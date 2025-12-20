@@ -1,0 +1,35 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  exclude:
+    - lib/src/bindings/libsignal_bindings.dart
+
+linter:
+  rules:
+    - always_declare_return_types
+    - avoid_empty_else
+    - avoid_print
+    - avoid_relative_lib_imports
+    - avoid_returning_null_for_future
+    - avoid_slow_async_io
+    - avoid_types_as_parameter_names
+    - cancel_subscriptions
+    - close_sinks
+    - comment_references
+    - control_flow_in_finally
+    - empty_statements
+    - hash_and_equals
+    - no_adjacent_strings_in_list
+    - no_duplicate_case_values
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_final_fields
+    - prefer_final_locals
+    - prefer_is_empty
+    - prefer_is_not_empty
+    - test_types_in_equals
+    - throw_in_finally
+    - unnecessary_statements
+    - unrelated_type_equality_checks
+    - use_key_in_widget_constructors
+    - valid_regexps

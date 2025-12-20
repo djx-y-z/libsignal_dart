@@ -1,0 +1,135 @@
+# Publish package to pub.dev
+#
+# Trigger: Push a version tag (e.g., v0.1.0)
+#
+# This workflow:
+# 1. Validates tag matches pubspec.yaml version
+# 2. Runs full test suite
+# 3. Publishes to pub.dev using OIDC (no tokens needed)
+# 4. Creates GitHub Release with changelog
+
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  # ============================================
+  # Validate version
+  # ============================================
+  validate:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Validate version
+        id: check
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PUBSPEC_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}')
+
+          echo "Tag version: $TAG_VERSION"
+          echo "Pubspec version: $PUBSPEC_VERSION"
+
+          if [ "$TAG_VERSION" != "$PUBSPEC_VERSION" ]; then
+            echo "::error::Version mismatch! Tag ($TAG_VERSION) != pubspec.yaml ($PUBSPEC_VERSION)"
+            exit 1
+          fi
+
+          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+
+  # ============================================
+  # Run tests
+  # ============================================
+  test:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Get dependencies
+        run: fvm dart pub get --no-example
+
+      - name: Analyze
+        run: fvm flutter analyze --fatal-infos
+
+      - name: Check formatting
+        run: fvm dart format --set-exit-if-changed .
+
+      - name: Run tests
+        run: fvm dart test
+
+  # ============================================
+  # Publish to pub.dev
+  # ============================================
+  publish:
+    needs: [validate, test]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC authentication
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Publish to pub.dev
+        run: dart pub publish --force
+
+  # ============================================
+  # Create GitHub Release
+  # ============================================
+  release:
+    needs: [validate, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION=${{ needs.validate.outputs.version }}
+          # Extract changelog section for this version
+          CHANGELOG=$(awk "/^## $VERSION/,/^## [0-9]/" CHANGELOG.md | head -n -1 | tail -n +2)
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No changelog entry for version $VERSION"
+          fi
+
+          # Use delimiter for multiline output
+          echo "content<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ needs.validate.outputs.version }}
+          body: |
+            ## libsignal v${{ needs.validate.outputs.version }}
+
+            ${{ steps.changelog.outputs.content }}
+
+            ---
+
+            **Installation:**
+            ```yaml
+            dependencies:
+              libsignal: ^${{ needs.validate.outputs.version }}
+            ```
+
+            **pub.dev:** https://pub.dev/packages/libsignal

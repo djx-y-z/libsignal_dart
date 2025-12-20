@@ -1,0 +1,52 @@
+name: Setup FVM and Flutter
+description: Setup Dart SDK, FVM, and install Flutter version from .fvmrc
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Dart SDK
+      uses: dart-lang/setup-dart@v1
+      with:
+        sdk: stable
+
+    - name: Install FVM (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        dart pub global activate fvm
+        echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+      shell: bash
+
+    - name: Install FVM (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        dart pub global activate fvm
+        echo "$env:LOCALAPPDATA\Pub\Cache\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      shell: pwsh
+
+    - name: Cache FVM (Unix)
+      if: runner.os != 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~/.fvm
+        key: fvm-${{ runner.os }}-${{ hashFiles('.fvmrc') }}
+        restore-keys: |
+          fvm-${{ runner.os }}-
+
+    - name: Cache FVM (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/cache@v4
+      with:
+        path: ~\.fvm
+        key: fvm-${{ runner.os }}-${{ hashFiles('.fvmrc') }}
+        restore-keys: |
+          fvm-${{ runner.os }}-
+
+    - name: Install Flutter via FVM (Unix)
+      if: runner.os != 'Windows'
+      run: fvm install
+      shell: bash
+
+    - name: Install Flutter via FVM (Windows)
+      if: runner.os == 'Windows'
+      run: fvm install
+      shell: pwsh

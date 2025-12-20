@@ -1,0 +1,120 @@
+/// iOS build script for libsignal
+///
+/// Builds libsignal-ffi for iOS using Rust/Cargo.
+/// Supports device (arm64) and simulator (arm64, x86_64).
+
+import 'dart:io';
+import 'common.dart';
+
+/// Build libsignal for iOS
+Future<void> buildIOS({IOSTarget target = IOSTarget.all}) async {
+  if (!Platform.isMacOS) {
+    throw Exception('iOS build must be run on macOS');
+  }
+
+  printBuildHeader('iOS (${target.name})');
+
+  // Check dependencies
+  logStep('Checking dependencies...');
+  await requireCommand('cargo');
+  await requireCommand('rustup');
+  await requireCommand('xcrun');
+
+  final version = getLibsignalVersion();
+  logInfo('libsignal version: $version');
+
+  final packageDir = getPackageDir();
+  final tempDir = getTempBuildDir();
+  final sourceDir = '$tempDir/libsignal';
+  final outputBaseDir = '${packageDir.path}/ios/Libraries';
+
+  // Clean and clone
+  logStep('Preparing build directory...');
+  await removeDir(tempDir);
+  await ensureDir(tempDir);
+
+  await cloneLibsignal(targetDir: sourceDir, version: version);
+
+  // Install iOS Rust targets
+  await ensureRustTarget('aarch64-apple-ios');
+  await ensureRustTarget('aarch64-apple-ios-sim');
+  await ensureRustTarget('x86_64-apple-ios');
+
+  await ensureDir(outputBaseDir);
+
+  // Build based on target
+  if (target == IOSTarget.all) {
+    await _buildIOSTarget(
+      'aarch64-apple-ios',
+      'device-arm64',
+      sourceDir,
+      outputBaseDir,
+    );
+    await _buildIOSTarget(
+      'aarch64-apple-ios-sim',
+      'simulator-arm64',
+      sourceDir,
+      outputBaseDir,
+    );
+    await _buildIOSTarget(
+      'x86_64-apple-ios',
+      'simulator-x86_64',
+      sourceDir,
+      outputBaseDir,
+    );
+  } else {
+    final (rustTarget, outputName) = switch (target) {
+      IOSTarget.device => ('aarch64-apple-ios', 'device-arm64'),
+      IOSTarget.simulatorArm64 => ('aarch64-apple-ios-sim', 'simulator-arm64'),
+      IOSTarget.simulatorX86_64 => ('x86_64-apple-ios', 'simulator-x86_64'),
+      IOSTarget.all => throw Exception('Unreachable'),
+    };
+    await _buildIOSTarget(rustTarget, outputName, sourceDir, outputBaseDir);
+  }
+
+  // Cleanup
+  logStep('Cleaning up...');
+  await removeDir(tempDir);
+
+  printBuildSummary('iOS', outputBaseDir);
+}
+
+Future<void> _buildIOSTarget(
+  String rustTarget,
+  String outputName,
+  String sourceDir,
+  String outputBaseDir,
+) async {
+  logPlatform('iOS', 'Building for $rustTarget...');
+
+  // Get iOS SDK path for linking
+  final sdkType = rustTarget.contains('sim') ? 'iphonesimulator' : 'iphoneos';
+  final sdkResult = await runCommand(
+    'xcrun',
+    ['--sdk', sdkType, '--show-sdk-path'],
+    printOutput: false,
+  );
+  final sdkPath = sdkResult.stdout.toString().trim();
+
+  final env = <String, String>{
+    'SDKROOT': sdkPath,
+    'IPHONEOS_DEPLOYMENT_TARGET': '13.0',
+  };
+
+  final libPath = await buildLibsignalFfi(
+    sourceDir: sourceDir,
+    rustTarget: rustTarget,
+    environment: env,
+  );
+
+  final outputDir = '$outputBaseDir/$outputName';
+  await ensureDir(outputDir);
+  await copyFile(libPath, '$outputDir/libsignal_ffi.dylib');
+
+  // Fix install name for iOS
+  await runCommandOrFail('install_name_tool', [
+    '-id',
+    '@rpath/libsignal_ffi.dylib',
+    '$outputDir/libsignal_ffi.dylib',
+  ]);
+}

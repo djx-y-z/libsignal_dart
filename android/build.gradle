@@ -1,0 +1,48 @@
+// The Android Gradle Plugin builds the native code with the Android NDK.
+
+group = "org.libsignal.libsignal"
+version = "1.0"
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        // The Android Gradle Plugin knows how to build native code with the NDK.
+        classpath("com.android.tools.build:gradle:8.11.1")
+    }
+}
+
+rootProject.allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+apply plugin: "com.android.library"
+
+android {
+    namespace = "org.libsignal.libsignal"
+
+    // Bumping the plugin compileSdk version requires all clients of this plugin
+    // to bump the version in their app.
+    compileSdk = 36
+
+    // Use the NDK version
+    // declared in /android/app/build.gradle file of the Flutter project.
+    // Replace it with a version number if this plugin requires a specific NDK version.
+    // (e.g. ndkVersion "23.1.7779620")
+    ndkVersion = android.ndkVersion
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        minSdk = 24
+    }
+}

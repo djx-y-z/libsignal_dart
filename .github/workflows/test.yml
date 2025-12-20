@@ -1,0 +1,49 @@
+# Run tests and static analysis
+#
+# Triggers:
+# - Push to main or develop branches (relevant files)
+# - Pull requests (relevant files)
+# - After successful build-libsignal workflow
+
+name: Test
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/test.yml'
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+  workflow_run:
+    workflows: ["Build libsignal Native Libraries"]
+    types:
+      - completed
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    # Only run on completed workflow if it was successful
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Get dependencies
+        run: fvm dart pub get --no-example
+
+      - name: Analyze
+        run: fvm flutter analyze --fatal-infos
+
+      - name: Check formatting
+        run: fvm dart format --set-exit-if-changed .
+
+      - name: Run tests
+        run: fvm dart test

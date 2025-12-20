@@ -1,0 +1,63 @@
+name: libsignal
+description: Dart FFI bindings for libsignal — Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+
+version: 0.1.0
+license: AGPL-3.0
+repository: https://github.com/djx-y-z/libsignal_dart
+homepage: https://github.com/djx-y-z/libsignal_dart
+issue_tracker: https://github.com/djx-y-z/libsignal_dart/issues
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.0"
+
+dependencies:
+  ffi: ^2.1.4
+  # Build hooks for automatic native library download
+  hooks: ^1.0.0
+  code_assets: ^1.0.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.24.0
+  ffigen: ^20.0.0
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  windows:
+
+topics:
+  - encryption
+  - signal-protocol
+  - e2e-encryption
+  - cryptography
+  - messaging
+
+ffigen:
+  name: LibSignalBindings
+  description: 'Cross-platform bindings for libsignal'
+  output: 'lib/src/bindings/libsignal_bindings.dart'
+  headers:
+    entry-points:
+      - 'headers/signal_ffi.h'
+  compiler-opts:
+    - '-Iheaders'
+  functions:
+    include:
+      - 'signal_.*'
+  structs:
+    include:
+      - 'Signal.*'
+  enums:
+    include:
+      - 'Signal.*'
+  # Generate @Native annotations instead of DynamicLibrary class
+  # asset-id must match CodeAsset registration in hook/build.dart
+  ffi-native:
+    asset-id: 'package:libsignal/libsignal'
+  # ignore-source-errors: libsignal headers may have platform-specific constructs
+  ignore-source-errors: true
+  silence-enum-warning: true

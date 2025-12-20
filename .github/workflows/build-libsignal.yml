@@ -1,0 +1,368 @@
+# Build libsignal native libraries for all platforms
+#
+# This workflow uses Rust/Cargo to build libsignal-ffi.
+# Uses cross-platform Dart scripts from scripts/ directory.
+#
+# Platforms:
+# - Linux x86_64, arm64 (dynamic .so)
+# - macOS arm64, x86_64 (dynamic .dylib)
+# - iOS device arm64, simulator arm64/x86_64 (dynamic .dylib)
+# - Android arm64-v8a, armeabi-v7a, x86_64 (dynamic .so)
+# - Windows x86_64 (dynamic .dll)
+#
+# Trigger:
+# - Manual dispatch (workflow_dispatch)
+# - Push to main when LIBSIGNAL_VERSION file changes
+#
+# After successful build, creates GitHub Release with native library archives.
+
+name: Build libsignal Native Libraries
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'LIBSIGNAL_VERSION'
+
+jobs:
+  # ============================================
+  # Read version from file
+  # ============================================
+  read-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      build: ${{ steps.version.outputs.build }}
+      full_version: ${{ steps.version.outputs.full_version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version info
+        id: version
+        run: |
+          VERSION=$(cat LIBSIGNAL_VERSION | tr -d '[:space:]' | sed 's/^v//')
+          BUILD=$(cat NATIVE_BUILD 2>/dev/null | tr -d '[:space:]' || echo '1')
+          FULL_VERSION="${VERSION}-${BUILD}"
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "build=$BUILD" >> $GITHUB_OUTPUT
+          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
+
+          echo "Building libsignal version: $VERSION (Build $BUILD)"
+          echo "Full version: $FULL_VERSION"
+
+  # ============================================
+  # Linux (x86_64 + arm64)
+  # ============================================
+  build-linux:
+    needs: read-version
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            rust_target: x86_64-unknown-linux-gnu
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            rust_target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Build libsignal for Linux ${{ matrix.arch }}
+        run: make build ARGS="linux --arch ${{ matrix.arch }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsignal-linux-${{ matrix.arch }}
+          path: bin/linux/libsignal_ffi.so
+
+  # ============================================
+  # macOS (arm64 + x86_64)
+  # ============================================
+  build-macos:
+    needs: read-version
+    strategy:
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-latest
+            rust_target: aarch64-apple-darwin
+          - arch: x86_64
+            runner: macos-15-intel
+            rust_target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Build libsignal for macOS ${{ matrix.arch }}
+        run: make build ARGS="macos --arch ${{ matrix.arch }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsignal-macos-${{ matrix.arch }}
+          path: bin/macos/libsignal_ffi.dylib
+
+  # ============================================
+  # iOS (device + simulator)
+  # ============================================
+  build-ios:
+    needs: read-version
+    strategy:
+      matrix:
+        include:
+          - target: device
+            arch: arm64
+            runner: macos-latest
+            rust_target: aarch64-apple-ios
+            dart_target: device
+          - target: simulator
+            arch: arm64
+            runner: macos-latest
+            rust_target: aarch64-apple-ios-sim
+            dart_target: simulator-arm64
+          - target: simulator
+            arch: x86_64
+            runner: macos-15-intel
+            rust_target: x86_64-apple-ios
+            dart_target: simulator-x86_64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Build libsignal for iOS ${{ matrix.target }} ${{ matrix.arch }}
+        run: make build ARGS="ios --target ${{ matrix.dart_target }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsignal-ios-${{ matrix.target }}-${{ matrix.arch }}
+          path: ios/Libraries/${{ matrix.target }}-${{ matrix.arch }}/libsignal_ffi.dylib
+
+  # ============================================
+  # Android (all ABIs)
+  # ============================================
+  build-android:
+    needs: read-version
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        abi: [arm64-v8a, armeabi-v7a, x86_64]
+        include:
+          - abi: arm64-v8a
+            rust_target: aarch64-linux-android
+          - abi: armeabi-v7a
+            rust_target: armv7-linux-androideabi
+          - abi: x86_64
+            rust_target: x86_64-linux-android
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Setup Android NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: |
+          sdkmanager --install "ndk;26.3.11579264"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.3.11579264" >> $GITHUB_ENV
+
+      - name: Build libsignal for Android ${{ matrix.abi }}
+        run: make build ARGS="android --abi ${{ matrix.abi }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsignal-android-${{ matrix.abi }}
+          path: android/src/main/jniLibs/${{ matrix.abi }}/libsignal_ffi.so
+
+  # ============================================
+  # Windows x86_64
+  # ============================================
+  build-windows:
+    needs: read-version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Install make
+        run: choco install make -y
+
+      - name: Setup MSVC
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build libsignal for Windows
+        run: make build ARGS="windows" FVM="cmd //c fvm"
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libsignal-windows-x86_64
+          path: bin/windows/signal_ffi.dll
+
+  # ============================================
+  # Create GitHub Release
+  # ============================================
+  create-release:
+    needs: [read-version, build-linux, build-macos, build-ios, build-android, build-windows]
+    runs-on: ubuntu-latest
+    env:
+      LIBSIGNAL_VERSION: ${{ needs.read-version.outputs.version }}
+      NATIVE_BUILD: ${{ needs.read-version.outputs.build }}
+      FULL_VERSION: ${{ needs.read-version.outputs.full_version }}
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release archives
+        run: |
+          FULL_VERSION=${{ env.FULL_VERSION }}
+          mkdir -p release-archives
+
+          # Linux x86_64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-linux-x86_64.tar.gz \
+            -C artifacts/libsignal-linux-x86_64 libsignal_ffi.so
+
+          # Linux arm64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-linux-arm64.tar.gz \
+            -C artifacts/libsignal-linux-arm64 libsignal_ffi.so
+
+          # macOS arm64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-macos-arm64.tar.gz \
+            -C artifacts/libsignal-macos-arm64 libsignal_ffi.dylib
+
+          # macOS x86_64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-macos-x86_64.tar.gz \
+            -C artifacts/libsignal-macos-x86_64 libsignal_ffi.dylib
+
+          # Windows x86_64
+          cd artifacts/libsignal-windows-x86_64 && zip ../../release-archives/libsignal-${FULL_VERSION}-windows-x86_64.zip signal_ffi.dll && cd ../..
+
+          # Android ABIs
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            tar -czvf release-archives/libsignal-${FULL_VERSION}-android-${abi}.tar.gz \
+              -C artifacts/libsignal-android-${abi} libsignal_ffi.so
+          done
+
+          # iOS device arm64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-ios-device-arm64.tar.gz \
+            -C artifacts/libsignal-ios-device-arm64 libsignal_ffi.dylib
+
+          # iOS simulator arm64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-ios-simulator-arm64.tar.gz \
+            -C artifacts/libsignal-ios-simulator-arm64 libsignal_ffi.dylib
+
+          # iOS simulator x86_64
+          tar -czvf release-archives/libsignal-${FULL_VERSION}-ios-simulator-x86_64.tar.gz \
+            -C artifacts/libsignal-ios-simulator-x86_64 libsignal_ffi.dylib
+
+          # Generate SHA256 checksums
+          cd release-archives
+          sha256sum libsignal-${FULL_VERSION}-*.* > libsignal-${FULL_VERSION}-checksums.sha256
+          cd ..
+
+          ls -lh release-archives/
+
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: libsignal-${{ env.FULL_VERSION }}
+          name: libsignal ${{ env.LIBSIGNAL_VERSION }} (Build ${{ env.NATIVE_BUILD }}) - Native Libraries
+          make_latest: true
+          files: |
+            release-archives/libsignal-${{ env.FULL_VERSION }}-linux-x86_64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-linux-arm64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-macos-arm64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-macos-x86_64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-windows-x86_64.zip
+            release-archives/libsignal-${{ env.FULL_VERSION }}-android-arm64-v8a.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-android-armeabi-v7a.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-android-x86_64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-ios-device-arm64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-ios-simulator-arm64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-ios-simulator-x86_64.tar.gz
+            release-archives/libsignal-${{ env.FULL_VERSION }}-checksums.sha256
+          body: |
+            ## libsignal ${{ env.LIBSIGNAL_VERSION }} (Build ${{ env.NATIVE_BUILD }}) Native Libraries
+
+            Pre-built native libraries for all supported platforms.
+            **These archives are downloaded automatically by Dart Build Hooks.**
+
+            ### Version Info
+            - **libsignal version**: v${{ env.LIBSIGNAL_VERSION }}
+            - **Build number**: ${{ env.NATIVE_BUILD }}
+            - **Full identifier**: ${{ env.FULL_VERSION }}
+
+            ### Platforms
+
+            | Platform | Architecture | Archive |
+            |----------|--------------|---------|
+            | Linux | x86_64 | `libsignal-${{ env.FULL_VERSION }}-linux-x86_64.tar.gz` |
+            | Linux | arm64 | `libsignal-${{ env.FULL_VERSION }}-linux-arm64.tar.gz` |
+            | macOS | arm64 | `libsignal-${{ env.FULL_VERSION }}-macos-arm64.tar.gz` |
+            | macOS | x86_64 | `libsignal-${{ env.FULL_VERSION }}-macos-x86_64.tar.gz` |
+            | Windows | x86_64 | `libsignal-${{ env.FULL_VERSION }}-windows-x86_64.zip` |
+            | Android | arm64-v8a | `libsignal-${{ env.FULL_VERSION }}-android-arm64-v8a.tar.gz` |
+            | Android | armeabi-v7a | `libsignal-${{ env.FULL_VERSION }}-android-armeabi-v7a.tar.gz` |
+            | Android | x86_64 | `libsignal-${{ env.FULL_VERSION }}-android-x86_64.tar.gz` |
+            | iOS | device (arm64) | `libsignal-${{ env.FULL_VERSION }}-ios-device-arm64.tar.gz` |
+            | iOS | simulator (arm64) | `libsignal-${{ env.FULL_VERSION }}-ios-simulator-arm64.tar.gz` |
+            | iOS | simulator (x86_64) | `libsignal-${{ env.FULL_VERSION }}-ios-simulator-x86_64.tar.gz` |
+
+            ### Checksums
+            SHA256 checksums are available in `libsignal-${{ env.FULL_VERSION }}-checksums.sha256`
+
+            ### Usage
+            Add `libsignal` to your `pubspec.yaml`:
+
+            ```yaml
+            dependencies:
+              libsignal: ^0.1.0
+            ```
