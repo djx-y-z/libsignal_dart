@@ -34,14 +34,6 @@ Future<void> buildMacOS({MacOSArch arch = MacOSArch.universal}) async {
 
   await cloneLibsignal(targetDir: sourceDir, version: version);
 
-  // Install required Rust targets
-  if (arch == MacOSArch.universal || arch == MacOSArch.arm64) {
-    await ensureRustTarget('aarch64-apple-darwin');
-  }
-  if (arch == MacOSArch.universal || arch == MacOSArch.x86_64) {
-    await ensureRustTarget('x86_64-apple-darwin');
-  }
-
   await ensureDir(outputDir);
 
   if (arch == MacOSArch.universal) {
@@ -65,10 +57,9 @@ Future<void> buildMacOS({MacOSArch arch = MacOSArch.universal}) async {
       '$outputDir/libsignal_ffi.dylib',
     ]);
   } else {
-    final target =
-        arch == MacOSArch.arm64
-            ? 'aarch64-apple-darwin'
-            : 'x86_64-apple-darwin';
+    final target = arch == MacOSArch.arm64
+        ? 'aarch64-apple-darwin'
+        : 'x86_64-apple-darwin';
     final libPath = await buildLibsignalFfi(
       sourceDir: sourceDir,
       rustTarget: target,

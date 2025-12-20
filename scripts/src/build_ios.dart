@@ -35,11 +35,6 @@ Future<void> buildIOS({IOSTarget target = IOSTarget.all}) async {
 
   await cloneLibsignal(targetDir: sourceDir, version: version);
 
-  // Install iOS Rust targets
-  await ensureRustTarget('aarch64-apple-ios');
-  await ensureRustTarget('aarch64-apple-ios-sim');
-  await ensureRustTarget('x86_64-apple-ios');
-
   await ensureDir(outputBaseDir);
 
   // Build based on target
@@ -89,11 +84,11 @@ Future<void> _buildIOSTarget(
 
   // Get iOS SDK path for linking
   final sdkType = rustTarget.contains('sim') ? 'iphonesimulator' : 'iphoneos';
-  final sdkResult = await runCommand(
-    'xcrun',
-    ['--sdk', sdkType, '--show-sdk-path'],
-    printOutput: false,
-  );
+  final sdkResult = await runCommand('xcrun', [
+    '--sdk',
+    sdkType,
+    '--show-sdk-path',
+  ], printOutput: false);
   final sdkPath = sdkResult.stdout.toString().trim();
 
   final env = <String, String>{

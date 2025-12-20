@@ -34,9 +34,7 @@ Future<void> buildWindows() async {
 
   await cloneLibsignal(targetDir: sourceDir, version: version);
 
-  // Install Rust target
   const rustTarget = 'x86_64-pc-windows-msvc';
-  await ensureRustTarget(rustTarget);
 
   await ensureDir(outputDir);
 

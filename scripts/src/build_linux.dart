@@ -38,9 +38,6 @@ Future<void> buildLinux({String? arch}) async {
 
   await cloneLibsignal(targetDir: sourceDir, version: version);
 
-  // Install Rust target
-  await ensureRustTarget(rustTarget);
-
   await ensureDir(outputDir);
 
   // Build

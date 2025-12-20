@@ -39,10 +39,9 @@ Future<void> buildAndroid({AndroidAbi abi = AndroidAbi.all}) async {
   await cloneLibsignal(targetDir: sourceDir, version: version);
 
   // Determine which ABIs to build
-  final abis =
-      abi == AndroidAbi.all
-          ? [AndroidAbi.arm64V8a, AndroidAbi.armeabiV7a, AndroidAbi.x86_64]
-          : [abi];
+  final abis = abi == AndroidAbi.all
+      ? [AndroidAbi.arm64V8a, AndroidAbi.armeabiV7a, AndroidAbi.x86_64]
+      : [abi];
 
   for (final targetAbi in abis) {
     await _buildAbi(
@@ -70,9 +69,6 @@ Future<void> _buildAbi({
   final rustTarget = getRustTarget('android', abiValue);
 
   logPlatform('Android', 'Building for $abiValue ($rustTarget)...');
-
-  // Install Rust target
-  await ensureRustTarget(rustTarget);
 
   // Configure linker for Android
   const apiLevel = 21; // Minimum Android API level

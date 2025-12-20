@@ -396,6 +396,16 @@ Future<String> buildLibsignalFfi({
 }) async {
   logStep('Building libsignal-ffi for $rustTarget...');
 
+  // libsignal uses nightly Rust (via rust-toolchain.toml in their repo).
+  // We need to install targets for that specific toolchain.
+  // Running rustup from sourceDir will use the correct toolchain.
+  logStep('Ensuring Rust target $rustTarget is installed for libsignal toolchain...');
+  await runCommandOrFail(
+    'rustup',
+    ['target', 'add', rustTarget],
+    workingDirectory: sourceDir,
+  );
+
   final env = {
     ...Platform.environment,
     if (environment != null) ...environment,
