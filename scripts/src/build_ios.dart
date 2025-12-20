@@ -83,7 +83,9 @@ Future<void> _buildIOSTarget(
   logPlatform('iOS', 'Building for $rustTarget...');
 
   // Get iOS SDK path for linking
-  final isSimulator = rustTarget.contains('sim');
+  // x86_64-apple-ios is also a simulator target (no x86_64 iOS devices exist)
+  final isSimulator =
+      rustTarget.contains('sim') || rustTarget == 'x86_64-apple-ios';
   final sdkType = isSimulator ? 'iphonesimulator' : 'iphoneos';
   final sdkResult = await runCommand('xcrun', [
     '--sdk',
