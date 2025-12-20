@@ -49,10 +49,9 @@ class LibSignal {
 
   /// Ensures the library is initialized.
   ///
-  /// Throws [StateError] if not initialized.
+  /// Auto-initializes if not already initialized.
   static void ensureInitialized() {
     if (!isInitialized) {
-      // Auto-initialize for convenience
       init();
     }
   }
@@ -64,33 +63,12 @@ class LibSignal {
     final isolateId = Isolate.current.hashCode;
     _initializedIsolates.remove(isolateId);
   }
-
-  /// Get the libsignal version.
-  ///
-  /// Returns the version of the underlying libsignal library.
-  static String getVersion() {
-    // TODO: Implement when FFI bindings are generated
-    // This will call signal_version_string() or similar
-    return 'unknown';
-  }
-
-  /// Get supported cryptographic algorithms.
-  ///
-  /// Returns information about available algorithms.
-  static Map<String, List<String>> getSupportedAlgorithms() {
-    return {
-      'key_agreement': ['X25519', 'Kyber1024'],
-      'signature': ['Ed25519'],
-      'encryption': ['AES-256-GCM-SIV'],
-      'hash': ['SHA-256', 'SHA-512'],
-    };
-  }
 }
 
-/// Thread-safe base class for libsignal operations.
+/// Base mixin for libsignal operations.
 ///
 /// Ensures library is initialized before any operation.
-abstract class LibSignalBase {
+mixin LibSignalBase {
   /// Ensures the library is initialized.
   ///
   /// Call this at the start of any public method.

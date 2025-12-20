@@ -119,3 +119,86 @@ This project uses FVM for consistent Flutter/Dart versions.
 **Version:** Flutter 3.38.4 (Dart SDK 3.10.0)
 
 FVM is automatically installed by `make setup`.
+
+## FFI Workaround: Fixed-Size Array Parameters
+
+### The Problem
+
+The libsignal C header declares some functions with fixed-size array output parameters:
+```c
+SignalFfiError signal_sender_key_message_get_distribution_id(
+    uint8_t (*out)[16],  // Pointer to array of 16 bytes
+    SignalConstPointerSenderKeyMessage msg
+);
+```
+
+However, `ffigen` incorrectly generates `Pointer<Pointer<Uint8>>` for the type `uint8_t (*)[N]`. This causes:
+1. Incorrect memory allocation when using `calloc<Pointer<Uint8>>()`
+2. SEGFAULT when libsignal writes 16 bytes to a pointer-sized allocation
+
+### The Workaround
+
+Use a Dart `Struct` with `Array<Uint8>` to allocate the exact number of bytes:
+
+```dart
+final class _Uuid16 extends Struct {
+  @Array.multi([16])
+  external Array<Uint8> bytes;
+}
+
+Uint8List get distributionId {
+  final outPtr = calloc<_Uuid16>();  // Allocates exactly 16 bytes
+  try {
+    // Cast when calling the FFI function
+    final error = signal_..._get_distribution_id(
+      outPtr.cast<Pointer<Uint8>>(),
+      ...
+    );
+    // Copy bytes from struct
+    final result = Uint8List(16);
+    for (var i = 0; i < 16; i++) {
+      result[i] = outPtr.ref.bytes[i];
+    }
+    return result;
+  } finally {
+    calloc.free(outPtr);
+  }
+}
+```
+
+### Why This Is Safe
+
+- The allocated size (16 bytes) exactly matches what libsignal expects
+- We copy data before freeing memory
+- Tests verify correct values are returned
+- The workaround survives `make regen` because it's in wrapper code, not in generated bindings
+
+### Affected Functions
+
+Functions with `uint8_t (*out)[16]` parameter that need this workaround:
+- `signal_sender_key_distribution_message_get_distribution_id` ✅ Fixed
+- `signal_sender_key_message_get_distribution_id` ✅ Fixed
+- `signal_sender_key_distribution_message_create` ✅ Fixed (input parameter)
+- `signal_group_encrypt_message` ✅ Fixed (input parameter)
+- `signal_error_get_uuid` - Not implemented (error handling)
+
+Functions with other fixed-size arrays (not currently used):
+- Various zkgroup functions with `uint8_t (*)[32]`, `uint8_t (*)[64]`, etc.
+
+## Unimplemented Functionality
+
+Some libsignal features are not yet implemented in this library:
+
+### zkgroup (Zero-Knowledge Groups)
+- Profile keys, credentials, group calls
+- Server-side verification
+- Not needed for basic Signal Protocol messaging
+
+### Session Establishment (signal_process_prekey_bundle)
+- Requires implementing FFI callbacks for SessionStore and IdentityKeyStore
+- Complex task involving async callbacks from C to Dart
+- Currently, session initialization is not fully implemented
+
+### SVR (Secure Value Recovery)
+- Server-side functionality for PIN-based backups
+- Not typically needed in client applications

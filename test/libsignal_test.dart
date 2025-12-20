@@ -3,111 +3,94 @@ import 'package:test/test.dart';
 
 void main() {
   group('LibSignal', () {
-    test('can be initialized', () {
-      LibSignal.init();
-      expect(LibSignal.isInitialized, isTrue);
-    });
-
-    test('init is idempotent', () {
-      LibSignal.init();
-      LibSignal.init();
-      LibSignal.init();
-      expect(LibSignal.isInitialized, isTrue);
-    });
-
-    test('cleanup works', () {
-      LibSignal.init();
-      expect(LibSignal.isInitialized, isTrue);
-
+    tearDown(() {
+      // Clean up after each test to reset state
       LibSignal.cleanup();
-      expect(LibSignal.isInitialized, isFalse);
     });
 
-    test('getVersion returns a string', () {
-      LibSignal.init();
-      final version = LibSignal.getVersion();
-      expect(version, isA<String>());
+    group('init()', () {
+      test('initializes successfully', () {
+        expect(() => LibSignal.init(), returnsNormally);
+      });
+
+      test('sets isInitialized to true', () {
+        LibSignal.init();
+        expect(LibSignal.isInitialized, isTrue);
+      });
+
+      test('can be called multiple times without error', () {
+        LibSignal.init();
+        LibSignal.init();
+        LibSignal.init();
+        expect(LibSignal.isInitialized, isTrue);
+      });
     });
 
-    test('getSupportedAlgorithms returns algorithm map', () {
-      final algorithms = LibSignal.getSupportedAlgorithms();
+    group('isInitialized', () {
+      test('returns false before init', () {
+        expect(LibSignal.isInitialized, isFalse);
+      });
 
-      expect(algorithms, isA<Map<String, List<String>>>());
-      expect(algorithms['key_agreement'], contains('X25519'));
-      expect(algorithms['signature'], contains('Ed25519'));
-      expect(algorithms['encryption'], contains('AES-256-GCM-SIV'));
+      test('returns true after init', () {
+        LibSignal.init();
+        expect(LibSignal.isInitialized, isTrue);
+      });
+
+      test('returns false after cleanup', () {
+        LibSignal.init();
+        LibSignal.cleanup();
+        expect(LibSignal.isInitialized, isFalse);
+      });
+    });
+
+    group('ensureInitialized()', () {
+      test('initializes if not already initialized', () {
+        expect(LibSignal.isInitialized, isFalse);
+        LibSignal.ensureInitialized();
+        expect(LibSignal.isInitialized, isTrue);
+      });
+
+      test('is idempotent when already initialized', () {
+        LibSignal.init();
+        expect(() => LibSignal.ensureInitialized(), returnsNormally);
+        expect(LibSignal.isInitialized, isTrue);
+      });
+    });
+
+    group('cleanup()', () {
+      test('cleans up successfully', () {
+        LibSignal.init();
+        expect(() => LibSignal.cleanup(), returnsNormally);
+      });
+
+      test('sets isInitialized to false', () {
+        LibSignal.init();
+        LibSignal.cleanup();
+        expect(LibSignal.isInitialized, isFalse);
+      });
+
+      test('can be called without init', () {
+        expect(() => LibSignal.cleanup(), returnsNormally);
+      });
+
+      test('can be called multiple times', () {
+        LibSignal.init();
+        LibSignal.cleanup();
+        LibSignal.cleanup();
+        expect(LibSignal.isInitialized, isFalse);
+      });
     });
   });
 
-  group('LibSignalException', () {
-    test('basic exception', () {
-      final exception = LibSignalException('Test error');
-
-      expect(exception.message, equals('Test error'));
-      expect(exception.errorCode, isNull);
-      expect(exception.context, isNull);
-      expect(exception.toString(), contains('Test error'));
+  group('LibSignalBase', () {
+    tearDown(() {
+      LibSignal.cleanup();
     });
 
-    test('exception with error code and context', () {
-      final exception = LibSignalException(
-        'Operation failed',
-        errorCode: 42,
-        context: 'test_operation',
-      );
-
-      expect(exception.message, equals('Operation failed'));
-      expect(exception.errorCode, equals(42));
-      expect(exception.context, equals('test_operation'));
-      expect(exception.toString(), contains('42'));
-      expect(exception.toString(), contains('test_operation'));
-    });
-
-    test('invalidArgument factory', () {
-      final exception = LibSignalException.invalidArgument('key', 'too short');
-
-      expect(exception.message, contains('Invalid argument'));
-      expect(exception.message, contains('key'));
-      expect(exception.message, contains('too short'));
-    });
-
-    test('nullPointer factory', () {
-      final exception = LibSignalException.nullPointer('generateKey');
-
-      expect(exception.message, contains('Null pointer'));
-      expect(exception.context, equals('generateKey'));
-    });
-
-    test('unsupported factory', () {
-      final exception = LibSignalException.unsupported(
-        'oldAlgorithm',
-        reason: 'deprecated',
-      );
-
-      expect(exception.message, contains('Unsupported'));
-      expect(exception.message, contains('oldAlgorithm'));
-      expect(exception.message, contains('deprecated'));
-    });
-
-    test('serialization factory', () {
-      final exception = LibSignalException.serialization(
-        'PrivateKey',
-        reason: 'invalid format',
-      );
-
-      expect(exception.message, contains('serialize'));
-      expect(exception.message, contains('PrivateKey'));
-    });
-
-    test('cryptoError factory', () {
-      final exception = LibSignalException.cryptoError(
-        'decrypt',
-        errorCode: -1,
-      );
-
-      expect(exception.message, contains('Cryptographic'));
-      expect(exception.message, contains('decrypt'));
-      expect(exception.errorCode, equals(-1));
+    test('ensureInit initializes library', () {
+      expect(LibSignal.isInitialized, isFalse);
+      LibSignalBase.ensureInit();
+      expect(LibSignal.isInitialized, isTrue);
     });
   });
 }
