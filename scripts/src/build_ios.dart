@@ -83,7 +83,8 @@ Future<void> _buildIOSTarget(
   logPlatform('iOS', 'Building for $rustTarget...');
 
   // Get iOS SDK path for linking
-  final sdkType = rustTarget.contains('sim') ? 'iphonesimulator' : 'iphoneos';
+  final isSimulator = rustTarget.contains('sim');
+  final sdkType = isSimulator ? 'iphonesimulator' : 'iphoneos';
   final sdkResult = await runCommand('xcrun', [
     '--sdk',
     sdkType,
@@ -91,9 +92,21 @@ Future<void> _buildIOSTarget(
   ], printOutput: false);
   final sdkPath = sdkResult.stdout.toString().trim();
 
+  // Determine clang target triple for bindgen
+  // Rust uses 'aarch64-apple-ios-sim' but clang needs 'arm64-apple-ios13.0-simulator'
+  String clangTarget;
+  if (rustTarget == 'aarch64-apple-ios-sim') {
+    clangTarget = 'arm64-apple-ios13.0-simulator';
+  } else if (rustTarget == 'x86_64-apple-ios') {
+    clangTarget = 'x86_64-apple-ios13.0-simulator';
+  } else {
+    clangTarget = 'arm64-apple-ios13.0';
+  }
+
   final env = <String, String>{
     'SDKROOT': sdkPath,
     'IPHONEOS_DEPLOYMENT_TARGET': '13.0',
+    'BINDGEN_EXTRA_CLANG_ARGS': '--target=$clangTarget -isysroot $sdkPath',
   };
 
   final libPath = await buildLibsignalFfi(
