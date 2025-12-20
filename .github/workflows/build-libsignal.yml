@@ -78,6 +78,12 @@ jobs:
       - name: Setup FVM and Flutter
         uses: ./.github/actions/setup-fvm
 
+      - name: Install Protobuf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+
       - name: Build libsignal for Linux ${{ matrix.arch }}
         run: make build ARGS="linux --arch ${{ matrix.arch }}"
 
@@ -112,6 +118,11 @@ jobs:
 
       - name: Setup FVM and Flutter
         uses: ./.github/actions/setup-fvm
+
+      - name: Install Protobuf
+        run: |
+          brew install protobuf
+          protoc --version
 
       - name: Build libsignal for macOS ${{ matrix.arch }}
         run: make build ARGS="macos --arch ${{ matrix.arch }}"
@@ -157,6 +168,11 @@ jobs:
       - name: Setup FVM and Flutter
         uses: ./.github/actions/setup-fvm
 
+      - name: Install Protobuf
+        run: |
+          brew install protobuf
+          protoc --version
+
       - name: Build libsignal for iOS ${{ matrix.target }} ${{ matrix.arch }}
         run: make build ARGS="ios --target ${{ matrix.dart_target }}"
 
@@ -201,6 +217,12 @@ jobs:
           sdkmanager --install "ndk;26.3.11579264"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.3.11579264" >> $GITHUB_ENV
 
+      - name: Install Protobuf
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler
+          protoc --version
+
       - name: Build libsignal for Android ${{ matrix.abi }}
         run: make build ARGS="android --abi ${{ matrix.abi }}"
 
@@ -232,6 +254,9 @@ jobs:
 
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Install Protobuf
+        run: choco install protoc -y
 
       - name: Build libsignal for Windows
         run: make build ARGS="windows" FVM="cmd //c fvm"
