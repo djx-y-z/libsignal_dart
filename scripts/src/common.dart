@@ -344,6 +344,39 @@ Future<void> cloneLibsignal({
     branch: version,
     depth: 1,
   );
+
+  // Patch Cargo.toml to include cdylib (needed for Dart FFI)
+  // Recent versions of libsignal only build staticlib by default
+  await _patchCargoTomlForCdylib(targetDir);
+}
+
+/// Patch libsignal-ffi Cargo.toml to include cdylib crate-type
+Future<void> _patchCargoTomlForCdylib(String sourceDir) async {
+  final cargoPath = '$sourceDir/rust/bridge/ffi/Cargo.toml';
+  final cargoFile = File(cargoPath);
+
+  if (!cargoFile.existsSync()) {
+    logWarn('Could not find Cargo.toml at $cargoPath');
+    return;
+  }
+
+  logStep('Patching Cargo.toml to include cdylib...');
+
+  var content = await cargoFile.readAsString();
+
+  // Replace staticlib with cdylib (we only need dynamic library for Dart FFI)
+  if (content.contains('crate-type = ["staticlib"]')) {
+    content = content.replaceAll(
+      'crate-type = ["staticlib"]',
+      'crate-type = ["cdylib"]',
+    );
+    await cargoFile.writeAsString(content);
+    logInfo('Patched Cargo.toml: staticlib -> cdylib');
+  } else if (content.contains('crate-type = ["cdylib"')) {
+    logInfo('Cargo.toml already uses cdylib');
+  } else {
+    logWarn('Could not find crate-type in Cargo.toml, build may fail');
+  }
 }
 
 /// Get cbindgen version from libsignal's .cbindgen-version file
