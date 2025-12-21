@@ -31,5 +31,7 @@
 /// ```
 library;
 
+export 'sealed_session_cipher.dart';
 export 'sender_certificate.dart';
 export 'server_certificate.dart';
+export 'unidentified_sender_message_content.dart';
