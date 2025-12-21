@@ -73,27 +73,26 @@ final class IdentityKeyPair {
     buffer.ref.base = dataPtr.cast<UnsignedChar>();
     buffer.ref.length = data.length;
 
-    final privateKeyPtr = calloc<SignalMutPointerPrivateKey>();
-    final publicKeyPtr = calloc<SignalMutPointerPublicKey>();
+    final outPtr =
+        calloc<SignalPairOfMutPointerPublicKeyMutPointerPrivateKey>();
 
     try {
       final error = signal_identitykeypair_deserialize(
-        privateKeyPtr,
-        publicKeyPtr,
+        outPtr,
         buffer.ref,
       );
       FfiHelpers.checkError(error, 'signal_identitykeypair_deserialize');
 
-      if (privateKeyPtr.ref.raw == nullptr) {
+      if (outPtr.ref.second.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_identitykeypair_deserialize (private key)',
         );
       }
 
-      if (publicKeyPtr.ref.raw == nullptr) {
+      if (outPtr.ref.first.raw == nullptr) {
         // Clean up private key if public key failed
         final mutPtr = calloc<SignalMutPointerPrivateKey>();
-        mutPtr.ref.raw = privateKeyPtr.ref.raw;
+        mutPtr.ref.raw = outPtr.ref.second.raw;
         signal_privatekey_destroy(mutPtr.ref);
         calloc.free(mutPtr);
 
@@ -103,8 +102,9 @@ final class IdentityKeyPair {
       }
 
       // Create wrapper objects that take ownership
-      final privateKey = PrivateKey.fromPointer(privateKeyPtr.ref.raw);
-      final publicKey = PublicKey.fromPointer(publicKeyPtr.ref.raw);
+      // Note: first = PublicKey, second = PrivateKey
+      final privateKey = PrivateKey.fromPointer(outPtr.ref.second.raw);
+      final publicKey = PublicKey.fromPointer(outPtr.ref.first.raw);
 
       return IdentityKeyPair._(privateKey, publicKey);
     } finally {
@@ -114,8 +114,7 @@ final class IdentityKeyPair {
       }
       calloc.free(dataPtr);
       calloc.free(buffer);
-      calloc.free(privateKeyPtr);
-      calloc.free(publicKeyPtr);
+      calloc.free(outPtr);
     }
   }
 

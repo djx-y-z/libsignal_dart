@@ -850,6 +850,8 @@ class _DecryptionCallbacks {
   int _markKyberPreKeyUsedCallback(
     Pointer<Void> ctx,
     int id,
+    int signedPreKeyId,
+    SignalConstPointerPublicKey baseKey,
   ) {
     try {
       _context.pendingKyberPreKeyRemoval = id;

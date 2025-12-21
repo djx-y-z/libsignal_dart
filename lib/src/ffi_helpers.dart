@@ -130,7 +130,7 @@ class FfiHelpers {
 
     final messagePtr = calloc<Pointer<Char>>();
     try {
-      final getMessageError = signal_error_get_message(error, messagePtr);
+      final getMessageError = signal_error_get_message(messagePtr, error);
       if (getMessageError != nullptr) {
         signal_error_free(getMessageError);
         return null;

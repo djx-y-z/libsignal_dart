@@ -380,8 +380,13 @@ final class SenderCertificate {
     final certPtr = calloc<SignalConstPointerSenderCertificate>();
     certPtr.ref.raw = _ptr;
 
+    // Create a slice of one trust root key
     final keyPtr = calloc<SignalConstPointerPublicKey>();
     keyPtr.ref.raw = trustRoot.pointer;
+
+    final trustRootsSlice = calloc<SignalBorrowedSliceOfConstPointerPublicKey>();
+    trustRootsSlice.ref.base = keyPtr;
+    trustRootsSlice.ref.length = 1;
 
     final time = (now ?? DateTime.now()).millisecondsSinceEpoch;
 
@@ -389,7 +394,7 @@ final class SenderCertificate {
       final error = signal_sender_certificate_validate(
         outPtr,
         certPtr.ref,
-        keyPtr.ref,
+        trustRootsSlice.ref,
         time,
       );
       FfiHelpers.checkError(error, 'signal_sender_certificate_validate');
@@ -399,6 +404,7 @@ final class SenderCertificate {
       calloc.free(outPtr);
       calloc.free(certPtr);
       calloc.free(keyPtr);
+      calloc.free(trustRootsSlice);
     }
   }
 
