@@ -13,181 +13,103 @@ external int __mb_cur_max;
 @ffi.Native<ffi.Pointer<ffi.Char>>()
 external ffi.Pointer<ffi.Char> suboptarg;
 
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
-external void signal_print_ptr(ffi.Pointer<ffi.Void> p);
-
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Char>)>()
-external void signal_free_string(ffi.Pointer<ffi.Char> buf);
-
-@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.UnsignedChar>, ffi.Size)>()
-external void signal_free_buffer(
-  ffi.Pointer<ffi.UnsignedChar> buf,
-  int buf_len,
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_account_entropy_pool_derive_backup_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Char> account_entropy,
 );
-
-@ffi.Native<ffi.Void Function(SignalOwnedBufferOfCStringPtr)>()
-external void signal_free_list_of_strings(SignalOwnedBufferOfCStringPtr buffer);
-
-@ffi.Native<ffi.Void Function(SignalOwnedBufferOfFfiCdsiLookupResponseEntry)>()
-external void signal_free_lookup_response_entry_list(
-  SignalOwnedBufferOfFfiCdsiLookupResponseEntry buffer,
-);
-
-@ffi.Native<ffi.Void Function(SignalBytestringArray)>()
-external void signal_free_bytestring_array(SignalBytestringArray array);
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Char>,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_error_get_message(
-  ffi.Pointer<SignalFfiError> err,
+external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_derive_svr_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Char> account_entropy,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<ffi.Pointer<ffi.Char>>)
+>()
+external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_generate(
   ffi.Pointer<ffi.Pointer<ffi.Char>> out,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
+    ffi.Pointer<ffi.Bool>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_is_valid(
+  ffi.Pointer<ffi.Bool> out,
+  ffi.Pointer<ffi.Char> account_entropy,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalMutPointerProtocolAddress>,
+    SignalConstPointerProtocolAddress,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_error_get_address(
-  ffi.Pointer<SignalFfiError> err,
+external ffi.Pointer<SignalFfiError> signal_address_clone(
+  ffi.Pointer<SignalMutPointerProtocolAddress> new_obj,
+  SignalConstPointerProtocolAddress obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerProtocolAddress)
+>()
+external ffi.Pointer<SignalFfiError> signal_address_destroy(
+  SignalMutPointerProtocolAddress p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerProtocolAddress,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_address_get_device_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerProtocolAddress obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerProtocolAddress,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_address_get_name(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerProtocolAddress obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerProtocolAddress>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_address_new(
   ffi.Pointer<SignalMutPointerProtocolAddress> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_error_get_uuid(
-  ffi.Pointer<SignalFfiError> err,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-);
-
-@ffi.Native<ffi.Uint32 Function(ffi.Pointer<SignalFfiError>)>()
-external int signal_error_get_type(ffi.Pointer<SignalFfiError> err);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
-    ffi.Pointer<ffi.Uint32>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_error_get_retry_after_seconds(
-  ffi.Pointer<SignalFfiError> err,
-  ffi.Pointer<ffi.Uint32> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
-    ffi.Pointer<ffi.Uint32>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_error_get_tries_remaining(
-  ffi.Pointer<SignalFfiError> err,
-  ffi.Pointer<ffi.Uint32> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalFfiError>,
-    ffi.Pointer<SignalStringArray>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_error_get_unknown_fields(
-  ffi.Pointer<SignalFfiError> err,
-  ffi.Pointer<SignalStringArray> out,
-);
-
-@ffi.Native<ffi.Void Function(ffi.Pointer<SignalFfiError>)>()
-external void signal_error_free(ffi.Pointer<SignalFfiError> err);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPrivateKey>,
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_identitykeypair_deserialize(
-  ffi.Pointer<SignalMutPointerPrivateKey> private_key,
-  ffi.Pointer<SignalMutPointerPublicKey> public_key,
-  SignalBorrowedBuffer input,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Uint32>,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-    ffi.Uint64,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    ffi.UnsignedInt,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-    SignalConstPointerFfiPreKeyStoreStruct,
-    SignalConstPointerFfiSignedPreKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sealed_session_cipher_decrypt(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.Char>> sender_e164,
-  ffi.Pointer<ffi.Pointer<ffi.Char>> sender_uuid,
-  ffi.Pointer<ffi.Uint32> sender_device_id,
-  SignalBorrowedBuffer ctext,
-  SignalConstPointerPublicKey trust_root,
-  int timestamp,
-  ffi.Pointer<ffi.Char> local_e164,
-  ffi.Pointer<ffi.Char> local_uuid,
-  int local_device_id,
-  SignalConstPointerFfiSessionStoreStruct session_store,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_store,
-  SignalConstPointerFfiPreKeyStoreStruct prekey_store,
-  SignalConstPointerFfiSignedPreKeyStoreStruct signed_prekey_store,
-);
-
-@ffi.Native<ffi.Bool Function(ffi.UnsignedInt, SignalFfiLogger)>(
-  symbol: 'signal_init_logger',
-)
-external bool _signal_init_logger(int max_level, SignalFfiLogger logger);
-
-bool signal_init_logger(SignalLogLevel max_level, SignalFfiLogger logger) =>
-    _signal_init_logger(max_level.value, logger);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmSiv)
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_destroy(
-  SignalMutPointerAes256GcmSiv p,
+  ffi.Pointer<ffi.Char> name,
+  int device_id,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256Ctr32)>()
 external ffi.Pointer<SignalFfiError> signal_aes256_ctr32_destroy(
   SignalMutPointerAes256Ctr32 p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmEncryption)
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_destroy(
-  SignalMutPointerAes256GcmEncryption p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmDecryption)
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_decryption_destroy(
-  SignalMutPointerAes256GcmDecryption p,
 );
 
 @ffi.Native<
@@ -221,44 +143,10 @@ external ffi.Pointer<SignalFfiError> signal_aes256_ctr32_process(
 );
 
 @ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerAes256GcmEncryption>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmDecryption)
 >()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_new(
-  ffi.Pointer<SignalMutPointerAes256GcmEncryption> out,
-  SignalBorrowedBuffer key,
-  SignalBorrowedBuffer nonce,
-  SignalBorrowedBuffer associated_data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerAes256GcmEncryption,
-    SignalBorrowedMutableBuffer,
-    ffi.Uint32,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_update(
-  SignalMutPointerAes256GcmEncryption gcm,
-  SignalBorrowedMutableBuffer data,
-  int offset,
-  int length,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerAes256GcmEncryption,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_compute_tag(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerAes256GcmEncryption gcm,
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_decryption_destroy(
+  SignalMutPointerAes256GcmDecryption p,
 );
 
 @ffi.Native<
@@ -306,13 +194,74 @@ external ffi.Pointer<SignalFfiError> signal_aes256_gcm_decryption_verify_tag(
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerAes256GcmSiv>,
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerAes256GcmEncryption,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_compute_tag(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerAes256GcmEncryption gcm,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmEncryption)
+>()
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_destroy(
+  SignalMutPointerAes256GcmEncryption p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerAes256GcmEncryption>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
     SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_new(
-  ffi.Pointer<SignalMutPointerAes256GcmSiv> out,
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_new(
+  ffi.Pointer<SignalMutPointerAes256GcmEncryption> out,
   SignalBorrowedBuffer key,
+  SignalBorrowedBuffer nonce,
+  SignalBorrowedBuffer associated_data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerAes256GcmEncryption,
+    SignalBorrowedMutableBuffer,
+    ffi.Uint32,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_encryption_update(
+  SignalMutPointerAes256GcmEncryption gcm,
+  SignalBorrowedMutableBuffer data,
+  int offset,
+  int length,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerAes256GcmSiv,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_decrypt(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerAes256GcmSiv aes_gcm_siv,
+  SignalBorrowedBuffer ctext,
+  SignalBorrowedBuffer nonce,
+  SignalBorrowedBuffer associated_data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerAes256GcmSiv)
+>()
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_destroy(
+  SignalMutPointerAes256GcmSiv p,
 );
 
 @ffi.Native<
@@ -334,3364 +283,18 @@ external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_encrypt(
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerAes256GcmSiv,
+    ffi.Pointer<SignalMutPointerAes256GcmSiv>,
     SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_decrypt(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerAes256GcmSiv aes_gcm_siv,
-  SignalBorrowedBuffer ctext,
-  SignalBorrowedBuffer nonce,
-  SignalBorrowedBuffer associated_data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerCiphertextMessage)
->()
-external ffi.Pointer<SignalFfiError> signal_ciphertext_message_destroy(
-  SignalMutPointerCiphertextMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerDecryptionErrorMessage)
->()
-external ffi.Pointer<SignalFfiError> signal_decryption_error_message_destroy(
-  SignalMutPointerDecryptionErrorMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_decryption_error_message_clone(
-  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> new_obj,
-  SignalConstPointerDecryptionErrorMessage obj,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerFingerprint)>()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_destroy(
-  SignalMutPointerFingerprint p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerFingerprint>,
-    SignalConstPointerFingerprint,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_clone(
-  ffi.Pointer<SignalMutPointerFingerprint> new_obj,
-  SignalConstPointerFingerprint obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPlaintextContent)
->()
-external ffi.Pointer<SignalFfiError> signal_plaintext_content_destroy(
-  SignalMutPointerPlaintextContent p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPlaintextContent>,
-    SignalConstPointerPlaintextContent,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_plaintext_content_clone(
-  ffi.Pointer<SignalMutPointerPlaintextContent> new_obj,
-  SignalConstPointerPlaintextContent obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeyBundle)
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_destroy(
-  SignalMutPointerPreKeyBundle p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeyBundle>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_clone(
-  ffi.Pointer<SignalMutPointerPreKeyBundle> new_obj,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeyRecord)
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_destroy(
-  SignalMutPointerPreKeyRecord p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeyRecord>,
-    SignalConstPointerPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_clone(
-  ffi.Pointer<SignalMutPointerPreKeyRecord> new_obj,
-  SignalConstPointerPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeySignalMessage)
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_destroy(
-  SignalMutPointerPreKeySignalMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_clone(
-  ffi.Pointer<SignalMutPointerPreKeySignalMessage> new_obj,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPrivateKey)>()
-external ffi.Pointer<SignalFfiError> signal_privatekey_destroy(
-  SignalMutPointerPrivateKey p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPrivateKey>,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_clone(
-  ffi.Pointer<SignalMutPointerPrivateKey> new_obj,
-  SignalConstPointerPrivateKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerProtocolAddress)
->()
-external ffi.Pointer<SignalFfiError> signal_address_destroy(
-  SignalMutPointerProtocolAddress p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerProtocolAddress>,
-    SignalConstPointerProtocolAddress,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_address_clone(
-  ffi.Pointer<SignalMutPointerProtocolAddress> new_obj,
-  SignalConstPointerProtocolAddress obj,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPublicKey)>()
-external ffi.Pointer<SignalFfiError> signal_publickey_destroy(
-  SignalMutPointerPublicKey p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_clone(
-  ffi.Pointer<SignalMutPointerPublicKey> new_obj,
-  SignalConstPointerPublicKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderCertificate)
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_destroy(
-  SignalMutPointerSenderCertificate p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderCertificate>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_clone(
-  ffi.Pointer<SignalMutPointerSenderCertificate> new_obj,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_destroy(
-  SignalMutPointerSenderKeyDistributionMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_clone(
-  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> new_obj,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderKeyMessage)
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_destroy(
-  SignalMutPointerSenderKeyMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_clone(
-  ffi.Pointer<SignalMutPointerSenderKeyMessage> new_obj,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderKeyRecord)
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_record_destroy(
-  SignalMutPointerSenderKeyRecord p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyRecord>,
-    SignalConstPointerSenderKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_record_clone(
-  ffi.Pointer<SignalMutPointerSenderKeyRecord> new_obj,
-  SignalConstPointerSenderKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerCertificate)
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_destroy(
-  SignalMutPointerServerCertificate p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerCertificate>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_clone(
-  ffi.Pointer<SignalMutPointerServerCertificate> new_obj,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSessionRecord)
->()
-external ffi.Pointer<SignalFfiError> signal_session_record_destroy(
-  SignalMutPointerSessionRecord p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSessionRecord>,
-    SignalConstPointerSessionRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_session_record_clone(
-  ffi.Pointer<SignalMutPointerSessionRecord> new_obj,
-  SignalConstPointerSessionRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSignalMessage)
->()
-external ffi.Pointer<SignalFfiError> signal_message_destroy(
-  SignalMutPointerSignalMessage p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignalMessage>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_clone(
-  ffi.Pointer<SignalMutPointerSignalMessage> new_obj,
-  SignalConstPointerSignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSignedPreKeyRecord)
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_destroy(
-  SignalMutPointerSignedPreKeyRecord p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_clone(
-  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> new_obj,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberPreKeyRecord)
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_destroy(
-  SignalMutPointerKyberPreKeyRecord p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_clone(
-  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> new_obj,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_destroy(
-  SignalMutPointerUnidentifiedSenderMessageContent p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberKeyPair)
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_destroy(
-  SignalMutPointerKyberKeyPair p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberKeyPair>,
-    SignalConstPointerKyberKeyPair,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_clone(
-  ffi.Pointer<SignalMutPointerKyberKeyPair> new_obj,
-  SignalConstPointerKyberKeyPair obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberPublicKey)
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_public_key_destroy(
-  SignalMutPointerKyberPublicKey p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPublicKey>,
-    SignalConstPointerKyberPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_public_key_clone(
-  ffi.Pointer<SignalMutPointerKyberPublicKey> new_obj,
-  SignalConstPointerKyberPublicKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberSecretKey)
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_destroy(
-  SignalMutPointerKyberSecretKey p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberSecretKey>,
-    SignalConstPointerKyberSecretKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_clone(
-  ffi.Pointer<SignalMutPointerKyberSecretKey> new_obj,
-  SignalConstPointerKyberSecretKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalBorrowedMutableBuffer,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_hkdf_derive(
-  SignalBorrowedMutableBuffer output,
-  SignalBorrowedBuffer ikm,
-  SignalBorrowedBuffer label,
-  SignalBorrowedBuffer salt,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_service_id_service_id_binary(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_service_id_service_id_string(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_service_id_service_id_log(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_service_id_parse_from_service_id_binary(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalBorrowedBuffer input,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_service_id_parse_from_service_id_string(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Char> input,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerProtocolAddress>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_address_new(
-  ffi.Pointer<SignalMutPointerProtocolAddress> out,
-  ffi.Pointer<ffi.Char> name,
-  int device_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_deserialize(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPublicKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_get_public_key_bytes(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPublicKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerProtocolAddress,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_address_get_device_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerProtocolAddress obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerProtocolAddress,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_address_get_name(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerProtocolAddress obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_equals(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerPublicKey lhs,
-  SignalConstPointerPublicKey rhs,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Int32>,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_compare(
-  ffi.Pointer<ffi.Int32> out,
-  SignalConstPointerPublicKey key1,
-  SignalConstPointerPublicKey key2,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerPublicKey,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_publickey_verify(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerPublicKey key,
-  SignalBorrowedBuffer message,
-  SignalBorrowedBuffer signature,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPrivateKey>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_deserialize(
-  ffi.Pointer<SignalMutPointerPrivateKey> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPrivateKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<SignalMutPointerPrivateKey>)
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_generate(
-  ffi.Pointer<SignalMutPointerPrivateKey> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_get_public_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPrivateKey k,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPrivateKey,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_sign(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPrivateKey key,
-  SignalBorrowedBuffer message,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPrivateKey,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_privatekey_agree(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPrivateKey private_key,
-  SignalConstPointerPublicKey public_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerKyberPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_public_key_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerKyberPublicKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPublicKey>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_public_key_deserialize(
-  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerKyberSecretKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerKyberSecretKey obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberSecretKey>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_deserialize(
-  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerKyberPublicKey,
-    SignalConstPointerKyberPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_public_key_equals(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerKyberPublicKey lhs,
-  SignalConstPointerKyberPublicKey rhs,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberKeyPair>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_generate(
-  ffi.Pointer<SignalMutPointerKyberKeyPair> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPublicKey>,
-    SignalConstPointerKyberKeyPair,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_get_public_key(
-  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
-  SignalConstPointerKyberKeyPair key_pair,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberSecretKey>,
-    SignalConstPointerKyberKeyPair,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_get_secret_key(
-  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
-  SignalConstPointerKyberKeyPair key_pair,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_identitykeypair_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPublicKey public_key,
-  SignalConstPointerPrivateKey private_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPrivateKey,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_identitykeypair_sign_alternate_identity(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPublicKey public_key,
-  SignalConstPointerPrivateKey private_key,
-  SignalConstPointerPublicKey other_identity,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_identitykey_verify_alternate_identity(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerPublicKey public_key,
-  SignalConstPointerPublicKey other_identity,
-  SignalBorrowedBuffer signature,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerFingerprint>,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_new(
-  ffi.Pointer<SignalMutPointerFingerprint> out,
-  int iterations,
-  int version,
-  SignalBorrowedBuffer local_identifier,
-  SignalConstPointerPublicKey local_key,
-  SignalBorrowedBuffer remote_identifier,
-  SignalConstPointerPublicKey remote_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerFingerprint,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_scannable_encoding(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerFingerprint obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerFingerprint,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_display_string(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerFingerprint obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_fingerprint_compare(
-  ffi.Pointer<ffi.Bool> out,
-  SignalBorrowedBuffer fprint1,
-  SignalBorrowedBuffer fprint2,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignalMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_deserialize(
-  ffi.Pointer<SignalMutPointerSignalMessage> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_get_body(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_get_serialized(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_get_counter(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_get_message_version(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignalMessage>,
-    ffi.Uint8,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_new(
-  ffi.Pointer<SignalMutPointerSignalMessage> out,
-  int message_version,
-  SignalBorrowedBuffer mac_key,
-  SignalConstPointerPublicKey sender_ratchet_key,
-  int counter,
-  int previous_counter,
-  SignalBorrowedBuffer ciphertext,
-  SignalConstPointerPublicKey sender_identity_key,
-  SignalConstPointerPublicKey receiver_identity_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerSignalMessage,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_verify_mac(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerSignalMessage msg,
-  SignalConstPointerPublicKey sender_identity_key,
-  SignalConstPointerPublicKey receiver_identity_key,
-  SignalBorrowedBuffer mac_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_get_sender_ratchet_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerSignalMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
-    ffi.Uint8,
-    ffi.Uint32,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPublicKey,
-    SignalConstPointerSignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_new(
-  ffi.Pointer<SignalMutPointerPreKeySignalMessage> out,
-  int message_version,
-  int registration_id,
-  int pre_key_id,
-  int signed_pre_key_id,
-  SignalConstPointerPublicKey base_key,
-  SignalConstPointerPublicKey identity_key,
-  SignalConstPointerSignalMessage signal_message,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_get_base_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeySignalMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_signal_message_get_identity_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeySignalMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignalMessage>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_signal_message_get_signal_message(
-  ffi.Pointer<SignalMutPointerSignalMessage> out,
-  SignalConstPointerPreKeySignalMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_deserialize(
-  ffi.Pointer<SignalMutPointerPreKeySignalMessage> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_signal_message_get_registration_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_signal_message_get_signed_pre_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_signal_message_get_pre_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeySignalMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_get_version(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeySignalMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_deserialize(
-  ffi.Pointer<SignalMutPointerSenderKeyMessage> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_cipher_text(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_message_get_distribution_id(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_chain_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSenderKeyMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_iteration(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSenderKeyMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
-    ffi.Uint8,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_new(
-  ffi.Pointer<SignalMutPointerSenderKeyMessage> out,
-  int message_version,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
-  int chain_id,
-  int iteration,
-  SignalBorrowedBuffer ciphertext,
-  SignalConstPointerPrivateKey pk,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerSenderKeyMessage,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_message_verify_signature(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerSenderKeyMessage skm,
-  SignalConstPointerPublicKey pubkey,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_deserialize(
-  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_get_chain_key(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_get_distribution_id(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_get_chain_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_get_iteration(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSenderKeyDistributionMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
-    ffi.Uint8,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_distribution_message_new(
-  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
-  int message_version,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
-  int chain_id,
-  int iteration,
-  SignalBorrowedBuffer chainkey,
-  SignalConstPointerPublicKey pk,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerSenderKeyDistributionMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_get_signature_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerSenderKeyDistributionMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_deserialize(
-  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_get_timestamp(
-  ffi.Pointer<ffi.Uint64> out,
-  SignalConstPointerDecryptionErrorMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_get_device_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerDecryptionErrorMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_decryption_error_message_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerDecryptionErrorMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_get_ratchet_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerDecryptionErrorMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
-    SignalBorrowedBuffer,
-    ffi.Uint8,
-    ffi.Uint64,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_for_original_message(
-  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
-  SignalBorrowedBuffer original_bytes,
-  int original_type,
-  int original_timestamp,
-  int original_sender_device_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_decryption_error_message_extract_from_serialized_content(
-  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
-  SignalBorrowedBuffer bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPlaintextContent>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_plaintext_content_deserialize(
-  ffi.Pointer<SignalMutPointerPlaintextContent> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPlaintextContent,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_plaintext_content_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPlaintextContent obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPlaintextContent,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_plaintext_content_get_body(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPlaintextContent obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPlaintextContent>,
-    SignalConstPointerDecryptionErrorMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_plaintext_content_from_decryption_error_message(
-  ffi.Pointer<SignalMutPointerPlaintextContent> out,
-  SignalConstPointerDecryptionErrorMessage m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeyBundle>,
-    ffi.Uint32,
-    ffi.Uint32,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    SignalBorrowedBuffer,
-    SignalConstPointerPublicKey,
-    ffi.Uint32,
-    SignalConstPointerKyberPublicKey,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_new(
-  ffi.Pointer<SignalMutPointerPreKeyBundle> out,
-  int registration_id,
-  int device_id,
-  int prekey_id,
-  SignalConstPointerPublicKey prekey,
-  int signed_prekey_id,
-  SignalConstPointerPublicKey signed_prekey,
-  SignalBorrowedBuffer signed_prekey_signature,
-  SignalConstPointerPublicKey identity_key,
-  int kyber_prekey_id,
-  SignalConstPointerKyberPublicKey kyber_prekey,
-  SignalBorrowedBuffer kyber_prekey_signature,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_identity_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeyBundle p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_bundle_get_signed_pre_key_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_registration_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_device_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_bundle_get_signed_pre_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_pre_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_pre_key_public(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_bundle_get_signed_pre_key_public(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_kyber_pre_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyBundle obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPublicKey>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_bundle_get_kyber_pre_key_public(
-  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
-  SignalConstPointerPreKeyBundle bundle,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPreKeyBundle,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_pre_key_bundle_get_kyber_pre_key_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPreKeyBundle bundle,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_deserialize(
-  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_timestamp(
-  ffi.Pointer<ffi.Uint64> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_signed_pre_key_record_get_public_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPrivateKey>,
-    SignalConstPointerSignedPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_signed_pre_key_record_get_private_key(
-  ffi.Pointer<SignalMutPointerPrivateKey> out,
-  SignalConstPointerSignedPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_deserialize(
-  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_timestamp(
-  ffi.Pointer<ffi.Uint64> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPublicKey>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_public_key(
-  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberSecretKey>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_secret_key(
-  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberKeyPair>,
-    SignalConstPointerKyberPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_key_pair(
-  ffi.Pointer<SignalMutPointerKyberKeyPair> out,
-  SignalConstPointerKyberPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
-    ffi.Uint32,
-    ffi.Uint64,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPrivateKey,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_new(
-  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> out,
-  int id,
-  int timestamp,
-  SignalConstPointerPublicKey pub_key,
-  SignalConstPointerPrivateKey priv_key,
-  SignalBorrowedBuffer signature,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
-    ffi.Uint32,
-    ffi.Uint64,
-    SignalConstPointerKyberKeyPair,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_new(
-  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
-  int id,
-  int timestamp,
-  SignalConstPointerKyberKeyPair key_pair,
-  SignalBorrowedBuffer signature,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeyRecord>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_deserialize(
-  ffi.Pointer<SignalMutPointerPreKeyRecord> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_public_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPrivateKey>,
-    SignalConstPointerPreKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_private_key(
-  ffi.Pointer<SignalMutPointerPrivateKey> out,
-  SignalConstPointerPreKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPreKeyRecord>,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pre_key_record_new(
-  ffi.Pointer<SignalMutPointerPreKeyRecord> out,
-  int id,
-  SignalConstPointerPublicKey pub_key,
-  SignalConstPointerPrivateKey priv_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyRecord>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_record_deserialize(
-  ffi.Pointer<SignalMutPointerSenderKeyRecord> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderKeyRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_key_record_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderKeyRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerCertificate>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_deserialize(
-  ffi.Pointer<SignalMutPointerServerCertificate> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_get_serialized(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_get_certificate(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_get_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_get_key_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerServerCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_get_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerServerCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerCertificate>,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_certificate_new(
-  ffi.Pointer<SignalMutPointerServerCertificate> out,
-  int key_id,
-  SignalConstPointerPublicKey server_key,
-  SignalConstPointerPrivateKey trust_root,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderCertificate>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_deserialize(
-  ffi.Pointer<SignalMutPointerSenderCertificate> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_serialized(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_certificate(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_signature(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_sender_uuid(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_sender_e164(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_expiration(
-  ffi.Pointer<ffi.Uint64> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_device_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerPublicKey>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_key(
-  ffi.Pointer<SignalMutPointerPublicKey> out,
-  SignalConstPointerSenderCertificate obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerSenderCertificate,
-    SignalConstPointerPublicKey,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_validate(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerSenderCertificate cert,
-  SignalConstPointerPublicKey key,
-  int time,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerCertificate>,
-    SignalConstPointerSenderCertificate,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_certificate_get_server_certificate(
-  ffi.Pointer<SignalMutPointerServerCertificate> out,
-  SignalConstPointerSenderCertificate cert,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderCertificate>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Uint32,
-    SignalConstPointerPublicKey,
-    ffi.Uint64,
-    SignalConstPointerServerCertificate,
-    SignalConstPointerPrivateKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sender_certificate_new(
-  ffi.Pointer<SignalMutPointerSenderCertificate> out,
-  ffi.Pointer<ffi.Char> sender_uuid,
-  ffi.Pointer<ffi.Char> sender_e164,
-  int sender_device_id,
-  SignalConstPointerPublicKey sender_key,
-  int expiration,
-  SignalConstPointerServerCertificate signer_cert,
-  SignalConstPointerPrivateKey signer_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_deserialize(
-  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerUnidentifiedSenderMessageContent obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_get_contents(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerUnidentifiedSenderMessageContent obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_get_group_id_or_empty(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerUnidentifiedSenderMessageContent m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderCertificate>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_get_sender_cert(
-  ffi.Pointer<SignalMutPointerSenderCertificate> out,
-  SignalConstPointerUnidentifiedSenderMessageContent m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint8>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_get_msg_type(
-  ffi.Pointer<ffi.Uint8> out,
-  SignalConstPointerUnidentifiedSenderMessageContent m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_get_content_hint(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerUnidentifiedSenderMessageContent m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
-    SignalConstPointerCiphertextMessage,
-    SignalConstPointerSenderCertificate,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unidentified_sender_message_content_new(
-  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
-  SignalConstPointerCiphertextMessage message,
-  SignalConstPointerSenderCertificate sender,
-  int content_hint,
-  SignalBorrowedBuffer group_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint8>,
-    SignalConstPointerCiphertextMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_ciphertext_message_type(
-  ffi.Pointer<ffi.Uint8> out,
-  SignalConstPointerCiphertextMessage msg,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerCiphertextMessage,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_ciphertext_message_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerCiphertextMessage obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerCiphertextMessage>,
-    SignalConstPointerPlaintextContent,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_ciphertext_message_from_plaintext_content(
-  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
-  SignalConstPointerPlaintextContent m,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSessionRecord)
->()
-external ffi.Pointer<SignalFfiError>
-signal_session_record_archive_current_state(
-  SignalMutPointerSessionRecord session_record,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerSessionRecord,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_session_record_has_usable_sender_chain(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerSessionRecord s,
-  int now,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    SignalConstPointerSessionRecord,
-    SignalConstPointerPublicKey,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_session_record_current_ratchet_key_matches(
-  ffi.Pointer<ffi.Bool> out,
-  SignalConstPointerSessionRecord s,
-  SignalConstPointerPublicKey key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSessionRecord>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_session_record_deserialize(
-  ffi.Pointer<SignalMutPointerSessionRecord> out,
-  SignalBorrowedBuffer data,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSessionRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_session_record_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSessionRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSessionRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_session_record_get_local_registration_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSessionRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint32>,
-    SignalConstPointerSessionRecord,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_session_record_get_remote_registration_id(
-  ffi.Pointer<ffi.Uint32> out,
-  SignalConstPointerSessionRecord obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerPreKeyBundle,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_process_prekey_bundle(
-  SignalConstPointerPreKeyBundle bundle,
-  SignalConstPointerProtocolAddress protocol_address,
-  SignalConstPointerFfiSessionStoreStruct session_store,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-  int now,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerCiphertextMessage>,
-    SignalBorrowedBuffer,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_encrypt_message(
-  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
-  SignalBorrowedBuffer ptext,
-  SignalConstPointerProtocolAddress protocol_address,
-  SignalConstPointerFfiSessionStoreStruct session_store,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-  int now,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSignalMessage,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_decrypt_message(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSignalMessage message,
-  SignalConstPointerProtocolAddress protocol_address,
-  SignalConstPointerFfiSessionStoreStruct session_store,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerPreKeySignalMessage,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-    SignalConstPointerFfiPreKeyStoreStruct,
-    SignalConstPointerFfiSignedPreKeyStoreStruct,
-    SignalConstPointerFfiKyberPreKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_decrypt_pre_key_message(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerPreKeySignalMessage message,
-  SignalConstPointerProtocolAddress protocol_address,
-  SignalConstPointerFfiSessionStoreStruct session_store,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-  SignalConstPointerFfiPreKeyStoreStruct prekey_store,
-  SignalConstPointerFfiSignedPreKeyStoreStruct signed_prekey_store,
-  SignalConstPointerFfiKyberPreKeyStoreStruct kyber_prekey_store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sealed_session_cipher_encrypt(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerProtocolAddress destination,
-  SignalConstPointerUnidentifiedSenderMessageContent content,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedSliceOfConstPointerProtocolAddress,
-    SignalBorrowedSliceOfConstPointerSessionRecord,
-    SignalBorrowedBuffer,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sealed_sender_multi_recipient_encrypt(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedSliceOfConstPointerProtocolAddress recipients,
-  SignalBorrowedSliceOfConstPointerSessionRecord recipient_sessions,
-  SignalBorrowedBuffer excluded_recipients,
-  SignalConstPointerUnidentifiedSenderMessageContent content,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sealed_sender_multi_recipient_message_for_single_recipient(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer encoded_multi_recipient_message,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
-    SignalBorrowedBuffer,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sealed_session_cipher_decrypt_to_usmc(
-  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
-  SignalBorrowedBuffer ctext,
-  SignalConstPointerFfiIdentityKeyStoreStruct identity_store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
-    SignalConstPointerProtocolAddress,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerFfiSenderKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_sender_key_distribution_message_create(
-  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
-  SignalConstPointerProtocolAddress sender,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
-  SignalConstPointerFfiSenderKeyStoreStruct store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerSenderKeyDistributionMessage,
-    SignalConstPointerFfiSenderKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_process_sender_key_distribution_message(
-  SignalConstPointerProtocolAddress sender,
-  SignalConstPointerSenderKeyDistributionMessage
-  sender_key_distribution_message,
-  SignalConstPointerFfiSenderKeyStoreStruct store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerCiphertextMessage>,
-    SignalConstPointerProtocolAddress,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-    SignalConstPointerFfiSenderKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_group_encrypt_message(
-  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
-  SignalConstPointerProtocolAddress sender,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
-  SignalBorrowedBuffer message,
-  SignalConstPointerFfiSenderKeyStoreStruct store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerProtocolAddress,
-    SignalBorrowedBuffer,
-    SignalConstPointerFfiSenderKeyStoreStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_group_decrypt_message(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerProtocolAddress sender,
-  SignalBorrowedBuffer message,
-  SignalConstPointerFfiSenderKeyStoreStruct store,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<SignalOwnedBuffer>)
->()
-external ffi.Pointer<SignalFfiError>
-signal_device_transfer_generate_private_key(ffi.Pointer<SignalOwnedBuffer> out);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Uint8,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_device_transfer_generate_private_key_with_format(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  int key_format,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Char>,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_device_transfer_generate_certificate(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer private_key,
-  ffi.Pointer<ffi.Char> name,
-  int days_to_expire,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerSgxClientState>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_cds2_client_state_new(
-  ffi.Pointer<SignalMutPointerSgxClientState> out,
-  SignalBorrowedBuffer mrenclave,
-  SignalBorrowedBuffer attestation_msg,
-  int current_timestamp,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerHsmEnclaveClient)
->()
-external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_destroy(
-  SignalMutPointerHsmEnclaveClient p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerHsmEnclaveClient>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_new(
-  ffi.Pointer<SignalMutPointerHsmEnclaveClient> out,
-  SignalBorrowedBuffer trusted_public_key,
-  SignalBorrowedBuffer trusted_code_hashes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerHsmEnclaveClient,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_hsm_enclave_client_complete_handshake(
-  SignalMutPointerHsmEnclaveClient cli,
-  SignalBorrowedBuffer handshake_received,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerHsmEnclaveClient,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_established_send(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerHsmEnclaveClient cli,
-  SignalBorrowedBuffer plaintext_to_send,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerHsmEnclaveClient,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_established_recv(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerHsmEnclaveClient cli,
-  SignalBorrowedBuffer received_ciphertext,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerHsmEnclaveClient,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_initial_request(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerHsmEnclaveClient obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSgxClientState)
->()
-external ffi.Pointer<SignalFfiError> signal_sgx_client_state_destroy(
-  SignalMutPointerSgxClientState p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerSgxClientState,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sgx_client_state_initial_request(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerSgxClientState obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerSgxClientState,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sgx_client_state_complete_handshake(
-  SignalMutPointerSgxClientState cli,
-  SignalBorrowedBuffer handshake_received,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerSgxClientState,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sgx_client_state_established_send(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerSgxClientState cli,
-  SignalBorrowedBuffer plaintext_to_send,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerSgxClientState,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_sgx_client_state_established_recv(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerSgxClientState cli,
-  SignalBorrowedBuffer received_ciphertext,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_expiring_profile_key_credential_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_expiring_profile_key_credential_response_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_group_master_key_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_group_public_params_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError> signal_profile_key_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_ciphertext_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_commitment_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_request_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_request_context_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_presentation_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_request_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_request_context_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_response_check_valid_contents(
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_uuid_ciphertext_check_valid_contents(SignalBorrowedBuffer buffer);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerPublicParams)
->()
-external ffi.Pointer<SignalFfiError> signal_server_public_params_destroy(
-  SignalMutPointerServerPublicParams p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerPublicParams>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_public_params_deserialize(
-  ffi.Pointer<SignalMutPointerServerPublicParams> out,
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerPublicParams,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_public_params_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerPublicParams handle,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerSecretParams)
->()
-external ffi.Pointer<SignalFfiError> signal_server_secret_params_destroy(
-  SignalMutPointerServerSecretParams p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerSecretParams>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_secret_params_deserialize(
-  ffi.Pointer<SignalMutPointerServerSecretParams> out,
-  SignalBorrowedBuffer buffer,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerSecretParams,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_server_secret_params_serialize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerSecretParams handle,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_profile_key_get_commitment(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_profile_key_get_profile_key_version(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_profile_key_derive_access_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_generate_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_derive_from_master_key(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> master_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_group_secret_params_get_master_key(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_get_public_params(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_encrypt_service_id(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> service_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_decrypt_service_id(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> ciphertext,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_encrypt_profile_key(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_decrypt_profile_key(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_encrypt_blob_with_padding_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  SignalBorrowedBuffer plaintext,
-  int padding_len,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_secret_params_decrypt_blob_with_padding(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
-  SignalBorrowedBuffer ciphertext,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerSecretParams>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_generate_deterministic(
-  ffi.Pointer<SignalMutPointerServerSecretParams> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerServerPublicParams>,
-    SignalConstPointerServerSecretParams,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_get_public_params(
-  ffi.Pointer<SignalMutPointerServerPublicParams> out,
-  SignalConstPointerServerSecretParams params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_sign_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerServerSecretParams params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  SignalBorrowedBuffer message,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerPublicParams,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_get_endorsement_public_key(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerPublicParams params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_receive_auth_credential_with_pni_as_service_id(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerPublicParams params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> pni,
-  int redemption_time,
-  SignalBorrowedBuffer auth_credential_with_pni_response_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_create_auth_credential_with_pni_presentation_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_secret_params,
-  SignalBorrowedBuffer auth_credential_with_pni_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_create_profile_key_credential_request_context_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_receive_expiring_profile_key_credential(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> response,
-  int current_time_in_seconds,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_create_expiring_profile_key_credential_presentation_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key_credential,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_create_receipt_credential_request_context_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> receipt_serial,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_receive_receipt_credential(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> response,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_create_receipt_credential_presentation_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerPublicParams server_public_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_issue_auth_credential_with_pni_zkc_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> pni,
-  int redemption_time,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_auth_credential_with_pni_check_valid_contents(
-  SignalBorrowedBuffer bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_auth_credential_with_pni_response_check_valid_contents(
-  SignalBorrowedBuffer bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_verify_auth_credential_presentation(
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
-  SignalBorrowedBuffer presentation_bytes,
-  int current_time_in_seconds,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_issue_expiring_profile_key_credential_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> commitment,
-  int expiration_in_seconds,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_verify_profile_key_credential_presentation(
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
-  SignalBorrowedBuffer presentation_bytes,
-  int current_time_in_seconds,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Uint64,
-    ffi.Uint64,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_issue_receipt_credential_deterministic(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request,
-  int receipt_expiration_time,
-  int receipt_level,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerServerSecretParams,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_server_secret_params_verify_receipt_credential_presentation(
-  SignalConstPointerServerSecretParams server_secret_params,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_public_params_get_group_identifier(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerServerPublicParams,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_server_public_params_verify_signature(
-  SignalConstPointerServerPublicParams server_public_params,
-  SignalBorrowedBuffer message,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> notary_signature,
+external ffi.Pointer<SignalFfiError> signal_aes256_gcm_siv_new(
+  ffi.Pointer<SignalMutPointerAes256GcmSiv> out,
+  SignalBorrowedBuffer key,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
 signal_auth_credential_presentation_check_valid_contents(
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_auth_credential_presentation_get_uuid_ciphertext(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
   SignalBorrowedBuffer presentation_bytes,
 );
 
@@ -3722,535 +325,125 @@ signal_auth_credential_presentation_get_redemption_time(
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_request_context_get_request(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> context,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_expiring_profile_key_credential_get_expiration_time(
-  ffi.Pointer<ffi.Uint64> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> credential,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_presentation_check_valid_contents(
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
     SignalBorrowedBuffer,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_presentation_get_uuid_ciphertext(
+signal_auth_credential_presentation_get_uuid_ciphertext(
   ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
   SignalBorrowedBuffer presentation_bytes,
 );
 
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-  )
->()
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
-signal_profile_key_credential_presentation_get_profile_key_ciphertext(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_request_context_get_request(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_get_receipt_expiration_time(
-  ffi.Pointer<ffi.Uint64> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_get_receipt_level(
-  ffi.Pointer<ffi.Uint64> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_presentation_get_receipt_expiration_time(
-  ffi.Pointer<ffi.Uint64> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_presentation_get_receipt_level(
-  ffi.Pointer<ffi.Uint64> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_receipt_credential_presentation_get_receipt_serial(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
+signal_auth_credential_with_pni_check_valid_contents(
+  SignalBorrowedBuffer bytes,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
-signal_generic_server_secret_params_check_valid_contents(
-  SignalBorrowedBuffer params_bytes,
+signal_auth_credential_with_pni_response_check_valid_contents(
+  SignalBorrowedBuffer bytes,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<SignalCPromiseMutPointerAuthenticatedChatConnection>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Bool,
+    SignalBorrowedBytestringArray,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_generic_server_secret_params_generate_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+signal_authenticated_chat_connection_connect(
+  ffi.Pointer<SignalCPromiseMutPointerAuthenticatedChatConnection> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+  bool receive_stories,
+  SignalBorrowedBytestringArray languages,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
+    SignalMutPointerAuthenticatedChatConnection,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_generic_server_secret_params_get_public_params(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_generic_server_public_params_check_valid_contents(
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_secret_params_check_valid_contents(
-  SignalBorrowedBuffer params_bytes,
+signal_authenticated_chat_connection_destroy(
+  SignalMutPointerAuthenticatedChatConnection p,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerAuthenticatedChatConnection,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_call_link_secret_params_derive_from_root_key(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer root_key,
+signal_authenticated_chat_connection_disconnect(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerAuthenticatedChatConnection chat,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
+    ffi.Pointer<SignalMutPointerChatConnectionInfo>,
+    SignalConstPointerAuthenticatedChatConnection,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_secret_params_get_public_params(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer params_bytes,
+external ffi.Pointer<SignalFfiError> signal_authenticated_chat_connection_info(
+  ffi.Pointer<SignalMutPointerChatConnectionInfo> out,
+  SignalConstPointerAuthenticatedChatConnection chat,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerAuthenticatedChatConnection,
+    SignalConstPointerFfiChatListenerStruct,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_call_link_secret_params_decrypt_user_id(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalBorrowedBuffer params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> user_id,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_public_params_check_valid_contents(
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_context_check_valid_contents(
-  SignalBorrowedBuffer context_bytes,
+signal_authenticated_chat_connection_init_listener(
+  SignalConstPointerAuthenticatedChatConnection chat,
+  SignalConstPointerFfiChatListenerStruct listener,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_context_new_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer room_id,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+signal_authenticated_chat_connection_preconnect(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
+    ffi.Pointer<SignalCPromiseFfiChatResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerAuthenticatedChatConnection,
+    SignalConstPointerHttpRequest,
+    ffi.Uint32,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_context_get_request(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer context_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_check_valid_contents(
-  SignalBorrowedBuffer request_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_issue_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer request_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  int timestamp,
-  SignalBorrowedBuffer params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_response_check_valid_contents(
-  SignalBorrowedBuffer response_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_request_context_receive_response(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer context_bytes,
-  SignalBorrowedBuffer response_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_check_valid_contents(
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_present_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer credential_bytes,
-  SignalBorrowedBuffer room_id,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  SignalBorrowedBuffer server_params_bytes,
-  SignalBorrowedBuffer call_link_params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_presentation_check_valid_contents(
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_create_call_link_credential_presentation_verify(
-  SignalBorrowedBuffer presentation_bytes,
-  SignalBorrowedBuffer room_id,
-  int now,
-  SignalBorrowedBuffer server_params_bytes,
-  SignalBorrowedBuffer call_link_params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_response_check_valid_contents(
-  SignalBorrowedBuffer response_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_response_issue_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  int redemption_time,
-  SignalBorrowedBuffer params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_response_receive(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer response_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  int redemption_time,
-  SignalBorrowedBuffer params_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_check_valid_contents(
-  SignalBorrowedBuffer credential_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_present_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer credential_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
-  int redemption_time,
-  SignalBorrowedBuffer server_params_bytes,
-  SignalBorrowedBuffer call_link_params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_presentation_check_valid_contents(
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_presentation_verify(
-  SignalBorrowedBuffer presentation_bytes,
-  int now,
-  SignalBorrowedBuffer server_params_bytes,
-  SignalBorrowedBuffer call_link_params_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_call_link_auth_credential_presentation_get_user_id(
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
-  SignalBorrowedBuffer presentation_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_context_new(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> uuid,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_context_check_valid_contents(
-  SignalBorrowedBuffer context_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_context_get_request(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer context_bytes,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_check_valid_contents(
-  SignalBorrowedBuffer request_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-    ffi.Uint8,
-    ffi.Uint8,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_issue_deterministic(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer request_bytes,
-  int redemption_time,
-  int backup_level,
-  int credential_type,
-  SignalBorrowedBuffer params_bytes,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_response_check_valid_contents(
-  SignalBorrowedBuffer response_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_backup_auth_credential_request_context_receive_response(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer context_bytes,
-  SignalBorrowedBuffer response_bytes,
-  int expected_redemption_time,
-  SignalBorrowedBuffer params_bytes,
+external ffi.Pointer<SignalFfiError> signal_authenticated_chat_connection_send(
+  ffi.Pointer<SignalCPromiseFfiChatResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerAuthenticatedChatConnection chat,
+  SignalConstPointerHttpRequest http_request,
+  int timeout_millis,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
@@ -4332,6 +525,1570 @@ signal_backup_auth_credential_presentation_verify(
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_check_valid_contents(
+  SignalBorrowedBuffer request_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_context_check_valid_contents(
+  SignalBorrowedBuffer context_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_context_get_request(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer context_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_context_new(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> uuid,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_context_receive_response(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer context_bytes,
+  SignalBorrowedBuffer response_bytes,
+  int expected_redemption_time,
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    ffi.Uint8,
+    ffi.Uint8,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_request_issue_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer request_bytes,
+  int redemption_time,
+  int backup_level,
+  int credential_type,
+  SignalBorrowedBuffer params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_auth_credential_response_check_valid_contents(
+  SignalBorrowedBuffer response_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_backup_key_derive_backup_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPrivateKey>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_backup_key_derive_ec_key(
+  ffi.Pointer<SignalMutPointerPrivateKey> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_key_derive_local_backup_metadata_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_key_derive_media_encryption_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> media_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_backup_key_derive_media_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Char> media_name,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_key_derive_thumbnail_transit_encryption_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> media_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerBackupRestoreResponse)
+>()
+external ffi.Pointer<SignalFfiError> signal_backup_restore_response_destroy(
+  SignalMutPointerBackupRestoreResponse p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerBackupRestoreResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_restore_response_get_forward_secrecy_token(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerBackupRestoreResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerBackupRestoreResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_restore_response_get_next_backup_secret_data(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerBackupRestoreResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerBackupStoreResponse)
+>()
+external ffi.Pointer<SignalFfiError> signal_backup_store_response_destroy(
+  SignalMutPointerBackupStoreResponse p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerBackupStoreResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_store_response_get_forward_secrecy_token(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerBackupStoreResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerBackupStoreResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_store_response_get_next_backup_secret_data(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerBackupStoreResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerBackupStoreResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_backup_store_response_get_opaque_metadata(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerBackupStoreResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerBridgedStringMap>,
+    SignalConstPointerBridgedStringMap,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_bridged_string_map_clone(
+  ffi.Pointer<SignalMutPointerBridgedStringMap> new_obj,
+  SignalConstPointerBridgedStringMap obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerBridgedStringMap)
+>()
+external ffi.Pointer<SignalFfiError> signal_bridged_string_map_destroy(
+  SignalMutPointerBridgedStringMap p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerBridgedStringMap,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_bridged_string_map_insert(
+  SignalMutPointerBridgedStringMap map,
+  ffi.Pointer<ffi.Char> key,
+  ffi.Pointer<ffi.Char> value,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerBridgedStringMap>,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_bridged_string_map_new(
+  ffi.Pointer<SignalMutPointerBridgedStringMap> out,
+  int initial_capacity,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_check_valid_contents(
+  SignalBorrowedBuffer credential_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_present_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer credential_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  int redemption_time,
+  SignalBorrowedBuffer server_params_bytes,
+  SignalBorrowedBuffer call_link_params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_presentation_check_valid_contents(
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_presentation_get_user_id(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_presentation_verify(
+  SignalBorrowedBuffer presentation_bytes,
+  int now,
+  SignalBorrowedBuffer server_params_bytes,
+  SignalBorrowedBuffer call_link_params_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_response_check_valid_contents(
+  SignalBorrowedBuffer response_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_response_issue_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  int redemption_time,
+  SignalBorrowedBuffer params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_auth_credential_response_receive(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer response_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  int redemption_time,
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_public_params_check_valid_contents(
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_secret_params_check_valid_contents(
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_secret_params_decrypt_user_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalBorrowedBuffer params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_secret_params_derive_from_root_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer root_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_secret_params_encrypt_user_id(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalBorrowedBuffer params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_call_link_secret_params_get_public_params(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSgxClientState>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_cds2_client_state_new(
+  ffi.Pointer<SignalMutPointerSgxClientState> out,
+  SignalBorrowedBuffer mrenclave,
+  SignalBorrowedBuffer attestation_msg,
+  int current_timestamp,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseFfiCdsiLookupResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerCdsiLookup,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_complete(
+  ffi.Pointer<SignalCPromiseFfiCdsiLookupResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerCdsiLookup lookup,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerCdsiLookup)>()
+external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_destroy(
+  SignalMutPointerCdsiLookup p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerCdsiLookup>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    SignalConstPointerLookupRequest,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_new(
+  ffi.Pointer<SignalCPromiseMutPointerCdsiLookup> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+  SignalConstPointerLookupRequest request,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerCdsiLookup,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_token(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerCdsiLookup lookup,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerChatConnectionInfo,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_chat_connection_info_description(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerChatConnectionInfo connection_info,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint8>,
+    SignalConstPointerChatConnectionInfo,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_chat_connection_info_ip_version(
+  ffi.Pointer<ffi.Uint8> out,
+  SignalConstPointerChatConnectionInfo connection_info,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint16>,
+    SignalConstPointerChatConnectionInfo,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_chat_connection_info_local_port(
+  ffi.Pointer<ffi.Uint16> out,
+  SignalConstPointerChatConnectionInfo connection_info,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerCiphertextMessage)
+>()
+external ffi.Pointer<SignalFfiError> signal_ciphertext_message_destroy(
+  SignalMutPointerCiphertextMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerCiphertextMessage>,
+    SignalConstPointerPlaintextContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_ciphertext_message_from_plaintext_content(
+  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
+  SignalConstPointerPlaintextContent m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerCiphertextMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_ciphertext_message_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerCiphertextMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint8>,
+    SignalConstPointerCiphertextMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_ciphertext_message_type(
+  ffi.Pointer<ffi.Uint8> out,
+  SignalConstPointerCiphertextMessage msg,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionInfo)
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_info_destroy(
+  SignalMutPointerConnectionInfo p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_manager_clear_proxy(
+  SignalConstPointerConnectionManager connection_manager,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionManager)
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_manager_destroy(
+  SignalMutPointerConnectionManager p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerConnectionManager>,
+    ffi.Uint8,
+    ffi.Pointer<ffi.Char>,
+    SignalMutPointerBridgedStringMap,
+    ffi.Uint8,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_manager_new(
+  ffi.Pointer<SignalMutPointerConnectionManager> out,
+  int environment,
+  ffi.Pointer<ffi.Char> user_agent,
+  SignalMutPointerBridgedStringMap remote_config,
+  int build_variant,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
+>()
+external ffi.Pointer<SignalFfiError>
+signal_connection_manager_on_network_change(
+  SignalConstPointerConnectionManager connection_manager,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerConnectionManager,
+    ffi.Bool,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_connection_manager_set_censorship_circumvention_enabled(
+  SignalConstPointerConnectionManager connection_manager,
+  bool enabled,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
+>()
+external ffi.Pointer<SignalFfiError>
+signal_connection_manager_set_invalid_proxy(
+  SignalConstPointerConnectionManager connection_manager,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerConnectionManager,
+    SignalConstPointerConnectionProxyConfig,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_manager_set_proxy(
+  SignalConstPointerConnectionManager connection_manager,
+  SignalConstPointerConnectionProxyConfig proxy,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerConnectionManager,
+    SignalMutPointerBridgedStringMap,
+    ffi.Uint8,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_connection_manager_set_remote_config(
+  SignalConstPointerConnectionManager connection_manager,
+  SignalMutPointerBridgedStringMap remote_config,
+  int build_variant,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerConnectionProxyConfig>,
+    SignalConstPointerConnectionProxyConfig,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_clone(
+  ffi.Pointer<SignalMutPointerConnectionProxyConfig> new_obj,
+  SignalConstPointerConnectionProxyConfig obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionProxyConfig)
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_destroy(
+  SignalMutPointerConnectionProxyConfig p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerConnectionProxyConfig>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Int32,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_new(
+  ffi.Pointer<SignalMutPointerConnectionProxyConfig> out,
+  ffi.Pointer<ffi.Char> scheme,
+  ffi.Pointer<ffi.Char> host,
+  int port,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_check_valid_contents(
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_present_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer credential_bytes,
+  SignalBorrowedBuffer room_id,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  SignalBorrowedBuffer server_params_bytes,
+  SignalBorrowedBuffer call_link_params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_presentation_check_valid_contents(
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_presentation_verify(
+  SignalBorrowedBuffer presentation_bytes,
+  SignalBorrowedBuffer room_id,
+  int now,
+  SignalBorrowedBuffer server_params_bytes,
+  SignalBorrowedBuffer call_link_params_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_check_valid_contents(
+  SignalBorrowedBuffer request_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_context_check_valid_contents(
+  SignalBorrowedBuffer context_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_context_get_request(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer context_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_context_new_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer room_id,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_context_receive_response(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer context_bytes,
+  SignalBorrowedBuffer response_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_request_issue_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer request_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  int timestamp,
+  SignalBorrowedBuffer params_bytes,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_create_call_link_credential_response_check_valid_contents(
+  SignalBorrowedBuffer response_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignalMessage,
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerFfiSessionStoreStruct,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_decrypt_message(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignalMessage message,
+  SignalConstPointerProtocolAddress protocol_address,
+  SignalConstPointerFfiSessionStoreStruct session_store,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPreKeySignalMessage,
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerFfiSessionStoreStruct,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+    SignalConstPointerFfiPreKeyStoreStruct,
+    SignalConstPointerFfiSignedPreKeyStoreStruct,
+    SignalConstPointerFfiKyberPreKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_decrypt_pre_key_message(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPreKeySignalMessage message,
+  SignalConstPointerProtocolAddress protocol_address,
+  SignalConstPointerFfiSessionStoreStruct session_store,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+  SignalConstPointerFfiPreKeyStoreStruct prekey_store,
+  SignalConstPointerFfiSignedPreKeyStoreStruct signed_prekey_store,
+  SignalConstPointerFfiKyberPreKeyStoreStruct kyber_prekey_store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
+    SignalConstPointerDecryptionErrorMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_decryption_error_message_clone(
+  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> new_obj,
+  SignalConstPointerDecryptionErrorMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_deserialize(
+  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerDecryptionErrorMessage)
+>()
+external ffi.Pointer<SignalFfiError> signal_decryption_error_message_destroy(
+  SignalMutPointerDecryptionErrorMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_extract_from_serialized_content(
+  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
+  SignalBorrowedBuffer bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerDecryptionErrorMessage>,
+    SignalBorrowedBuffer,
+    ffi.Uint8,
+    ffi.Uint64,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_for_original_message(
+  ffi.Pointer<SignalMutPointerDecryptionErrorMessage> out,
+  SignalBorrowedBuffer original_bytes,
+  int original_type,
+  int original_timestamp,
+  int original_sender_device_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerDecryptionErrorMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_get_device_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerDecryptionErrorMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerDecryptionErrorMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_get_ratchet_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerDecryptionErrorMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerDecryptionErrorMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_decryption_error_message_get_timestamp(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerDecryptionErrorMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerDecryptionErrorMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_decryption_error_message_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerDecryptionErrorMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Char>,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_device_transfer_generate_certificate(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer private_key,
+  ffi.Pointer<ffi.Char> name,
+  int days_to_expire,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<SignalOwnedBuffer>)
+>()
+external ffi.Pointer<SignalFfiError>
+signal_device_transfer_generate_private_key(ffi.Pointer<SignalOwnedBuffer> out);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Uint8,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_device_transfer_generate_private_key_with_format(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  int key_format,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerCiphertextMessage>,
+    SignalBorrowedBuffer,
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerFfiSessionStoreStruct,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_encrypt_message(
+  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
+  SignalBorrowedBuffer ptext,
+  SignalConstPointerProtocolAddress protocol_address,
+  SignalConstPointerFfiSessionStoreStruct session_store,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+  int now,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<SignalFfiError>)>()
+external void signal_error_free(ffi.Pointer<SignalFfiError> err);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerProtocolAddress>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_address(
+  ffi.Pointer<SignalMutPointerProtocolAddress> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalPairOfc_charu32>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_invalid_protocol_address(
+  ffi.Pointer<SignalPairOfc_charu32> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_message(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBufferOfFfiMismatchedDevicesError>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_mismatched_device_errors(
+  ffi.Pointer<SignalOwnedBufferOfFfiMismatchedDevicesError> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_our_fingerprint_version(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalPairOfc_charOwnedBufferOfc_uchar>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_rate_limit_challenge(
+  ffi.Pointer<SignalPairOfc_charOwnedBufferOfc_uchar> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalPairOfc_charbool>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_error_get_registration_error_not_deliverable(
+  ffi.Pointer<SignalPairOfc_charbool> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<SignalFfiError>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_registration_lock(
+  ffi.Pointer<ffi.Uint64> out_time_remaining_seconds,
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out_svr2_username,
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out_svr2_password,
+  ffi.Pointer<SignalFfiError> err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_retry_after_seconds(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_their_fingerprint_version(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_tries_remaining(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<ffi.Uint32 Function(ffi.Pointer<SignalFfiError>)>()
+external int signal_error_get_type(ffi.Pointer<SignalFfiError> err);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalStringArray>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_unknown_fields(
+  ffi.Pointer<SignalStringArray> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalUnwindSafeArgSignalFfiError,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_error_get_uuid(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalUnwindSafeArgSignalFfiError err,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_expiring_profile_key_credential_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_expiring_profile_key_credential_get_expiration_time(
+  ffi.Pointer<ffi.Uint64> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> credential,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_expiring_profile_key_credential_response_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerFingerprint>,
+    SignalConstPointerFingerprint,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_clone(
+  ffi.Pointer<SignalMutPointerFingerprint> new_obj,
+  SignalConstPointerFingerprint obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_compare(
+  ffi.Pointer<ffi.Bool> out,
+  SignalBorrowedBuffer fprint1,
+  SignalBorrowedBuffer fprint2,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerFingerprint)>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_destroy(
+  SignalMutPointerFingerprint p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerFingerprint,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_display_string(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerFingerprint obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerFingerprint>,
+    ffi.Uint32,
+    ffi.Uint32,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_new(
+  ffi.Pointer<SignalMutPointerFingerprint> out,
+  int iterations,
+  int version,
+  SignalBorrowedBuffer local_identifier,
+  SignalConstPointerPublicKey local_key,
+  SignalBorrowedBuffer remote_identifier,
+  SignalConstPointerPublicKey remote_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerFingerprint,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_fingerprint_scannable_encoding(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerFingerprint obj,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.UnsignedChar>, ffi.Size)>()
+external void signal_free_buffer(
+  ffi.Pointer<ffi.UnsignedChar> buf,
+  int buf_len,
+);
+
+@ffi.Native<ffi.Void Function(SignalBytestringArray)>()
+external void signal_free_bytestring_array(SignalBytestringArray array);
+
+@ffi.Native<ffi.Void Function(SignalOwnedBufferOfFfiMismatchedDevicesError)>()
+external void signal_free_list_of_mismatched_device_errors(
+  SignalOwnedBufferOfFfiMismatchedDevicesError buffer,
+);
+
+@ffi.Native<ffi.Void Function(SignalOwnedBufferOfFfiRegisterResponseBadge)>()
+external void signal_free_list_of_register_response_badges(
+  SignalOwnedBufferOfFfiRegisterResponseBadge buffer,
+);
+
+@ffi.Native<
+  ffi.Void Function(SignalOwnedBufferOfServiceIdFixedWidthBinaryBytes)
+>()
+external void signal_free_list_of_service_ids(
+  SignalOwnedBufferOfServiceIdFixedWidthBinaryBytes buffer,
+);
+
+@ffi.Native<ffi.Void Function(SignalOwnedBufferOfCStringPtr)>()
+external void signal_free_list_of_strings(SignalOwnedBufferOfCStringPtr buffer);
+
+@ffi.Native<ffi.Void Function(SignalOwnedBufferOfFfiCdsiLookupResponseEntry)>()
+external void signal_free_lookup_response_entry_list(
+  SignalOwnedBufferOfFfiCdsiLookupResponseEntry buffer,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Char>)>()
+external void signal_free_string(ffi.Pointer<ffi.Char> buf);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_generic_server_public_params_check_valid_contents(
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_generic_server_secret_params_check_valid_contents(
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_generic_server_secret_params_generate_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_generic_server_secret_params_get_public_params(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer params_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerProtocolAddress,
+    SignalBorrowedBuffer,
+    SignalConstPointerFfiSenderKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_group_decrypt_message(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerProtocolAddress sender,
+  SignalBorrowedBuffer message,
+  SignalConstPointerFfiSenderKeyStoreStruct store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerCiphertextMessage>,
+    SignalConstPointerProtocolAddress,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    SignalConstPointerFfiSenderKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_group_encrypt_message(
+  ffi.Pointer<SignalMutPointerCiphertextMessage> out,
+  SignalConstPointerProtocolAddress sender,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
+  SignalBorrowedBuffer message,
+  SignalConstPointerFfiSenderKeyStoreStruct store,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_group_master_key_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_group_public_params_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_public_params_get_group_identifier(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_decrypt_blob_with_padding(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  SignalBorrowedBuffer ciphertext,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_decrypt_profile_key(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_decrypt_service_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> ciphertext,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_derive_from_master_key(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> master_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_encrypt_blob_with_padding_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  SignalBorrowedBuffer plaintext,
+  int padding_len,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_encrypt_profile_key(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_encrypt_service_id(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> service_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_generate_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_group_secret_params_get_master_key(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_secret_params_get_public_params(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> params,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
 signal_group_send_derived_key_pair_check_valid_contents(
   SignalBorrowedBuffer bytes,
 );
@@ -4350,80 +2107,18 @@ signal_group_send_derived_key_pair_for_expiration(
   SignalConstPointerServerSecretParams server_params,
 );
 
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
-external ffi.Pointer<SignalFfiError>
-signal_group_send_endorsements_response_check_valid_contents(
-  SignalBorrowedBuffer bytes,
-);
-
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalOwnedBuffer>,
     SignalBorrowedBuffer,
     SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_group_send_endorsements_response_issue_deterministic(
+signal_group_send_endorsement_call_link_params_to_token(
   ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer concatenated_group_member_ciphertexts,
-  SignalBorrowedBuffer key_pair,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint64>,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_send_endorsements_response_get_expiration(
-  ffi.Pointer<ffi.Uint64> out,
-  SignalBorrowedBuffer response_bytes,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalBytestringArray>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Uint64,
-    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
-    SignalConstPointerServerPublicParams,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_send_endorsements_response_receive_and_combine_with_service_ids(
-  ffi.Pointer<SignalBytestringArray> out,
-  SignalBorrowedBuffer response_bytes,
-  SignalBorrowedBuffer group_members,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> local_user,
-  int now,
-  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_params,
-  SignalConstPointerServerPublicParams server_params,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalBytestringArray>,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    SignalBorrowedBuffer,
-    ffi.Uint64,
-    SignalConstPointerServerPublicParams,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_group_send_endorsements_response_receive_and_combine_with_ciphertexts(
-  ffi.Pointer<SignalBytestringArray> out,
-  SignalBorrowedBuffer response_bytes,
-  SignalBorrowedBuffer concatenated_group_member_ciphertexts,
-  SignalBorrowedBuffer local_user_ciphertext,
-  int now,
-  SignalConstPointerServerPublicParams server_params,
+  SignalBorrowedBuffer endorsement,
+  SignalBorrowedBuffer call_link_secret_params_serialized,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
@@ -4469,19 +2164,78 @@ external ffi.Pointer<SignalFfiError> signal_group_send_endorsement_to_token(
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
-signal_group_send_token_check_valid_contents(SignalBorrowedBuffer bytes);
+signal_group_send_endorsements_response_check_valid_contents(
+  SignalBorrowedBuffer bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_send_endorsements_response_get_expiration(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalBorrowedBuffer response_bytes,
+);
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalOwnedBuffer>,
     SignalBorrowedBuffer,
-    ffi.Uint64,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_group_send_token_to_full_token(
+external ffi.Pointer<SignalFfiError>
+signal_group_send_endorsements_response_issue_deterministic(
   ffi.Pointer<SignalOwnedBuffer> out,
-  SignalBorrowedBuffer token,
-  int expiration,
+  SignalBorrowedBuffer concatenated_group_member_ciphertexts,
+  SignalBorrowedBuffer key_pair,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalBytestringArray>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    SignalConstPointerServerPublicParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_send_endorsements_response_receive_and_combine_with_ciphertexts(
+  ffi.Pointer<SignalBytestringArray> out,
+  SignalBorrowedBuffer response_bytes,
+  SignalBorrowedBuffer concatenated_group_member_ciphertexts,
+  SignalBorrowedBuffer local_user_ciphertext,
+  int now,
+  SignalConstPointerServerPublicParams server_params,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalBytestringArray>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_group_send_endorsements_response_receive_and_combine_with_service_ids(
+  ffi.Pointer<SignalBytestringArray> out,
+  SignalBorrowedBuffer response_bytes,
+  SignalBorrowedBuffer group_members,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> local_user,
+  int now,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_params,
+  SignalConstPointerServerPublicParams server_params,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
@@ -4515,295 +2269,134 @@ external ffi.Pointer<SignalFfiError> signal_group_send_full_token_verify(
   SignalBorrowedBuffer key_pair,
 );
 
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionInfo)
->()
-external ffi.Pointer<SignalFfiError> signal_connection_info_destroy(
-  SignalMutPointerConnectionInfo p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionProxyConfig)
->()
-external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_destroy(
-  SignalMutPointerConnectionProxyConfig p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerConnectionProxyConfig>,
-    SignalConstPointerConnectionProxyConfig,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_clone(
-  ffi.Pointer<SignalMutPointerConnectionProxyConfig> new_obj,
-  SignalConstPointerConnectionProxyConfig obj,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerConnectionProxyConfig>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Int32,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_connection_proxy_config_new(
-  ffi.Pointer<SignalMutPointerConnectionProxyConfig> out,
-  ffi.Pointer<ffi.Char> scheme,
-  ffi.Pointer<ffi.Char> host,
-  int port,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Char> password,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerConnectionManager)
->()
-external ffi.Pointer<SignalFfiError> signal_connection_manager_destroy(
-  SignalMutPointerConnectionManager p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerConnectionManager>,
-    ffi.Uint8,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_connection_manager_new(
-  ffi.Pointer<SignalMutPointerConnectionManager> out,
-  int environment,
-  ffi.Pointer<ffi.Char> user_agent,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerConnectionManager,
-    SignalConstPointerConnectionProxyConfig,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_connection_manager_set_proxy(
-  SignalConstPointerConnectionManager connection_manager,
-  SignalConstPointerConnectionProxyConfig proxy,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
->()
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
 external ffi.Pointer<SignalFfiError>
-signal_connection_manager_set_invalid_proxy(
-  SignalConstPointerConnectionManager connection_manager,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
->()
-external ffi.Pointer<SignalFfiError> signal_connection_manager_clear_proxy(
-  SignalConstPointerConnectionManager connection_manager,
-);
+signal_group_send_token_check_valid_contents(SignalBorrowedBuffer bytes);
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerConnectionManager,
-    ffi.Bool,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_connection_manager_set_censorship_circumvention_enabled(
-  SignalConstPointerConnectionManager connection_manager,
-  bool enabled,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalConstPointerConnectionManager)
->()
-external ffi.Pointer<SignalFfiError>
-signal_connection_manager_on_network_change(
-  SignalConstPointerConnectionManager connection_manager,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<SignalOwnedBuffer>,
     SignalBorrowedBuffer,
+    ffi.Uint64,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_create_otp(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  ffi.Pointer<ffi.Char> username,
-  SignalBorrowedBuffer secret,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_create_otp_from_base64(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Char> secret,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerLookupRequest)
->()
-external ffi.Pointer<SignalFfiError> signal_lookup_request_destroy(
-  SignalMutPointerLookupRequest p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerLookupRequest>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_lookup_request_new(
-  ffi.Pointer<SignalMutPointerLookupRequest> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerLookupRequest,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_lookup_request_add_e164(
-  SignalConstPointerLookupRequest request,
-  ffi.Pointer<ffi.Char> e164,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerLookupRequest,
-    ffi.Pointer<ffi.Char>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_lookup_request_add_previous_e164(
-  SignalConstPointerLookupRequest request,
-  ffi.Pointer<ffi.Char> e164,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerLookupRequest,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_lookup_request_set_token(
-  SignalConstPointerLookupRequest request,
+external ffi.Pointer<SignalFfiError> signal_group_send_token_to_full_token(
+  ffi.Pointer<SignalOwnedBuffer> out,
   SignalBorrowedBuffer token,
+  int expiration,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerLookupRequest,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedMutableBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_hex_encode(
+  SignalBorrowedMutableBuffer output,
+  SignalBorrowedBuffer input,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalBorrowedMutableBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_hkdf_derive(
+  SignalBorrowedMutableBuffer output,
+  SignalBorrowedBuffer ikm,
+  SignalBorrowedBuffer label,
+  SignalBorrowedBuffer salt,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerHsmEnclaveClient,
     SignalBorrowedBuffer,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_lookup_request_add_aci_and_access_key(
-  SignalConstPointerLookupRequest request,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
-  SignalBorrowedBuffer access_key,
-);
-
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerCdsiLookup)>()
-external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_destroy(
-  SignalMutPointerCdsiLookup p,
+signal_hsm_enclave_client_complete_handshake(
+  SignalMutPointerHsmEnclaveClient cli,
+  SignalBorrowedBuffer handshake_received,
 );
 
 @ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseMutPointerCdsiLookup>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerConnectionManager,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    SignalConstPointerLookupRequest,
-  )
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerHsmEnclaveClient)
 >()
-external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_new(
-  ffi.Pointer<SignalCPromiseMutPointerCdsiLookup> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerConnectionManager connection_manager,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Char> password,
-  SignalConstPointerLookupRequest request,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseMutPointerCdsiLookup>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerConnectionManager,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    SignalConstPointerLookupRequest,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_new_routes(
-  ffi.Pointer<SignalCPromiseMutPointerCdsiLookup> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerConnectionManager connection_manager,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Char> password,
-  SignalConstPointerLookupRequest request,
+external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_destroy(
+  SignalMutPointerHsmEnclaveClient p,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalOwnedBuffer>,
-    SignalConstPointerCdsiLookup,
+    SignalMutPointerHsmEnclaveClient,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_token(
+external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_established_recv(
   ffi.Pointer<SignalOwnedBuffer> out,
-  SignalConstPointerCdsiLookup lookup,
+  SignalMutPointerHsmEnclaveClient cli,
+  SignalBorrowedBuffer received_ciphertext,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseFfiCdsiLookupResponse>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerCdsiLookup,
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerHsmEnclaveClient,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_cdsi_lookup_complete(
-  ffi.Pointer<SignalCPromiseFfiCdsiLookupResponse> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerCdsiLookup lookup,
+external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_established_send(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerHsmEnclaveClient cli,
+  SignalBorrowedBuffer plaintext_to_send,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerHsmEnclaveClient,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_initial_request(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerHsmEnclaveClient obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerHsmEnclaveClient>,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_hsm_enclave_client_new(
+  ffi.Pointer<SignalMutPointerHsmEnclaveClient> out,
+  SignalBorrowedBuffer trusted_public_key,
+  SignalBorrowedBuffer trusted_code_hashes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerHttpRequest,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_http_request_add_header(
+  SignalConstPointerHttpRequest request,
+  ffi.Pointer<ffi.Char> name,
+  ffi.Pointer<ffi.Char> value,
 );
 
 @ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerHttpRequest)>()
 external ffi.Pointer<SignalFfiError> signal_http_request_destroy(
   SignalMutPointerHttpRequest p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerUnauthenticatedChatConnection,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_destroy(
-  SignalMutPointerUnauthenticatedChatConnection p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerAuthenticatedChatConnection,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_authenticated_chat_connection_destroy(
-  SignalMutPointerAuthenticatedChatConnection p,
 );
 
 @ffi.Native<
@@ -4836,238 +2429,877 @@ external ffi.Pointer<SignalFfiError> signal_http_request_new_without_body(
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerHttpRequest,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_http_request_add_header(
-  SignalConstPointerHttpRequest request,
-  ffi.Pointer<ffi.Char> name,
-  ffi.Pointer<ffi.Char> value,
+external ffi.Pointer<SignalFfiError>
+signal_identitykey_verify_alternate_identity(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerPublicKey public_key,
+  SignalConstPointerPublicKey other_identity,
+  SignalBorrowedBuffer signature,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint16>,
-    SignalConstPointerChatConnectionInfo,
+    ffi.Pointer<SignalPairOfMutPointerPublicKeyMutPointerPrivateKey>,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_chat_connection_info_local_port(
-  ffi.Pointer<ffi.Uint16> out,
-  SignalConstPointerChatConnectionInfo connection_info,
+external ffi.Pointer<SignalFfiError> signal_identitykeypair_deserialize(
+  ffi.Pointer<SignalPairOfMutPointerPublicKeyMutPointerPrivateKey> out,
+  SignalBorrowedBuffer input,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Uint8>,
-    SignalConstPointerChatConnectionInfo,
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPrivateKey,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_chat_connection_info_ip_version(
-  ffi.Pointer<ffi.Uint8> out,
-  SignalConstPointerChatConnectionInfo connection_info,
+external ffi.Pointer<SignalFfiError> signal_identitykeypair_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPublicKey public_key,
+  SignalConstPointerPrivateKey private_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPrivateKey,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_identitykeypair_sign_alternate_identity(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPublicKey public_key,
+  SignalConstPointerPrivateKey private_key,
+  SignalConstPointerPublicKey other_identity,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<ffi.Uint32>, ffi.Uint32)
+>()
+external ffi.Pointer<SignalFfiError>
+signal_incremental_mac_calculate_chunk_size(
+  ffi.Pointer<ffi.Uint32> out,
+  int data_size,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerIncrementalMac)
+>()
+external ffi.Pointer<SignalFfiError> signal_incremental_mac_destroy(
+  SignalMutPointerIncrementalMac p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerIncrementalMac,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_incremental_mac_finalize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerIncrementalMac mac,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerIncrementalMac>,
+    SignalBorrowedBuffer,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_incremental_mac_initialize(
+  ffi.Pointer<SignalMutPointerIncrementalMac> out,
+  SignalBorrowedBuffer key,
+  int chunk_size,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerIncrementalMac,
+    SignalBorrowedBuffer,
+    ffi.Uint32,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_incremental_mac_update(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerIncrementalMac mac,
+  SignalBorrowedBuffer bytes,
+  int offset,
+  int length,
+);
+
+@ffi.Native<ffi.Bool Function(ffi.UnsignedInt, SignalFfiLogger)>(
+  symbol: 'signal_init_logger',
+)
+external bool _signal_init_logger(int max_level, SignalFfiLogger logger);
+
+bool signal_init_logger(SignalLogLevel max_level, SignalFfiLogger logger) =>
+    _signal_init_logger(max_level.value, logger);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_key_transparency_aci_search_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Uint8,
+    SignalConstPointerUnauthenticatedChatConnection,
+    SignalOptionalBorrowedSliceOfc_uchar,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_key_transparency_distinguished(
+  ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  int environment,
+  SignalConstPointerUnauthenticatedChatConnection chat_connection,
+  SignalOptionalBorrowedSliceOfc_uchar last_distinguished_tree_head,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_key_transparency_e164_search_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Char> e164,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Uint8,
+    SignalConstPointerUnauthenticatedChatConnection,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerPublicKey,
+    ffi.Pointer<ffi.Char>,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalBorrowedBuffer,
+    ffi.Bool,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_key_transparency_monitor(
+  ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  int environment,
+  SignalConstPointerUnauthenticatedChatConnection chat_connection,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  SignalConstPointerPublicKey aci_identity_key,
+  ffi.Pointer<ffi.Char> e164,
+  SignalOptionalBorrowedSliceOfc_uchar unidentified_access_key,
+  SignalOptionalBorrowedSliceOfc_uchar username_hash,
+  SignalOptionalBorrowedSliceOfc_uchar account_data,
+  SignalBorrowedBuffer last_distinguished_tree_head,
+  bool is_self_monitor,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Uint8,
+    SignalConstPointerUnauthenticatedChatConnection,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerPublicKey,
+    ffi.Pointer<ffi.Char>,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalOptionalBorrowedSliceOfc_uchar,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_key_transparency_search(
+  ffi.Pointer<SignalCPromiseOwnedBufferOfc_uchar> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  int environment,
+  SignalConstPointerUnauthenticatedChatConnection chat_connection,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  SignalConstPointerPublicKey aci_identity_key,
+  ffi.Pointer<ffi.Char> e164,
+  SignalOptionalBorrowedSliceOfc_uchar unidentified_access_key,
+  SignalOptionalBorrowedSliceOfc_uchar username_hash,
+  SignalOptionalBorrowedSliceOfc_uchar account_data,
+  SignalBorrowedBuffer last_distinguished_tree_head,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_key_transparency_username_hash_search_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer hash,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberKeyPair>,
+    SignalConstPointerKyberKeyPair,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_clone(
+  ffi.Pointer<SignalMutPointerKyberKeyPair> new_obj,
+  SignalConstPointerKyberKeyPair obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberKeyPair)
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_destroy(
+  SignalMutPointerKyberKeyPair p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberKeyPair>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_generate(
+  ffi.Pointer<SignalMutPointerKyberKeyPair> out,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPublicKey>,
+    SignalConstPointerKyberKeyPair,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_get_public_key(
+  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
+  SignalConstPointerKyberKeyPair key_pair,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberSecretKey>,
+    SignalConstPointerKyberKeyPair,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_key_pair_get_secret_key(
+  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
+  SignalConstPointerKyberKeyPair key_pair,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_clone(
+  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> new_obj,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_deserialize(
+  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberPreKeyRecord)
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_destroy(
+  SignalMutPointerKyberPreKeyRecord p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberKeyPair>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_key_pair(
+  ffi.Pointer<SignalMutPointerKyberKeyPair> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPublicKey>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_public_key(
+  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberSecretKey>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_secret_key(
+  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_get_timestamp(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPreKeyRecord>,
+    ffi.Uint32,
+    ffi.Uint64,
+    SignalConstPointerKyberKeyPair,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_new(
+  ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
+  int id,
+  int timestamp,
+  SignalConstPointerKyberKeyPair key_pair,
+  SignalBorrowedBuffer signature,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerKyberPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_pre_key_record_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerKyberPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPublicKey>,
+    SignalConstPointerKyberPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_public_key_clone(
+  ffi.Pointer<SignalMutPointerKyberPublicKey> new_obj,
+  SignalConstPointerKyberPublicKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPublicKey>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_public_key_deserialize(
+  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberPublicKey)
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_public_key_destroy(
+  SignalMutPointerKyberPublicKey p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerKyberPublicKey,
+    SignalConstPointerKyberPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_public_key_equals(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerKyberPublicKey lhs,
+  SignalConstPointerKyberPublicKey rhs,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerKyberPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_public_key_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerKyberPublicKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberSecretKey>,
+    SignalConstPointerKyberSecretKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_clone(
+  ffi.Pointer<SignalMutPointerKyberSecretKey> new_obj,
+  SignalConstPointerKyberSecretKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberSecretKey>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_deserialize(
+  ffi.Pointer<SignalMutPointerKyberSecretKey> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerKyberSecretKey)
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_destroy(
+  SignalMutPointerKyberSecretKey p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerKyberSecretKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_kyber_secret_key_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerKyberSecretKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerLookupRequest,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_lookup_request_add_aci_and_access_key(
+  SignalConstPointerLookupRequest request,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  SignalBorrowedBuffer access_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerLookupRequest,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_lookup_request_add_e164(
+  SignalConstPointerLookupRequest request,
+  ffi.Pointer<ffi.Char> e164,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerLookupRequest,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_lookup_request_add_previous_e164(
+  SignalConstPointerLookupRequest request,
+  ffi.Pointer<ffi.Char> e164,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerLookupRequest)
+>()
+external ffi.Pointer<SignalFfiError> signal_lookup_request_destroy(
+  SignalMutPointerLookupRequest p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerLookupRequest>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_lookup_request_new(
+  ffi.Pointer<SignalMutPointerLookupRequest> out,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerLookupRequest,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_lookup_request_set_token(
+  SignalConstPointerLookupRequest request,
+  SignalBorrowedBuffer token,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerMessageBackupKey)
+>()
+external ffi.Pointer<SignalFfiError> signal_message_backup_key_destroy(
+  SignalMutPointerMessageBackupKey p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerMessageBackupKey>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_message_backup_key_from_account_entropy_pool(
+  ffi.Pointer<SignalMutPointerMessageBackupKey> out,
+  ffi.Pointer<ffi.Char> account_entropy,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> forward_secrecy_token,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerMessageBackupKey>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_message_backup_key_from_backup_key_and_backup_id(
+  ffi.Pointer<SignalMutPointerMessageBackupKey> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_id,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> forward_secrecy_token,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerMessageBackupKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_backup_key_get_aes_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerMessageBackupKey key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerMessageBackupKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_backup_key_get_hmac_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerMessageBackupKey key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerMessageBackupValidationOutcome,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_message_backup_validation_outcome_destroy(
+  SignalMutPointerMessageBackupValidationOutcome p,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerChatConnectionInfo,
+    SignalConstPointerMessageBackupValidationOutcome,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_chat_connection_info_description(
+external ffi.Pointer<SignalFfiError>
+signal_message_backup_validation_outcome_get_error_message(
   ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerChatConnectionInfo connection_info,
+  SignalConstPointerMessageBackupValidationOutcome outcome,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseMutPointerUnauthenticatedChatConnection>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerConnectionManager,
+    ffi.Pointer<SignalStringArray>,
+    SignalConstPointerMessageBackupValidationOutcome,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_connect(
-  ffi.Pointer<SignalCPromiseMutPointerUnauthenticatedChatConnection> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerConnectionManager connection_manager,
+signal_message_backup_validation_outcome_get_unknown_fields(
+  ffi.Pointer<SignalStringArray> out,
+  SignalConstPointerMessageBackupValidationOutcome outcome,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerUnauthenticatedChatConnection,
-    SignalConstPointerFfiChatListenerStruct,
+    ffi.Pointer<SignalMutPointerMessageBackupValidationOutcome>,
+    SignalConstPointerMessageBackupKey,
+    SignalConstPointerFfiInputStreamStruct,
+    SignalConstPointerFfiInputStreamStruct,
+    ffi.Uint64,
+    ffi.Uint8,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_init_listener(
-  SignalConstPointerUnauthenticatedChatConnection chat,
-  SignalConstPointerFfiChatListenerStruct listener,
+external ffi.Pointer<SignalFfiError> signal_message_backup_validator_validate(
+  ffi.Pointer<SignalMutPointerMessageBackupValidationOutcome> out,
+  SignalConstPointerMessageBackupKey key,
+  SignalConstPointerFfiInputStreamStruct first_stream,
+  SignalConstPointerFfiInputStreamStruct second_stream,
+  int len,
+  int purpose,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseFfiChatResponse>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerUnauthenticatedChatConnection,
-    SignalConstPointerHttpRequest,
+    ffi.Pointer<SignalMutPointerSignalMessage>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_clone(
+  ffi.Pointer<SignalMutPointerSignalMessage> new_obj,
+  SignalConstPointerSignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignalMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_deserialize(
+  ffi.Pointer<SignalMutPointerSignalMessage> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSignalMessage)
+>()
+external ffi.Pointer<SignalFfiError> signal_message_destroy(
+  SignalMutPointerSignalMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_body(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_counter(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_message_version(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_pq_ratchet(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignalMessage msg,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_sender_ratchet_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerSignalMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_message_get_serialized(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignalMessage>,
+    ffi.Uint8,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
     ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_send(
-  ffi.Pointer<SignalCPromiseFfiChatResponse> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerUnauthenticatedChatConnection chat,
-  SignalConstPointerHttpRequest http_request,
-  int timeout_millis,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromisebool>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerUnauthenticatedChatConnection,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_disconnect(
-  ffi.Pointer<SignalCPromisebool> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerUnauthenticatedChatConnection chat,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerChatConnectionInfo>,
-    SignalConstPointerUnauthenticatedChatConnection,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_unauthenticated_chat_connection_info(
-  ffi.Pointer<SignalMutPointerChatConnectionInfo> out,
-  SignalConstPointerUnauthenticatedChatConnection chat,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseMutPointerAuthenticatedChatConnection>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerConnectionManager,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Bool,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_authenticated_chat_connection_connect(
-  ffi.Pointer<SignalCPromiseMutPointerAuthenticatedChatConnection> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerConnectionManager connection_manager,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Char> password,
-  bool receive_stories,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerAuthenticatedChatConnection,
-    SignalConstPointerFfiChatListenerStruct,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_authenticated_chat_connection_init_listener(
-  SignalConstPointerAuthenticatedChatConnection chat,
-  SignalConstPointerFfiChatListenerStruct listener,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromiseFfiChatResponse>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerAuthenticatedChatConnection,
-    SignalConstPointerHttpRequest,
     ffi.Uint32,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_authenticated_chat_connection_send(
-  ffi.Pointer<SignalCPromiseFfiChatResponse> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerAuthenticatedChatConnection chat,
-  SignalConstPointerHttpRequest http_request,
-  int timeout_millis,
+external ffi.Pointer<SignalFfiError> signal_message_new(
+  ffi.Pointer<SignalMutPointerSignalMessage> out,
+  int message_version,
+  SignalBorrowedBuffer mac_key,
+  SignalConstPointerPublicKey sender_ratchet_key,
+  int counter,
+  int previous_counter,
+  SignalBorrowedBuffer ciphertext,
+  SignalConstPointerPublicKey sender_identity_key,
+  SignalConstPointerPublicKey receiver_identity_key,
+  SignalBorrowedBuffer pq_ratchet,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalCPromisebool>,
-    SignalConstPointerTokioAsyncContext,
-    SignalConstPointerAuthenticatedChatConnection,
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerSignalMessage,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_authenticated_chat_connection_disconnect(
-  ffi.Pointer<SignalCPromisebool> promise,
-  SignalConstPointerTokioAsyncContext async_runtime,
-  SignalConstPointerAuthenticatedChatConnection chat,
+external ffi.Pointer<SignalFfiError> signal_message_verify_mac(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerSignalMessage msg,
+  SignalConstPointerPublicKey sender_identity_key,
+  SignalConstPointerPublicKey receiver_identity_key,
+  SignalBorrowedBuffer mac_key,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerChatConnectionInfo>,
-    SignalConstPointerAuthenticatedChatConnection,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_authenticated_chat_connection_info(
-  ffi.Pointer<SignalMutPointerChatConnectionInfo> out,
-  SignalConstPointerAuthenticatedChatConnection chat,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerMessageAck)
->()
-external ffi.Pointer<SignalFfiError> signal_server_message_ack_destroy(
-  SignalMutPointerServerMessageAck p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalConstPointerServerMessageAck)
->()
-external ffi.Pointer<SignalFfiError> signal_server_message_ack_send(
-  SignalConstPointerServerMessageAck ack,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerTokioAsyncContext)
->()
-external ffi.Pointer<SignalFfiError> signal_tokio_async_context_destroy(
-  SignalMutPointerTokioAsyncContext p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerTokioAsyncContext>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_tokio_async_context_new(
-  ffi.Pointer<SignalMutPointerTokioAsyncContext> out,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalConstPointerTokioAsyncContext,
+    ffi.Pointer<SignalMutPointerSanitizedMetadata>,
+    SignalConstPointerFfiInputStreamStruct,
     ffi.Uint64,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_tokio_async_context_cancel(
-  SignalConstPointerTokioAsyncContext context,
-  int raw_cancellation_id,
+external ffi.Pointer<SignalFfiError> signal_mp4_sanitizer_sanitize(
+  ffi.Pointer<SignalMutPointerSanitizedMetadata> out,
+  SignalConstPointerFfiInputStreamStruct input,
+  int len,
 );
 
-@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPinHash)>()
-external ffi.Pointer<SignalFfiError> signal_pin_hash_destroy(
-  SignalMutPointerPinHash p,
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerOnlineBackupValidator,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_online_backup_validator_add_frame(
+  SignalMutPointerOnlineBackupValidator backup,
+  SignalBorrowedBuffer frame,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerOnlineBackupValidator)
+>()
+external ffi.Pointer<SignalFfiError> signal_online_backup_validator_destroy(
+  SignalMutPointerOnlineBackupValidator p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerOnlineBackupValidator)
+>()
+external ffi.Pointer<SignalFfiError> signal_online_backup_validator_finalize(
+  SignalMutPointerOnlineBackupValidator backup,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerOnlineBackupValidator>,
+    SignalBorrowedBuffer,
+    ffi.Uint8,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_online_backup_validator_new(
+  ffi.Pointer<SignalMutPointerOnlineBackupValidator> out,
+  SignalBorrowedBuffer backup_info_frame,
+  int purpose,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerPinHash,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pin_hash_access_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerPinHash ph,
 );
 
 @ffi.Native<
@@ -5081,15 +3313,9 @@ external ffi.Pointer<SignalFfiError> signal_pin_hash_clone(
   SignalConstPointerPinHash obj,
 );
 
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerPinHash,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_pin_hash_encryption_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerPinHash ph,
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPinHash)>()
+external ffi.Pointer<SignalFfiError> signal_pin_hash_destroy(
+  SignalMutPointerPinHash p,
 );
 
 @ffi.Native<
@@ -5098,7 +3324,7 @@ external ffi.Pointer<SignalFfiError> signal_pin_hash_encryption_key(
     SignalConstPointerPinHash,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_pin_hash_access_key(
+external ffi.Pointer<SignalFfiError> signal_pin_hash_encryption_key(
   ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
   SignalConstPointerPinHash ph,
 );
@@ -5156,123 +3382,2971 @@ external ffi.Pointer<SignalFfiError> signal_pin_verify_local_hash(
 );
 
 @ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<ffi.Pointer<ffi.Char>>)
->()
-external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_generate(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-);
-
-@ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Bool>,
-    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<SignalMutPointerPlaintextContent>,
+    SignalConstPointerPlaintextContent,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_is_valid(
-  ffi.Pointer<ffi.Bool> out,
-  ffi.Pointer<ffi.Char> account_entropy,
+external ffi.Pointer<SignalFfiError> signal_plaintext_content_clone(
+  ffi.Pointer<SignalMutPointerPlaintextContent> new_obj,
+  SignalConstPointerPlaintextContent obj,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<SignalMutPointerPlaintextContent>,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_account_entropy_pool_derive_svr_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Char> account_entropy,
+external ffi.Pointer<SignalFfiError> signal_plaintext_content_deserialize(
+  ffi.Pointer<SignalMutPointerPlaintextContent> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPlaintextContent)
+>()
+external ffi.Pointer<SignalFfiError> signal_plaintext_content_destroy(
+  SignalMutPointerPlaintextContent p,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<SignalMutPointerPlaintextContent>,
+    SignalConstPointerDecryptionErrorMessage,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_account_entropy_pool_derive_backup_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Char> account_entropy,
+signal_plaintext_content_from_decryption_error_message(
+  ffi.Pointer<SignalMutPointerPlaintextContent> out,
+  SignalConstPointerDecryptionErrorMessage m,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPlaintextContent,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_backup_key_derive_backup_id(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+external ffi.Pointer<SignalFfiError> signal_plaintext_content_get_body(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPlaintextContent obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPlaintextContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_plaintext_content_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPlaintextContent obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeyBundle>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_clone(
+  ffi.Pointer<SignalMutPointerPreKeyBundle> new_obj,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeyBundle)
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_destroy(
+  SignalMutPointerPreKeyBundle p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_device_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_identity_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeyBundle p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_kyber_pre_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerKyberPublicKey>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_bundle_get_kyber_pre_key_public(
+  ffi.Pointer<SignalMutPointerKyberPublicKey> out,
+  SignalConstPointerPreKeyBundle bundle,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_bundle_get_kyber_pre_key_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_pre_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_pre_key_public(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_get_registration_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_bundle_get_signed_pre_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_bundle_get_signed_pre_key_public(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPreKeyBundle,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_bundle_get_signed_pre_key_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPreKeyBundle obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeyBundle>,
+    ffi.Uint32,
+    ffi.Uint32,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
+    ffi.Uint32,
+    SignalConstPointerKyberPublicKey,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_bundle_new(
+  ffi.Pointer<SignalMutPointerPreKeyBundle> out,
+  int registration_id,
+  int device_id,
+  int prekey_id,
+  SignalConstPointerPublicKey prekey,
+  int signed_prekey_id,
+  SignalConstPointerPublicKey signed_prekey,
+  SignalBorrowedBuffer signed_prekey_signature,
+  SignalConstPointerPublicKey identity_key,
+  int kyber_prekey_id,
+  SignalConstPointerKyberPublicKey kyber_prekey,
+  SignalBorrowedBuffer kyber_prekey_signature,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeyRecord>,
+    SignalConstPointerPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_clone(
+  ffi.Pointer<SignalMutPointerPreKeyRecord> new_obj,
+  SignalConstPointerPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeyRecord>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_deserialize(
+  ffi.Pointer<SignalMutPointerPreKeyRecord> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeyRecord)
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_destroy(
+  SignalMutPointerPreKeyRecord p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeyRecord obj,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalMutPointerPrivateKey>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerPreKeyRecord,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_backup_key_derive_ec_key(
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_private_key(
   ffi.Pointer<SignalMutPointerPrivateKey> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  SignalConstPointerPreKeyRecord obj,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_get_public_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeyRecord>,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_new(
+  ffi.Pointer<SignalMutPointerPreKeyRecord> out,
+  int id,
+  SignalConstPointerPublicKey pub_key,
+  SignalConstPointerPrivateKey priv_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_record_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_clone(
+  ffi.Pointer<SignalMutPointerPreKeySignalMessage> new_obj,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_deserialize(
+  ffi.Pointer<SignalMutPointerPreKeySignalMessage> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerPreKeySignalMessage)
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_destroy(
+  SignalMutPointerPreKeySignalMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_get_base_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeySignalMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_signal_message_get_identity_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPreKeySignalMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_signal_message_get_pre_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_signal_message_get_registration_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignalMessage>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_signal_message_get_signal_message(
+  ffi.Pointer<SignalMutPointerSignalMessage> out,
+  SignalConstPointerPreKeySignalMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_pre_key_signal_message_get_signed_pre_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_get_version(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPreKeySignalMessage>,
+    ffi.Uint8,
+    ffi.Uint32,
+    ffi.Uint32,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+    SignalConstPointerSignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_new(
+  ffi.Pointer<SignalMutPointerPreKeySignalMessage> out,
+  int message_version,
+  int registration_id,
+  int pre_key_id,
+  int signed_pre_key_id,
+  SignalConstPointerPublicKey base_key,
+  SignalConstPointerPublicKey identity_key,
+  SignalConstPointerSignalMessage signal_message,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPreKeySignalMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_pre_key_signal_message_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPreKeySignalMessage obj,
+);
+
+@ffi.Native<ffi.Void Function(ffi.Pointer<ffi.Void>)>()
+external void signal_print_ptr(ffi.Pointer<ffi.Void> p);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPrivateKey,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_agree(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPrivateKey private_key,
+  SignalConstPointerPublicKey public_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPrivateKey>,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_clone(
+  ffi.Pointer<SignalMutPointerPrivateKey> new_obj,
+  SignalConstPointerPrivateKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPrivateKey>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_deserialize(
+  ffi.Pointer<SignalMutPointerPrivateKey> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPrivateKey)>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_destroy(
+  SignalMutPointerPrivateKey p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<SignalMutPointerPrivateKey>)
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_generate(
+  ffi.Pointer<SignalMutPointerPrivateKey> out,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_get_public_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerPrivateKey k,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPrivateKey,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_hpke_open(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPrivateKey sk,
+  SignalBorrowedBuffer ciphertext,
+  SignalBorrowedBuffer info,
+  SignalBorrowedBuffer associated_data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPrivateKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPrivateKey,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_privatekey_sign(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPrivateKey key,
+  SignalBorrowedBuffer message,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerPreKeyBundle,
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerFfiSessionStoreStruct,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_process_prekey_bundle(
+  SignalConstPointerPreKeyBundle bundle,
+  SignalConstPointerProtocolAddress protocol_address,
+  SignalConstPointerFfiSessionStoreStruct session_store,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+  int now,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerSenderKeyDistributionMessage,
+    SignalConstPointerFfiSenderKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_process_sender_key_distribution_message(
+  SignalConstPointerProtocolAddress sender,
+  SignalConstPointerSenderKeyDistributionMessage
+  sender_key_distribution_message,
+  SignalConstPointerFfiSenderKeyStoreStruct store,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError> signal_profile_key_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_ciphertext_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_commitment_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_presentation_check_valid_contents(
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_presentation_get_profile_key_ciphertext(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_presentation_get_uuid_ciphertext(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalBorrowedBuffer presentation_bytes,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_request_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_request_context_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_profile_key_credential_request_context_get_request(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> context,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_profile_key_derive_access_key(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_profile_key_get_commitment(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_profile_key_get_profile_key_version(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerProvisioningChatConnection>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_provisioning_chat_connection_connect(
+  ffi.Pointer<SignalCPromiseMutPointerProvisioningChatConnection> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerProvisioningChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_provisioning_chat_connection_destroy(
+  SignalMutPointerProvisioningChatConnection p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerProvisioningChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_provisioning_chat_connection_disconnect(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerProvisioningChatConnection chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerChatConnectionInfo>,
+    SignalConstPointerProvisioningChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_provisioning_chat_connection_info(
+  ffi.Pointer<SignalMutPointerChatConnectionInfo> out,
+  SignalConstPointerProvisioningChatConnection chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerProvisioningChatConnection,
+    SignalConstPointerFfiProvisioningListenerStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_provisioning_chat_connection_init_listener(
+  SignalConstPointerProvisioningChatConnection chat,
+  SignalConstPointerFfiProvisioningListenerStruct listener,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_clone(
+  ffi.Pointer<SignalMutPointerPublicKey> new_obj,
+  SignalConstPointerPublicKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Int32>,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_compare(
+  ffi.Pointer<ffi.Int32> out,
+  SignalConstPointerPublicKey key1,
+  SignalConstPointerPublicKey key2,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_deserialize(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalMutPointerPublicKey)>()
+external ffi.Pointer<SignalFfiError> signal_publickey_destroy(
+  SignalMutPointerPublicKey p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_equals(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerPublicKey lhs,
+  SignalConstPointerPublicKey rhs,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_get_public_key_bytes(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPublicKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_hpke_seal(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPublicKey pk,
+  SignalBorrowedBuffer plaintext,
+  SignalBorrowedBuffer info,
+  SignalBorrowedBuffer associated_data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerPublicKey obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerPublicKey,
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_publickey_verify(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerPublicKey key,
+  SignalBorrowedBuffer message,
+  SignalBorrowedBuffer signature,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_get_receipt_expiration_time(
+  ffi.Pointer<ffi.Uint64> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_get_receipt_level(
+  ffi.Pointer<ffi.Uint64> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_presentation_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_presentation_get_receipt_expiration_time(
+  ffi.Pointer<ffi.Uint64> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_presentation_get_receipt_level(
+  ffi.Pointer<ffi.Uint64> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_presentation_get_receipt_serial(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_request_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_request_context_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_request_context_get_request(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_receipt_credential_response_check_valid_contents(
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerRegisterAccountRequest>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_register_account_request_create(
+  ffi.Pointer<SignalMutPointerRegisterAccountRequest> out,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerRegisterAccountRequest)
+>()
+external ffi.Pointer<SignalFfiError> signal_register_account_request_destroy(
+  SignalMutPointerRegisterAccountRequest p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerRegisterAccountRequest,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_account_password(
+  SignalConstPointerRegisterAccountRequest register_account,
+  ffi.Pointer<ffi.Char> account_password,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerRegisterAccountRequest,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_apn_push_token(
+  SignalConstPointerRegisterAccountRequest register_account,
+  ffi.Pointer<ffi.Char> apn_push_token,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerRegisterAccountRequest,
+    ffi.Uint8,
+    SignalFfiSignedPublicPreKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_identity_pq_last_resort_pre_key(
+  SignalConstPointerRegisterAccountRequest register_account,
+  int identity_type,
+  SignalFfiSignedPublicPreKey pq_last_resort_pre_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerRegisterAccountRequest,
+    ffi.Uint8,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_identity_public_key(
+  SignalConstPointerRegisterAccountRequest register_account,
+  int identity_type,
+  SignalConstPointerPublicKey identity_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerRegisterAccountRequest,
+    ffi.Uint8,
+    SignalFfiSignedPublicPreKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_identity_signed_pre_key(
+  SignalConstPointerRegisterAccountRequest register_account,
+  int identity_type,
+  SignalFfiSignedPublicPreKey signed_pre_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalConstPointerRegisterAccountRequest)
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_request_set_skip_device_transfer(
+  SignalConstPointerRegisterAccountRequest register_account,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerRegisterAccountResponse)
+>()
+external ffi.Pointer<SignalFfiError> signal_register_account_response_destroy(
+  SignalMutPointerRegisterAccountResponse p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_entitlement_backup_expiration_seconds(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_entitlement_backup_level(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBufferOfFfiRegisterResponseBadge>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_entitlement_badges(
+  ffi.Pointer<SignalOwnedBufferOfFfiRegisterResponseBadge> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerRegisterAccountResponse,
+    ffi.Uint8,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_identity(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerRegisterAccountResponse response,
+  int identity_type,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_number(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_reregistration(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_storage_capable(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_username_hash(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerRegisterAccountResponse,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_register_account_response_get_username_link_handle(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerRegisterAccountResponse response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerRegistrationAccountAttributes>,
+    SignalBorrowedBuffer,
+    ffi.Uint16,
+    ffi.Uint16,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Bool,
+    SignalBorrowedBytestringArray,
+    ffi.Bool,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_account_attributes_create(
+  ffi.Pointer<SignalMutPointerRegistrationAccountAttributes> out,
+  SignalBorrowedBuffer recovery_password,
+  int aci_registration_id,
+  int pni_registration_id,
+  ffi.Pointer<ffi.Char> registration_lock,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> unidentified_access_key,
+  bool unrestricted_unidentified_access,
+  SignalBorrowedBytestringArray capabilities,
+  bool discoverable_by_phone_number,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerRegistrationAccountAttributes,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_account_attributes_destroy(
+  SignalMutPointerRegistrationAccountAttributes p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseFfiCheckSvr2CredentialsResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    SignalBorrowedBytestringArray,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_check_svr2_credentials(
+  ffi.Pointer<SignalCPromiseFfiCheckSvr2CredentialsResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  SignalBorrowedBytestringArray svr_tokens,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerRegistrationService>,
+    SignalConstPointerTokioAsyncContext,
+    SignalFfiRegistrationCreateSessionRequest,
+    SignalConstPointerFfiConnectChatBridgeStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_service_create_session(
+  ffi.Pointer<SignalCPromiseMutPointerRegistrationService> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalFfiRegistrationCreateSessionRequest create_session,
+  SignalConstPointerFfiConnectChatBridgeStruct connect_chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerRegistrationService)
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_service_destroy(
+  SignalMutPointerRegistrationService p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerRegisterAccountResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    SignalConstPointerRegisterAccountRequest,
+    SignalConstPointerRegistrationAccountAttributes,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_register_account(
+  ffi.Pointer<SignalCPromiseMutPointerRegisterAccountResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  SignalConstPointerRegisterAccountRequest register_account,
+  SignalConstPointerRegistrationAccountAttributes account_attributes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerRegistrationSession>,
+    SignalConstPointerRegistrationService,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_registration_session(
+  ffi.Pointer<SignalMutPointerRegistrationSession> out,
+  SignalConstPointerRegistrationService service,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_request_push_challenge(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  ffi.Pointer<ffi.Char> push_token,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    SignalBorrowedBytestringArray,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_request_verification_code(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  ffi.Pointer<ffi.Char> transport,
+  ffi.Pointer<ffi.Char> client,
+  SignalBorrowedBytestringArray languages,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerRegisterAccountResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerFfiConnectChatBridgeStruct,
+    ffi.Pointer<ffi.Char>,
+    SignalConstPointerRegisterAccountRequest,
+    SignalConstPointerRegistrationAccountAttributes,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_reregister_account(
+  ffi.Pointer<SignalCPromiseMutPointerRegisterAccountResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerFfiConnectChatBridgeStruct connect_chat,
+  ffi.Pointer<ffi.Char> number,
+  SignalConstPointerRegisterAccountRequest register_account,
+  SignalConstPointerRegistrationAccountAttributes account_attributes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerRegistrationService>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    SignalConstPointerFfiConnectChatBridgeStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_service_resume_session(
+  ffi.Pointer<SignalCPromiseMutPointerRegistrationService> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  ffi.Pointer<ffi.Char> session_id,
+  ffi.Pointer<ffi.Char> number,
+  SignalConstPointerFfiConnectChatBridgeStruct connect_chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerRegistrationService,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_service_session_id(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerRegistrationService service,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_service_submit_captcha(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  ffi.Pointer<ffi.Char> captcha_value,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_submit_push_challenge(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  ffi.Pointer<ffi.Char> push_challenge,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerRegistrationService,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_service_submit_verification_code(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerRegistrationService service,
+  ffi.Pointer<ffi.Char> code,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerRegistrationSession)
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_session_destroy(
+  SignalMutPointerRegistrationSession p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_session_get_allowed_to_request_code(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_session_get_next_call_seconds(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_session_get_next_sms_seconds(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_session_get_next_verification_attempt_seconds(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_registration_session_get_requested_information(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerRegistrationSession,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_registration_session_get_verified(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerRegistrationSession session,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSanitizedMetadata>,
+    SignalConstPointerSanitizedMetadata,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sanitized_metadata_clone(
+  ffi.Pointer<SignalMutPointerSanitizedMetadata> new_obj,
+  SignalConstPointerSanitizedMetadata obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSanitizedMetadata)
+>()
+external ffi.Pointer<SignalFfiError> signal_sanitized_metadata_destroy(
+  SignalMutPointerSanitizedMetadata p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerSanitizedMetadata,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sanitized_metadata_get_data_len(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerSanitizedMetadata sanitized,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerSanitizedMetadata,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sanitized_metadata_get_data_offset(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerSanitizedMetadata sanitized,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSanitizedMetadata,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sanitized_metadata_get_metadata(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSanitizedMetadata sanitized,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedSliceOfConstPointerProtocolAddress,
+    SignalBorrowedSliceOfConstPointerSessionRecord,
+    SignalBorrowedBuffer,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sealed_sender_multi_recipient_encrypt(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedSliceOfConstPointerProtocolAddress recipients,
+  SignalBorrowedSliceOfConstPointerSessionRecord recipient_sessions,
+  SignalBorrowedBuffer excluded_recipients,
+  SignalConstPointerUnidentifiedSenderMessageContent content,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sealed_sender_multi_recipient_message_for_single_recipient(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalBorrowedBuffer encoded_multi_recipient_message,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
+    SignalBorrowedBuffer,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sealed_session_cipher_decrypt_to_usmc(
+  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
+  SignalBorrowedBuffer ctext,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerProtocolAddress,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+    SignalConstPointerFfiIdentityKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sealed_session_cipher_encrypt(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerProtocolAddress destination,
+  SignalConstPointerUnidentifiedSenderMessageContent content,
+  SignalConstPointerFfiIdentityKeyStoreStruct identity_key_store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Uint8,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_secure_value_recovery_for_backups_create_new_backup_chain(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  int environment,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_secure_value_recovery_for_backups_remove_backup(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerBackupRestoreResponse>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    SignalConstPointerConnectionManager,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_secure_value_recovery_for_backups_restore_backup_from_server(
+  ffi.Pointer<SignalCPromiseMutPointerBackupRestoreResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  SignalBorrowedBuffer metadata,
+  SignalConstPointerConnectionManager connection_manager,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerBackupStoreResponse>,
+    SignalConstPointerTokioAsyncContext,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+    SignalConstPointerConnectionManager,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_secure_value_recovery_for_backups_store_backup(
+  ffi.Pointer<SignalCPromiseMutPointerBackupStoreResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+  SignalBorrowedBuffer previous_secret_data,
+  SignalConstPointerConnectionManager connection_manager,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Char> password,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderCertificate>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_clone(
+  ffi.Pointer<SignalMutPointerSenderCertificate> new_obj,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderCertificate>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_deserialize(
+  ffi.Pointer<SignalMutPointerSenderCertificate> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderCertificate)
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_destroy(
+  SignalMutPointerSenderCertificate p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_certificate(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_device_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_expiration(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_sender_e164(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_sender_uuid(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_serialized(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerCertificate>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_certificate_get_server_certificate(
+  ffi.Pointer<SignalMutPointerServerCertificate> out,
+  SignalConstPointerSenderCertificate cert,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_get_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderCertificate>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    ffi.Uint64,
+    SignalConstPointerServerCertificate,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_new(
+  ffi.Pointer<SignalMutPointerSenderCertificate> out,
+  ffi.Pointer<ffi.Char> sender_uuid,
+  ffi.Pointer<ffi.Char> sender_e164,
+  int sender_device_id,
+  SignalConstPointerPublicKey sender_key,
+  int expiration,
+  SignalConstPointerServerCertificate signer_cert,
+  SignalConstPointerPrivateKey signer_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerSenderCertificate,
+    SignalBorrowedSliceOfConstPointerPublicKey,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_certificate_validate(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerSenderCertificate cert,
+  SignalBorrowedSliceOfConstPointerPublicKey trust_roots,
+  int time,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_clone(
+  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> new_obj,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
+    SignalConstPointerProtocolAddress,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerFfiSenderKeyStoreStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_create(
+  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
+  SignalConstPointerProtocolAddress sender,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
+  SignalConstPointerFfiSenderKeyStoreStruct store,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_deserialize(
+  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_destroy(
+  SignalMutPointerSenderKeyDistributionMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_get_chain_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_get_chain_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_get_distribution_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_get_iteration(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_get_signature_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerSenderKeyDistributionMessage m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage>,
+    ffi.Uint8,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint32,
+    ffi.Uint32,
+    SignalBorrowedBuffer,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_distribution_message_new(
+  ffi.Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
+  int message_version,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
+  int chain_id,
+  int iteration,
+  SignalBorrowedBuffer chainkey,
+  SignalConstPointerPublicKey pk,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderKeyDistributionMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_distribution_message_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderKeyDistributionMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_clone(
+  ffi.Pointer<SignalMutPointerSenderKeyMessage> new_obj,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_deserialize(
+  ffi.Pointer<SignalMutPointerSenderKeyMessage> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderKeyMessage)
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_destroy(
+  SignalMutPointerSenderKeyMessage p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_chain_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_cipher_text(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_sender_key_message_get_distribution_id(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_get_iteration(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyMessage>,
+    ffi.Uint8,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint32,
+    ffi.Uint32,
+    SignalBorrowedBuffer,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_new(
+  ffi.Pointer<SignalMutPointerSenderKeyMessage> out,
+  int message_version,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> distribution_id,
+  int chain_id,
+  int iteration,
+  SignalBorrowedBuffer ciphertext,
+  SignalConstPointerPrivateKey pk,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderKeyMessage,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderKeyMessage obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerSenderKeyMessage,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_message_verify_signature(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerSenderKeyMessage skm,
+  SignalConstPointerPublicKey pubkey,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyRecord>,
+    SignalConstPointerSenderKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_record_clone(
+  ffi.Pointer<SignalMutPointerSenderKeyRecord> new_obj,
+  SignalConstPointerSenderKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderKeyRecord>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_record_deserialize(
+  ffi.Pointer<SignalMutPointerSenderKeyRecord> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSenderKeyRecord)
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_record_destroy(
+  SignalMutPointerSenderKeyRecord p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSenderKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sender_key_record_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSenderKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerCertificate>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_clone(
+  ffi.Pointer<SignalMutPointerServerCertificate> new_obj,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerCertificate>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_deserialize(
+  ffi.Pointer<SignalMutPointerServerCertificate> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerCertificate)
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_destroy(
+  SignalMutPointerServerCertificate p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_get_certificate(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_get_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_get_key_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_get_serialized(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerCertificate,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_get_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerCertificate obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerCertificate>,
+    ffi.Uint32,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPrivateKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_certificate_new(
+  ffi.Pointer<SignalMutPointerServerCertificate> out,
+  int key_id,
+  SignalConstPointerPublicKey server_key,
+  SignalConstPointerPrivateKey trust_root,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerMessageAck)
+>()
+external ffi.Pointer<SignalFfiError> signal_server_message_ack_destroy(
+  SignalMutPointerServerMessageAck p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalConstPointerServerMessageAck)
+>()
+external ffi.Pointer<SignalFfiError> signal_server_message_ack_send(
+  SignalConstPointerServerMessageAck ack,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_create_auth_credential_with_pni_presentation_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_secret_params,
+  SignalBorrowedBuffer auth_credential_with_pni_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_create_expiring_profile_key_credential_presentation_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key_credential,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_create_profile_key_credential_request_context_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> profile_key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_create_receipt_credential_presentation_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> receipt_credential,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
 external ffi.Pointer<SignalFfiError>
-signal_backup_key_derive_local_backup_metadata_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
+signal_server_public_params_create_receipt_credential_request_context_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> receipt_serial,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerPublicParams>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_public_params_deserialize(
+  ffi.Pointer<SignalMutPointerServerPublicParams> out,
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerPublicParams)
+>()
+external ffi.Pointer<SignalFfiError> signal_server_public_params_destroy(
+  SignalMutPointerServerPublicParams p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerPublicParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_get_endorsement_public_key(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerPublicParams params,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_receive_auth_credential_with_pni_as_service_id(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerPublicParams params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> pni,
+  int redemption_time,
+  SignalBorrowedBuffer auth_credential_with_pni_response_bytes,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_receive_expiring_profile_key_credential(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> response,
+  int current_time_in_seconds,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerPublicParams,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_receive_receipt_credential(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerPublicParams server_public_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request_context,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> response,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerPublicParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_public_params_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerPublicParams handle,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerServerPublicParams,
+    SignalBorrowedBuffer,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_public_params_verify_signature(
+  SignalConstPointerServerPublicParams server_public_params,
+  SignalBorrowedBuffer message,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> notary_signature,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerSecretParams>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_secret_params_deserialize(
+  ffi.Pointer<SignalMutPointerServerSecretParams> out,
+  SignalBorrowedBuffer buffer,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerServerSecretParams)
+>()
+external ffi.Pointer<SignalFfiError> signal_server_secret_params_destroy(
+  SignalMutPointerServerSecretParams p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerSecretParams>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_generate_deterministic(
+  ffi.Pointer<SignalMutPointerServerSecretParams> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerServerPublicParams>,
+    SignalConstPointerServerSecretParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_get_public_params(
+  ffi.Pointer<SignalMutPointerServerPublicParams> out,
+  SignalConstPointerServerSecretParams params,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_issue_auth_credential_with_pni_zkc_deterministic(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> pni,
+  int redemption_time,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_issue_expiring_profile_key_credential_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> user_id,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> commitment,
+  int expiration_in_seconds,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    ffi.Uint64,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_issue_receipt_credential_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> out,
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> request,
+  int receipt_expiration_time,
+  int receipt_level,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerServerSecretParams,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_server_secret_params_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerServerSecretParams handle,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_sign_deterministic(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalConstPointerServerSecretParams params,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  SignalBorrowedBuffer message,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_verify_auth_credential_presentation(
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
+  SignalBorrowedBuffer presentation_bytes,
+  int current_time_in_seconds,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_verify_profile_key_credential_presentation(
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> group_public_params,
+  SignalBorrowedBuffer presentation_bytes,
+  int current_time_in_seconds,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerServerSecretParams,
+    ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_server_secret_params_verify_receipt_credential_presentation(
+  SignalConstPointerServerSecretParams server_secret_params,
+  ffi.Pointer<ffi.Pointer<ffi.UnsignedChar>> presentation,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_service_id_parse_from_service_id_binary(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  SignalBorrowedBuffer input,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
     ffi.Pointer<ffi.Char>,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_backup_key_derive_media_id(
+external ffi.Pointer<SignalFfiError>
+signal_service_id_parse_from_service_id_string(
   ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Char> media_name,
+  ffi.Pointer<ffi.Char> input,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<SignalOwnedBuffer>,
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
-external ffi.Pointer<SignalFfiError>
-signal_backup_key_derive_media_encryption_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> media_id,
+external ffi.Pointer<SignalFfiError> signal_service_id_service_id_binary(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
   )
 >()
+external ffi.Pointer<SignalFfiError> signal_service_id_service_id_log(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Char>>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_service_id_service_id_string(
+  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> value,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSessionRecord)
+>()
 external ffi.Pointer<SignalFfiError>
-signal_backup_key_derive_thumbnail_transit_encryption_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> media_id,
+signal_session_record_archive_current_state(
+  SignalMutPointerSessionRecord session_record,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSessionRecord>,
+    SignalConstPointerSessionRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_session_record_clone(
+  ffi.Pointer<SignalMutPointerSessionRecord> new_obj,
+  SignalConstPointerSessionRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerSessionRecord,
+    SignalConstPointerPublicKey,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_session_record_current_ratchet_key_matches(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerSessionRecord s,
+  SignalConstPointerPublicKey key,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSessionRecord>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_session_record_deserialize(
+  ffi.Pointer<SignalMutPointerSessionRecord> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSessionRecord)
+>()
+external ffi.Pointer<SignalFfiError> signal_session_record_destroy(
+  SignalMutPointerSessionRecord p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSessionRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_session_record_get_local_registration_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSessionRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSessionRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_session_record_get_remote_registration_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSessionRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Bool>,
+    SignalConstPointerSessionRecord,
+    ffi.Uint64,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_session_record_has_usable_sender_chain(
+  ffi.Pointer<ffi.Bool> out,
+  SignalConstPointerSessionRecord s,
+  int now,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSessionRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_session_record_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSessionRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerSgxClientState,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sgx_client_state_complete_handshake(
+  SignalMutPointerSgxClientState cli,
+  SignalBorrowedBuffer handshake_received,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSgxClientState)
+>()
+external ffi.Pointer<SignalFfiError> signal_sgx_client_state_destroy(
+  SignalMutPointerSgxClientState p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerSgxClientState,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sgx_client_state_established_recv(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerSgxClientState cli,
+  SignalBorrowedBuffer received_ciphertext,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalMutPointerSgxClientState,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sgx_client_state_established_send(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalMutPointerSgxClientState cli,
+  SignalBorrowedBuffer plaintext_to_send,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSgxClientState,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_sgx_client_state_initial_request(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSgxClientState obj,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function()>()
+external ffi.Pointer<SignalFfiError> signal_signal_media_check_available();
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_clone(
+  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> new_obj,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_deserialize(
+  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerSignedPreKeyRecord)
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_destroy(
+  SignalMutPointerSignedPreKeyRecord p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_id(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPrivateKey>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_signed_pre_key_record_get_private_key(
+  ffi.Pointer<SignalMutPointerPrivateKey> out,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerPublicKey>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_signed_pre_key_record_get_public_key(
+  ffi.Pointer<SignalMutPointerPublicKey> out,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_signature(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint64>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_get_timestamp(
+  ffi.Pointer<ffi.Uint64> out,
+  SignalConstPointerSignedPreKeyRecord obj,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSignedPreKeyRecord>,
+    ffi.Uint32,
+    ffi.Uint64,
+    SignalConstPointerPublicKey,
+    SignalConstPointerPrivateKey,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_new(
+  ffi.Pointer<SignalMutPointerSignedPreKeyRecord> out,
+  int id,
+  int timestamp,
+  SignalConstPointerPublicKey pub_key,
+  SignalConstPointerPrivateKey priv_key,
+  SignalBorrowedBuffer signature,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerSignedPreKeyRecord,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_signed_pre_key_record_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerSignedPreKeyRecord obj,
 );
 
 @ffi.Native<
@@ -5291,306 +6365,303 @@ external ffi.Pointer<SignalFfiError> signal_svr2_client_new(
 );
 
 @ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerIncrementalMac)
->()
-external ffi.Pointer<SignalFfiError> signal_incremental_mac_destroy(
-  SignalMutPointerIncrementalMac p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(ffi.Pointer<ffi.Uint32>, ffi.Uint32)
->()
-external ffi.Pointer<SignalFfiError>
-signal_incremental_mac_calculate_chunk_size(
-  ffi.Pointer<ffi.Uint32> out,
-  int data_size,
-);
-
-@ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerIncrementalMac>,
-    SignalBorrowedBuffer,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_incremental_mac_initialize(
-  ffi.Pointer<SignalMutPointerIncrementalMac> out,
-  SignalBorrowedBuffer key,
-  int chunk_size,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerIncrementalMac,
-    SignalBorrowedBuffer,
-    ffi.Uint32,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_incremental_mac_update(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerIncrementalMac mac,
-  SignalBorrowedBuffer bytes,
-  int offset,
-  int length,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalOwnedBuffer>,
-    SignalMutPointerIncrementalMac,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_incremental_mac_finalize(
-  ffi.Pointer<SignalOwnedBuffer> out,
-  SignalMutPointerIncrementalMac mac,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerValidatingMac)
->()
-external ffi.Pointer<SignalFfiError> signal_validating_mac_destroy(
-  SignalMutPointerValidatingMac p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerValidatingMac>,
-    SignalBorrowedBuffer,
-    ffi.Uint32,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_validating_mac_initialize(
-  ffi.Pointer<SignalMutPointerValidatingMac> out,
-  SignalBorrowedBuffer key,
-  int chunk_size,
-  SignalBorrowedBuffer digests,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Int32>,
-    SignalMutPointerValidatingMac,
-    SignalBorrowedBuffer,
-    ffi.Uint32,
-    ffi.Uint32,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_validating_mac_update(
-  ffi.Pointer<ffi.Int32> out,
-  SignalMutPointerValidatingMac mac,
-  SignalBorrowedBuffer bytes,
-  int offset,
-  int length,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Int32>,
-    SignalMutPointerValidatingMac,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_validating_mac_finalize(
-  ffi.Pointer<ffi.Int32> out,
-  SignalMutPointerValidatingMac mac,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerMessageBackupKey)
->()
-external ffi.Pointer<SignalFfiError> signal_message_backup_key_destroy(
-  SignalMutPointerMessageBackupKey p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerMessageBackupValidationOutcome,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_message_backup_validation_outcome_destroy(
-  SignalMutPointerMessageBackupValidationOutcome p,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerMessageBackupKey>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_backup_key_from_master_key(
-  ffi.Pointer<SignalMutPointerMessageBackupKey> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> master_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerMessageBackupKey>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_message_backup_key_from_account_entropy_pool(
-  ffi.Pointer<SignalMutPointerMessageBackupKey> out,
-  ffi.Pointer<ffi.Char> account_entropy,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> aci,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerMessageBackupKey>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_message_backup_key_from_backup_key_and_backup_id(
-  ffi.Pointer<SignalMutPointerMessageBackupKey> out,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_key,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> backup_id,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerMessageBackupKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_backup_key_get_hmac_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerMessageBackupKey key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    SignalConstPointerMessageBackupKey,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_message_backup_key_get_aes_key(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  SignalConstPointerMessageBackupKey key,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<ffi.Pointer<ffi.Char>>,
-    SignalConstPointerMessageBackupValidationOutcome,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_message_backup_validation_outcome_get_error_message(
-  ffi.Pointer<ffi.Pointer<ffi.Char>> out,
-  SignalConstPointerMessageBackupValidationOutcome outcome,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalStringArray>,
-    SignalConstPointerMessageBackupValidationOutcome,
-  )
->()
-external ffi.Pointer<SignalFfiError>
-signal_message_backup_validation_outcome_get_unknown_fields(
-  ffi.Pointer<SignalStringArray> out,
-  SignalConstPointerMessageBackupValidationOutcome outcome,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerMessageBackupValidationOutcome>,
-    SignalConstPointerMessageBackupKey,
-    SignalConstPointerFfiInputStreamStruct,
-    SignalConstPointerFfiInputStreamStruct,
+    SignalConstPointerTokioAsyncContext,
     ffi.Uint64,
-    ffi.Uint8,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_message_backup_validator_validate(
-  ffi.Pointer<SignalMutPointerMessageBackupValidationOutcome> out,
-  SignalConstPointerMessageBackupKey key,
-  SignalConstPointerFfiInputStreamStruct first_stream,
-  SignalConstPointerFfiInputStreamStruct second_stream,
-  int len,
-  int purpose,
+external ffi.Pointer<SignalFfiError> signal_tokio_async_context_cancel(
+  SignalConstPointerTokioAsyncContext context,
+  int raw_cancellation_id,
 );
 
 @ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerOnlineBackupValidator)
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerTokioAsyncContext)
 >()
-external ffi.Pointer<SignalFfiError> signal_online_backup_validator_destroy(
-  SignalMutPointerOnlineBackupValidator p,
+external ffi.Pointer<SignalFfiError> signal_tokio_async_context_destroy(
+  SignalMutPointerTokioAsyncContext p,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    ffi.Pointer<SignalMutPointerOnlineBackupValidator>,
+    ffi.Pointer<SignalMutPointerTokioAsyncContext>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_tokio_async_context_new(
+  ffi.Pointer<SignalMutPointerTokioAsyncContext> out,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseMutPointerUnauthenticatedChatConnection>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerConnectionManager,
+    SignalBorrowedBytestringArray,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_connect(
+  ffi.Pointer<SignalCPromiseMutPointerUnauthenticatedChatConnection> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerConnectionManager connection_manager,
+  SignalBorrowedBytestringArray languages,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerUnauthenticatedChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_destroy(
+  SignalMutPointerUnauthenticatedChatConnection p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromisebool>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerUnauthenticatedChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_disconnect(
+  ffi.Pointer<SignalCPromisebool> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerChatConnectionInfo>,
+    SignalConstPointerUnauthenticatedChatConnection,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_info(
+  ffi.Pointer<SignalMutPointerChatConnectionInfo> out,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerUnauthenticatedChatConnection,
+    SignalConstPointerFfiChatListenerStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_init_listener(
+  SignalConstPointerUnauthenticatedChatConnection chat,
+  SignalConstPointerFfiChatListenerStruct listener,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOptionalUuid>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerUnauthenticatedChatConnection,
     SignalBorrowedBuffer,
-    ffi.Uint8,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_online_backup_validator_new(
-  ffi.Pointer<SignalMutPointerOnlineBackupValidator> out,
-  SignalBorrowedBuffer backup_info_frame,
-  int purpose,
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_look_up_username_hash(
+  ffi.Pointer<SignalCPromiseOptionalUuid> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+  SignalBorrowedBuffer hash,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalMutPointerOnlineBackupValidator,
-    SignalBorrowedBuffer,
-  )
->()
-external ffi.Pointer<SignalFfiError> signal_online_backup_validator_add_frame(
-  SignalMutPointerOnlineBackupValidator backup,
-  SignalBorrowedBuffer frame,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(SignalMutPointerOnlineBackupValidator)
->()
-external ffi.Pointer<SignalFfiError> signal_online_backup_validator_finalize(
-  SignalMutPointerOnlineBackupValidator backup,
-);
-
-@ffi.Native<
-  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOptionalPairOfc_charu832>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerUnauthenticatedChatConnection,
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    ffi.Pointer<ffi.Char>,
+    SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_username_hash(
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
-  ffi.Pointer<ffi.Char> username,
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_look_up_username_link(
+  ffi.Pointer<SignalCPromiseOptionalPairOfc_charu832> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> uuid,
+  SignalBorrowedBuffer entropy,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseFfiChatResponse>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerUnauthenticatedChatConnection,
+    SignalConstPointerHttpRequest,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_send(
+  ffi.Pointer<SignalCPromiseFfiChatResponse> promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+  SignalConstPointerHttpRequest http_request,
+  int timeout_millis,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalCPromiseOwnedBufferOfServiceIdFixedWidthBinaryBytes>,
+    SignalConstPointerTokioAsyncContext,
+    SignalConstPointerUnauthenticatedChatConnection,
+    SignalBorrowedBuffer,
+    ffi.Uint64,
+    SignalBorrowedBuffer,
+    ffi.Bool,
+    ffi.Bool,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unauthenticated_chat_connection_send_multi_recipient_message(
+  ffi.Pointer<SignalCPromiseOwnedBufferOfServiceIdFixedWidthBinaryBytes>
+  promise,
+  SignalConstPointerTokioAsyncContext async_runtime,
+  SignalConstPointerUnauthenticatedChatConnection chat,
+  SignalBorrowedBuffer payload,
+  int timestamp,
+  SignalBorrowedBuffer auth,
+  bool online_only,
+  bool is_urgent,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_deserialize(
+  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
+  SignalBorrowedBuffer data,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalMutPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_destroy(
+  SignalMutPointerUnidentifiedSenderMessageContent p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint32>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_get_content_hint(
+  ffi.Pointer<ffi.Uint32> out,
+  SignalConstPointerUnidentifiedSenderMessageContent m,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<SignalOwnedBuffer>,
-    ffi.Pointer<ffi.Char>,
-    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_username_proof(
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_get_contents(
   ffi.Pointer<SignalOwnedBuffer> out,
-  ffi.Pointer<ffi.Char> username,
-  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+  SignalConstPointerUnidentifiedSenderMessageContent obj,
 );
 
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
-    SignalBorrowedBuffer,
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_get_group_id_or_empty(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerUnidentifiedSenderMessageContent m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Uint8>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_get_msg_type(
+  ffi.Pointer<ffi.Uint8> out,
+  SignalConstPointerUnidentifiedSenderMessageContent m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerSenderCertificate>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_get_sender_cert(
+  ffi.Pointer<SignalMutPointerSenderCertificate> out,
+  SignalConstPointerUnidentifiedSenderMessageContent m,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
+    SignalConstPointerCiphertextMessage,
+    SignalConstPointerSenderCertificate,
+    ffi.Uint32,
     SignalBorrowedBuffer,
   )
 >()
-external ffi.Pointer<SignalFfiError> signal_username_verify(
-  SignalBorrowedBuffer proof,
-  SignalBorrowedBuffer hash,
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_new(
+  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
+  SignalConstPointerCiphertextMessage message,
+  SignalConstPointerSenderCertificate sender,
+  int content_hint,
+  SignalBorrowedBuffer group_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent>,
+    SignalBorrowedBuffer,
+    ffi.Uint8,
+    SignalConstPointerSenderCertificate,
+    ffi.Uint32,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_new_from_content_and_type(
+  ffi.Pointer<SignalMutPointerUnidentifiedSenderMessageContent> out,
+  SignalBorrowedBuffer message_content,
+  int message_type,
+  SignalConstPointerSenderCertificate sender,
+  int content_hint,
+  SignalBorrowedBuffer group_id,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    SignalConstPointerUnidentifiedSenderMessageContent,
+  )
+>()
+external ffi.Pointer<SignalFfiError>
+signal_unidentified_sender_message_content_serialize(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  SignalConstPointerUnidentifiedSenderMessageContent obj,
 );
 
 @ffi.Native<
@@ -5606,6 +6677,17 @@ external ffi.Pointer<SignalFfiError> signal_username_candidates_from(
   ffi.Pointer<ffi.Char> nickname,
   int min_len,
   int max_len,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    ffi.Pointer<ffi.Char>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_username_hash(
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> out,
+  ffi.Pointer<ffi.Char> username,
 );
 
 @ffi.Native<
@@ -5649,6 +6731,93 @@ external ffi.Pointer<SignalFfiError> signal_username_link_decrypt_username(
   ffi.Pointer<ffi.Pointer<ffi.Char>> out,
   SignalBorrowedBuffer entropy,
   SignalBorrowedBuffer encrypted_username,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalOwnedBuffer>,
+    ffi.Pointer<ffi.Char>,
+    ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_username_proof(
+  ffi.Pointer<SignalOwnedBuffer> out,
+  ffi.Pointer<ffi.Char> username,
+  ffi.Pointer<ffi.Pointer<ffi.Uint8>> randomness,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalBorrowedBuffer,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_username_verify(
+  SignalBorrowedBuffer proof,
+  SignalBorrowedBuffer hash,
+);
+
+@ffi.Native<ffi.Pointer<SignalFfiError> Function(SignalBorrowedBuffer)>()
+external ffi.Pointer<SignalFfiError>
+signal_uuid_ciphertext_check_valid_contents(SignalBorrowedBuffer buffer);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(SignalMutPointerValidatingMac)
+>()
+external ffi.Pointer<SignalFfiError> signal_validating_mac_destroy(
+  SignalMutPointerValidatingMac p,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Int32>,
+    SignalMutPointerValidatingMac,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_validating_mac_finalize(
+  ffi.Pointer<ffi.Int32> out,
+  SignalMutPointerValidatingMac mac,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<SignalMutPointerValidatingMac>,
+    SignalBorrowedBuffer,
+    ffi.Uint32,
+    SignalBorrowedBuffer,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_validating_mac_initialize(
+  ffi.Pointer<SignalMutPointerValidatingMac> out,
+  SignalBorrowedBuffer key,
+  int chunk_size,
+  SignalBorrowedBuffer digests,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    ffi.Pointer<ffi.Int32>,
+    SignalMutPointerValidatingMac,
+    SignalBorrowedBuffer,
+    ffi.Uint32,
+    ffi.Uint32,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_validating_mac_update(
+  ffi.Pointer<ffi.Int32> out,
+  SignalMutPointerValidatingMac mac,
+  SignalBorrowedBuffer bytes,
+  int offset,
+  int length,
+);
+
+@ffi.Native<
+  ffi.Pointer<SignalFfiError> Function(
+    SignalConstPointerFfiSyncInputStreamStruct,
+  )
+>()
+external ffi.Pointer<SignalFfiError> signal_webp_sanitizer_sanitize(
+  SignalConstPointerFfiSyncInputStreamStruct input,
 );
 
 typedef __builtin_va_list = ffi.Pointer<ffi.Char>;
@@ -6150,6 +7319,76 @@ typedef malloc_zone_t = _malloc_zone_t;
 typedef dev_t = __darwin_dev_t;
 typedef mode_t = __darwin_mode_t;
 
+enum SignalLogLevel {
+  SignalLogLevelError(1),
+  SignalLogLevelWarn(2),
+  SignalLogLevelInfo(3),
+  SignalLogLevelDebug(4),
+  SignalLogLevelTrace(5);
+
+  final int value;
+  const SignalLogLevel(this.value);
+
+  static SignalLogLevel fromValue(int value) => switch (value) {
+    1 => SignalLogLevelError,
+    2 => SignalLogLevelWarn,
+    3 => SignalLogLevelInfo,
+    4 => SignalLogLevelDebug,
+    5 => SignalLogLevelTrace,
+    _ => throw ArgumentError('Unknown value for SignalLogLevel: $value'),
+  };
+}
+
+enum SignalFfiPublicKeyType {
+  SignalFfiPublicKeyTypeECC(0),
+  SignalFfiPublicKeyTypeKyber(1);
+
+  final int value;
+  const SignalFfiPublicKeyType(this.value);
+
+  static SignalFfiPublicKeyType fromValue(int value) => switch (value) {
+    0 => SignalFfiPublicKeyTypeECC,
+    1 => SignalFfiPublicKeyTypeKyber,
+    _ => throw ArgumentError(
+      'Unknown value for SignalFfiPublicKeyType: $value',
+    ),
+  };
+}
+
+typedef SignalFfiPublicKeyType$1 = ffi.Uint8;
+typedef DartSignalFfiPublicKeyType = int;
+
+enum SignalChallengeOption {
+  SignalChallengeOptionPushChallenge(0),
+  SignalChallengeOptionCaptcha(1);
+
+  final int value;
+  const SignalChallengeOption(this.value);
+
+  static SignalChallengeOption fromValue(int value) => switch (value) {
+    0 => SignalChallengeOptionPushChallenge,
+    1 => SignalChallengeOptionCaptcha,
+    _ => throw ArgumentError('Unknown value for SignalChallengeOption: $value'),
+  };
+}
+
+typedef SignalChallengeOption$1 = ffi.Uint8;
+typedef DartSignalChallengeOption = int;
+
+enum SignalDirection {
+  SignalDirectionSending(0),
+  SignalDirectionReceiving(1);
+
+  final int value;
+  const SignalDirection(this.value);
+
+  static SignalDirection fromValue(int value) => switch (value) {
+    0 => SignalDirectionSending,
+    1 => SignalDirectionReceiving,
+    _ => throw ArgumentError('Unknown value for SignalDirection: $value'),
+  };
+}
+
 enum SignalCiphertextMessageType {
   SignalCiphertextMessageTypeWhisper(2),
   SignalCiphertextMessageTypePreKey(3),
@@ -6186,37 +7425,21 @@ enum SignalContentHint {
   };
 }
 
-enum SignalDirection {
-  SignalDirectionSending(0),
-  SignalDirectionReceiving(1);
+/// The result of saving a new identity key for a protocol address.
+enum SignalIdentityChange {
+  /// The protocol address didn't have an identity key or had the same key.
+  SignalIdentityChangeNewOrUnchanged(0),
+
+  /// The new identity key replaced a different key for the protocol address.
+  SignalIdentityChangeReplacedExisting(1);
 
   final int value;
-  const SignalDirection(this.value);
+  const SignalIdentityChange(this.value);
 
-  static SignalDirection fromValue(int value) => switch (value) {
-    0 => SignalDirectionSending,
-    1 => SignalDirectionReceiving,
-    _ => throw ArgumentError('Unknown value for SignalDirection: $value'),
-  };
-}
-
-enum SignalLogLevel {
-  SignalLogLevelError(1),
-  SignalLogLevelWarn(2),
-  SignalLogLevelInfo(3),
-  SignalLogLevelDebug(4),
-  SignalLogLevelTrace(5);
-
-  final int value;
-  const SignalLogLevel(this.value);
-
-  static SignalLogLevel fromValue(int value) => switch (value) {
-    1 => SignalLogLevelError,
-    2 => SignalLogLevelWarn,
-    3 => SignalLogLevelInfo,
-    4 => SignalLogLevelDebug,
-    5 => SignalLogLevelTrace,
-    _ => throw ArgumentError('Unknown value for SignalLogLevel: $value'),
+  static SignalIdentityChange fromValue(int value) => switch (value) {
+    0 => SignalIdentityChangeNewOrUnchanged,
+    1 => SignalIdentityChangeReplacedExisting,
+    _ => throw ArgumentError('Unknown value for SignalIdentityChange: $value'),
   };
 }
 
@@ -6246,6 +7469,7 @@ enum SignalErrorCode {
   SignalErrorCodeInvalidRegistrationId(81),
   SignalErrorCodeInvalidSession(82),
   SignalErrorCodeInvalidSenderKeySession(83),
+  SignalErrorCodeInvalidProtocolAddress(84),
   SignalErrorCodeDuplicatedMessage(90),
   SignalErrorCodeCallbackError(100),
   SignalErrorCodeVerificationFailure(110),
@@ -6274,12 +7498,32 @@ enum SignalErrorCode {
   SignalErrorCodeConnectionFailed(148),
   SignalErrorCodeChatServiceInactive(149),
   SignalErrorCodeRequestTimedOut(150),
+  SignalErrorCodeRateLimitChallenge(151),
+  SignalErrorCodePossibleCaptiveNetwork(152),
   SignalErrorCodeSvrDataMissing(160),
   SignalErrorCodeSvrRestoreFailed(161),
   SignalErrorCodeSvrRotationMachineTooManySteps(162),
+  SignalErrorCodeSvrRequestFailed(163),
   SignalErrorCodeAppExpired(170),
   SignalErrorCodeDeviceDeregistered(171),
-  SignalErrorCodeBackupValidation(180);
+  SignalErrorCodeConnectionInvalidated(172),
+  SignalErrorCodeConnectedElsewhere(173),
+  SignalErrorCodeBackupValidation(180),
+  SignalErrorCodeRegistrationInvalidSessionId(190),
+  SignalErrorCodeRegistrationUnknown(192),
+  SignalErrorCodeRegistrationSessionNotFound(193),
+  SignalErrorCodeRegistrationNotReadyForVerification(194),
+  SignalErrorCodeRegistrationSendVerificationCodeFailed(195),
+  SignalErrorCodeRegistrationCodeNotDeliverable(196),
+  SignalErrorCodeRegistrationSessionUpdateRejected(197),
+  SignalErrorCodeRegistrationCredentialsCouldNotBeParsed(198),
+  SignalErrorCodeRegistrationDeviceTransferPossible(199),
+  SignalErrorCodeRegistrationRecoveryVerificationFailed(200),
+  SignalErrorCodeRegistrationLock(201),
+  SignalErrorCodeKeyTransparencyError(210),
+  SignalErrorCodeKeyTransparencyVerificationFailed(211),
+  SignalErrorCodeRequestUnauthorized(220),
+  SignalErrorCodeMismatchedDevices(221);
 
   final int value;
   const SignalErrorCode(this.value);
@@ -6310,6 +7554,7 @@ enum SignalErrorCode {
     81 => SignalErrorCodeInvalidRegistrationId,
     82 => SignalErrorCodeInvalidSession,
     83 => SignalErrorCodeInvalidSenderKeySession,
+    84 => SignalErrorCodeInvalidProtocolAddress,
     90 => SignalErrorCodeDuplicatedMessage,
     100 => SignalErrorCodeCallbackError,
     110 => SignalErrorCodeVerificationFailure,
@@ -6338,15 +7583,58 @@ enum SignalErrorCode {
     148 => SignalErrorCodeConnectionFailed,
     149 => SignalErrorCodeChatServiceInactive,
     150 => SignalErrorCodeRequestTimedOut,
+    151 => SignalErrorCodeRateLimitChallenge,
+    152 => SignalErrorCodePossibleCaptiveNetwork,
     160 => SignalErrorCodeSvrDataMissing,
     161 => SignalErrorCodeSvrRestoreFailed,
     162 => SignalErrorCodeSvrRotationMachineTooManySteps,
+    163 => SignalErrorCodeSvrRequestFailed,
     170 => SignalErrorCodeAppExpired,
     171 => SignalErrorCodeDeviceDeregistered,
+    172 => SignalErrorCodeConnectionInvalidated,
+    173 => SignalErrorCodeConnectedElsewhere,
     180 => SignalErrorCodeBackupValidation,
+    190 => SignalErrorCodeRegistrationInvalidSessionId,
+    192 => SignalErrorCodeRegistrationUnknown,
+    193 => SignalErrorCodeRegistrationSessionNotFound,
+    194 => SignalErrorCodeRegistrationNotReadyForVerification,
+    195 => SignalErrorCodeRegistrationSendVerificationCodeFailed,
+    196 => SignalErrorCodeRegistrationCodeNotDeliverable,
+    197 => SignalErrorCodeRegistrationSessionUpdateRejected,
+    198 => SignalErrorCodeRegistrationCredentialsCouldNotBeParsed,
+    199 => SignalErrorCodeRegistrationDeviceTransferPossible,
+    200 => SignalErrorCodeRegistrationRecoveryVerificationFailed,
+    201 => SignalErrorCodeRegistrationLock,
+    210 => SignalErrorCodeKeyTransparencyError,
+    211 => SignalErrorCodeKeyTransparencyVerificationFailed,
+    220 => SignalErrorCodeRequestUnauthorized,
+    221 => SignalErrorCodeMismatchedDevices,
     _ => throw ArgumentError('Unknown value for SignalErrorCode: $value'),
   };
 }
+
+enum SignalSvr2CredentialsResult {
+  SignalSvr2CredentialsResultMatch(0),
+  SignalSvr2CredentialsResultNoMatch(1),
+  SignalSvr2CredentialsResultInvalid(2);
+
+  final int value;
+  const SignalSvr2CredentialsResult(this.value);
+
+  static SignalSvr2CredentialsResult fromValue(int value) => switch (value) {
+    0 => SignalSvr2CredentialsResultMatch,
+    1 => SignalSvr2CredentialsResultNoMatch,
+    2 => SignalSvr2CredentialsResultInvalid,
+    _ => throw ArgumentError(
+      'Unknown value for SignalSvr2CredentialsResult: $value',
+    ),
+  };
+}
+
+typedef SignalSvr2CredentialsResult$1 = ffi.Uint8;
+typedef DartSignalSvr2CredentialsResult = int;
+
+final class SignalAccountAttributes extends ffi.Opaque {}
 
 final class SignalAes256Ctr32 extends ffi.Opaque {}
 
@@ -6357,6 +7645,12 @@ final class SignalAes256GcmEncryption extends ffi.Opaque {}
 final class SignalAes256GcmSiv extends ffi.Opaque {}
 
 final class SignalAuthenticatedChatConnection extends ffi.Opaque {}
+
+final class SignalBackupRestoreResponse extends ffi.Opaque {}
+
+final class SignalBackupStoreResponse extends ffi.Opaque {}
+
+final class SignalBridgedStringMap extends ffi.Opaque {}
 
 final class SignalCdsiLookup extends ffi.Opaque {}
 
@@ -6406,7 +7700,17 @@ final class SignalPrivateKey extends ffi.Opaque {}
 
 final class SignalProtocolAddress extends ffi.Opaque {}
 
+final class SignalProvisioningChatConnection extends ffi.Opaque {}
+
 final class SignalPublicKey extends ffi.Opaque {}
+
+final class SignalRegisterAccountRequest extends ffi.Opaque {}
+
+final class SignalRegisterAccountResponse extends ffi.Opaque {}
+
+final class SignalRegistrationService extends ffi.Opaque {}
+
+final class SignalRegistrationSession extends ffi.Opaque {}
 
 final class SignalSanitizedMetadata extends ffi.Opaque {}
 
@@ -6444,6 +7748,238 @@ final class SignalUnidentifiedSenderMessageContent extends ffi.Opaque {}
 
 final class SignalValidatingMac extends ffi.Opaque {}
 
+final class SignalMutPointerProtocolAddress extends ffi.Struct {
+  external ffi.Pointer<SignalProtocolAddress> raw;
+}
+
+final class SignalConstPointerProtocolAddress extends ffi.Struct {
+  external ffi.Pointer<SignalProtocolAddress> raw;
+}
+
+final class SignalMutPointerAes256Ctr32 extends ffi.Struct {
+  external ffi.Pointer<SignalAes256Ctr32> raw;
+}
+
+final class SignalBorrowedBuffer extends ffi.Struct {
+  external ffi.Pointer<ffi.UnsignedChar> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalBorrowedMutableBuffer extends ffi.Struct {
+  external ffi.Pointer<ffi.UnsignedChar> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalMutPointerAes256GcmDecryption extends ffi.Struct {
+  external ffi.Pointer<SignalAes256GcmDecryption> raw;
+}
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBuffer extends ffi.Struct {
+  external ffi.Pointer<ffi.UnsignedChar> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalMutPointerAes256GcmEncryption extends ffi.Struct {
+  external ffi.Pointer<SignalAes256GcmEncryption> raw;
+}
+
+final class SignalConstPointerAes256GcmSiv extends ffi.Struct {
+  external ffi.Pointer<SignalAes256GcmSiv> raw;
+}
+
+final class SignalMutPointerAes256GcmSiv extends ffi.Struct {
+  external ffi.Pointer<SignalAes256GcmSiv> raw;
+}
+
+final class SignalMutPointerAuthenticatedChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalAuthenticatedChatConnection> raw;
+}
+
+typedef SignalCancellationId = ffi.Uint64;
+typedef DartSignalCancellationId = int;
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerAuthenticatedChatConnection
+    extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerAuthenticatedChatConnection> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerTokioAsyncContext extends ffi.Struct {
+  external ffi.Pointer<SignalTokioAsyncContext> raw;
+}
+
+final class SignalConstPointerConnectionManager extends ffi.Struct {
+  external ffi.Pointer<SignalConnectionManager> raw;
+}
+
+final class SignalBorrowedSliceOfusize extends ffi.Struct {
+  external ffi.Pointer<ffi.Size> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalBorrowedBytestringArray extends ffi.Struct {
+  external SignalBorrowedBuffer bytes;
+
+  external SignalBorrowedSliceOfusize lengths;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromisebool extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<ffi.Bool> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerAuthenticatedChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalAuthenticatedChatConnection> raw;
+}
+
+typedef SignalChatConnectionInfo = SignalConnectionInfo;
+
+final class SignalMutPointerChatConnectionInfo extends ffi.Struct {
+  external ffi.Pointer<SignalChatConnectionInfo> raw;
+}
+
+typedef SignalReceivedIncomingMessageFunction =
+    ffi.Void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      SignalOwnedBuffer envelope,
+      ffi.Uint64 timestamp_millis,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef DartSignalReceivedIncomingMessageFunction =
+    void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      SignalOwnedBuffer envelope,
+      int timestamp_millis,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef SignalReceivedIncomingMessage =
+    ffi.Pointer<ffi.NativeFunction<SignalReceivedIncomingMessageFunction>>;
+typedef SignalReceivedQueueEmptyFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalReceivedQueueEmptyFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalReceivedQueueEmpty =
+    ffi.Pointer<ffi.NativeFunction<SignalReceivedQueueEmptyFunction>>;
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBufferOfusize extends ffi.Struct {
+  external ffi.Pointer<ffi.Size> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalBytestringArray extends ffi.Struct {
+  external SignalOwnedBuffer bytes;
+
+  external SignalOwnedBufferOfusize lengths;
+}
+
+typedef SignalStringArray = SignalBytestringArray;
+typedef SignalReceivedAlertsFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
+typedef DartSignalReceivedAlertsFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
+typedef SignalReceivedAlerts =
+    ffi.Pointer<ffi.NativeFunction<SignalReceivedAlertsFunction>>;
+typedef SignalConnectionInterruptedFunction =
+    ffi.Void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalFfiError> error,
+    );
+typedef DartSignalConnectionInterruptedFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx, ffi.Pointer<SignalFfiError> error);
+typedef SignalConnectionInterrupted =
+    ffi.Pointer<ffi.NativeFunction<SignalConnectionInterruptedFunction>>;
+typedef SignalDestroyChatListenerFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalDestroyChatListenerFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalDestroyChatListener =
+    ffi.Pointer<ffi.NativeFunction<SignalDestroyChatListenerFunction>>;
+
+/// Callbacks for [`ChatListener`].
+///
+/// Callbacks will be serialized (i.e. two calls will not come in at the same time), but may not
+/// always happen on the same thread. Calls should be responded to promptly to avoid blocking later
+/// messages.
+///
+/// # Safety
+///
+/// This type contains raw pointers. Code that constructs an instance of this type must ensure
+/// memory safety assuming that
+/// - the callback function pointer fields are called with `ctx` as an argument;
+/// - the `destroy` function pointer field is called with `ctx` as an argument;
+/// - no function pointer fields are called after `destroy` is called.
+final class SignalFfiChatListenerStruct extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ctx;
+
+  external SignalReceivedIncomingMessage received_incoming_message;
+
+  external SignalReceivedQueueEmpty received_queue_empty;
+
+  external SignalReceivedAlerts received_alerts;
+
+  external SignalConnectionInterrupted connection_interrupted;
+
+  external SignalDestroyChatListener destroy;
+}
+
+final class SignalConstPointerFfiChatListenerStruct extends ffi.Struct {
+  external ffi.Pointer<SignalFfiChatListenerStruct> raw;
+}
+
 /// A type alias to be used with [`OwnedBufferOf`], so that `OwnedBufferOf<c_char>` and
 /// `OwnedBufferOf<*const c_char>` get distinct names.
 typedef SignalCStringPtr = ffi.Pointer<ffi.Char>;
@@ -6455,6 +7991,78 @@ final class SignalOwnedBufferOfCStringPtr extends ffi.Struct {
   /// The number of elements in the buffer (not necessarily the number of bytes).
   @ffi.Size()
   external int length;
+}
+
+final class SignalFfiChatResponse extends ffi.Struct {
+  @ffi.Uint16()
+  external int status;
+
+  external ffi.Pointer<ffi.Char> message;
+
+  external SignalOwnedBufferOfCStringPtr headers;
+
+  external SignalOwnedBuffer body;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseFfiChatResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalFfiChatResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerHttpRequest extends ffi.Struct {
+  external ffi.Pointer<SignalHttpRequest> raw;
+}
+
+final class SignalMutPointerPrivateKey extends ffi.Struct {
+  external ffi.Pointer<SignalPrivateKey> raw;
+}
+
+final class SignalMutPointerBackupRestoreResponse extends ffi.Struct {
+  external ffi.Pointer<SignalBackupRestoreResponse> raw;
+}
+
+final class SignalConstPointerBackupRestoreResponse extends ffi.Struct {
+  external ffi.Pointer<SignalBackupRestoreResponse> raw;
+}
+
+final class SignalMutPointerBackupStoreResponse extends ffi.Struct {
+  external ffi.Pointer<SignalBackupStoreResponse> raw;
+}
+
+final class SignalConstPointerBackupStoreResponse extends ffi.Struct {
+  external ffi.Pointer<SignalBackupStoreResponse> raw;
+}
+
+final class SignalMutPointerBridgedStringMap extends ffi.Struct {
+  external ffi.Pointer<SignalBridgedStringMap> raw;
+}
+
+final class SignalConstPointerBridgedStringMap extends ffi.Struct {
+  external ffi.Pointer<SignalBridgedStringMap> raw;
+}
+
+final class SignalMutPointerSgxClientState extends ffi.Struct {
+  external ffi.Pointer<SignalSgxClientState> raw;
 }
 
 final class SignalFfiCdsiLookupResponseEntry extends ffi.Struct {
@@ -6478,61 +8086,113 @@ final class SignalOwnedBufferOfFfiCdsiLookupResponseEntry extends ffi.Struct {
   external int length;
 }
 
-/// A representation of a array allocated on the Rust heap for use in C code.
-final class SignalOwnedBuffer extends ffi.Struct {
-  external ffi.Pointer<ffi.UnsignedChar> base;
+final class SignalFfiCdsiLookupResponse extends ffi.Struct {
+  external SignalOwnedBufferOfFfiCdsiLookupResponseEntry entries;
 
-  /// The number of elements in the buffer (not necessarily the number of bytes).
-  @ffi.Size()
-  external int length;
+  @ffi.Int32()
+  external int debug_permits_used;
 }
 
-/// A representation of a array allocated on the Rust heap for use in C code.
-final class SignalOwnedBufferOfusize extends ffi.Struct {
-  external ffi.Pointer<ffi.Size> base;
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseFfiCdsiLookupResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalFfiCdsiLookupResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
 
-  /// The number of elements in the buffer (not necessarily the number of bytes).
-  @ffi.Size()
-  external int length;
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
 }
 
-final class SignalBytestringArray extends ffi.Struct {
-  external SignalOwnedBuffer bytes;
-
-  external SignalOwnedBufferOfusize lengths;
+final class SignalConstPointerCdsiLookup extends ffi.Struct {
+  external ffi.Pointer<SignalCdsiLookup> raw;
 }
 
-final class SignalMutPointerProtocolAddress extends ffi.Struct {
-  external ffi.Pointer<SignalProtocolAddress> raw;
+final class SignalMutPointerCdsiLookup extends ffi.Struct {
+  external ffi.Pointer<SignalCdsiLookup> raw;
 }
 
-typedef SignalStringArray = SignalBytestringArray;
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerCdsiLookup extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerCdsiLookup> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
 
-final class SignalMutPointerPrivateKey extends ffi.Struct {
-  external ffi.Pointer<SignalPrivateKey> raw;
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
 }
 
-final class SignalMutPointerPublicKey extends ffi.Struct {
-  external ffi.Pointer<SignalPublicKey> raw;
+final class SignalConstPointerLookupRequest extends ffi.Struct {
+  external ffi.Pointer<SignalLookupRequest> raw;
 }
 
-final class SignalBorrowedBuffer extends ffi.Struct {
-  external ffi.Pointer<ffi.UnsignedChar> base;
-
-  @ffi.Size()
-  external int length;
+final class SignalConstPointerChatConnectionInfo extends ffi.Struct {
+  external ffi.Pointer<SignalChatConnectionInfo> raw;
 }
 
-final class SignalConstPointerPublicKey extends ffi.Struct {
-  external ffi.Pointer<SignalPublicKey> raw;
+final class SignalMutPointerCiphertextMessage extends ffi.Struct {
+  external ffi.Pointer<SignalCiphertextMessage> raw;
+}
+
+final class SignalConstPointerPlaintextContent extends ffi.Struct {
+  external ffi.Pointer<SignalPlaintextContent> raw;
+}
+
+final class SignalConstPointerCiphertextMessage extends ffi.Struct {
+  external ffi.Pointer<SignalCiphertextMessage> raw;
+}
+
+final class SignalMutPointerConnectionInfo extends ffi.Struct {
+  external ffi.Pointer<SignalConnectionInfo> raw;
+}
+
+final class SignalMutPointerConnectionManager extends ffi.Struct {
+  external ffi.Pointer<SignalConnectionManager> raw;
+}
+
+final class SignalConstPointerConnectionProxyConfig extends ffi.Struct {
+  external ffi.Pointer<SignalConnectionProxyConfig> raw;
+}
+
+final class SignalMutPointerConnectionProxyConfig extends ffi.Struct {
+  external ffi.Pointer<SignalConnectionProxyConfig> raw;
+}
+
+final class SignalConstPointerSignalMessage extends ffi.Struct {
+  external ffi.Pointer<SignalMessage> raw;
 }
 
 final class SignalMutPointerSessionRecord extends ffi.Struct {
   external ffi.Pointer<SignalSessionRecord> raw;
-}
-
-final class SignalConstPointerProtocolAddress extends ffi.Struct {
-  external ffi.Pointer<SignalProtocolAddress> raw;
 }
 
 typedef SignalLoadSessionFunction =
@@ -6602,6 +8262,11 @@ typedef DartSignalGetLocalRegistrationIdFunction =
     int Function(ffi.Pointer<ffi.Void> store_ctx, ffi.Pointer<ffi.Uint32> idp);
 typedef SignalGetLocalRegistrationId =
     ffi.Pointer<ffi.NativeFunction<SignalGetLocalRegistrationIdFunction>>;
+
+final class SignalConstPointerPublicKey extends ffi.Struct {
+  external ffi.Pointer<SignalPublicKey> raw;
+}
+
 typedef SignalSaveIdentityKeyFunction =
     ffi.Int Function(
       ffi.Pointer<ffi.Void> store_ctx,
@@ -6616,6 +8281,11 @@ typedef DartSignalSaveIdentityKeyFunction =
     );
 typedef SignalSaveIdentityKey =
     ffi.Pointer<ffi.NativeFunction<SignalSaveIdentityKeyFunction>>;
+
+final class SignalMutPointerPublicKey extends ffi.Struct {
+  external ffi.Pointer<SignalPublicKey> raw;
+}
+
 typedef SignalGetIdentityKeyFunction =
     ffi.Int Function(
       ffi.Pointer<ffi.Void> store_ctx,
@@ -6663,6 +8333,10 @@ final class SignalIdentityKeyStore extends ffi.Struct {
 
 final class SignalConstPointerFfiIdentityKeyStoreStruct extends ffi.Struct {
   external ffi.Pointer<SignalIdentityKeyStore> raw;
+}
+
+final class SignalConstPointerPreKeySignalMessage extends ffi.Struct {
+  external ffi.Pointer<SignalPreKeySignalMessage> raw;
 }
 
 final class SignalMutPointerPreKeyRecord extends ffi.Struct {
@@ -6773,6 +8447,270 @@ final class SignalConstPointerFfiSignedPreKeyStoreStruct extends ffi.Struct {
   external ffi.Pointer<SignalSignedPreKeyStore> raw;
 }
 
+final class SignalMutPointerKyberPreKeyRecord extends ffi.Struct {
+  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
+}
+
+typedef SignalLoadKyberPreKeyFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
+      ffi.Uint32 id,
+    );
+typedef DartSignalLoadKyberPreKeyFunction =
+    int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
+      int id,
+    );
+typedef SignalLoadKyberPreKey =
+    ffi.Pointer<ffi.NativeFunction<SignalLoadKyberPreKeyFunction>>;
+
+final class SignalConstPointerKyberPreKeyRecord extends ffi.Struct {
+  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
+}
+
+typedef SignalStoreKyberPreKeyFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Uint32 id,
+      SignalConstPointerKyberPreKeyRecord record,
+    );
+typedef DartSignalStoreKyberPreKeyFunction =
+    int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      int id,
+      SignalConstPointerKyberPreKeyRecord record,
+    );
+typedef SignalStoreKyberPreKey =
+    ffi.Pointer<ffi.NativeFunction<SignalStoreKyberPreKeyFunction>>;
+typedef SignalMarkKyberPreKeyUsedFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Uint32 id,
+      ffi.Uint32 signed_prekey_id,
+      SignalConstPointerPublicKey base_key,
+    );
+typedef DartSignalMarkKyberPreKeyUsedFunction =
+    int Function(
+      ffi.Pointer<ffi.Void> store_ctx,
+      int id,
+      int signed_prekey_id,
+      SignalConstPointerPublicKey base_key,
+    );
+typedef SignalMarkKyberPreKeyUsed =
+    ffi.Pointer<ffi.NativeFunction<SignalMarkKyberPreKeyUsedFunction>>;
+
+final class SignalKyberPreKeyStore extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ctx;
+
+  external SignalLoadKyberPreKey load_kyber_pre_key;
+
+  external SignalStoreKyberPreKey store_kyber_pre_key;
+
+  external SignalMarkKyberPreKeyUsed mark_kyber_pre_key_used;
+}
+
+final class SignalConstPointerFfiKyberPreKeyStoreStruct extends ffi.Struct {
+  external ffi.Pointer<SignalKyberPreKeyStore> raw;
+}
+
+final class SignalMutPointerDecryptionErrorMessage extends ffi.Struct {
+  external ffi.Pointer<SignalDecryptionErrorMessage> raw;
+}
+
+final class SignalConstPointerDecryptionErrorMessage extends ffi.Struct {
+  external ffi.Pointer<SignalDecryptionErrorMessage> raw;
+}
+
+/// Like [`std::panic::AssertUnwindSafe`], but FFI-compatible.
+typedef SignalUnwindSafeArgSignalFfiError = ffi.Pointer<SignalFfiError>;
+
+final class SignalPairOfc_charu32 extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> first;
+
+  @ffi.Uint32()
+  external int second;
+}
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBufferOfu32 extends ffi.Struct {
+  external ffi.Pointer<ffi.Uint32> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalFfiMismatchedDevicesError extends ffi.Struct {
+  @ffi.Array.multi([17])
+  external ffi.Array<ffi.Uint8> account;
+
+  external SignalOwnedBufferOfu32 missing_devices;
+
+  external SignalOwnedBufferOfu32 extra_devices;
+
+  external SignalOwnedBufferOfu32 stale_devices;
+}
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBufferOfFfiMismatchedDevicesError extends ffi.Struct {
+  external ffi.Pointer<SignalFfiMismatchedDevicesError> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalPairOfc_charOwnedBufferOfc_uchar extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> first;
+
+  external SignalOwnedBuffer second;
+}
+
+final class SignalPairOfc_charbool extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> first;
+
+  @ffi.Bool()
+  external bool second;
+}
+
+final class SignalMutPointerFingerprint extends ffi.Struct {
+  external ffi.Pointer<SignalFingerprint> raw;
+}
+
+final class SignalConstPointerFingerprint extends ffi.Struct {
+  external ffi.Pointer<SignalFingerprint> raw;
+}
+
+final class SignalFfiRegisterResponseBadge extends ffi.Struct {
+  /// The badge ID.
+  external ffi.Pointer<ffi.Char> id;
+
+  /// Whether the badge is currently configured to be visible.
+  @ffi.Bool()
+  external bool visible;
+
+  /// When the badge expires.
+  @ffi.Double()
+  external double expiration_secs;
+}
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBufferOfFfiRegisterResponseBadge extends ffi.Struct {
+  external ffi.Pointer<SignalFfiRegisterResponseBadge> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+/// A representation of a array allocated on the Rust heap for use in C code.
+final class SignalOwnedBufferOfServiceIdFixedWidthBinaryBytes
+    extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<ffi.Uint8>> base;
+
+  /// The number of elements in the buffer (not necessarily the number of bytes).
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalMutPointerSenderKeyRecord extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyRecord> raw;
+}
+
+typedef SignalLoadSenderKeyFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<SignalMutPointerSenderKeyRecord>,
+      SignalConstPointerProtocolAddress,
+      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    );
+typedef DartSignalLoadSenderKeyFunction =
+    int Function(
+      ffi.Pointer<ffi.Void>,
+      ffi.Pointer<SignalMutPointerSenderKeyRecord>,
+      SignalConstPointerProtocolAddress,
+      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+    );
+typedef SignalLoadSenderKey =
+    ffi.Pointer<ffi.NativeFunction<SignalLoadSenderKeyFunction>>;
+
+final class SignalConstPointerSenderKeyRecord extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyRecord> raw;
+}
+
+typedef SignalStoreSenderKeyFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void>,
+      SignalConstPointerProtocolAddress,
+      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+      SignalConstPointerSenderKeyRecord,
+    );
+typedef DartSignalStoreSenderKeyFunction =
+    int Function(
+      ffi.Pointer<ffi.Void>,
+      SignalConstPointerProtocolAddress,
+      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
+      SignalConstPointerSenderKeyRecord,
+    );
+typedef SignalStoreSenderKey =
+    ffi.Pointer<ffi.NativeFunction<SignalStoreSenderKeyFunction>>;
+
+final class SignalSenderKeyStore extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ctx;
+
+  external SignalLoadSenderKey load_sender_key;
+
+  external SignalStoreSenderKey store_sender_key;
+}
+
+final class SignalConstPointerFfiSenderKeyStoreStruct extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyStore> raw;
+}
+
+final class SignalConstPointerServerSecretParams extends ffi.Struct {
+  external ffi.Pointer<SignalServerSecretParams> raw;
+}
+
+final class SignalBorrowedSliceOfBuffers extends ffi.Struct {
+  external ffi.Pointer<SignalBorrowedBuffer> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalConstPointerServerPublicParams extends ffi.Struct {
+  external ffi.Pointer<SignalServerPublicParams> raw;
+}
+
+final class SignalMutPointerHsmEnclaveClient extends ffi.Struct {
+  external ffi.Pointer<SignalHsmEnclaveClient> raw;
+}
+
+final class SignalConstPointerHsmEnclaveClient extends ffi.Struct {
+  external ffi.Pointer<SignalHsmEnclaveClient> raw;
+}
+
+final class SignalMutPointerHttpRequest extends ffi.Struct {
+  external ffi.Pointer<SignalHttpRequest> raw;
+}
+
+final class SignalPairOfMutPointerPublicKeyMutPointerPrivateKey
+    extends ffi.Struct {
+  external SignalMutPointerPublicKey first;
+
+  external SignalMutPointerPrivateKey second;
+}
+
+final class SignalConstPointerPrivateKey extends ffi.Struct {
+  external ffi.Pointer<SignalPrivateKey> raw;
+}
+
+final class SignalMutPointerIncrementalMac extends ffi.Struct {
+  external ffi.Pointer<SignalIncrementalMac> raw;
+}
+
 typedef SignalLogCallbackFunction =
     ffi.Void Function(
       ffi.Pointer<ffi.Void> ctx,
@@ -6806,140 +8744,40 @@ final class SignalFfiLogger extends ffi.Struct {
   external SignalLogFlushCallback flush;
 }
 
-final class SignalMutPointerAes256GcmSiv extends ffi.Struct {
-  external ffi.Pointer<SignalAes256GcmSiv> raw;
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseOwnedBufferOfc_uchar extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalOwnedBuffer> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
 }
 
-final class SignalMutPointerAes256Ctr32 extends ffi.Struct {
-  external ffi.Pointer<SignalAes256Ctr32> raw;
+final class SignalConstPointerUnauthenticatedChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalUnauthenticatedChatConnection> raw;
 }
 
-final class SignalMutPointerAes256GcmEncryption extends ffi.Struct {
-  external ffi.Pointer<SignalAes256GcmEncryption> raw;
-}
+final class SignalOptionalBorrowedSliceOfc_uchar extends ffi.Struct {
+  @ffi.Bool()
+  external bool present;
 
-final class SignalMutPointerAes256GcmDecryption extends ffi.Struct {
-  external ffi.Pointer<SignalAes256GcmDecryption> raw;
-}
-
-final class SignalBorrowedMutableBuffer extends ffi.Struct {
-  external ffi.Pointer<ffi.UnsignedChar> base;
-
-  @ffi.Size()
-  external int length;
-}
-
-final class SignalConstPointerAes256GcmSiv extends ffi.Struct {
-  external ffi.Pointer<SignalAes256GcmSiv> raw;
-}
-
-final class SignalMutPointerCiphertextMessage extends ffi.Struct {
-  external ffi.Pointer<SignalCiphertextMessage> raw;
-}
-
-final class SignalMutPointerDecryptionErrorMessage extends ffi.Struct {
-  external ffi.Pointer<SignalDecryptionErrorMessage> raw;
-}
-
-final class SignalConstPointerDecryptionErrorMessage extends ffi.Struct {
-  external ffi.Pointer<SignalDecryptionErrorMessage> raw;
-}
-
-final class SignalMutPointerFingerprint extends ffi.Struct {
-  external ffi.Pointer<SignalFingerprint> raw;
-}
-
-final class SignalConstPointerFingerprint extends ffi.Struct {
-  external ffi.Pointer<SignalFingerprint> raw;
-}
-
-final class SignalMutPointerPlaintextContent extends ffi.Struct {
-  external ffi.Pointer<SignalPlaintextContent> raw;
-}
-
-final class SignalConstPointerPlaintextContent extends ffi.Struct {
-  external ffi.Pointer<SignalPlaintextContent> raw;
-}
-
-final class SignalMutPointerPreKeyBundle extends ffi.Struct {
-  external ffi.Pointer<SignalPreKeyBundle> raw;
-}
-
-final class SignalConstPointerPreKeyBundle extends ffi.Struct {
-  external ffi.Pointer<SignalPreKeyBundle> raw;
-}
-
-final class SignalMutPointerPreKeySignalMessage extends ffi.Struct {
-  external ffi.Pointer<SignalPreKeySignalMessage> raw;
-}
-
-final class SignalConstPointerPreKeySignalMessage extends ffi.Struct {
-  external ffi.Pointer<SignalPreKeySignalMessage> raw;
-}
-
-final class SignalConstPointerPrivateKey extends ffi.Struct {
-  external ffi.Pointer<SignalPrivateKey> raw;
-}
-
-final class SignalMutPointerSenderCertificate extends ffi.Struct {
-  external ffi.Pointer<SignalSenderCertificate> raw;
-}
-
-final class SignalConstPointerSenderCertificate extends ffi.Struct {
-  external ffi.Pointer<SignalSenderCertificate> raw;
-}
-
-final class SignalMutPointerSenderKeyDistributionMessage extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyDistributionMessage> raw;
-}
-
-final class SignalConstPointerSenderKeyDistributionMessage extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyDistributionMessage> raw;
-}
-
-final class SignalMutPointerSenderKeyMessage extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyMessage> raw;
-}
-
-final class SignalConstPointerSenderKeyMessage extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyMessage> raw;
-}
-
-final class SignalMutPointerSenderKeyRecord extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyRecord> raw;
-}
-
-final class SignalConstPointerSenderKeyRecord extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyRecord> raw;
-}
-
-final class SignalMutPointerServerCertificate extends ffi.Struct {
-  external ffi.Pointer<SignalServerCertificate> raw;
-}
-
-final class SignalConstPointerServerCertificate extends ffi.Struct {
-  external ffi.Pointer<SignalServerCertificate> raw;
-}
-
-final class SignalMutPointerSignalMessage extends ffi.Struct {
-  external ffi.Pointer<SignalMessage> raw;
-}
-
-final class SignalConstPointerSignalMessage extends ffi.Struct {
-  external ffi.Pointer<SignalMessage> raw;
-}
-
-final class SignalMutPointerKyberPreKeyRecord extends ffi.Struct {
-  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
-}
-
-final class SignalConstPointerKyberPreKeyRecord extends ffi.Struct {
-  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
-}
-
-final class SignalMutPointerUnidentifiedSenderMessageContent
-    extends ffi.Struct {
-  external ffi.Pointer<SignalUnidentifiedSenderMessageContent> raw;
+  external SignalBorrowedBuffer value;
 }
 
 typedef SignalKyberKeyPair = SignalKeyPair;
@@ -6958,10 +8796,6 @@ final class SignalMutPointerKyberPublicKey extends ffi.Struct {
   external ffi.Pointer<SignalKyberPublicKey> raw;
 }
 
-final class SignalConstPointerKyberPublicKey extends ffi.Struct {
-  external ffi.Pointer<SignalKyberPublicKey> raw;
-}
-
 /// A KEM secret key with the ability to decapsulate a shared secret.
 typedef SignalSecretKey = SignalKeySecret;
 typedef SignalKyberSecretKey = SignalSecretKey;
@@ -6970,519 +8804,28 @@ final class SignalMutPointerKyberSecretKey extends ffi.Struct {
   external ffi.Pointer<SignalKyberSecretKey> raw;
 }
 
+final class SignalConstPointerKyberPublicKey extends ffi.Struct {
+  external ffi.Pointer<SignalKyberPublicKey> raw;
+}
+
 final class SignalConstPointerKyberSecretKey extends ffi.Struct {
   external ffi.Pointer<SignalKyberSecretKey> raw;
-}
-
-final class SignalConstPointerUnidentifiedSenderMessageContent
-    extends ffi.Struct {
-  external ffi.Pointer<SignalUnidentifiedSenderMessageContent> raw;
-}
-
-final class SignalConstPointerCiphertextMessage extends ffi.Struct {
-  external ffi.Pointer<SignalCiphertextMessage> raw;
-}
-
-typedef SignalLoadKyberPreKeyFunction =
-    ffi.Int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
-      ffi.Uint32 id,
-    );
-typedef DartSignalLoadKyberPreKeyFunction =
-    int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
-      int id,
-    );
-typedef SignalLoadKyberPreKey =
-    ffi.Pointer<ffi.NativeFunction<SignalLoadKyberPreKeyFunction>>;
-typedef SignalStoreKyberPreKeyFunction =
-    ffi.Int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      ffi.Uint32 id,
-      SignalConstPointerKyberPreKeyRecord record,
-    );
-typedef DartSignalStoreKyberPreKeyFunction =
-    int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      int id,
-      SignalConstPointerKyberPreKeyRecord record,
-    );
-typedef SignalStoreKyberPreKey =
-    ffi.Pointer<ffi.NativeFunction<SignalStoreKyberPreKeyFunction>>;
-typedef SignalMarkKyberPreKeyUsedFunction =
-    ffi.Int Function(ffi.Pointer<ffi.Void> store_ctx, ffi.Uint32 id);
-typedef DartSignalMarkKyberPreKeyUsedFunction =
-    int Function(ffi.Pointer<ffi.Void> store_ctx, int id);
-typedef SignalMarkKyberPreKeyUsed =
-    ffi.Pointer<ffi.NativeFunction<SignalMarkKyberPreKeyUsedFunction>>;
-
-final class SignalKyberPreKeyStore extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ctx;
-
-  external SignalLoadKyberPreKey load_kyber_pre_key;
-
-  external SignalStoreKyberPreKey store_kyber_pre_key;
-
-  external SignalMarkKyberPreKeyUsed mark_kyber_pre_key_used;
-}
-
-final class SignalConstPointerFfiKyberPreKeyStoreStruct extends ffi.Struct {
-  external ffi.Pointer<SignalKyberPreKeyStore> raw;
-}
-
-final class SignalBorrowedSliceOfConstPointerProtocolAddress
-    extends ffi.Struct {
-  external ffi.Pointer<SignalConstPointerProtocolAddress> base;
-
-  @ffi.Size()
-  external int length;
-}
-
-final class SignalBorrowedSliceOfConstPointerSessionRecord extends ffi.Struct {
-  external ffi.Pointer<SignalConstPointerSessionRecord> base;
-
-  @ffi.Size()
-  external int length;
-}
-
-typedef SignalLoadSenderKeyFunction =
-    ffi.Int Function(
-      ffi.Pointer<ffi.Void>,
-      ffi.Pointer<SignalMutPointerSenderKeyRecord>,
-      SignalConstPointerProtocolAddress,
-      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    );
-typedef DartSignalLoadSenderKeyFunction =
-    int Function(
-      ffi.Pointer<ffi.Void>,
-      ffi.Pointer<SignalMutPointerSenderKeyRecord>,
-      SignalConstPointerProtocolAddress,
-      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-    );
-typedef SignalLoadSenderKey =
-    ffi.Pointer<ffi.NativeFunction<SignalLoadSenderKeyFunction>>;
-typedef SignalStoreSenderKeyFunction =
-    ffi.Int Function(
-      ffi.Pointer<ffi.Void>,
-      SignalConstPointerProtocolAddress,
-      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-      SignalConstPointerSenderKeyRecord,
-    );
-typedef DartSignalStoreSenderKeyFunction =
-    int Function(
-      ffi.Pointer<ffi.Void>,
-      SignalConstPointerProtocolAddress,
-      ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
-      SignalConstPointerSenderKeyRecord,
-    );
-typedef SignalStoreSenderKey =
-    ffi.Pointer<ffi.NativeFunction<SignalStoreSenderKeyFunction>>;
-
-final class SignalSenderKeyStore extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ctx;
-
-  external SignalLoadSenderKey load_sender_key;
-
-  external SignalStoreSenderKey store_sender_key;
-}
-
-final class SignalConstPointerFfiSenderKeyStoreStruct extends ffi.Struct {
-  external ffi.Pointer<SignalSenderKeyStore> raw;
-}
-
-final class SignalMutPointerSgxClientState extends ffi.Struct {
-  external ffi.Pointer<SignalSgxClientState> raw;
-}
-
-final class SignalMutPointerHsmEnclaveClient extends ffi.Struct {
-  external ffi.Pointer<SignalHsmEnclaveClient> raw;
-}
-
-final class SignalConstPointerHsmEnclaveClient extends ffi.Struct {
-  external ffi.Pointer<SignalHsmEnclaveClient> raw;
-}
-
-final class SignalConstPointerSgxClientState extends ffi.Struct {
-  external ffi.Pointer<SignalSgxClientState> raw;
-}
-
-final class SignalMutPointerServerPublicParams extends ffi.Struct {
-  external ffi.Pointer<SignalServerPublicParams> raw;
-}
-
-final class SignalConstPointerServerPublicParams extends ffi.Struct {
-  external ffi.Pointer<SignalServerPublicParams> raw;
-}
-
-final class SignalMutPointerServerSecretParams extends ffi.Struct {
-  external ffi.Pointer<SignalServerSecretParams> raw;
-}
-
-final class SignalConstPointerServerSecretParams extends ffi.Struct {
-  external ffi.Pointer<SignalServerSecretParams> raw;
-}
-
-final class SignalBorrowedSliceOfBuffers extends ffi.Struct {
-  external ffi.Pointer<SignalBorrowedBuffer> base;
-
-  @ffi.Size()
-  external int length;
-}
-
-final class SignalMutPointerConnectionInfo extends ffi.Struct {
-  external ffi.Pointer<SignalConnectionInfo> raw;
-}
-
-final class SignalMutPointerConnectionProxyConfig extends ffi.Struct {
-  external ffi.Pointer<SignalConnectionProxyConfig> raw;
-}
-
-final class SignalConstPointerConnectionProxyConfig extends ffi.Struct {
-  external ffi.Pointer<SignalConnectionProxyConfig> raw;
-}
-
-final class SignalMutPointerConnectionManager extends ffi.Struct {
-  external ffi.Pointer<SignalConnectionManager> raw;
-}
-
-final class SignalConstPointerConnectionManager extends ffi.Struct {
-  external ffi.Pointer<SignalConnectionManager> raw;
 }
 
 final class SignalMutPointerLookupRequest extends ffi.Struct {
   external ffi.Pointer<SignalLookupRequest> raw;
 }
 
-final class SignalConstPointerLookupRequest extends ffi.Struct {
-  external ffi.Pointer<SignalLookupRequest> raw;
-}
-
-final class SignalMutPointerCdsiLookup extends ffi.Struct {
-  external ffi.Pointer<SignalCdsiLookup> raw;
-}
-
-typedef SignalCancellationId = ffi.Uint64;
-typedef DartSignalCancellationId = int;
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromiseMutPointerCdsiLookup extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<SignalMutPointerCdsiLookup> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-final class SignalConstPointerTokioAsyncContext extends ffi.Struct {
-  external ffi.Pointer<SignalTokioAsyncContext> raw;
-}
-
-final class SignalConstPointerCdsiLookup extends ffi.Struct {
-  external ffi.Pointer<SignalCdsiLookup> raw;
-}
-
-final class SignalFfiCdsiLookupResponse extends ffi.Struct {
-  external SignalOwnedBufferOfFfiCdsiLookupResponseEntry entries;
-
-  @ffi.Int32()
-  external int debug_permits_used;
-}
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromiseFfiCdsiLookupResponse extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<SignalFfiCdsiLookupResponse> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-final class SignalMutPointerHttpRequest extends ffi.Struct {
-  external ffi.Pointer<SignalHttpRequest> raw;
-}
-
-final class SignalMutPointerUnauthenticatedChatConnection extends ffi.Struct {
-  external ffi.Pointer<SignalUnauthenticatedChatConnection> raw;
-}
-
-final class SignalMutPointerAuthenticatedChatConnection extends ffi.Struct {
-  external ffi.Pointer<SignalAuthenticatedChatConnection> raw;
-}
-
-final class SignalConstPointerHttpRequest extends ffi.Struct {
-  external ffi.Pointer<SignalHttpRequest> raw;
-}
-
-typedef SignalChatConnectionInfo = SignalConnectionInfo;
-
-final class SignalConstPointerChatConnectionInfo extends ffi.Struct {
-  external ffi.Pointer<SignalChatConnectionInfo> raw;
-}
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromiseMutPointerUnauthenticatedChatConnection
-    extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<SignalMutPointerUnauthenticatedChatConnection> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-final class SignalConstPointerUnauthenticatedChatConnection extends ffi.Struct {
-  external ffi.Pointer<SignalUnauthenticatedChatConnection> raw;
-}
-
-typedef SignalReceivedIncomingMessageFunction =
-    ffi.Void Function(
-      ffi.Pointer<ffi.Void> ctx,
-      SignalOwnedBuffer envelope,
-      ffi.Uint64 timestamp_millis,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
-    );
-typedef DartSignalReceivedIncomingMessageFunction =
-    void Function(
-      ffi.Pointer<ffi.Void> ctx,
-      SignalOwnedBuffer envelope,
-      int timestamp_millis,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
-    );
-typedef SignalReceivedIncomingMessage =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedIncomingMessageFunction>>;
-typedef SignalReceivedQueueEmptyFunction =
-    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
-typedef DartSignalReceivedQueueEmptyFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx);
-typedef SignalReceivedQueueEmpty =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedQueueEmptyFunction>>;
-typedef SignalConnectionInterruptedFunction =
-    ffi.Void Function(
-      ffi.Pointer<ffi.Void> ctx,
-      ffi.Pointer<SignalFfiError> error,
-    );
-typedef DartSignalConnectionInterruptedFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx, ffi.Pointer<SignalFfiError> error);
-typedef SignalConnectionInterrupted =
-    ffi.Pointer<ffi.NativeFunction<SignalConnectionInterruptedFunction>>;
-typedef SignalDestroyChatListenerFunction =
-    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
-typedef DartSignalDestroyChatListenerFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx);
-typedef SignalDestroyChatListener =
-    ffi.Pointer<ffi.NativeFunction<SignalDestroyChatListenerFunction>>;
-
-/// Callbacks for [`ChatListener`].
-///
-/// Callbacks will be serialized (i.e. two calls will not come in at the same time), but may not
-/// always happen on the same thread. Calls should be responded to promptly to avoid blocking later
-/// messages.
-///
-/// # Safety
-///
-/// This type contains raw pointers. Code that constructs an instance of this type must ensure
-/// memory safety assuming that
-/// - the callback function pointer fields are called with `ctx` as an argument;
-/// - the `destroy` function pointer field is called with `ctx` as an argument;
-/// - no function pointer fields are called after `destroy` is called.
-final class SignalFfiChatListenerStruct extends ffi.Struct {
-  external ffi.Pointer<ffi.Void> ctx;
-
-  external SignalReceivedIncomingMessage received_incoming_message;
-
-  external SignalReceivedQueueEmpty received_queue_empty;
-
-  external SignalConnectionInterrupted connection_interrupted;
-
-  external SignalDestroyChatListener destroy;
-}
-
-final class SignalConstPointerFfiChatListenerStruct extends ffi.Struct {
-  external ffi.Pointer<SignalFfiChatListenerStruct> raw;
-}
-
-final class SignalFfiChatResponse extends ffi.Struct {
-  @ffi.Uint16()
-  external int status;
-
-  external ffi.Pointer<ffi.Char> message;
-
-  external SignalOwnedBufferOfCStringPtr headers;
-
-  external SignalOwnedBuffer body;
-}
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromiseFfiChatResponse extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<SignalFfiChatResponse> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromisebool extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<ffi.Bool> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-final class SignalMutPointerChatConnectionInfo extends ffi.Struct {
-  external ffi.Pointer<SignalChatConnectionInfo> raw;
-}
-
-/// A C callback used to report the results of Rust futures.
-///
-/// cbindgen will produce independent C types like `SignalCPromisei32` and
-/// `SignalCPromiseProtocolAddress`.
-///
-/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
-/// completed once.
-final class SignalCPromiseMutPointerAuthenticatedChatConnection
-    extends ffi.Struct {
-  external ffi.Pointer<
-    ffi.NativeFunction<
-      ffi.Void Function(
-        ffi.Pointer<SignalFfiError> error,
-        ffi.Pointer<SignalMutPointerAuthenticatedChatConnection> result,
-        ffi.Pointer<ffi.Void> context,
-      )
-    >
-  >
-  complete;
-
-  external ffi.Pointer<ffi.Void> context;
-
-  @SignalCancellationId()
-  external int cancellation_id;
-}
-
-final class SignalConstPointerAuthenticatedChatConnection extends ffi.Struct {
-  external ffi.Pointer<SignalAuthenticatedChatConnection> raw;
-}
-
-final class SignalMutPointerServerMessageAck extends ffi.Struct {
-  external ffi.Pointer<SignalServerMessageAck> raw;
-}
-
-final class SignalConstPointerServerMessageAck extends ffi.Struct {
-  external ffi.Pointer<SignalServerMessageAck> raw;
-}
-
-final class SignalMutPointerTokioAsyncContext extends ffi.Struct {
-  external ffi.Pointer<SignalTokioAsyncContext> raw;
-}
-
-final class SignalMutPointerPinHash extends ffi.Struct {
-  external ffi.Pointer<SignalPinHash> raw;
-}
-
-final class SignalConstPointerPinHash extends ffi.Struct {
-  external ffi.Pointer<SignalPinHash> raw;
-}
-
-final class SignalMutPointerIncrementalMac extends ffi.Struct {
-  external ffi.Pointer<SignalIncrementalMac> raw;
-}
-
-final class SignalMutPointerValidatingMac extends ffi.Struct {
-  external ffi.Pointer<SignalValidatingMac> raw;
-}
-
 final class SignalMutPointerMessageBackupKey extends ffi.Struct {
+  external ffi.Pointer<SignalMessageBackupKey> raw;
+}
+
+final class SignalConstPointerMessageBackupKey extends ffi.Struct {
   external ffi.Pointer<SignalMessageBackupKey> raw;
 }
 
 final class SignalMutPointerMessageBackupValidationOutcome extends ffi.Struct {
   external ffi.Pointer<SignalMessageBackupValidationOutcome> raw;
-}
-
-final class SignalConstPointerMessageBackupKey extends ffi.Struct {
-  external ffi.Pointer<SignalMessageBackupKey> raw;
 }
 
 final class SignalConstPointerMessageBackupValidationOutcome
@@ -7523,16 +8866,572 @@ final class SignalConstPointerFfiInputStreamStruct extends ffi.Struct {
   external ffi.Pointer<SignalInputStream> raw;
 }
 
-final class SignalMutPointerOnlineBackupValidator extends ffi.Struct {
-  external ffi.Pointer<SignalOnlineBackupValidator> raw;
+final class SignalMutPointerSignalMessage extends ffi.Struct {
+  external ffi.Pointer<SignalMessage> raw;
 }
 
 final class SignalMutPointerSanitizedMetadata extends ffi.Struct {
   external ffi.Pointer<SignalSanitizedMetadata> raw;
 }
 
+final class SignalMutPointerOnlineBackupValidator extends ffi.Struct {
+  external ffi.Pointer<SignalOnlineBackupValidator> raw;
+}
+
+final class SignalConstPointerPinHash extends ffi.Struct {
+  external ffi.Pointer<SignalPinHash> raw;
+}
+
+final class SignalMutPointerPinHash extends ffi.Struct {
+  external ffi.Pointer<SignalPinHash> raw;
+}
+
+final class SignalMutPointerPlaintextContent extends ffi.Struct {
+  external ffi.Pointer<SignalPlaintextContent> raw;
+}
+
+final class SignalMutPointerPreKeyBundle extends ffi.Struct {
+  external ffi.Pointer<SignalPreKeyBundle> raw;
+}
+
+final class SignalConstPointerPreKeyBundle extends ffi.Struct {
+  external ffi.Pointer<SignalPreKeyBundle> raw;
+}
+
+final class SignalMutPointerPreKeySignalMessage extends ffi.Struct {
+  external ffi.Pointer<SignalPreKeySignalMessage> raw;
+}
+
+final class SignalConstPointerSenderKeyDistributionMessage extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyDistributionMessage> raw;
+}
+
+final class SignalMutPointerProvisioningChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalProvisioningChatConnection> raw;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerProvisioningChatConnection
+    extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerProvisioningChatConnection> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerProvisioningChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalProvisioningChatConnection> raw;
+}
+
+typedef SignalReceivedProvisioningAddressFunction =
+    ffi.Void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<ffi.Char> addr,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef DartSignalReceivedProvisioningAddressFunction =
+    void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<ffi.Char> addr,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef SignalReceivedProvisioningAddress =
+    ffi.Pointer<ffi.NativeFunction<SignalReceivedProvisioningAddressFunction>>;
+typedef SignalReceivedProvisioningEnvelopeFunction =
+    ffi.Void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      SignalOwnedBuffer data,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef DartSignalReceivedProvisioningEnvelopeFunction =
+    void Function(
+      ffi.Pointer<ffi.Void> ctx,
+      SignalOwnedBuffer data,
+      ffi.Pointer<SignalServerMessageAck> cleanup,
+    );
+typedef SignalReceivedProvisioningEnvelope =
+    ffi.Pointer<ffi.NativeFunction<SignalReceivedProvisioningEnvelopeFunction>>;
+typedef SignalDestroyProvisioningListenerFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalDestroyProvisioningListenerFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalDestroyProvisioningListener =
+    ffi.Pointer<ffi.NativeFunction<SignalDestroyProvisioningListenerFunction>>;
+
+/// Callbacks for [`ProvisioningListener`].
+///
+/// Callbacks will be serialized (i.e. two calls will not come in at the same time), but may not
+/// always happen on the same thread. Calls should be responded to promptly to avoid blocking later
+/// messages.
+///
+/// # Safety
+///
+/// This type contains raw pointers. Code that constructs an instance of this type must ensure
+/// memory safety assuming that
+/// - the callback function pointer fields are called with `ctx` as an argument;
+/// - the `destroy` function pointer field is called with `ctx` as an argument;
+/// - no function pointer fields are called after `destroy` is called.
+final class SignalFfiProvisioningListenerStruct extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ctx;
+
+  external SignalReceivedProvisioningAddress received_address;
+
+  external SignalReceivedProvisioningEnvelope received_envelope;
+
+  external SignalConnectionInterrupted connection_interrupted;
+
+  external SignalDestroyProvisioningListener destroy;
+}
+
+final class SignalConstPointerFfiProvisioningListenerStruct extends ffi.Struct {
+  external ffi.Pointer<SignalFfiProvisioningListenerStruct> raw;
+}
+
+final class SignalMutPointerRegisterAccountRequest extends ffi.Struct {
+  external ffi.Pointer<SignalRegisterAccountRequest> raw;
+}
+
+final class SignalConstPointerRegisterAccountRequest extends ffi.Struct {
+  external ffi.Pointer<SignalRegisterAccountRequest> raw;
+}
+
+final class SignalFfiSignedPublicPreKey extends ffi.Struct {
+  @ffi.Uint32()
+  external int key_id;
+
+  @SignalFfiPublicKeyType$1()
+  external int public_key_type;
+
+  external ffi.Pointer<ffi.Void> public_key;
+
+  external SignalBorrowedBuffer signature;
+}
+
+final class SignalMutPointerRegisterAccountResponse extends ffi.Struct {
+  external ffi.Pointer<SignalRegisterAccountResponse> raw;
+}
+
+final class SignalConstPointerRegisterAccountResponse extends ffi.Struct {
+  external ffi.Pointer<SignalRegisterAccountResponse> raw;
+}
+
+typedef SignalRegistrationAccountAttributes = SignalAccountAttributes;
+
+final class SignalMutPointerRegistrationAccountAttributes extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationAccountAttributes> raw;
+}
+
+final class SignalFfiCheckSvr2CredentialsResponse extends ffi.Struct {
+  /// Bridged as a string of bytes, but each entry is a UTF-8 `String` key
+  /// concatenated with a byte for the value.
+  external SignalBytestringArray entries;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseFfiCheckSvr2CredentialsResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalFfiCheckSvr2CredentialsResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerRegistrationService extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationService> raw;
+}
+
+final class SignalMutPointerRegistrationService extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationService> raw;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerRegistrationService extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerRegistrationService> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalFfiRegistrationCreateSessionRequest extends ffi.Struct {
+  external ffi.Pointer<ffi.Char> number;
+
+  external ffi.Pointer<ffi.Char> push_token;
+
+  external ffi.Pointer<ffi.Char> mcc;
+
+  external ffi.Pointer<ffi.Char> mnc;
+}
+
+typedef SignalGetConnectChatConnectionManagerFunction =
+    ffi.Pointer<SignalConnectionManager> Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalGetConnectChatConnectionManager =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalGetConnectChatConnectionManagerFunction>
+    >;
+typedef SignalDestroyConnectChatBridgeFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalDestroyConnectChatBridgeFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalDestroyConnectChatBridge =
+    ffi.Pointer<ffi.NativeFunction<SignalDestroyConnectChatBridgeFunction>>;
+
+/// A ref-counting pointer to a [`ConnectionManager`] and a callback to
+/// decrement the count.
+final class SignalFfiConnectChatBridgeStruct extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ctx;
+
+  external SignalGetConnectChatConnectionManager get_connection_manager;
+
+  external SignalDestroyConnectChatBridge destroy;
+}
+
+final class SignalConstPointerFfiConnectChatBridgeStruct extends ffi.Struct {
+  external ffi.Pointer<SignalFfiConnectChatBridgeStruct> raw;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerRegisterAccountResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerRegisterAccountResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalConstPointerRegistrationAccountAttributes extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationAccountAttributes> raw;
+}
+
+final class SignalMutPointerRegistrationSession extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationSession> raw;
+}
+
+final class SignalConstPointerRegistrationSession extends ffi.Struct {
+  external ffi.Pointer<SignalRegistrationSession> raw;
+}
+
 final class SignalConstPointerSanitizedMetadata extends ffi.Struct {
   external ffi.Pointer<SignalSanitizedMetadata> raw;
+}
+
+final class SignalBorrowedSliceOfConstPointerProtocolAddress
+    extends ffi.Struct {
+  external ffi.Pointer<SignalConstPointerProtocolAddress> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalBorrowedSliceOfConstPointerSessionRecord extends ffi.Struct {
+  external ffi.Pointer<SignalConstPointerSessionRecord> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalConstPointerUnidentifiedSenderMessageContent
+    extends ffi.Struct {
+  external ffi.Pointer<SignalUnidentifiedSenderMessageContent> raw;
+}
+
+final class SignalMutPointerUnidentifiedSenderMessageContent
+    extends ffi.Struct {
+  external ffi.Pointer<SignalUnidentifiedSenderMessageContent> raw;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerBackupRestoreResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerBackupRestoreResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerBackupStoreResponse extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerBackupStoreResponse> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalMutPointerSenderCertificate extends ffi.Struct {
+  external ffi.Pointer<SignalSenderCertificate> raw;
+}
+
+final class SignalConstPointerSenderCertificate extends ffi.Struct {
+  external ffi.Pointer<SignalSenderCertificate> raw;
+}
+
+final class SignalMutPointerServerCertificate extends ffi.Struct {
+  external ffi.Pointer<SignalServerCertificate> raw;
+}
+
+final class SignalConstPointerServerCertificate extends ffi.Struct {
+  external ffi.Pointer<SignalServerCertificate> raw;
+}
+
+final class SignalBorrowedSliceOfConstPointerPublicKey extends ffi.Struct {
+  external ffi.Pointer<SignalConstPointerPublicKey> base;
+
+  @ffi.Size()
+  external int length;
+}
+
+final class SignalMutPointerSenderKeyDistributionMessage extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyDistributionMessage> raw;
+}
+
+final class SignalMutPointerSenderKeyMessage extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyMessage> raw;
+}
+
+final class SignalConstPointerSenderKeyMessage extends ffi.Struct {
+  external ffi.Pointer<SignalSenderKeyMessage> raw;
+}
+
+final class SignalMutPointerServerMessageAck extends ffi.Struct {
+  external ffi.Pointer<SignalServerMessageAck> raw;
+}
+
+final class SignalConstPointerServerMessageAck extends ffi.Struct {
+  external ffi.Pointer<SignalServerMessageAck> raw;
+}
+
+final class SignalMutPointerServerPublicParams extends ffi.Struct {
+  external ffi.Pointer<SignalServerPublicParams> raw;
+}
+
+final class SignalMutPointerServerSecretParams extends ffi.Struct {
+  external ffi.Pointer<SignalServerSecretParams> raw;
+}
+
+final class SignalConstPointerSgxClientState extends ffi.Struct {
+  external ffi.Pointer<SignalSgxClientState> raw;
+}
+
+final class SignalMutPointerTokioAsyncContext extends ffi.Struct {
+  external ffi.Pointer<SignalTokioAsyncContext> raw;
+}
+
+final class SignalMutPointerUnauthenticatedChatConnection extends ffi.Struct {
+  external ffi.Pointer<SignalUnauthenticatedChatConnection> raw;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseMutPointerUnauthenticatedChatConnection
+    extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalMutPointerUnauthenticatedChatConnection> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseOptionalUuid extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<ffi.Pointer<ffi.Uint8>> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalOptionalPairOfc_charu832 extends ffi.Struct {
+  @ffi.Bool()
+  external bool present;
+
+  external ffi.Pointer<ffi.Char> first;
+
+  @ffi.Array.multi([32])
+  external ffi.Array<ffi.Uint8> second;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseOptionalPairOfc_charu832 extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalOptionalPairOfc_charu832> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+/// A C callback used to report the results of Rust futures.
+///
+/// cbindgen will produce independent C types like `SignalCPromisei32` and
+/// `SignalCPromiseProtocolAddress`.
+///
+/// This derives Copy because it behaves like a C type; nevertheless, a promise should still only be
+/// completed once.
+final class SignalCPromiseOwnedBufferOfServiceIdFixedWidthBinaryBytes
+    extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(
+        ffi.Pointer<SignalFfiError> error,
+        ffi.Pointer<SignalOwnedBufferOfServiceIdFixedWidthBinaryBytes> result,
+        ffi.Pointer<ffi.Void> context,
+      )
+    >
+  >
+  complete;
+
+  external ffi.Pointer<ffi.Void> context;
+
+  @SignalCancellationId()
+  external int cancellation_id;
+}
+
+final class SignalMutPointerValidatingMac extends ffi.Struct {
+  external ffi.Pointer<SignalValidatingMac> raw;
 }
 
 typedef SignalSyncInputStream = SignalInputStream;
@@ -8881,13 +10780,11 @@ const int SignalLOCAL_BACKUP_METADATA_KEY_LEN = 32;
 
 const int SignalMEDIA_ID_LEN = 15;
 
+const int SignalBACKUP_FORWARD_SECRECY_TOKEN_LEN = 32;
+
 const int SignalMEDIA_ENCRYPTION_KEY_LEN = 64;
 
-const int SignalBackupKey_MASTER_KEY_LEN = 32;
-
 const int SignalBackupId_LEN = 16;
-
-const int SignalFourCC_ENCODED_LEN = 4;
 
 const int SignalNUM_AUTH_CRED_ATTRIBUTES = 3;
 
@@ -8976,3 +10873,5 @@ const int SignalUUID_LEN = 16;
 const int SignalACCESS_KEY_LEN = 16;
 
 const int SignalSECONDS_PER_DAY = 86400;
+
+const int SignalFourCC_ENCODED_LEN = 4;
