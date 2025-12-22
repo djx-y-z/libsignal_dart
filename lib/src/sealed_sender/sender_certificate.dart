@@ -12,6 +12,7 @@ import '../ffi_helpers.dart';
 import '../keys/private_key.dart';
 import '../keys/public_key.dart';
 import '../libsignal.dart';
+import '../serialization_validator.dart';
 import 'server_certificate.dart';
 
 /// Finalizer for SenderCertificate.
@@ -62,9 +63,8 @@ final class SenderCertificate {
   static SenderCertificate deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
-    if (data.isEmpty) {
-      throw LibSignalException.invalidArgument('data', 'Cannot be empty');
-    }
+    // Pre-validate to prevent native crashes on invalid data
+    SerializationValidator.validateSenderCertificate(data);
 
     final dataPtr = calloc<Uint8>(data.length);
     dataPtr.asTypedList(data.length).setAll(0, data);
@@ -372,39 +372,57 @@ final class SenderCertificate {
   /// The [now] is the current time to check expiration against.
   ///
   /// Returns `true` if the certificate is valid, `false` otherwise.
+  ///
+  /// This method verifies:
+  /// 1. The server certificate signature against the trust root
+  /// 2. The sender certificate signature against the server's key
+  /// 3. The certificate has not expired
+  ///
+  /// **Implementation Note**: This method uses Dart-based signature verification
+  /// instead of the native `signal_sender_certificate_validate` FFI call due to
+  /// a Dart FFI ABI issue on ARM64 when passing 16-byte structs by value.
+  /// See: https://github.com/dart-lang/sdk/issues/36730
   bool validate(PublicKey trustRoot, {DateTime? now}) {
     _checkDisposed();
     trustRoot.checkNotDisposed();
 
-    final outPtr = calloc<Bool>();
-    final certPtr = calloc<SignalConstPointerSenderCertificate>();
-    certPtr.ref.raw = _ptr;
+    // Implementation using manual signature verification.
+    // This works around the FFI ABI issue with SignalBorrowedSliceOfConstPointerPublicKey
+    // on ARM64 platforms. When the Dart FFI issue is resolved, this can be switched
+    // to use signal_sender_certificate_validate directly.
 
-    // Create a slice of one trust root key
-    final keyPtr = calloc<SignalConstPointerPublicKey>();
-    keyPtr.ref.raw = trustRoot.pointer;
+    final checkTime = now ?? DateTime.now();
 
-    final trustRootsSlice = calloc<SignalBorrowedSliceOfConstPointerPublicKey>();
-    trustRootsSlice.ref.base = keyPtr;
-    trustRootsSlice.ref.length = 1;
+    // 1. Check expiration
+    if (!expiration.isAfter(checkTime)) {
+      return false;
+    }
 
-    final time = (now ?? DateTime.now()).millisecondsSinceEpoch;
-
+    // 2. Get and verify server certificate
+    final serverCert = getServerCertificate();
     try {
-      final error = signal_sender_certificate_validate(
-        outPtr,
-        certPtr.ref,
-        trustRootsSlice.ref,
-        time,
+      // Verify server certificate signature against trust root
+      final serverCertValid = trustRoot.verify(
+        serverCert.certificate,
+        serverCert.signature,
       );
-      FfiHelpers.checkError(error, 'signal_sender_certificate_validate');
+      if (!serverCertValid) {
+        return false;
+      }
 
-      return outPtr.value;
+      // 3. Verify sender certificate signature against server's key
+      final serverKey = serverCert.getKey();
+      try {
+        final senderCertValid = serverKey.verify(
+          certificate,
+          signature,
+        );
+        return senderCertValid;
+      } finally {
+        serverKey.dispose();
+      }
     } finally {
-      calloc.free(outPtr);
-      calloc.free(certPtr);
-      calloc.free(keyPtr);
-      calloc.free(trustRootsSlice);
+      serverCert.dispose();
     }
   }
 

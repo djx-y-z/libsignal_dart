@@ -185,6 +185,28 @@ Functions with `uint8_t (*out)[16]` parameter that need this workaround:
 Functions with other fixed-size arrays (not currently used):
 - Various zkgroup functions with `uint8_t (*)[32]`, `uint8_t (*)[64]`, etc.
 
+## FFI Known Issue: 16-byte Struct Passed by Value (ARM64)
+
+### The Problem
+
+The native `signal_sender_certificate_validate` function takes a `SignalBorrowedSliceOfConstPointerPublicKey` struct (16 bytes: pointer + size_t) **by value**. On ARM64, there's a Dart FFI ABI issue where the data is not passed correctly to the native library.
+
+### Solution
+
+`SenderCertificate.validate()` is implemented in pure Dart using manual signature verification instead of the FFI call. This provides identical functionality and works on all platforms.
+
+The Dart implementation:
+1. Verifies server certificate signature against trust root
+2. Verifies sender certificate signature against server's key
+3. Checks certificate expiration
+
+When the Dart FFI issue is resolved, the implementation can be switched to use the native `signal_sender_certificate_validate` function without breaking changes.
+
+### Related Resources
+
+- [Dart FFI structs by value (GitHub #36730)](https://github.com/dart-lang/sdk/issues/36730)
+- [Implementing structs by value in Dart FFI (Medium)](https://medium.com/dartlang/implementing-structs-by-value-in-dart-ffi-1cb1829d11a9)
+
 ## Unimplemented Functionality
 
 Some libsignal features are not yet implemented in this library:

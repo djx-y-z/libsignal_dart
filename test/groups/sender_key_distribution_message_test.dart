@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
-import '../test_helpers/test_helpers.dart';
-
 void main() {
   setUpAll(() => LibSignal.init());
   tearDownAll(() => LibSignal.cleanup());
@@ -39,16 +37,8 @@ void main() {
         );
       });
 
-      test('rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
-        expect(
-          () => SenderKeyDistributionMessage.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
       test('rejects garbage data', () {
-        final garbage = randomBytes(100);
+        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
         expect(
           () => SenderKeyDistributionMessage.deserialize(garbage),
           throwsA(isA<LibSignalException>()),

@@ -119,8 +119,18 @@ void main() {
         );
       });
 
-      test('deserialize rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
+      test('deserialize rejects data with wrong length', () {
+        final invalidData = Uint8List.fromList([0x0a, 1, 2, 3, 4, 5]);
+        expect(
+          () => IdentityKeyPair.deserialize(invalidData),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      test('deserialize rejects data with wrong type byte', () {
+        // 69 bytes but wrong type prefix
+        final invalidData = Uint8List(69);
+        invalidData[0] = 0x99; // Wrong type
         expect(
           () => IdentityKeyPair.deserialize(invalidData),
           throwsA(isA<LibSignalException>()),

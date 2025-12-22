@@ -13,6 +13,16 @@ import '../libsignal.dart';
 import 'private_key.dart';
 import 'public_key.dart';
 
+/// Protobuf wire types and field tags for IdentityKeyPair serialization.
+///
+/// Format:
+/// - Field 1 (tag 0x0a): PublicKey (length-delimited, 33 bytes)
+/// - Field 2 (tag 0x12): PrivateKey (length-delimited, 32 bytes)
+const int _kPublicKeyFieldTag = 0x0a; // field 1, wire type 2
+const int _kPrivateKeyFieldTag = 0x12; // field 2, wire type 2
+const int _kPublicKeyLength = 33;
+const int _kPrivateKeyLength = 32;
+
 /// An identity key pair for Signal Protocol.
 ///
 /// The identity key pair is the long-term key pair that identifies
@@ -55,67 +65,106 @@ final class IdentityKeyPair {
 
   /// Deserializes an identity key pair from bytes.
   ///
-  /// The [data] should be a 64-byte serialized identity key pair
-  /// (32 bytes public key + 32 bytes private key, or as encoded by serialize).
+  /// The [data] should be a 69-byte serialized identity key pair in protobuf
+  /// format (as encoded by [serialize]).
   ///
   /// Throws [LibSignalException] if the data is invalid.
   static IdentityKeyPair deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
+    // Validate minimum structure
+    // Expected: 1 + 1 + 33 + 1 + 1 + 32 = 69 bytes
+    const expectedLength =
+        1 + 1 + _kPublicKeyLength + 1 + 1 + _kPrivateKeyLength;
+
     if (data.isEmpty) {
-      throw LibSignalException.invalidArgument('data', 'Cannot be empty');
-    }
-
-    final dataPtr = calloc<Uint8>(data.length);
-    dataPtr.asTypedList(data.length).setAll(0, data);
-
-    final buffer = calloc<SignalBorrowedBuffer>();
-    buffer.ref.base = dataPtr.cast<UnsignedChar>();
-    buffer.ref.length = data.length;
-
-    final outPtr =
-        calloc<SignalPairOfMutPointerPublicKeyMutPointerPrivateKey>();
-
-    try {
-      final error = signal_identitykeypair_deserialize(
-        outPtr,
-        buffer.ref,
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Cannot be empty',
       );
-      FfiHelpers.checkError(error, 'signal_identitykeypair_deserialize');
-
-      if (outPtr.ref.second.raw == nullptr) {
-        throw LibSignalException.nullPointer(
-          'signal_identitykeypair_deserialize (private key)',
-        );
-      }
-
-      if (outPtr.ref.first.raw == nullptr) {
-        // Clean up private key if public key failed
-        final mutPtr = calloc<SignalMutPointerPrivateKey>();
-        mutPtr.ref.raw = outPtr.ref.second.raw;
-        signal_privatekey_destroy(mutPtr.ref);
-        calloc.free(mutPtr);
-
-        throw LibSignalException.nullPointer(
-          'signal_identitykeypair_deserialize (public key)',
-        );
-      }
-
-      // Create wrapper objects that take ownership
-      // Note: first = PublicKey, second = PrivateKey
-      final privateKey = PrivateKey.fromPointer(outPtr.ref.second.raw);
-      final publicKey = PublicKey.fromPointer(outPtr.ref.first.raw);
-
-      return IdentityKeyPair._(privateKey, publicKey);
-    } finally {
-      // Secure clear the key data
-      for (var i = 0; i < data.length; i++) {
-        dataPtr[i] = 0;
-      }
-      calloc.free(dataPtr);
-      calloc.free(buffer);
-      calloc.free(outPtr);
     }
+
+    if (data.length != expectedLength) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Invalid length: expected $expectedLength bytes, got ${data.length}',
+      );
+    }
+
+    // Parse protobuf structure manually.
+    //
+    // TODO(libsignal): Remove this workaround when signal_identitykeypair_deserialize
+    // is fixed in a future libsignal version. Currently (v0.86.9) it causes SEGFAULT
+    // even on valid data. See docs/NATIVE_CRASH_ISOLATION.md for details.
+    //
+    // We parse the protobuf format and deserialize the keys separately using
+    // signal_publickey_deserialize and signal_privatekey_deserialize which work correctly.
+    //
+    // Format:
+    //   0x0a 0x21 <33 bytes public key>   (field 1, length 33)
+    //   0x12 0x20 <32 bytes private key>  (field 2, length 32)
+
+    var offset = 0;
+
+    // Field 1: Public Key
+    if (data[offset] != _kPublicKeyFieldTag) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Invalid format: expected public key field tag 0x0a, '
+            'got 0x${data[offset].toRadixString(16)}',
+      );
+    }
+    offset++;
+
+    if (data[offset] != _kPublicKeyLength) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Invalid format: expected public key length $_kPublicKeyLength, '
+            'got ${data[offset]}',
+      );
+    }
+    offset++;
+
+    final publicKeyBytes =
+        Uint8List.sublistView(data, offset, offset + _kPublicKeyLength);
+    offset += _kPublicKeyLength;
+
+    // Field 2: Private Key
+    if (data[offset] != _kPrivateKeyFieldTag) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Invalid format: expected private key field tag 0x12, '
+            'got 0x${data[offset].toRadixString(16)}',
+      );
+    }
+    offset++;
+
+    if (data[offset] != _kPrivateKeyLength) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Invalid format: expected private key length $_kPrivateKeyLength, '
+            'got ${data[offset]}',
+      );
+    }
+    offset++;
+
+    final privateKeyBytes =
+        Uint8List.sublistView(data, offset, offset + _kPrivateKeyLength);
+
+    // Deserialize keys using their individual deserialize methods
+    // (which work correctly, unlike signal_identitykeypair_deserialize)
+    final publicKey = PublicKey.deserialize(publicKeyBytes);
+
+    PrivateKey privateKey;
+    try {
+      privateKey = PrivateKey.deserialize(privateKeyBytes);
+    } catch (e) {
+      // Clean up public key if private key deserialization fails
+      publicKey.dispose();
+      rethrow;
+    }
+
+    return IdentityKeyPair._(privateKey, publicKey);
   }
 
   /// Serializes the identity key pair to bytes.

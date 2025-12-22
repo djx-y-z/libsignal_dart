@@ -10,6 +10,7 @@ import '../bindings/libsignal_bindings.dart';
 import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
+import '../serialization_validator.dart';
 
 /// Finalizer for SenderKeyRecord.
 final Finalizer<Pointer<SignalSenderKeyRecord>> _senderKeyRecordFinalizer =
@@ -42,9 +43,8 @@ final class SenderKeyRecord {
   static SenderKeyRecord deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
-    if (data.isEmpty) {
-      throw LibSignalException.invalidArgument('data', 'Cannot be empty');
-    }
+    // Pre-validate to prevent native crashes on invalid data
+    SerializationValidator.validateSenderKeyRecord(data);
 
     final dataPtr = calloc<Uint8>(data.length);
     dataPtr.asTypedList(data.length).setAll(0, data);

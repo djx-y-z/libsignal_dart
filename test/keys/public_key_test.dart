@@ -46,12 +46,119 @@ void main() {
         );
       });
 
-      test('deserialize rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
+      test('deserialize rejects data with wrong length', () {
+        final invalidData = Uint8List.fromList([0x05, 1, 2, 3, 4, 5]);
         expect(
           () => PublicKey.deserialize(invalidData),
           throwsA(isA<LibSignalException>()),
         );
+      });
+
+      test('deserialize rejects data with wrong type byte', () {
+        // 33 bytes but wrong type prefix
+        final invalidData = Uint8List(33);
+        invalidData[0] = 0x99; // Wrong type
+        expect(
+          () => PublicKey.deserialize(invalidData),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      group('deserialize rejects low-order points', () {
+        test('rejects zero point (order 4)', () {
+          final data = Uint8List(33);
+          data[0] = 0x05; // Correct type prefix
+          // Remaining 32 bytes are all zeros - low-order point
+          expect(
+            () => PublicKey.deserialize(data),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.message,
+                'message',
+                contains('Low-order point'),
+              ),
+            ),
+          );
+        });
+
+        test('rejects one point (order 1)', () {
+          final data = Uint8List(33);
+          data[0] = 0x05; // Correct type prefix
+          data[1] = 0x01; // Low-order point: 1
+          expect(
+            () => PublicKey.deserialize(data),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.message,
+                'message',
+                contains('Low-order point'),
+              ),
+            ),
+          );
+        });
+
+        test('rejects order-8 point', () {
+          // Low-order point of order 8 from libsodium blocklist
+          final data = Uint8List.fromList([
+            0x05, // type prefix
+            0xe0, 0xeb, 0x7a, 0x7c, 0x3b, 0x41, 0xb8, 0xae, //
+            0x16, 0x56, 0xe3, 0xfa, 0xf1, 0x9f, 0xc4, 0x6a,
+            0xda, 0x09, 0x8d, 0xeb, 0x9c, 0x32, 0xb1, 0xfd,
+            0x86, 0x62, 0x05, 0x16, 0x5f, 0x49, 0xb8, 0x00,
+          ]);
+          expect(
+            () => PublicKey.deserialize(data),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.message,
+                'message',
+                contains('Low-order point'),
+              ),
+            ),
+          );
+        });
+
+        test('rejects p-1 point (order 2)', () {
+          // p-1 is a low-order point of order 2
+          final data = Uint8List.fromList([
+            0x05, // type prefix
+            0xec, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+          ]);
+          expect(
+            () => PublicKey.deserialize(data),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.message,
+                'message',
+                contains('Low-order point'),
+              ),
+            ),
+          );
+        });
+
+        test('rejects non-canonical p encoding (order 4)', () {
+          // Non-canonical encoding of 0
+          final data = Uint8List.fromList([
+            0x05, // type prefix
+            0xed, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, //
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
+          ]);
+          expect(
+            () => PublicKey.deserialize(data),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.message,
+                'message',
+                contains('Low-order point'),
+              ),
+            ),
+          );
+        });
       });
 
       test('first byte is key type prefix', () {

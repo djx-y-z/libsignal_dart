@@ -12,6 +12,7 @@ import '../ffi_helpers.dart';
 import '../keys/private_key.dart';
 import '../keys/public_key.dart';
 import '../libsignal.dart';
+import '../serialization_validator.dart';
 
 /// Finalizer for SignedPreKeyRecord.
 final Finalizer<Pointer<SignalSignedPreKeyRecord>>
@@ -115,9 +116,8 @@ final class SignedPreKeyRecord {
   static SignedPreKeyRecord deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
-    if (data.isEmpty) {
-      throw LibSignalException.invalidArgument('data', 'Cannot be empty');
-    }
+    // Pre-validate to prevent native crashes on invalid data
+    SerializationValidator.validateSignedPreKeyRecord(data);
 
     final dataPtr = calloc<Uint8>(data.length);
     dataPtr.asTypedList(data.length).setAll(0, data);

@@ -93,8 +93,6 @@ void main() {
         final cipher = SealedSessionCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
-          preKeyStore: alicePreKeyStore,
-          signedPreKeyStore: aliceSignedPreKeyStore,
         );
 
         expect(cipher, isNotNull);
@@ -386,32 +384,6 @@ void main() {
       });
     });
 
-    group('SealedSenderDecryptionResult', () {
-      test('holds correct values', () {
-        final result = SealedSenderDecryptionResult(
-          plaintext: Uint8List.fromList([1, 2, 3]),
-          senderE164: '+1234567890',
-          senderUuid: 'test-uuid',
-          senderDeviceId: 42,
-        );
-
-        expect(result.plaintext, equals(Uint8List.fromList([1, 2, 3])));
-        expect(result.senderE164, equals('+1234567890'));
-        expect(result.senderUuid, equals('test-uuid'));
-        expect(result.senderDeviceId, equals(42));
-      });
-
-      test('allows null senderE164', () {
-        final result = SealedSenderDecryptionResult(
-          plaintext: Uint8List.fromList([1, 2, 3]),
-          senderE164: null,
-          senderUuid: 'test-uuid',
-          senderDeviceId: 1,
-        );
-
-        expect(result.senderE164, isNull);
-      });
-    });
 
     // Round-trip tests use a two-step decryption approach because
     // libsignal C FFI (v0.67.3) doesn't pass Kyber pre-key store to

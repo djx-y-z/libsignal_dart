@@ -102,19 +102,25 @@ class FfiHelpers {
   /// Checks if the FFI error pointer indicates an error and throws if so.
   ///
   /// Frees the error pointer after extracting the message.
+  ///
+  /// Note: Error message retrieval is disabled because some versions of
+  /// libsignal crash when calling signal_error_get_message for certain
+  /// error types. Only the error code is used.
   static void checkError(Pointer<SignalFfiError>? error, String operation) {
     if (error == null || error == nullptr) {
       return;
     }
 
     final errorType = signal_error_get_type(error);
-    final message = getErrorMessage(error);
+
+    // Note: Disabled message retrieval due to crashes in some libsignal versions.
+    // final message = getErrorMessage(error);
 
     // Free the error
     signal_error_free(error);
 
     throw LibSignalException(
-      message ?? 'Unknown error in $operation',
+      'Error in $operation (code: $errorType)',
       errorCode: errorType,
       context: operation,
     );
@@ -123,6 +129,10 @@ class FfiHelpers {
   /// Gets the error message from a [SignalFfiError].
   ///
   /// Does not free the error pointer.
+  ///
+  /// Note: Some versions of libsignal may crash when calling
+  /// signal_error_get_message for certain error types. This function
+  /// attempts to safely retrieve the message but may return null.
   static String? getErrorMessage(Pointer<SignalFfiError> error) {
     if (error == nullptr) {
       return null;
@@ -130,6 +140,10 @@ class FfiHelpers {
 
     final messagePtr = calloc<Pointer<Char>>();
     try {
+      // Note: signal_error_get_message may crash for certain error types
+      // in some versions of libsignal. Unfortunately, we cannot catch
+      // native crashes from Dart. If this becomes a problem, consider
+      // disabling message retrieval entirely.
       final getMessageError = signal_error_get_message(messagePtr, error);
       if (getMessageError != nullptr) {
         signal_error_free(getMessageError);

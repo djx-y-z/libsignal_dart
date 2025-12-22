@@ -39,18 +39,102 @@ Native libraries are downloaded automatically during the build process.
 ```dart
 import 'package:libsignal/libsignal.dart';
 
-void main() {
+void main() async {
   // Initialize the library
   LibSignal.init();
 
-  // Get supported algorithms
-  final algorithms = LibSignal.getSupportedAlgorithms();
-  print('Key agreement: ${algorithms['key_agreement']}');
-  print('Signatures: ${algorithms['signature']}');
+  // Generate identity key pair
+  final identity = IdentityKeyPair.generate();
+  print('Identity public key: ${identity.publicKey.serialize().length} bytes');
 
   // Clean up when done
+  identity.dispose();
   LibSignal.cleanup();
 }
+```
+
+## Usage Examples
+
+### Session Encryption (Double Ratchet)
+
+```dart
+// Create stores
+final sessionStore = InMemorySessionStore();
+final identityStore = InMemoryIdentityKeyStore(identity, registrationId);
+
+// Build session from pre-key bundle
+final builder = SessionBuilder(
+  sessionStore: sessionStore,
+  identityKeyStore: identityStore,
+);
+await builder.processPreKeyBundle(recipientAddress, preKeyBundle);
+
+// Encrypt messages
+final cipher = SessionCipher(
+  sessionStore: sessionStore,
+  identityKeyStore: identityStore,
+);
+final encrypted = await cipher.encrypt(recipientAddress, plaintext);
+```
+
+### Sealed Sender (Anonymous Messaging)
+
+```dart
+// Create sealed session cipher
+final sealedCipher = SealedSessionCipher(
+  sessionStore: sessionStore,
+  identityKeyStore: identityStore,
+);
+
+// Create sender certificate (issued by server)
+final senderCert = SenderCertificate.create(
+  senderUuid: 'my-uuid',
+  deviceId: 1,
+  senderKey: identity.publicKey,
+  expiration: DateTime.now().add(Duration(days: 30)),
+  signerCertificate: serverCert,
+  signerKey: serverPrivateKey,
+);
+
+// Encrypt with sealed sender (server won't know who sent it)
+final sealed = await sealedCipher.encrypt(
+  recipientAddress,
+  plaintext,
+  senderCert,
+  contentHint: ContentHint.resendable,
+);
+
+// Recipient decrypts and learns sender identity
+final result = await recipientCipher.decrypt(
+  sealed,
+  trustRoot: trustRootPublicKey,
+  timestamp: DateTime.now(),
+  localUuid: 'recipient-uuid',
+  localDeviceId: 1,
+);
+print('Message from: ${result.senderUuid}');
+```
+
+### Group Messaging (SenderKey)
+
+```dart
+// Create group session
+final groupSession = GroupSession(
+  senderKeyStore: InMemorySenderKeyStore(),
+);
+
+// Create distribution message (send to all group members)
+final distributionMessage = await groupSession.createDistributionMessage(
+  sender: myAddress,
+  distributionId: groupId,
+);
+
+// Encrypt for group
+final groupCiphertext = await groupSession.encrypt(
+  sender: myAddress,
+  distributionId: groupId,
+  plaintext: message,
+);
 ```
 
 ## Documentation

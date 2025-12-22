@@ -13,6 +13,7 @@ import '../kyber/kyber_key_pair.dart';
 import '../kyber/kyber_public_key.dart';
 import '../kyber/kyber_secret_key.dart';
 import '../libsignal.dart';
+import '../serialization_validator.dart';
 
 /// Finalizer for KyberPreKeyRecord.
 final Finalizer<Pointer<SignalKyberPreKeyRecord>> _kyberPreKeyRecordFinalizer =
@@ -94,9 +95,8 @@ final class KyberPreKeyRecord {
   static KyberPreKeyRecord deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
-    if (data.isEmpty) {
-      throw LibSignalException.invalidArgument('data', 'Cannot be empty');
-    }
+    // Pre-validate to prevent native crashes on invalid data
+    SerializationValidator.validateKyberPreKeyRecord(data);
 
     final dataPtr = calloc<Uint8>(data.length);
     dataPtr.asTypedList(data.length).setAll(0, data);

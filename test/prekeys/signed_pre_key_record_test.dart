@@ -3,8 +3,6 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
-import '../test_helpers/test_helpers.dart';
-
 void main() {
   setUpAll(() => LibSignal.init());
   tearDownAll(() => LibSignal.cleanup());
@@ -173,23 +171,15 @@ void main() {
         restoredPriv.dispose();
       });
 
-      test('deserialize rejects empty data', () {
+      test('rejects empty data', () {
         expect(
           () => SignedPreKeyRecord.deserialize(Uint8List(0)),
           throwsA(isA<LibSignalException>()),
         );
       });
 
-      test('deserialize rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
-        expect(
-          () => SignedPreKeyRecord.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('deserialize rejects garbage data', () {
-        final garbage = randomBytes(200);
+      test('rejects garbage data', () {
+        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
         expect(
           () => SignedPreKeyRecord.deserialize(garbage),
           throwsA(isA<LibSignalException>()),

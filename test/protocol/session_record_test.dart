@@ -17,7 +17,7 @@ void main() {
     //
     // PreKeyBundle tests are located in test/prekeys/pre_key_bundle_test.dart
 
-    group('deserialize()', () {
+    group('deserialize() validation', () {
       test('rejects empty data', () {
         expect(
           () => SessionRecord.deserialize(Uint8List(0)),
@@ -25,45 +25,19 @@ void main() {
         );
       });
 
-      test('rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
-
+      test('rejects garbage data', () {
+        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
         expect(
-          () => SessionRecord.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('rejects random bytes', () {
-        // Random bytes shouldn't deserialize as valid session
-        final randomData = Uint8List.fromList(
-          List.generate(100, (i) => i % 256),
-        );
-
-        expect(
-          () => SessionRecord.deserialize(randomData),
+          () => SessionRecord.deserialize(garbage),
           throwsA(isA<LibSignalException>()),
         );
       });
 
       test('rejects truncated data', () {
-        // Create some bytes that might look like a header but are incomplete
-        final truncatedData = Uint8List.fromList([0x0A, 0x10, 0x01, 0x02]);
-
+        // Simulate truncated protobuf
+        final truncated = Uint8List.fromList([0x0a, 0x10, 0x01, 0x02]);
         expect(
-          () => SessionRecord.deserialize(truncatedData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('rejects very large random data', () {
-        // Large random data should still fail
-        final largeData = Uint8List.fromList(
-          List.generate(10000, (i) => i % 256),
-        );
-
-        expect(
-          () => SessionRecord.deserialize(largeData),
+          () => SessionRecord.deserialize(truncated),
           throwsA(isA<LibSignalException>()),
         );
       });

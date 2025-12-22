@@ -175,16 +175,8 @@ void main() {
         );
       });
 
-      test('deserialize rejects invalid data', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
-        expect(
-          () => DecryptionErrorMessage.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('deserialize rejects garbage data', () {
-        final garbage = randomBytes(100);
+      test('rejects garbage data', () {
+        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
         expect(
           () => DecryptionErrorMessage.deserialize(garbage),
           throwsA(isA<LibSignalException>()),

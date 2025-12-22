@@ -79,8 +79,7 @@ void main() {
         );
       });
 
-      test('deserialize rejects invalid data', () {
-        // Invalid key data (too short)
+      test('deserialize rejects data with wrong length', () {
         final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
         expect(
           () => PrivateKey.deserialize(invalidData),
