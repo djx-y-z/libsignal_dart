@@ -46,6 +46,9 @@ Dart FFI bindings for libsignal - Signal Protocol implementation for end-to-end 
 ### Upstream Repository
 - **libsignal**: https://github.com/signalapp/libsignal
 
+### Security
+See [SECURITY.md](SECURITY.md) for security guidelines and code review checklist.
+
 ## Project Structure
 
 ```

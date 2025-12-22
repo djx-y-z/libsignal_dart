@@ -205,6 +205,10 @@ This package wraps the official Signal libsignal library. All cryptographic oper
 - All native libraries are built from source in GitHub Actions
 - SHA256 checksums are verified during download
 - Sensitive data is securely zeroed before freeing
+- Constant-time comparison for cryptographic data
+- Input validation and bounds checking
+
+For detailed security guidelines and audit information, see [SECURITY.md](SECURITY.md).
 
 ## Contributing
 
