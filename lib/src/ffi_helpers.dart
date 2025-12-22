@@ -37,8 +37,10 @@ class FfiHelpers {
     final buffer = calloc<SignalBorrowedBuffer>();
     buffer.ref.base = ptr.cast<UnsignedChar>();
     buffer.ref.length = data.length;
+    final result = buffer.ref; // Copy struct before freeing
+    calloc.free(buffer); // Fix memory leak: free the wrapper struct
 
-    return (buffer.ref, ptr);
+    return (result, ptr);
   }
 
   /// Creates a [SignalBorrowedBuffer] on the stack from a [Uint8List].
@@ -52,8 +54,8 @@ class FfiHelpers {
     final buffer = calloc<SignalBorrowedBuffer>();
     buffer.ref.base = ptr.cast<UnsignedChar>();
     buffer.ref.length = length;
-    final result = buffer.ref;
-    // Note: We don't free the buffer struct here as ref gives a copy
+    final result = buffer.ref; // Copy struct before freeing
+    calloc.free(buffer); // Fix memory leak: free the wrapper struct
     return result;
   }
 
@@ -65,7 +67,8 @@ class FfiHelpers {
     final buffer = calloc<SignalBorrowedMutableBuffer>();
     buffer.ref.base = ptr.cast<UnsignedChar>();
     buffer.ref.length = length;
-    final result = buffer.ref;
+    final result = buffer.ref; // Copy struct before freeing
+    calloc.free(buffer); // Fix memory leak: free the wrapper struct
     return result;
   }
 

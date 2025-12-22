@@ -10,6 +10,7 @@ import '../bindings/libsignal_bindings.dart';
 import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
+import '../secure_bytes.dart';
 import '../serialization_validator.dart';
 import '../utils.dart';
 
@@ -82,9 +83,19 @@ final class KyberSecretKey {
 
   /// Serializes the Kyber secret key to bytes.
   ///
-  /// **Security note**: The returned bytes contain sensitive key material.
-  /// Ensure they are securely handled and cleared when no longer needed.
-  Uint8List serialize() {
+  /// Returns a [SecureBytes] wrapper. The caller MUST call
+  /// [SecureBytes.dispose] when done to securely zero the memory.
+  ///
+  /// Example:
+  /// ```dart
+  /// final keyBytes = kyberSecretKey.serialize();
+  /// try {
+  ///   saveToSecureStorage(keyBytes.bytes);
+  /// } finally {
+  ///   keyBytes.dispose(); // Securely zeros the memory
+  /// }
+  /// ```
+  SecureBytes serialize() {
     _checkDisposed();
 
     final outPtr = calloc<SignalOwnedBuffer>();
@@ -95,7 +106,7 @@ final class KyberSecretKey {
       final error = signal_kyber_secret_key_serialize(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_secret_key_serialize');
 
-      return FfiHelpers.fromOwnedBuffer(outPtr.ref);
+      return SecureBytes(FfiHelpers.fromOwnedBuffer(outPtr.ref));
     } finally {
       calloc.free(outPtr);
       calloc.free(constPtr);

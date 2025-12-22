@@ -44,6 +44,7 @@ import '../protocol/protocol_address.dart';
 import '../protocol/session_record.dart';
 import '../stores/identity_key_store.dart';
 import '../stores/session_store.dart';
+import '../utils.dart';
 import 'sender_certificate.dart';
 import 'unidentified_sender_message_content.dart';
 
@@ -309,12 +310,11 @@ class _SealedSenderEncryptCallbacks {
         if (error != nullptr) return 0;
 
         final incomingBytes = FfiHelpers.fromOwnedBuffer(outPtr.ref);
-        if (storedBytes.length != incomingBytes.length) return 0;
 
-        for (var i = 0; i < storedBytes.length; i++) {
-          if (storedBytes[i] != incomingBytes[i]) return 0;
-        }
-        return 1;
+        // Use constant-time comparison to prevent timing attacks
+        return LibSignalUtils.constantTimeEquals(storedBytes, incomingBytes)
+            ? 1
+            : 0;
       } finally {
         calloc.free(outPtr);
       }

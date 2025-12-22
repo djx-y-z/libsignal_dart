@@ -10,6 +10,7 @@ import '../bindings/libsignal_bindings.dart';
 import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
+import '../secure_bytes.dart';
 import 'private_key.dart';
 import 'public_key.dart';
 
@@ -125,6 +126,13 @@ final class IdentityKeyPair {
     }
     offset++;
 
+    // Bounds check before sublistView
+    if (offset + _kPublicKeyLength > data.length) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Buffer overrun: public key extends beyond data',
+      );
+    }
     final publicKeyBytes =
         Uint8List.sublistView(data, offset, offset + _kPublicKeyLength);
     offset += _kPublicKeyLength;
@@ -148,6 +156,13 @@ final class IdentityKeyPair {
     }
     offset++;
 
+    // Bounds check before sublistView
+    if (offset + _kPrivateKeyLength > data.length) {
+      throw LibSignalException.invalidArgument(
+        'identityKeyPair',
+        'Buffer overrun: private key extends beyond data',
+      );
+    }
     final privateKeyBytes =
         Uint8List.sublistView(data, offset, offset + _kPrivateKeyLength);
 
@@ -169,12 +184,20 @@ final class IdentityKeyPair {
 
   /// Serializes the identity key pair to bytes.
   ///
-  /// Returns a serialized representation that can be restored
-  /// with [deserialize].
+  /// Returns a [SecureBytes] containing a serialized representation that
+  /// can be restored with [deserialize]. The caller MUST call
+  /// [SecureBytes.dispose] when done to securely zero the memory.
   ///
-  /// **Security note**: The returned bytes contain sensitive key material.
-  /// Ensure they are securely handled and cleared when no longer needed.
-  Uint8List serialize() {
+  /// Example:
+  /// ```dart
+  /// final keyPairBytes = identityKeyPair.serialize();
+  /// try {
+  ///   saveToSecureStorage(keyPairBytes.bytes);
+  /// } finally {
+  ///   keyPairBytes.dispose(); // Securely zeros the memory
+  /// }
+  /// ```
+  SecureBytes serialize() {
     _checkDisposed();
 
     final outPtr = calloc<SignalOwnedBuffer>();
@@ -192,7 +215,7 @@ final class IdentityKeyPair {
       );
       FfiHelpers.checkError(error, 'signal_identitykeypair_serialize');
 
-      return FfiHelpers.fromOwnedBuffer(outPtr.ref);
+      return SecureBytes(FfiHelpers.fromOwnedBuffer(outPtr.ref));
     } finally {
       calloc.free(outPtr);
       calloc.free(publicConstPtr);

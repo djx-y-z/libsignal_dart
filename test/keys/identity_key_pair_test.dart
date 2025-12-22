@@ -76,7 +76,7 @@ void main() {
       test('round-trip preserves keys', () {
         final original = IdentityKeyPair.generate();
         final serialized = original.serialize();
-        final restored = IdentityKeyPair.deserialize(serialized);
+        final restored = IdentityKeyPair.deserialize(serialized.bytes);
 
         // Public keys should be equal
         expect(
@@ -85,10 +85,11 @@ void main() {
         );
 
         // Private keys should serialize to same bytes
-        expect(
-          original.privateKey.serialize(),
-          equals(restored.privateKey.serialize()),
-        );
+        final origPrivBytes = original.privateKey.serialize();
+        final restoredPrivBytes = restored.privateKey.serialize();
+        expect(origPrivBytes.bytes, equals(restoredPrivBytes.bytes));
+        origPrivBytes.dispose();
+        restoredPrivBytes.dispose();
 
         // Both private keys should produce signatures verifiable by the public key
         final message = Uint8List.fromList('test'.codeUnits);
@@ -98,6 +99,7 @@ void main() {
         expect(original.publicKey.verify(message, sig1), isTrue);
         expect(original.publicKey.verify(message, sig2), isTrue);
 
+        serialized.dispose();
         original.dispose();
         restored.dispose();
       });
@@ -109,6 +111,7 @@ void main() {
         // Should be 64 bytes (32 public + 32 private) or protocol-specific
         expect(serialized.length, greaterThan(0));
 
+        serialized.dispose();
         identity.dispose();
       });
 

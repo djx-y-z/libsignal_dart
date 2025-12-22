@@ -77,7 +77,11 @@ void main() {
         );
 
         final retrievedPrivKey = preKey.getPrivateKey();
-        expect(retrievedPrivKey.serialize(), equals(privateKey.serialize()));
+        final retrievedBytes = retrievedPrivKey.serialize();
+        final privateBytes = privateKey.serialize();
+        expect(retrievedBytes.bytes, equals(privateBytes.bytes));
+        retrievedBytes.dispose();
+        privateBytes.dispose();
 
         preKey.dispose();
         privateKey.dispose();
@@ -110,7 +114,11 @@ void main() {
 
         final origPriv = original.getPrivateKey();
         final restoredPriv = restored.getPrivateKey();
-        expect(restoredPriv.serialize(), equals(origPriv.serialize()));
+        final origPrivBytes = origPriv.serialize();
+        final restoredPrivBytes = restoredPriv.serialize();
+        expect(restoredPrivBytes.bytes, equals(origPrivBytes.bytes));
+        origPrivBytes.dispose();
+        restoredPrivBytes.dispose();
 
         original.dispose();
         restored.dispose();
@@ -296,7 +304,11 @@ void main() {
 
         final origPriv = original.getPrivateKey();
         final clonedPriv = cloned.getPrivateKey();
-        expect(clonedPriv.serialize(), equals(origPriv.serialize()));
+        final origPrivBytes = origPriv.serialize();
+        final clonedPrivBytes = clonedPriv.serialize();
+        expect(clonedPrivBytes.bytes, equals(origPrivBytes.bytes));
+        origPrivBytes.dispose();
+        clonedPrivBytes.dispose();
 
         original.dispose();
         cloned.dispose();
@@ -306,6 +318,61 @@ void main() {
         clonedPub.dispose();
         origPriv.dispose();
         clonedPriv.dispose();
+      });
+    });
+
+    group('create() with disposed keys', () {
+      test('throws when publicKey is disposed', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+
+        publicKey.dispose();
+
+        expect(
+          () => PreKeyRecord.create(
+            id: 1,
+            publicKey: publicKey,
+            privateKey: privateKey,
+          ),
+          throwsStateError,
+        );
+
+        privateKey.dispose();
+      });
+
+      test('throws when privateKey is disposed', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+
+        privateKey.dispose();
+
+        expect(
+          () => PreKeyRecord.create(
+            id: 1,
+            publicKey: publicKey,
+            privateKey: privateKey,
+          ),
+          throwsStateError,
+        );
+
+        publicKey.dispose();
+      });
+
+      test('throws when both keys are disposed', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+
+        publicKey.dispose();
+        privateKey.dispose();
+
+        expect(
+          () => PreKeyRecord.create(
+            id: 1,
+            publicKey: publicKey,
+            privateKey: privateKey,
+          ),
+          throwsStateError,
+        );
       });
     });
 

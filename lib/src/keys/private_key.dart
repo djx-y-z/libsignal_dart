@@ -10,6 +10,7 @@ import '../bindings/libsignal_bindings.dart';
 import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
+import '../secure_bytes.dart';
 import '../serialization_validator.dart';
 import 'public_key.dart';
 
@@ -115,11 +116,20 @@ final class PrivateKey {
 
   /// Serializes the private key to bytes.
   ///
-  /// Returns a 32-byte representation of the private key.
+  /// Returns a [SecureBytes] containing a 32-byte representation of the
+  /// private key. The caller MUST call [SecureBytes.dispose] when done
+  /// to securely zero the memory.
   ///
-  /// **Security note**: The returned bytes contain sensitive key material.
-  /// Ensure they are securely handled and cleared when no longer needed.
-  Uint8List serialize() {
+  /// Example:
+  /// ```dart
+  /// final keyBytes = privateKey.serialize();
+  /// try {
+  ///   saveToSecureStorage(keyBytes.bytes);
+  /// } finally {
+  ///   keyBytes.dispose(); // Securely zeros the memory
+  /// }
+  /// ```
+  SecureBytes serialize() {
     _checkDisposed();
 
     final outPtr = calloc<SignalOwnedBuffer>();
@@ -130,7 +140,7 @@ final class PrivateKey {
       final error = signal_privatekey_serialize(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_privatekey_serialize');
 
-      return FfiHelpers.fromOwnedBuffer(outPtr.ref);
+      return SecureBytes(FfiHelpers.fromOwnedBuffer(outPtr.ref));
     } finally {
       calloc.free(outPtr);
       calloc.free(constPtr);

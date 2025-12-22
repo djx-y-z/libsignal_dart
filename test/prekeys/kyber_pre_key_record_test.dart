@@ -294,7 +294,11 @@ void main() {
 
         final origSecret = original.getSecretKey();
         final clonedSecret = cloned.getSecretKey();
-        expect(clonedSecret.serialize(), equals(origSecret.serialize()));
+        final origSecretBytes = origSecret.serialize();
+        final clonedSecretBytes = clonedSecret.serialize();
+        expect(clonedSecretBytes.bytes, equals(origSecretBytes.bytes));
+        origSecretBytes.dispose();
+        clonedSecretBytes.dispose();
 
         original.dispose();
         cloned.dispose();

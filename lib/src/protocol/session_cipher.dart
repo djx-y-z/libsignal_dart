@@ -19,6 +19,7 @@ import '../stores/kyber_pre_key_store.dart';
 import '../stores/pre_key_store.dart';
 import '../stores/session_store.dart';
 import '../stores/signed_pre_key_store.dart';
+import '../utils.dart';
 import 'ciphertext_message_type.dart';
 import 'protocol_address.dart';
 import 'session_record.dart';
@@ -316,12 +317,11 @@ class _EncryptionCallbacks {
         if (error != nullptr) return 0;
 
         final incomingBytes = FfiHelpers.fromOwnedBuffer(outPtr.ref);
-        if (storedBytes.length != incomingBytes.length) return 0;
 
-        for (var i = 0; i < storedBytes.length; i++) {
-          if (storedBytes[i] != incomingBytes[i]) return 0;
-        }
-        return 1;
+        // Use constant-time comparison to prevent timing attacks
+        return LibSignalUtils.constantTimeEquals(storedBytes, incomingBytes)
+            ? 1
+            : 0;
       } finally {
         calloc.free(outPtr);
       }
@@ -669,12 +669,11 @@ class _DecryptionCallbacks {
         if (error != nullptr) return 0;
 
         final incomingBytes = FfiHelpers.fromOwnedBuffer(outPtr.ref);
-        if (storedBytes.length != incomingBytes.length) return 0;
 
-        for (var i = 0; i < storedBytes.length; i++) {
-          if (storedBytes[i] != incomingBytes[i]) return 0;
-        }
-        return 1;
+        // Use constant-time comparison to prevent timing attacks
+        return LibSignalUtils.constantTimeEquals(storedBytes, incomingBytes)
+            ? 1
+            : 0;
       } finally {
         calloc.free(outPtr);
       }

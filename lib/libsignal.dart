@@ -62,6 +62,7 @@ library;
 // Core
 export 'src/exception.dart';
 export 'src/libsignal.dart';
+export 'src/secure_bytes.dart';
 
 // Cryptographic utilities
 export 'src/crypto/crypto.dart';

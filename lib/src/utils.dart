@@ -141,6 +141,42 @@ class LibSignalUtils {
   }
 
   // ============================================
+  // Cryptographic utilities
+  // ============================================
+
+  /// Compares two byte arrays in constant time.
+  ///
+  /// This is used to prevent timing attacks when comparing sensitive data
+  /// like cryptographic keys or MACs.
+  ///
+  /// Returns `true` if the arrays are equal, `false` otherwise.
+  /// The comparison always processes all bytes regardless of where
+  /// differences occur.
+  ///
+  /// **Security note**: Unlike regular `==` comparison, this function
+  /// does not return early on the first difference, preventing timing
+  /// attacks that could leak information about the compared data.
+  static bool constantTimeEquals(Uint8List a, Uint8List b) {
+    if (a.length != b.length) {
+      // Length mismatch — still do a dummy comparison to prevent
+      // timing leakage about the length difference
+      var dummy = 0;
+      final minLen = a.length < b.length ? a.length : b.length;
+      for (var i = 0; i < minLen; i++) {
+        dummy |= a[i] ^ b[i];
+      }
+      // Use dummy to prevent compiler optimization
+      return dummy != dummy; // Always false, but compiler can't optimize away
+    }
+
+    var result = 0;
+    for (var i = 0; i < a.length; i++) {
+      result |= a[i] ^ b[i];
+    }
+    return result == 0;
+  }
+
+  // ============================================
   // Validation utilities
   // ============================================
 

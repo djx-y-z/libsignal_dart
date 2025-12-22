@@ -58,6 +58,8 @@ final class PreKeyRecord {
     required PrivateKey privateKey,
   }) {
     LibSignal.ensureInitialized();
+    publicKey.checkNotDisposed();
+    privateKey.checkNotDisposed();
 
     final outPtr = calloc<SignalMutPointerPreKeyRecord>();
     final pubKeyPtr = calloc<SignalConstPointerPublicKey>();

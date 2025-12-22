@@ -14,13 +14,16 @@ void main() {
         final original = keyPair.getSecretKey();
 
         final serialized = original.serialize();
-        expect(serialized, isNotEmpty);
+        expect(serialized.bytes, isNotEmpty);
         // Kyber1024 secret key (includes format byte prefix)
         expect(serialized.length, equals(3169));
 
-        final restored = KyberSecretKey.deserialize(serialized);
-        expect(restored.serialize(), equals(serialized));
+        final restored = KyberSecretKey.deserialize(serialized.bytes);
+        final restoredBytes = restored.serialize();
+        expect(restoredBytes.bytes, equals(serialized.bytes));
+        restoredBytes.dispose();
 
+        serialized.dispose();
         keyPair.dispose();
         original.dispose();
         restored.dispose();
@@ -46,13 +49,20 @@ void main() {
 
         expect(cloned, isNotNull);
         expect(cloned.isDisposed, isFalse);
-        expect(cloned.serialize(), equals(original.serialize()));
+
+        final clonedBytes = cloned.serialize();
+        final originalBytes = original.serialize();
+        expect(clonedBytes.bytes, equals(originalBytes.bytes));
+        clonedBytes.dispose();
+        originalBytes.dispose();
 
         original.dispose();
 
         // Cloned should still work after original is disposed
         expect(cloned.isDisposed, isFalse);
-        expect(cloned.serialize().length, equals(3169));
+        final clonedAfterDispose = cloned.serialize();
+        expect(clonedAfterDispose.length, equals(3169));
+        clonedAfterDispose.dispose();
 
         keyPair.dispose();
         cloned.dispose();

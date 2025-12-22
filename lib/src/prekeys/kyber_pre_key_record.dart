@@ -54,6 +54,7 @@ final class KyberPreKeyRecord {
     required Uint8List signature,
   }) {
     LibSignal.ensureInitialized();
+    keyPair.checkNotDisposed();
 
     final outPtr = calloc<SignalMutPointerKyberPreKeyRecord>();
     final keyPairPtr = calloc<SignalConstPointerKyberKeyPair>();

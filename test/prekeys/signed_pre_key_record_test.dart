@@ -161,7 +161,11 @@ void main() {
 
         final origPriv = original.getPrivateKey();
         final restoredPriv = restored.getPrivateKey();
-        expect(restoredPriv.serialize(), equals(origPriv.serialize()));
+        final origPrivBytes = origPriv.serialize();
+        final restoredPrivBytes = restoredPriv.serialize();
+        expect(restoredPrivBytes.bytes, equals(origPrivBytes.bytes));
+        origPrivBytes.dispose();
+        restoredPrivBytes.dispose();
 
         original.dispose();
         restored.dispose();
@@ -301,7 +305,11 @@ void main() {
 
         final origPriv = original.getPrivateKey();
         final clonedPriv = cloned.getPrivateKey();
-        expect(clonedPriv.serialize(), equals(origPriv.serialize()));
+        final origPrivBytes = origPriv.serialize();
+        final clonedPrivBytes = clonedPriv.serialize();
+        expect(clonedPrivBytes.bytes, equals(origPrivBytes.bytes));
+        origPrivBytes.dispose();
+        clonedPrivBytes.dispose();
 
         original.dispose();
         cloned.dispose();

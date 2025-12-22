@@ -164,7 +164,11 @@ final class ProtocolAddress {
   @override
   String toString() {
     if (_disposed) return 'ProtocolAddress(disposed)';
-    return 'ProtocolAddress($name:$deviceId)';
+    // Redact name to prevent sensitive data leaking to logs.
+    // Show only first 4 chars + length hint for debugging.
+    final n = name;
+    final redacted = n.length > 4 ? '${n.substring(0, 4)}...[${n.length}]' : n;
+    return 'ProtocolAddress($redacted:$deviceId)';
   }
 
   @override

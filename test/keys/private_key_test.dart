@@ -50,22 +50,28 @@ void main() {
 
         expect(serialized.length, equals(32));
 
+        serialized.dispose();
         key.dispose();
       });
 
       test('round-trip preserves key', () {
         final original = PrivateKey.generate();
         final serialized = original.serialize();
-        final restored = PrivateKey.deserialize(serialized);
+        final restored = PrivateKey.deserialize(serialized.bytes);
 
         // Keys should produce the same serialization
-        expect(restored.serialize(), equals(original.serialize()));
+        final restoredBytes = restored.serialize();
+        final originalBytes = original.serialize();
+        expect(restoredBytes.bytes, equals(originalBytes.bytes));
+        restoredBytes.dispose();
+        originalBytes.dispose();
 
         // Keys should derive the same public key
         final pub1 = original.getPublicKey();
         final pub2 = restored.getPublicKey();
         expect(pub1.equals(pub2), isTrue);
 
+        serialized.dispose();
         original.dispose();
         restored.dispose();
         pub1.dispose();
@@ -229,7 +235,11 @@ void main() {
         final original = PrivateKey.generate();
         final cloned = original.clone();
 
-        expect(cloned.serialize(), equals(original.serialize()));
+        final clonedBytes = cloned.serialize();
+        final originalBytes = original.serialize();
+        expect(clonedBytes.bytes, equals(originalBytes.bytes));
+        clonedBytes.dispose();
+        originalBytes.dispose();
 
         original.dispose();
 

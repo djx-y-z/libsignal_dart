@@ -268,6 +268,11 @@ final class ServerCertificate {
     }
   }
 
+  /// Checks that this certificate has not been disposed.
+  ///
+  /// Throws [StateError] if the certificate has been disposed.
+  void checkNotDisposed() => _checkDisposed();
+
   /// Releases the native resources.
   void dispose() {
     if (!_disposed) {

@@ -99,10 +99,20 @@ void main() {
     });
 
     group('toString()', () {
-      test('formats as ProtocolAddress(name:deviceId)', () {
+      test('formats with redacted name (name > 4 chars)', () {
         final address = ProtocolAddress('alice', 3);
 
-        expect(address.toString(), equals('ProtocolAddress(alice:3)'));
+        // Name is redacted to prevent sensitive data leaking to logs
+        expect(address.toString(), equals('ProtocolAddress(alic...[5]:3)'));
+
+        address.dispose();
+      });
+
+      test('formats with full name (name <= 4 chars)', () {
+        final address = ProtocolAddress('bob', 3);
+
+        // Short names are shown in full
+        expect(address.toString(), equals('ProtocolAddress(bob:3)'));
 
         address.dispose();
       });

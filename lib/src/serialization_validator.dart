@@ -141,11 +141,13 @@ abstract final class RecordSize {
   static const int kyberPreKeyRecordMin = 100;
 
   /// Minimum SessionRecord size.
-  /// Complex nested protobuf structure.
-  static const int sessionRecordMin = 10;
+  /// Complex nested protobuf structure containing session states,
+  /// identity keys, base keys, etc.
+  static const int sessionRecordMin = 50;
 
   /// Minimum SenderKeyRecord size.
-  static const int senderKeyRecordMin = 5;
+  /// Contains chain key, public signing key, and message keys.
+  static const int senderKeyRecordMin = 20;
 
   /// Minimum SenderCertificate size.
   static const int senderCertificateMin = 10;

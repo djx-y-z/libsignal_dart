@@ -165,7 +165,8 @@ void main() {
         final name = SenderKeyName(addr, 'group-1');
 
         final str = name.toString();
-        expect(str, contains('alice'));
+        // ProtocolAddress now redacts names longer than 4 chars
+        expect(str, contains('alic')); // First 4 chars visible
         expect(str, contains('group-1'));
 
         addr.dispose();

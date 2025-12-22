@@ -70,6 +70,8 @@ final class SignedPreKeyRecord {
     required Uint8List signature,
   }) {
     LibSignal.ensureInitialized();
+    publicKey.checkNotDisposed();
+    privateKey.checkNotDisposed();
 
     final outPtr = calloc<SignalMutPointerSignedPreKeyRecord>();
     final pubKeyPtr = calloc<SignalConstPointerPublicKey>();

@@ -114,6 +114,7 @@ final class SenderCertificate {
     LibSignal.ensureInitialized();
     senderKey.checkNotDisposed();
     signerKey.checkNotDisposed();
+    signerCertificate.checkNotDisposed();
 
     final outPtr = calloc<SignalMutPointerSenderCertificate>();
     final uuidPtr = senderUuid.toNativeUtf8().cast<Char>();

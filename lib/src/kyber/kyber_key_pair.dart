@@ -161,6 +161,11 @@ final class KyberKeyPair {
     }
   }
 
+  /// Checks that this key pair has not been disposed.
+  ///
+  /// Throws [StateError] if the key pair has been disposed.
+  void checkNotDisposed() => _checkDisposed();
+
   void dispose() {
     if (!_disposed) {
       _disposed = true;
