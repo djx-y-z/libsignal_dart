@@ -10,12 +10,15 @@ library;
 import 'dart:io';
 
 import 'package:code_assets/code_assets.dart';
+import 'package:crypto/crypto.dart';
 import 'package:hooks/hooks.dart';
 
 /// Package name for asset registration.
 const _packageName = 'libsignal';
 
 /// Asset ID used for looking up the library at runtime.
+/// Note: This is just the name part; CodeAsset combines it with package
+/// to form the full ID: package:libsignal/libsignal
 const _assetId = 'libsignal';
 
 /// GitHub repository for downloading releases.
@@ -35,32 +38,63 @@ void main(List<String> args) async {
     final packageRoot = input.packageRoot;
 
     // Check for skip marker file (used during library building via `make build`)
+    // This avoids chicken-and-egg problem when building native libraries
     final skipMarkerUri = packageRoot.resolve('.skip_libsignal_hook');
     final skipFile = File.fromUri(skipMarkerUri);
 
     // Add marker file as dependency for cache invalidation
+    // This ensures hook reruns when marker is created/deleted
     output.dependencies.add(skipMarkerUri);
 
     if (skipFile.existsSync()) {
       return;
     }
 
-    // Download from GitHub Releases and bundle with the app
+    // For all cases, download from GitHub Releases and bundle with the app
     final fullVersion = await _readFullVersion(packageRoot);
     final assetInfo = _resolveAssetInfo(codeConfig, fullVersion);
 
     // Output directory for cached downloads
+    // Use architecture-specific subdirectory for each platform/arch combination
     final archSubdir = '${targetOS.name}-${targetArch.name}';
     final cacheDir = input.outputDirectoryShared.resolve('$archSubdir/');
     final libFile = File.fromUri(cacheDir.resolve(assetInfo.fileName));
 
     // Download if not cached
     if (!libFile.existsSync()) {
+      // Download checksums file for SHA256 verification (supply chain security)
+      final baseUrl =
+          'https://github.com/$_githubRepo/releases/download/libsignal-$fullVersion';
+      Map<String, String>? checksums;
+      String? expectedChecksum;
+
+      try {
+        checksums = await _downloadChecksums(baseUrl, fullVersion);
+        expectedChecksum = checksums[assetInfo.archiveFileName];
+
+        if (expectedChecksum == null) {
+          throw HookException(
+            'Checksum not found for ${assetInfo.archiveFileName} in checksums file. '
+            'Available files: ${checksums.keys.join(', ')}',
+          );
+        }
+      } catch (e) {
+        // If checksums download fails, log warning but continue
+        // This allows builds to work even if checksums file is missing
+        // (e.g., for older releases or local development)
+        // ignore: avoid_print
+        print(
+          'Warning: Could not verify SHA256 checksum: $e\n'
+          'Proceeding without verification (not recommended for production).',
+        );
+      }
+
       await _downloadAndExtract(
         assetInfo.downloadUrl,
         cacheDir,
         assetInfo.archiveFileName,
         assetInfo.fileName,
+        expectedChecksum: expectedChecksum,
       );
     }
 
@@ -72,7 +106,7 @@ void main(List<String> args) async {
       );
     }
 
-    // Register native asset
+    // Register native asset (Flutter converts .dylib to Framework for iOS)
     output.assets.code.add(
       CodeAsset(
         package: _packageName,
@@ -105,7 +139,7 @@ Future<String> _readVersion(Uri packageRoot) async {
 Future<String> _readNativeBuild(Uri packageRoot) async {
   final buildFile = File.fromUri(packageRoot.resolve('NATIVE_BUILD'));
   if (!buildFile.existsSync()) {
-    return '1';
+    return '1'; // Default if file doesn't exist
   }
   final build = (await buildFile.readAsString()).trim();
   return build.isEmpty ? '1' : build;
@@ -134,6 +168,9 @@ class _AssetInfo {
 }
 
 /// Resolves asset information for the target platform.
+///
+/// [fullVersion] is the complete version string including build number,
+/// e.g., "0.86.9-1" (libsignal version + native build number).
 _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String fullVersion) {
   final baseUrl =
       'https://github.com/$_githubRepo/releases/download/libsignal-$fullVersion';
@@ -152,6 +189,7 @@ _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String fullVersion) {
       );
 
     case OS.macOS:
+      // Use architecture-specific binaries (Flutter will merge them with lipo)
       final arch = _macOSArchName(targetArch);
       return _AssetInfo(
         downloadUrl: '$baseUrl/libsignal-$fullVersion-macos-$arch.tar.gz',
@@ -178,6 +216,13 @@ _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String fullVersion) {
       );
 
     case OS.iOS:
+      // iOS: Use DynamicLoadingBundled - Flutter automatically converts
+      // .dylib to Framework format required by App Store.
+      //
+      // We download architecture-specific .dylib files:
+      // - device-arm64 for physical devices
+      // - simulator-arm64 for Apple Silicon simulators
+      // - simulator-x86_64 for Intel simulators
       final iosTarget = _iOSTargetName(codeConfig, targetArch);
       return _AssetInfo(
         downloadUrl: '$baseUrl/libsignal-$fullVersion-ios-$iosTarget.tar.gz',
@@ -230,10 +275,17 @@ String _linuxArchName(Architecture arch) {
 }
 
 /// Determines iOS target name based on CodeConfig.
+///
+/// For iOS, we need to determine if we're building for device or simulator,
+/// and which architecture. The CodeConfig provides this information.
 String _iOSTargetName(CodeConfig codeConfig, Architecture arch) {
+  // Check if building for simulator by looking at the iOS SDK
+  // iOS simulators use iphonesimulator SDK, devices use iphoneos SDK
+  // The CodeConfig.iOS.targetSdk property tells us which one
   final isSimulator = codeConfig.iOS.targetSdk == IOSSdk.iPhoneSimulator;
 
   if (isSimulator) {
+    // Simulator: can be arm64 (Apple Silicon) or x86_64 (Intel)
     switch (arch) {
       case Architecture.arm64:
         return 'simulator-arm64';
@@ -243,6 +295,7 @@ String _iOSTargetName(CodeConfig codeConfig, Architecture arch) {
         throw HookException('Unsupported iOS simulator architecture: $arch');
     }
   } else {
+    // Device: always arm64
     if (arch != Architecture.arm64) {
       throw HookException(
         'Unsupported iOS device architecture: $arch (only arm64 is supported)',
@@ -252,13 +305,17 @@ String _iOSTargetName(CodeConfig codeConfig, Architecture arch) {
   }
 }
 
-/// Downloads and extracts the native library archive.
+/// Downloads and extracts the native library archive with SHA256 verification.
+///
+/// [expectedChecksum] is the expected SHA256 hash of the archive.
+/// If null, verification is skipped (not recommended for production).
 Future<void> _downloadAndExtract(
   String url,
   Uri outputDir,
   String archiveFileName,
-  String libFileName,
-) async {
+  String libFileName, {
+  String? expectedChecksum,
+}) async {
   final outDir = Directory.fromUri(outputDir);
   await outDir.create(recursive: true);
 
@@ -266,6 +323,11 @@ Future<void> _downloadAndExtract(
 
   // Download with retry
   await _downloadWithRetry(url, archiveFile);
+
+  // Verify SHA256 checksum if provided
+  if (expectedChecksum != null) {
+    await _verifyChecksum(archiveFile, expectedChecksum, archiveFileName);
+  }
 
   // Extract based on format
   if (url.endsWith('.zip')) {
@@ -375,6 +437,92 @@ Future<void> _extractZip(File archive, Directory outDir) async {
 
   if (result.exitCode != 0) {
     throw HookException('Failed to extract zip archive: ${result.stderr}');
+  }
+}
+
+/// Downloads and verifies checksums file from GitHub Release.
+///
+/// Returns a map of filename -> expected SHA256 hash.
+Future<Map<String, String>> _downloadChecksums(
+  String baseUrl,
+  String fullVersion,
+) async {
+  final checksumsUrl = '$baseUrl/libsignal-$fullVersion-checksums.sha256';
+  final client = HttpClient();
+
+  try {
+    final request = await client.getUrl(Uri.parse(checksumsUrl));
+    final response = await request.close();
+
+    if (response.statusCode != 200) {
+      throw HookException(
+        'Failed to download checksums from $checksumsUrl: HTTP ${response.statusCode}',
+      );
+    }
+
+    final content = await response.transform(systemEncoding.decoder).join();
+    return _parseChecksums(content);
+  } finally {
+    client.close();
+  }
+}
+
+/// Parses SHA256 checksums file content.
+///
+/// Expected format (standard sha256sum output):
+/// ```
+/// <hash>  <filename>
+/// <hash>  <filename>
+/// ```
+Map<String, String> _parseChecksums(String content) {
+  final checksums = <String, String>{};
+
+  for (final line in content.split('\n')) {
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) continue;
+
+    // Format: "<hash>  <filename>" (two spaces between hash and filename)
+    // Also support single space for compatibility
+    final match = RegExp(r'^([a-fA-F0-9]{64})\s+(.+)$').firstMatch(trimmed);
+    if (match != null) {
+      final hash = match.group(1)!.toLowerCase();
+      final filename = match.group(2)!;
+      checksums[filename] = hash;
+    }
+  }
+
+  return checksums;
+}
+
+/// Computes SHA256 hash of a file.
+Future<String> _computeFileSha256(File file) async {
+  final bytes = await file.readAsBytes();
+  final digest = sha256.convert(bytes);
+  return digest.toString();
+}
+
+/// Verifies file SHA256 hash against expected value.
+///
+/// Throws [HookException] if verification fails.
+Future<void> _verifyChecksum(
+  File file,
+  String expectedHash,
+  String filename,
+) async {
+  final actualHash = await _computeFileSha256(file);
+
+  if (actualHash != expectedHash.toLowerCase()) {
+    // Delete the corrupted/tampered file
+    if (file.existsSync()) {
+      await file.delete();
+    }
+    throw HookException(
+      'SHA256 verification failed for $filename!\n'
+      'Expected: $expectedHash\n'
+      'Actual:   $actualHash\n'
+      'This may indicate a corrupted download or supply chain attack. '
+      'Please report this issue at https://github.com/$_githubRepo/issues',
+    );
   }
 }
 

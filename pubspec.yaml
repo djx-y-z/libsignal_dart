@@ -13,6 +13,8 @@ environment:
 
 dependencies:
   ffi: ^2.1.4
+  # SHA256 verification for native library downloads
+  crypto: ^3.0.6
   # Build hooks for automatic native library download
   hooks: ^1.0.0
   code_assets: ^1.0.0
