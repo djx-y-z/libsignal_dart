@@ -76,7 +76,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -89,7 +89,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );

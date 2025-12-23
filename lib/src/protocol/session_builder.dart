@@ -486,8 +486,8 @@ class SessionBuilder {
       final addressConstPtr = calloc<SignalConstPointerProtocolAddress>();
       addressConstPtr.ref.raw = remoteAddress.pointer;
 
-      // Current time in milliseconds
-      final now = DateTime.now().millisecondsSinceEpoch;
+      // Current time in milliseconds (UTC)
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
       try {
         // Call libsignal to process the pre-key bundle

@@ -12,6 +12,7 @@ import '../ffi_helpers.dart';
 import '../libsignal.dart';
 import '../protocol/protocol_address.dart';
 import '../stores/sender_key_store.dart';
+import '../utils.dart';
 import 'sender_key_distribution_message.dart';
 
 /// A map to store sender key record bytes during FFI callback execution.
@@ -21,6 +22,16 @@ import 'sender_key_distribution_message.dart';
 final _pendingSenderKeyRecordBytes = <int, Uint8List>{};
 final _pendingStoreOperations = <int, _StoreOperation>{};
 int _operationCounter = 0;
+
+/// Gets a unique operation ID with overflow protection.
+int _nextOperationId() {
+  _operationCounter++;
+  // Reset if approaching max int to prevent overflow
+  if (_operationCounter > 0x7FFFFFFFFFFFFFF) {
+    _operationCounter = 1;
+  }
+  return _operationCounter;
+}
 
 class _StoreOperation {
   final SenderKeyStore store;
@@ -189,7 +200,7 @@ class GroupSession {
   /// This message should be sent to all group members so they can
   /// decrypt messages from this sender.
   Future<SenderKeyDistributionMessage> createDistributionMessage() async {
-    final operationId = ++_operationCounter;
+    final operationId = _nextOperationId();
 
     // Pre-load existing sender key record if any
     final senderKeyName = SenderKeyName(
@@ -282,7 +293,7 @@ class GroupSession {
     ProtocolAddress senderAddress,
     SenderKeyDistributionMessage message,
   ) async {
-    final operationId = ++_operationCounter;
+    final operationId = _nextOperationId();
 
     // Pre-load existing sender key record if any
     final senderKeyName = SenderKeyName(
@@ -356,7 +367,7 @@ class GroupSession {
   ///
   /// Returns the encrypted message bytes.
   Future<Uint8List> encrypt(Uint8List plaintext) async {
-    final operationId = ++_operationCounter;
+    final operationId = _nextOperationId();
 
     // Pre-load existing sender key record
     final senderKeyName = SenderKeyName(
@@ -453,6 +464,8 @@ class GroupSession {
           calloc.free(destroyPtr);
         }
       } finally {
+        // Securely zero plaintext before freeing
+        LibSignalUtils.zeroBytes(msgPtr.asTypedList(plaintext.length));
         calloc.free(outPtr);
         calloc.free(senderPtr);
         calloc.free(distIdData);
@@ -475,7 +488,7 @@ class GroupSession {
     ProtocolAddress senderAddress,
     Uint8List ciphertext,
   ) async {
-    final operationId = ++_operationCounter;
+    final operationId = _nextOperationId();
 
     // Pre-load existing sender key record
     final senderKeyName = SenderKeyName(
@@ -539,6 +552,8 @@ class GroupSession {
 
         return FfiHelpers.fromOwnedBuffer(outPtr.ref);
       } finally {
+        // Securely zero ciphertext before freeing
+        LibSignalUtils.zeroBytes(msgPtr.asTypedList(ciphertext.length));
         calloc.free(outPtr);
         calloc.free(senderPtr);
         calloc.free(msgPtr);

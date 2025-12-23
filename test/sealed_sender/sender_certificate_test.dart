@@ -45,7 +45,7 @@ void main() {
 
     group('create()', () {
       test('creates valid sender certificate with all fields', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           senderE164: '+1234567890',
@@ -66,7 +66,7 @@ void main() {
       });
 
       test('creates certificate without E164', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           senderE164: null,
@@ -83,7 +83,7 @@ void main() {
       });
 
       test('creates certificate with various device IDs', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
 
         for (final deviceId in [1, 2, 100, 0xFFFF]) {
           final cert = SenderCertificate.create(
@@ -101,7 +101,7 @@ void main() {
       });
 
       test('created certificate has valid signature', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -119,7 +119,7 @@ void main() {
       });
 
       test('created certificate has certificate data', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -137,7 +137,7 @@ void main() {
 
       test('expiration time is preserved', () {
         // Round to seconds to avoid millisecond precision issues
-        final now = DateTime.now();
+        final now = DateTime.now().toUtc();
         final expiration = DateTime(
           now.year,
           now.month,
@@ -168,7 +168,7 @@ void main() {
 
     group('serialize() / deserialize()', () {
       test('round-trip preserves certificate', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final original = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           senderE164: '+1234567890',
@@ -201,7 +201,7 @@ void main() {
       });
 
       test('round-trip preserves certificate without E164', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final original = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           senderE164: null,
@@ -239,7 +239,7 @@ void main() {
 
     group('getKey()', () {
       test('returns valid public key', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -261,7 +261,7 @@ void main() {
       });
 
       test('multiple calls return equivalent keys', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -284,7 +284,7 @@ void main() {
 
     group('getServerCertificate()', () {
       test('returns server certificate', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -307,7 +307,7 @@ void main() {
 
     group('validate()', () {
       test('valid certificate validates successfully', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -325,7 +325,7 @@ void main() {
 
       test('expired certificate fails validation', () {
         // Create a certificate that expired in the past
-        final expiration = DateTime.now().subtract(const Duration(days: 1));
+        final expiration = DateTime.now().toUtc().subtract(const Duration(days: 1));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -342,7 +342,7 @@ void main() {
       });
 
       test('validation with custom time works', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -355,14 +355,14 @@ void main() {
         // Check with time before expiration
         final isValidBefore = cert.validate(
           trustRootPublic,
-          now: DateTime.now().add(const Duration(days: 15)),
+          now: DateTime.now().toUtc().add(const Duration(days: 15)),
         );
         expect(isValidBefore, isTrue);
 
         // Check with time after expiration
         final isValidAfter = cert.validate(
           trustRootPublic,
-          now: DateTime.now().add(const Duration(days: 60)),
+          now: DateTime.now().toUtc().add(const Duration(days: 60)),
         );
         expect(isValidAfter, isFalse);
 
@@ -370,7 +370,7 @@ void main() {
       });
 
       test('validation fails with wrong trust root', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -391,7 +391,7 @@ void main() {
 
     group('clone()', () {
       test('creates independent copy', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final original = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           senderE164: '+1234567890',
@@ -421,7 +421,7 @@ void main() {
 
     group('disposal', () {
       test('isDisposed is false initially', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -436,7 +436,7 @@ void main() {
       });
 
       test('isDisposed is true after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -451,7 +451,7 @@ void main() {
       });
 
       test('double dispose is safe', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -466,7 +466,7 @@ void main() {
       });
 
       test('senderUuid throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -481,7 +481,7 @@ void main() {
       });
 
       test('senderE164 throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -496,7 +496,7 @@ void main() {
       });
 
       test('deviceId throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -511,7 +511,7 @@ void main() {
       });
 
       test('expiration throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -526,7 +526,7 @@ void main() {
       });
 
       test('serialize throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -541,7 +541,7 @@ void main() {
       });
 
       test('getKey throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -556,7 +556,7 @@ void main() {
       });
 
       test('getServerCertificate throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -571,7 +571,7 @@ void main() {
       });
 
       test('validate throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -586,7 +586,7 @@ void main() {
       });
 
       test('certificate throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -601,7 +601,7 @@ void main() {
       });
 
       test('signature throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -616,7 +616,7 @@ void main() {
       });
 
       test('clone throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -631,7 +631,7 @@ void main() {
       });
 
       test('pointer throws after dispose', () {
-        final expiration = DateTime.now().add(const Duration(days: 30));
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,

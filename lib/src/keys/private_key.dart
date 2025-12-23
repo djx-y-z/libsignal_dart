@@ -12,6 +12,7 @@ import '../ffi_helpers.dart';
 import '../libsignal.dart';
 import '../secure_bytes.dart';
 import '../serialization_validator.dart';
+import '../utils.dart';
 import 'public_key.dart';
 
 /// Weak reference tracking for finalizer.
@@ -105,9 +106,7 @@ final class PrivateKey {
       return PrivateKey._(outPtr.ref.raw);
     } finally {
       // Secure clear the key data
-      for (var i = 0; i < data.length; i++) {
-        dataPtr[i] = 0;
-      }
+      LibSignalUtils.zeroBytes(dataPtr.asTypedList(data.length));
       calloc.free(dataPtr);
       calloc.free(buffer);
       calloc.free(outPtr);

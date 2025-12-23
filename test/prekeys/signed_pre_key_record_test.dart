@@ -81,7 +81,7 @@ void main() {
         final timestamps = [
           0,
           1,
-          DateTime.now().millisecondsSinceEpoch,
+          DateTime.now().toUtc().millisecondsSinceEpoch,
           0x7FFFFFFFFFFFFFFF, // Max int64
         ];
 
@@ -201,7 +201,7 @@ void main() {
 
     group('timestamp', () {
       test('returns correct timestamp', () {
-        final now = DateTime.now().millisecondsSinceEpoch;
+        final now = DateTime.now().toUtc().millisecondsSinceEpoch;
         final signedPreKey = createSignedPreKey(id: 1, timestamp: now);
         expect(signedPreKey.timestamp, equals(now));
         signedPreKey.dispose();

@@ -38,7 +38,7 @@ final Finalizer<Pointer<SignalSenderCertificate>> _senderCertificateFinalizer =
 ///   senderE164: '+1234567890',
 ///   deviceId: 1,
 ///   senderKey: senderPublicKey,
-///   expiration: DateTime.now().add(Duration(days: 30)),
+///   expiration: DateTime.now().toUtc().add(Duration(days: 30)),
 ///   signerCertificate: serverCert,
 ///   signerKey: serverPrivateKey,
 /// );
@@ -99,7 +99,7 @@ final class SenderCertificate {
   /// The [senderE164] is the sender's phone number (optional, can be null).
   /// The [deviceId] is the sender's device ID.
   /// The [senderKey] is the sender's public key.
-  /// The [expiration] is when this certificate expires.
+  /// The [expiration] is when this certificate expires (automatically converted to UTC).
   /// The [signerCertificate] is the server certificate that signs this.
   /// The [signerKey] is the private key for signing.
   static SenderCertificate create({
@@ -130,8 +130,8 @@ final class SenderCertificate {
     final signerKeyPtr = calloc<SignalConstPointerPrivateKey>();
     signerKeyPtr.ref.raw = signerKey.pointer;
 
-    // Expiration is in milliseconds since epoch
-    final expirationMs = expiration.millisecondsSinceEpoch;
+    // Expiration is in milliseconds since epoch (UTC)
+    final expirationMs = expiration.toUtc().millisecondsSinceEpoch;
 
     try {
       final error = signal_sender_certificate_new(
@@ -288,7 +288,7 @@ final class SenderCertificate {
           signal_sender_certificate_get_expiration(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_sender_certificate_get_expiration');
 
-      return DateTime.fromMillisecondsSinceEpoch(outPtr.value);
+      return DateTime.fromMillisecondsSinceEpoch(outPtr.value, isUtc: true);
     } finally {
       calloc.free(outPtr);
       calloc.free(constPtr);
@@ -392,7 +392,7 @@ final class SenderCertificate {
     // on ARM64 platforms. When the Dart FFI issue is resolved, this can be switched
     // to use signal_sender_certificate_validate directly.
 
-    final checkTime = now ?? DateTime.now();
+    final checkTime = now?.toUtc() ?? DateTime.now().toUtc();
 
     // 1. Check expiration
     if (!expiration.isAfter(checkTime)) {

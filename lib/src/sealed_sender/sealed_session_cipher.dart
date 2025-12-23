@@ -65,6 +65,20 @@ class _SealedSenderEncryptContext {
     this.sessionRecordBytes,
     this.remoteIdentityBytes,
   });
+
+  /// Securely clears all sensitive data from the context.
+  void clear() {
+    LibSignalUtils.zeroBytes(sessionRecordBytes);
+    LibSignalUtils.zeroBytes(pendingSessionStore);
+    LibSignalUtils.zeroBytes(remoteIdentityBytes);
+    if (pendingIdentitySave != null) {
+      LibSignalUtils.zeroBytes(pendingIdentitySave!.identityBytes);
+    }
+    sessionRecordBytes = null;
+    pendingSessionStore = null;
+    remoteIdentityBytes = null;
+    pendingIdentitySave = null;
+  }
 }
 
 /// Context for sealed sender decryption to USMC.
@@ -591,7 +605,7 @@ class SealedSessionCipher {
       plaintextBuffer.ref.length = plaintext.length;
 
       final ciphertextOutPtr = calloc<SignalMutPointerCiphertextMessage>();
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
       try {
         // Step 1: Encrypt the message using session
@@ -722,6 +736,8 @@ class SealedSessionCipher {
         bindings.signal_ciphertext_message_destroy(destroyPtr.ref);
         calloc.free(destroyPtr);
 
+        // Securely zero plaintext before freeing
+        LibSignalUtils.zeroBytes(plaintextPtr.asTypedList(plaintext.length));
         calloc.free(sessionStorePtr);
         calloc.free(identityStorePtr);
         calloc.free(sessionStoreConstPtr);
@@ -733,6 +749,7 @@ class SealedSessionCipher {
       }
     } finally {
       callbacks.close();
+      context.clear();
     }
   }
 
@@ -789,6 +806,8 @@ class SealedSessionCipher {
 
         return UnidentifiedSenderMessageContent.fromPointer(outPtr.ref.raw);
       } finally {
+        // Securely zero ciphertext before freeing
+        LibSignalUtils.zeroBytes(ctextPtr.asTypedList(ciphertext.length));
         calloc.free(identityStorePtr);
         calloc.free(identityStoreConstPtr);
         calloc.free(ctextPtr);

@@ -47,7 +47,7 @@ void main() {
 
       final signedPreKeyRecord = SignedPreKeyRecord.create(
         id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
+        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
         publicKey: bobKeys.signedPreKeyPublic,
         privateKey: bobKeys.signedPreKeyPrivate,
         signature: bobKeys.signedPreKeySignature,
@@ -59,7 +59,7 @@ void main() {
 
       final kyberPreKeyRecord = KyberPreKeyRecord.create(
         id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().millisecondsSinceEpoch,
+        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
         keyPair: bobKeys.kyberKeyPair,
         signature: bobKeys.kyberPreKeySignature,
       );
@@ -84,7 +84,7 @@ void main() {
       final plaintext = Uint8List.fromList(utf8.encode('Test message'));
       final encrypted = await aliceCipher.encrypt(bobAddress, plaintext);
       validEncryptedMessage = encrypted.bytes;
-      validTimestamp = DateTime.now().millisecondsSinceEpoch;
+      validTimestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
 
       preKeyRecord.dispose();
       signedPreKeyRecord.dispose();

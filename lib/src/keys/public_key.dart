@@ -11,6 +11,7 @@ import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
 import '../serialization_validator.dart';
+import '../utils.dart';
 
 /// Weak reference tracking for finalizer.
 final Finalizer<Pointer<SignalPublicKey>> _publicKeyFinalizer = Finalizer(
@@ -81,6 +82,9 @@ final class PublicKey {
 
       return PublicKey._(outPtr.ref.raw);
     } finally {
+      // Securely zero key data before freeing (public keys are less sensitive,
+      // but consistent handling helps prevent copy-paste errors)
+      LibSignalUtils.zeroBytes(dataPtr.asTypedList(data.length));
       calloc.free(dataPtr);
       calloc.free(buffer);
       calloc.free(outPtr);
@@ -168,6 +172,9 @@ final class PublicKey {
 
       return outPtr.value;
     } finally {
+      // Securely zero buffers before freeing
+      LibSignalUtils.zeroBytes(messagePtr.asTypedList(message.length));
+      LibSignalUtils.zeroBytes(signaturePtr.asTypedList(signature.length));
       calloc.free(messagePtr);
       calloc.free(signaturePtr);
       calloc.free(messageBuffer);

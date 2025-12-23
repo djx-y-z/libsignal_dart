@@ -39,7 +39,7 @@ void main() {
       store = InMemorySignedPreKeyStore();
       identityKeyPair = IdentityKeyPair.generate();
 
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
       record1 = createSignedPreKey(
         id: 1,
         timestamp: timestamp,
@@ -111,7 +111,7 @@ void main() {
 
         final newRecord = createSignedPreKey(
           id: 1,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           identityKeyPair: identityKeyPair,
         );
         await store.storeSignedPreKey(1, newRecord);
@@ -247,7 +247,7 @@ void main() {
       test('handles ID 0', () async {
         final record = createSignedPreKey(
           id: 0,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           identityKeyPair: identityKeyPair,
         );
 
@@ -265,7 +265,7 @@ void main() {
       test('handles large IDs', () async {
         final record = createSignedPreKey(
           id: 0xFFFFFF,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           identityKeyPair: identityKeyPair,
         );
 

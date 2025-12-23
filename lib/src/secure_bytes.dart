@@ -6,6 +6,13 @@ library;
 
 import 'dart:typed_data';
 
+import 'utils.dart';
+
+/// Weak reference tracking for finalizer (safety net for forgotten dispose calls).
+final Finalizer<Uint8List> _secureBytesProtector = Finalizer(
+  LibSignalUtils.zeroBytes,
+);
+
 /// A wrapper for sensitive byte data that provides secure disposal.
 ///
 /// When [dispose] is called, the underlying bytes are securely zeroed
@@ -32,7 +39,10 @@ final class SecureBytes {
   ///
   /// The data is NOT copied - the wrapper takes ownership of the bytes.
   /// After disposal, the original bytes will be zeroed.
-  SecureBytes(this._data);
+  SecureBytes(this._data) {
+    // Attach finalizer as safety net in case dispose() is not called
+    _secureBytesProtector.attach(this, _data, detach: this);
+  }
 
   /// Creates a SecureBytes wrapper with a copy of the data.
   ///
@@ -66,11 +76,11 @@ final class SecureBytes {
   /// - Calling dispose again is safe (no-op)
   void dispose() {
     if (!_disposed) {
-      // Securely zero the memory
-      for (var i = 0; i < _data.length; i++) {
-        _data[i] = 0;
-      }
       _disposed = true;
+      // Detach from finalizer since we're disposing manually
+      _secureBytesProtector.detach(this);
+      // Securely zero the memory
+      LibSignalUtils.zeroBytes(_data);
     }
   }
 

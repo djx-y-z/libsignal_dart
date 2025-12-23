@@ -130,6 +130,142 @@ if (offset + _kPublicKeyLength > data.length) {
 - `test/secure_bytes_test.dart` - Tests for `SecureBytes` class
 - Updated `test/prekeys/pre_key_record_test.dart` - Tests for disposed key handling
 
+### Category H: DateTime UTC Consistency
+
+**Problem:** Using local time (`DateTime.now()`) for cryptographic timestamps causes:
+- Certificate validation results varying by timezone
+- Message timestamps inconsistent across devices
+- Potential replay attack vulnerabilities
+
+**Fixes:**
+- All timestamp operations use UTC via `DateTime.now().toUtc()`
+- `DateTime.fromMillisecondsSinceEpoch()` uses `isUtc: true`
+- Library API accepts any DateTime and converts internally to UTC
+
+**Files affected:**
+- `lib/src/sealed_sender/sender_certificate.dart` - expiration, validate(), create()
+- `lib/src/protocol/session_cipher.dart` - encryption timestamp
+- `lib/src/sealed_sender/sealed_session_cipher.dart` - sealed sender timestamp
+- `lib/src/protocol/session_builder.dart` - pre-key bundle timestamp
+- All test files updated to use `.toUtc()`
+
+### Category I: Secure Memory Zeroing
+
+**Problem:** Sensitive data (plaintext, ciphertext, session records) persists in memory after `calloc.free()`.
+
+**Fixes:**
+- Added centralized `LibSignalUtils.zeroBytes()` function
+- All sensitive buffers zeroed before `calloc.free()`
+- Consistent pattern across all FFI operations
+
+**Implementation:**
+```dart
+// In lib/src/utils.dart
+static void zeroBytes(Uint8List? data) {
+  if (data == null || data.isEmpty) return;
+  for (var i = 0; i < data.length; i++) {
+    data[i] = 0;
+  }
+}
+
+// Usage in FFI operations
+finally {
+  LibSignalUtils.zeroBytes(plaintextPtr.asTypedList(plaintext.length));
+  calloc.free(plaintextPtr);
+}
+```
+
+**Files affected:**
+- `lib/src/utils.dart` - centralized function
+- `lib/src/protocol/session_cipher.dart` - encrypt/decrypt
+- `lib/src/sealed_sender/sealed_session_cipher.dart` - encrypt/decrypt
+- `lib/src/groups/group_session.dart` - encrypt/decrypt
+- `lib/src/keys/public_key.dart` - deserialize, verify
+- `lib/src/keys/private_key.dart` - deserialize
+
+### Category J: Context Data Cleanup
+
+**Problem:** Encryption/decryption context classes store sensitive session data without cleanup.
+
+**Fixes:**
+- Added `clear()` method to `_EncryptionContext` and `_DecryptionContext`
+- Context data zeroed in `finally` blocks after use
+- Prevents session state leakage
+
+**Implementation:**
+```dart
+class _EncryptionContext {
+  Uint8List? sessionRecordBytes;
+  Uint8List? remoteIdentityBytes;
+  // ...
+
+  void clear() {
+    LibSignalUtils.zeroBytes(sessionRecordBytes);
+    LibSignalUtils.zeroBytes(remoteIdentityBytes);
+    // Clear all sensitive fields
+  }
+}
+```
+
+**Files affected:**
+- `lib/src/protocol/session_cipher.dart`
+- `lib/src/sealed_sender/sealed_session_cipher.dart`
+
+### Category K: SecureBytes Finalizer
+
+**Problem:** If user forgets to call `dispose()`, sensitive data may leak to garbage collector.
+
+**Fixes:**
+- Added `Finalizer<Uint8List>` as safety net
+- Automatically zeros data if object is garbage collected
+- Explicit `dispose()` still recommended for deterministic cleanup
+
+**Implementation:**
+```dart
+final Finalizer<Uint8List> _secureBytesProtector = Finalizer(
+  LibSignalUtils.zeroBytes,
+);
+
+class SecureBytes {
+  SecureBytes(this._data) {
+    _secureBytesProtector.attach(this, _data, detach: this);
+  }
+
+  void dispose() {
+    if (!_disposed) {
+      _disposed = true;
+      _secureBytesProtector.detach(this);
+      LibSignalUtils.zeroBytes(_data);
+    }
+  }
+}
+```
+
+**Files affected:**
+- `lib/src/secure_bytes.dart`
+
+### Category L: Operation Counter Overflow Protection
+
+**Problem:** Group session operation counter could overflow after ~2^63 operations.
+
+**Fixes:**
+- Added overflow check with reset to 1
+- Prevents potential undefined behavior
+
+**Implementation:**
+```dart
+int _nextOperationId() {
+  _operationCounter++;
+  if (_operationCounter > 0x7FFFFFFFFFFFFFF) {
+    _operationCounter = 1;
+  }
+  return _operationCounter;
+}
+```
+
+**Files affected:**
+- `lib/src/groups/group_session.dart`
+
 ## Secure Development Guidelines
 
 ### Memory Management
@@ -151,17 +287,24 @@ if (offset + _kPublicKeyLength > data.length) {
    }
    ```
 
-2. **Use `try-finally` for FFI operations:**
+2. **Use `try-finally` for FFI operations with memory zeroing:**
    ```dart
-   final ptr = calloc<SomeStruct>();
+   final ptr = calloc<Uint8>(dataLength);
    try {
      // Use ptr
    } finally {
+     LibSignalUtils.zeroBytes(ptr.asTypedList(dataLength));
      calloc.free(ptr);
    }
    ```
 
-3. **Use `SecureBytes` for sensitive data:**
+3. **Use centralized `zeroBytes()` for sensitive data:**
+   ```dart
+   // Don't write inline loops - use the centralized function
+   LibSignalUtils.zeroBytes(sensitiveData);
+   ```
+
+4. **Use `SecureBytes` for sensitive data:
    ```dart
    final secureKey = SecureBytes(keyData);
    try {
@@ -190,6 +333,33 @@ if (offset + _kPublicKeyLength > data.length) {
    inputObject.checkNotDisposed();
    ```
 
+### DateTime Handling
+
+1. **Always use UTC for cryptographic timestamps:**
+   ```dart
+   // Wrong - local time varies by timezone
+   final now = DateTime.now();
+
+   // Correct - UTC is timezone-independent
+   final now = DateTime.now().toUtc();
+   ```
+
+2. **Convert timestamps to UTC internally:**
+   ```dart
+   // Accept any DateTime but convert to UTC
+   final utcTime = inputTime.toUtc();
+   final timestampMs = utcTime.millisecondsSinceEpoch;
+   ```
+
+3. **Parse timestamps as UTC:**
+   ```dart
+   // Wrong - returns local time
+   DateTime.fromMillisecondsSinceEpoch(value);
+
+   // Correct - returns UTC time
+   DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
+   ```
+
 ### Cryptographic Operations
 
 1. **Use constant-time comparison for secrets:**
@@ -210,7 +380,18 @@ if (offset + _kPublicKeyLength > data.length) {
 
 3. **Zero sensitive data after use:**
    ```dart
+   LibSignalUtils.zeroBytes(sensitiveBuffer);
    secureBytes.dispose(); // Automatically zeros
+   ```
+
+4. **Clean up context objects:**
+   ```dart
+   final context = _EncryptionContext();
+   try {
+     // Use context
+   } finally {
+     context.clear(); // Zero all sensitive fields
+   }
    ```
 
 ## Code Review Security Checklist
@@ -218,21 +399,27 @@ if (offset + _kPublicKeyLength > data.length) {
 When reviewing code changes, verify:
 
 - [ ] All FFI pointers are freed in `finally` blocks
+- [ ] Sensitive FFI buffers zeroed with `LibSignalUtils.zeroBytes()` before `calloc.free()`
 - [ ] `dispose()` methods check `_disposed` flag
 - [ ] `checkNotDisposed()` called on input objects in factory methods
 - [ ] Buffer bounds checked before `sublistView()` operations
 - [ ] Serialized data validated with `SerializationValidator`
 - [ ] Constant-time comparison used for cryptographic data
 - [ ] `toString()` methods don't expose sensitive data
+- [ ] `DateTime.now().toUtc()` used instead of `DateTime.now()`
+- [ ] `DateTime.fromMillisecondsSinceEpoch()` uses `isUtc: true`
+- [ ] Context classes have `clear()` method for sensitive data
 - [ ] New security-critical code has test coverage
 
 ## Known Limitations
 
-1. **Dart VM memory:** Memory zeroing in `SecureBytes` may not be effective if Dart GC has already copied the data. This is a platform limitation.
+1. **Dart VM memory:** Memory zeroing in `SecureBytes` may not be effective if Dart GC has already copied the data. This is a platform limitation. The `Finalizer` added to `SecureBytes` provides a safety net but is not a guarantee.
 
 2. **FFI struct by value (ARM64):** Some functions using 16-byte structs passed by value have ABI issues on ARM64. See `CLAUDE.md` for workarounds.
 
 3. **Timing side channels:** While `constantTimeEquals` provides constant-time comparison, other operations may still have timing variations due to Dart runtime behavior.
+
+4. **Finalizer timing:** The `SecureBytes` finalizer runs at GC's discretion, not immediately when the object becomes unreachable. Always prefer explicit `dispose()` calls for deterministic cleanup.
 
 ## Reporting Security Issues
 

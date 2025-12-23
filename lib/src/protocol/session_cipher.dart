@@ -52,6 +52,20 @@ class _EncryptionContext {
     this.sessionRecordBytes,
     this.remoteIdentityBytes,
   });
+
+  /// Securely clears all sensitive data from the context.
+  void clear() {
+    LibSignalUtils.zeroBytes(sessionRecordBytes);
+    LibSignalUtils.zeroBytes(pendingSessionStore);
+    LibSignalUtils.zeroBytes(remoteIdentityBytes);
+    if (pendingIdentitySave != null) {
+      LibSignalUtils.zeroBytes(pendingIdentitySave!.identityBytes);
+    }
+    sessionRecordBytes = null;
+    pendingSessionStore = null;
+    remoteIdentityBytes = null;
+    pendingIdentitySave = null;
+  }
 }
 
 /// Holds pre-loaded data for decryption FFI callbacks.
@@ -83,6 +97,30 @@ class _DecryptionContext {
     this.signedPreKeys = const {},
     this.kyberPreKeys = const {},
   });
+
+  /// Securely clears all sensitive data from the context.
+  void clear() {
+    LibSignalUtils.zeroBytes(sessionRecordBytes);
+    LibSignalUtils.zeroBytes(pendingSessionStore);
+    LibSignalUtils.zeroBytes(remoteIdentityBytes);
+    if (pendingIdentitySave != null) {
+      LibSignalUtils.zeroBytes(pendingIdentitySave!.identityBytes);
+    }
+    // Clear pre-key data
+    for (final data in preKeys.values) {
+      LibSignalUtils.zeroBytes(data);
+    }
+    for (final data in signedPreKeys.values) {
+      LibSignalUtils.zeroBytes(data);
+    }
+    for (final data in kyberPreKeys.values) {
+      LibSignalUtils.zeroBytes(data);
+    }
+    sessionRecordBytes = null;
+    pendingSessionStore = null;
+    remoteIdentityBytes = null;
+    pendingIdentitySave = null;
+  }
 }
 
 /// Manages NativeCallable instances for encryption.
@@ -1029,7 +1067,7 @@ class SessionCipher {
 
       final outPtr = calloc<SignalMutPointerCiphertextMessage>();
 
-      final now = DateTime.now().millisecondsSinceEpoch;
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
 
       try {
         final error = signal_encrypt_message(
@@ -1089,6 +1127,8 @@ class SessionCipher {
 
         return CiphertextMessage(encryptedBytes, messageType);
       } finally {
+        // Securely zero plaintext before freeing
+        LibSignalUtils.zeroBytes(plaintextPtr.asTypedList(plaintext.length));
         calloc.free(sessionStorePtr);
         calloc.free(identityStorePtr);
         calloc.free(sessionStoreConstPtr);
@@ -1100,6 +1140,7 @@ class SessionCipher {
       }
     } finally {
       callbacks.close();
+      context.clear();
     }
   }
 
@@ -1200,6 +1241,8 @@ class SessionCipher {
         signal_message_destroy(destroyPtr.ref);
         calloc.free(destroyPtr);
 
+        // Securely zero ciphertext before freeing
+        LibSignalUtils.zeroBytes(ciphertextPtr.asTypedList(ciphertext.length));
         calloc.free(messagePtr);
         calloc.free(ciphertextPtr);
         calloc.free(ciphertextBuffer);
@@ -1213,6 +1256,7 @@ class SessionCipher {
       }
     } finally {
       callbacks.close();
+      context.clear();
     }
   }
 
@@ -1396,6 +1440,8 @@ class SessionCipher {
         signal_pre_key_signal_message_destroy(destroyPtr.ref);
         calloc.free(destroyPtr);
 
+        // Securely zero ciphertext before freeing
+        LibSignalUtils.zeroBytes(ciphertextPtr.asTypedList(ciphertext.length));
         calloc.free(messagePtr);
         calloc.free(ciphertextPtr);
         calloc.free(ciphertextBuffer);
@@ -1415,6 +1461,7 @@ class SessionCipher {
       }
     } finally {
       callbacks.close();
+      context.clear();
     }
   }
 

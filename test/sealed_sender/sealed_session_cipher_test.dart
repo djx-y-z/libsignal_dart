@@ -121,7 +121,7 @@ void main() {
           senderUuid: 'alice-uuid',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -151,7 +151,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -163,7 +163,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -186,7 +186,7 @@ void main() {
           senderUuid: 'alice-uuid',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -229,7 +229,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -241,7 +241,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -264,7 +264,7 @@ void main() {
           senderUuid: 'alice-uuid',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -310,7 +310,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -322,7 +322,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -345,7 +345,7 @@ void main() {
           senderUuid: 'alice-uuid',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -407,7 +407,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -419,7 +419,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -442,7 +442,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -467,7 +467,7 @@ void main() {
         // Verify the sender certificate (trust root validation)
         final usmcSenderCert = usmc.getSenderCertificate();
         expect(
-          usmcSenderCert.validate(trustRootPublic, now: DateTime.now()),
+          usmcSenderCert.validate(trustRootPublic, now: DateTime.now().toUtc()),
           isTrue,
         );
 
@@ -518,7 +518,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -530,7 +530,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -553,7 +553,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -609,7 +609,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -621,7 +621,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -644,7 +644,7 @@ void main() {
           senderE164: null,
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -712,7 +712,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -724,7 +724,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -747,7 +747,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -821,7 +821,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -833,7 +833,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -856,7 +856,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -885,7 +885,7 @@ void main() {
 
         // But validation with wrong trust root should fail
         expect(
-          usmcSenderCert.validate(wrongTrustRoot, now: DateTime.now()),
+          usmcSenderCert.validate(wrongTrustRoot, now: DateTime.now().toUtc()),
           isFalse,
         );
 
@@ -918,7 +918,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -930,7 +930,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -953,7 +953,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().subtract(const Duration(days: 1)),
+          expiration: DateTime.now().toUtc().subtract(const Duration(days: 1)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );
@@ -979,7 +979,7 @@ void main() {
 
         // But validation should fail due to expiration
         expect(
-          usmcSenderCert.validate(trustRootPublic, now: DateTime.now()),
+          usmcSenderCert.validate(trustRootPublic, now: DateTime.now().toUtc()),
           isFalse,
         );
 
@@ -1010,7 +1010,7 @@ void main() {
 
         final signedPreKeyRecord = SignedPreKeyRecord.create(
           id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           publicKey: bobKeys.signedPreKeyPublic,
           privateKey: bobKeys.signedPreKeyPrivate,
           signature: bobKeys.signedPreKeySignature,
@@ -1022,7 +1022,7 @@ void main() {
 
         final kyberPreKeyRecord = KyberPreKeyRecord.create(
           id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().millisecondsSinceEpoch,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
           keyPair: bobKeys.kyberKeyPair,
           signature: bobKeys.kyberPreKeySignature,
         );
@@ -1045,7 +1045,7 @@ void main() {
           senderE164: '+1234567890',
           deviceId: 1,
           senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().add(const Duration(days: 30)),
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
           signerCertificate: serverCert,
           signerKey: serverPrivate,
         );

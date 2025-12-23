@@ -91,7 +91,7 @@ final senderCert = SenderCertificate.create(
   senderUuid: 'my-uuid',
   deviceId: 1,
   senderKey: identity.publicKey,
-  expiration: DateTime.now().add(Duration(days: 30)),
+  expiration: DateTime.now().toUtc().add(Duration(days: 30)),
   signerCertificate: serverCert,
   signerKey: serverPrivateKey,
 );
@@ -108,7 +108,7 @@ final sealed = await sealedCipher.encrypt(
 final result = await recipientCipher.decrypt(
   sealed,
   trustRoot: trustRootPublicKey,
-  timestamp: DateTime.now(),
+  timestamp: DateTime.now().toUtc(),
   localUuid: 'recipient-uuid',
   localDeviceId: 1,
 );
@@ -204,9 +204,11 @@ This package wraps the official Signal libsignal library. All cryptographic oper
 
 - All native libraries are built from source in GitHub Actions
 - SHA256 checksums are verified during download
-- Sensitive data is securely zeroed before freeing
+- Sensitive data is securely zeroed before freeing (centralized `LibSignalUtils.zeroBytes()`)
 - Constant-time comparison for cryptographic data
 - Input validation and bounds checking
+- UTC timestamps for timezone-independent certificate validation
+- Finalizers as safety nets for sensitive data cleanup
 
 For detailed security guidelines and audit information, see [SECURITY.md](SECURITY.md).
 

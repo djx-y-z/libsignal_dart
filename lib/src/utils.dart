@@ -132,12 +132,25 @@ class LibSignalUtils {
     }
 
     // Zero the memory before freeing
-    final list = ptr.asTypedList(length);
-    for (var i = 0; i < length; i++) {
-      list[i] = 0;
-    }
+    zeroBytes(ptr.asTypedList(length));
 
     calloc.free(ptr);
+  }
+
+  /// Securely zeros a byte array in place.
+  ///
+  /// This should be used for sensitive data like private keys, session data,
+  /// or plaintext before the data goes out of scope.
+  ///
+  /// Note: This provides defense-in-depth but cannot guarantee the Dart GC
+  /// won't keep copies. For highest security, use native memory via FFI.
+  static void zeroBytes(Uint8List? data) {
+    if (data == null || data.isEmpty) {
+      return;
+    }
+    for (var i = 0; i < data.length; i++) {
+      data[i] = 0;
+    }
   }
 
   // ============================================
