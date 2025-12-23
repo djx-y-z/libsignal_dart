@@ -266,6 +266,99 @@ int _nextOperationId() {
 **Files affected:**
 - `lib/src/groups/group_session.dart`
 
+### Category M: PublicKey hashCode Secure Caching
+
+**Problem:** `PublicKey.hashCode()` called `serialize()` on every invocation without zeroing the resulting bytes, causing key material to accumulate in memory.
+
+**Fixes:**
+- Added lazy caching of hash code on first access
+- Bytes are securely zeroed after computing hash
+- Cache is checked before serialization on subsequent calls
+
+**Implementation:**
+```dart
+int? _cachedHashCode;
+
+@override
+int get hashCode {
+  if (_disposed) return 0;
+  if (_cachedHashCode != null) return _cachedHashCode!;
+
+  final bytes = serialize();
+  try {
+    _cachedHashCode = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+    return _cachedHashCode!;
+  } finally {
+    LibSignalUtils.zeroBytes(bytes);
+  }
+}
+```
+
+**Files affected:**
+- `lib/src/keys/public_key.dart`
+
+### Category N: Unified Exception Types
+
+**Problem:** Disposed object checks threw `StateError` instead of `LibSignalException`, making error handling inconsistent.
+
+**Fixes:**
+- Added `LibSignalException.disposed()` factory method
+- All disposed checks now throw `LibSignalException` with context 'disposed'
+- Consistent exception type across entire library
+
+**Files affected:**
+- `lib/src/exception.dart` - new factory method
+- All files with disposed object checks (23 files)
+
+### Category O: Protocol Address Validation
+
+**Problem:** `ProtocolAddress` deviceId parameter was not validated, allowing negative values.
+
+**Fixes:**
+- Added validation: `deviceId >= 0`
+- Throws `LibSignalException.invalidArgument` for negative values
+
+**Files affected:**
+- `lib/src/protocol/protocol_address.dart`
+
+### Category P: Callback Pointer Zeroing
+
+**Problem:** FFI callback handlers freed pointers without zeroing them first.
+
+**Fixes:**
+- Added defensive zeroing of pointers before `calloc.free()`
+- Defense in depth against use-after-free
+
+**Files affected:**
+- `lib/src/protocol/session_cipher.dart`
+- `lib/src/sealed_sender/sealed_session_cipher.dart`
+
+### Category Q: Thread Safety Documentation
+
+**Problem:** Global mutable state in GroupSession was not documented as non-thread-safe.
+
+**Fixes:**
+- Added warning documentation about thread safety limitations
+- Clear guidance for multi-isolate scenarios
+
+**Files affected:**
+- `lib/src/groups/group_session.dart`
+
+### Category R: Sensitive Data Documentation
+
+**Problem:** `serialize()` methods returning sensitive data lacked security documentation.
+
+**Fixes:**
+- Added Security Note to `PreKeyRecord.serialize()`
+- Added Security Note to `SenderKeyRecord.serialize()`
+- Added Security Note to `IdentityKeyPair.deserialize()`
+- Clear guidance on zeroing returned/input data
+
+**Files affected:**
+- `lib/src/prekeys/pre_key_record.dart`
+- `lib/src/groups/sender_key_record.dart`
+- `lib/src/keys/identity_key_pair.dart`
+
 ## Secure Development Guidelines
 
 ### Memory Management
@@ -276,7 +369,7 @@ int _nextOperationId() {
 
    void _checkDisposed() {
      if (_disposed) {
-       throw StateError('Object has been disposed');
+       throw LibSignalException.disposed('ObjectType');
      }
    }
 

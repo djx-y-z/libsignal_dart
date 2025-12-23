@@ -351,7 +351,7 @@ final class DecryptionErrorMessage {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('DecryptionErrorMessage has been disposed');
+      throw LibSignalException.disposed('DecryptionErrorMessage');
     }
   }
 

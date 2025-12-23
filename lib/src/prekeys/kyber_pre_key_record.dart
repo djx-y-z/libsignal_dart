@@ -325,7 +325,7 @@ final class KyberPreKeyRecord {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('KyberPreKeyRecord has been disposed');
+      throw LibSignalException.disposed('KyberPreKeyRecord');
     }
   }
 

@@ -275,13 +275,13 @@ final class PrivateKey {
   /// Checks if this key has been disposed.
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('PrivateKey has been disposed');
+      throw LibSignalException.disposed('PrivateKey');
     }
   }
 
   /// Checks if this key has been disposed (public version for internal use).
   ///
-  /// Throws [StateError] if the key has been disposed.
+  /// Throws [LibSignalException] if the key has been disposed.
   void checkNotDisposed() => _checkDisposed();
 
   /// Releases the native resources associated with this key.

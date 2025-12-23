@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:libsignal/src/exception.dart';
 import 'package:libsignal/src/secure_bytes.dart';
 import 'package:test/test.dart';
 
@@ -74,7 +75,7 @@ void main() {
         final secure = SecureBytes(Uint8List.fromList([1, 2, 3]));
         secure.dispose();
 
-        expect(() => secure.bytes, throwsStateError);
+        expect(() => secure.bytes, throwsA(isA<LibSignalException>()));
       });
     });
 

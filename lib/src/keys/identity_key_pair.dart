@@ -11,6 +11,7 @@ import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
 import '../secure_bytes.dart';
+import '../utils.dart';
 import 'private_key.dart';
 import 'public_key.dart';
 
@@ -70,6 +71,20 @@ final class IdentityKeyPair {
   /// format (as encoded by [serialize]).
   ///
   /// Throws [LibSignalException] if the data is invalid.
+  ///
+  /// **Security Note:** The [data] parameter contains sensitive private key
+  /// material. The caller is responsible for securely zeroing [data] after
+  /// this method returns. Use [LibSignalUtils.zeroBytes] for secure cleanup:
+  ///
+  /// ```dart
+  /// final serializedKeyPair = loadFromSecureStorage();
+  /// try {
+  ///   final keyPair = IdentityKeyPair.deserialize(serializedKeyPair);
+  ///   // Use keyPair...
+  /// } finally {
+  ///   LibSignalUtils.zeroBytes(serializedKeyPair);
+  /// }
+  /// ```
   static IdentityKeyPair deserialize(Uint8List data) {
     LibSignal.ensureInitialized();
 
@@ -276,7 +291,7 @@ final class IdentityKeyPair {
   /// Checks if this key pair has been disposed.
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('IdentityKeyPair has been disposed');
+      throw LibSignalException.disposed('IdentityKeyPair');
     }
   }
 

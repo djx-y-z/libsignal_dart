@@ -101,7 +101,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final secret = keyPair.getSecretKey();
         secret.dispose();
-        expect(() => secret.serialize(), throwsStateError);
+        expect(() => secret.serialize(), throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });
@@ -110,7 +110,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final secret = keyPair.getSecretKey();
         secret.dispose();
-        expect(() => secret.clone(), throwsStateError);
+        expect(() => secret.clone(), throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });
@@ -119,7 +119,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final secret = keyPair.getSecretKey();
         secret.dispose();
-        expect(() => secret.pointer, throwsStateError);
+        expect(() => secret.pointer, throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });

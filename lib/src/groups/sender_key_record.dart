@@ -11,6 +11,7 @@ import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../libsignal.dart';
 import '../serialization_validator.dart';
+import '../utils.dart';
 
 /// Finalizer for SenderKeyRecord.
 final Finalizer<Pointer<SignalSenderKeyRecord>> _senderKeyRecordFinalizer =
@@ -74,6 +75,19 @@ final class SenderKeyRecord {
   }
 
   /// Serializes the sender key record to bytes.
+  ///
+  /// **Security Note:** The returned data contains sensitive key material.
+  /// The caller is responsible for securely zeroing the data after use.
+  /// Use [LibSignalUtils.zeroBytes] for secure cleanup:
+  ///
+  /// ```dart
+  /// final serialized = record.serialize();
+  /// try {
+  ///   // Store or transmit serialized
+  /// } finally {
+  ///   LibSignalUtils.zeroBytes(serialized);
+  /// }
+  /// ```
   Uint8List serialize() {
     _checkDisposed();
 
@@ -123,7 +137,7 @@ final class SenderKeyRecord {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SenderKeyRecord has been disposed');
+      throw LibSignalException.disposed('SenderKeyRecord');
     }
   }
 

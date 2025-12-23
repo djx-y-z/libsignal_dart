@@ -458,7 +458,7 @@ final class SenderCertificate {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SenderCertificate has been disposed');
+      throw LibSignalException.disposed('SenderCertificate');
     }
   }
 

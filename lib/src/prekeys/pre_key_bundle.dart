@@ -485,7 +485,7 @@ final class PreKeyBundle {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('PreKeyBundle has been disposed');
+      throw LibSignalException.disposed('PreKeyBundle');
     }
   }
 

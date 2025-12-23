@@ -334,7 +334,7 @@ void main() {
             publicKey: publicKey,
             privateKey: privateKey,
           ),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
 
         privateKey.dispose();
@@ -352,7 +352,7 @@ void main() {
             publicKey: publicKey,
             privateKey: privateKey,
           ),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
 
         publicKey.dispose();
@@ -371,7 +371,7 @@ void main() {
             publicKey: publicKey,
             privateKey: privateKey,
           ),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
       });
     });
@@ -439,7 +439,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.id, throwsStateError);
+        expect(() => preKey.id, throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();
@@ -456,7 +456,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.serialize(), throwsStateError);
+        expect(() => preKey.serialize(), throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();
@@ -473,7 +473,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.getPublicKey(), throwsStateError);
+        expect(() => preKey.getPublicKey(), throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();
@@ -490,7 +490,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.getPrivateKey(), throwsStateError);
+        expect(() => preKey.getPrivateKey(), throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();
@@ -507,7 +507,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.clone(), throwsStateError);
+        expect(() => preKey.clone(), throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();
@@ -524,7 +524,7 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.pointer, throwsStateError);
+        expect(() => preKey.pointer, throwsA(isA<LibSignalException>()));
 
         privateKey.dispose();
         publicKey.dispose();

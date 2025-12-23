@@ -342,49 +342,49 @@ void main() {
       test('id throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.id, throwsStateError);
+        expect(() => signedPreKey.id, throwsA(isA<LibSignalException>()));
       });
 
       test('timestamp throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.timestamp, throwsStateError);
+        expect(() => signedPreKey.timestamp, throwsA(isA<LibSignalException>()));
       });
 
       test('signature throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.signature, throwsStateError);
+        expect(() => signedPreKey.signature, throwsA(isA<LibSignalException>()));
       });
 
       test('serialize throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.serialize(), throwsStateError);
+        expect(() => signedPreKey.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getPublicKey throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.getPublicKey(), throwsStateError);
+        expect(() => signedPreKey.getPublicKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('getPrivateKey throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.getPrivateKey(), throwsStateError);
+        expect(() => signedPreKey.getPrivateKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.clone(), throwsStateError);
+        expect(() => signedPreKey.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.pointer, throwsStateError);
+        expect(() => signedPreKey.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

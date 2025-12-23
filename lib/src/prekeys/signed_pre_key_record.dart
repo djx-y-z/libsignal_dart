@@ -331,7 +331,7 @@ final class SignedPreKeyRecord {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SignedPreKeyRecord has been disposed');
+      throw LibSignalException.disposed('SignedPreKeyRecord');
     }
   }
 

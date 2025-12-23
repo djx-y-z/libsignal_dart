@@ -509,14 +509,14 @@ void main() {
         signalMessage.dispose();
 
         // All operations should throw StateError
-        expect(() => signalMessage.body, throwsStateError);
-        expect(() => signalMessage.counter, throwsStateError);
-        expect(() => signalMessage.messageVersion, throwsStateError);
+        expect(() => signalMessage.body, throwsA(isA<LibSignalException>()));
+        expect(() => signalMessage.counter, throwsA(isA<LibSignalException>()));
+        expect(() => signalMessage.messageVersion, throwsA(isA<LibSignalException>()));
         // Note: pqRatchet test skipped - function not available in current native lib
-        expect(() => signalMessage.getSenderRatchetKey(), throwsStateError);
-        expect(() => signalMessage.serialize(), throwsStateError);
-        expect(() => signalMessage.clone(), throwsStateError);
-        expect(() => signalMessage.pointer, throwsStateError);
+        expect(() => signalMessage.getSenderRatchetKey(), throwsA(isA<LibSignalException>()));
+        expect(() => signalMessage.serialize(), throwsA(isA<LibSignalException>()));
+        expect(() => signalMessage.clone(), throwsA(isA<LibSignalException>()));
+        expect(() => signalMessage.pointer, throwsA(isA<LibSignalException>()));
 
         // Cleanup FFI
         ffi.signal_pre_key_signal_message_destroy(preKeyMsgPtr.ref);

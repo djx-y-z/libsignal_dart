@@ -19,6 +19,11 @@ import 'sender_key_distribution_message.dart';
 ///
 /// This is used to pass data between Dart and native code during
 /// group encryption/decryption operations.
+///
+/// **Thread Safety Warning:** This global state is NOT thread-safe.
+/// GroupSession operations must not be performed concurrently from multiple
+/// isolates or threads. In multi-isolate scenarios, ensure exclusive access
+/// to GroupSession operations, or use separate GroupSession instances per isolate.
 final _pendingSenderKeyRecordBytes = <int, Uint8List>{};
 final _pendingStoreOperations = <int, _StoreOperation>{};
 int _operationCounter = 0;

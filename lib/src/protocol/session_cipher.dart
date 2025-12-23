@@ -251,6 +251,9 @@ class _EncryptionCallbacks {
           return 0;
         }
       } finally {
+        // Zero pointers before freeing for defense in depth
+        outPtr.ref.raw = nullptr;
+        constPtr.ref.raw = nullptr;
         calloc.free(outPtr);
         calloc.free(constPtr);
       }
@@ -603,6 +606,9 @@ class _DecryptionCallbacks {
           return 0;
         }
       } finally {
+        // Zero pointers before freeing for defense in depth
+        outPtr.ref.raw = nullptr;
+        constPtr.ref.raw = nullptr;
         calloc.free(outPtr);
         calloc.free(constPtr);
       }

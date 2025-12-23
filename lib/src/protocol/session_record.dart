@@ -255,7 +255,7 @@ final class SessionRecord {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SessionRecord has been disposed');
+      throw LibSignalException.disposed('SessionRecord');
     }
   }
 

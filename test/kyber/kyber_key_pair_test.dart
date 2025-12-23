@@ -159,25 +159,25 @@ void main() {
       test('getPublicKey throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.getPublicKey(), throwsStateError);
+        expect(() => keyPair.getPublicKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('getSecretKey throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.getSecretKey(), throwsStateError);
+        expect(() => keyPair.getSecretKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.clone(), throwsStateError);
+        expect(() => keyPair.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.pointer, throwsStateError);
+        expect(() => keyPair.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

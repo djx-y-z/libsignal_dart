@@ -331,55 +331,55 @@ void main() {
       test('id throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.id, throwsStateError);
+        expect(() => kyberPreKey.id, throwsA(isA<LibSignalException>()));
       });
 
       test('timestamp throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.timestamp, throwsStateError);
+        expect(() => kyberPreKey.timestamp, throwsA(isA<LibSignalException>()));
       });
 
       test('signature throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.signature, throwsStateError);
+        expect(() => kyberPreKey.signature, throwsA(isA<LibSignalException>()));
       });
 
       test('serialize throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.serialize(), throwsStateError);
+        expect(() => kyberPreKey.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getPublicKey throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getPublicKey(), throwsStateError);
+        expect(() => kyberPreKey.getPublicKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('getSecretKey throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getSecretKey(), throwsStateError);
+        expect(() => kyberPreKey.getSecretKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('getKeyPair throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getKeyPair(), throwsStateError);
+        expect(() => kyberPreKey.getKeyPair(), throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.clone(), throwsStateError);
+        expect(() => kyberPreKey.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.pointer, throwsStateError);
+        expect(() => kyberPreKey.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

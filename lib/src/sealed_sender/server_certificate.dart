@@ -264,13 +264,13 @@ final class ServerCertificate {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('ServerCertificate has been disposed');
+      throw LibSignalException.disposed('ServerCertificate');
     }
   }
 
   /// Checks that this certificate has not been disposed.
   ///
-  /// Throws [StateError] if the certificate has been disposed.
+  /// Throws [LibSignalException] if the certificate has been disposed.
   void checkNotDisposed() => _checkDisposed();
 
   /// Releases the native resources.

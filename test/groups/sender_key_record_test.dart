@@ -158,9 +158,9 @@ void main() {
         final record = SenderKeyRecord.deserialize(recordBytes);
         record.dispose();
 
-        expect(() => record.serialize(), throwsStateError);
-        expect(() => record.clone(), throwsStateError);
-        expect(() => record.pointer, throwsStateError);
+        expect(() => record.serialize(), throwsA(isA<LibSignalException>()));
+        expect(() => record.clone(), throwsA(isA<LibSignalException>()));
+        expect(() => record.pointer, throwsA(isA<LibSignalException>()));
       });
 
       test('double dispose is safe', () {

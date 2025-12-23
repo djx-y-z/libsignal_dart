@@ -40,6 +40,10 @@ final class PublicKey {
   final Pointer<SignalPublicKey> _ptr;
   bool _disposed = false;
 
+  /// Cached hash code to avoid repeated serialization.
+  /// Computed lazily on first access to hashCode.
+  int? _cachedHashCode;
+
   PublicKey._(this._ptr) {
     _publicKeyFinalizer.attach(this, _ptr, detach: this);
   }
@@ -273,7 +277,7 @@ final class PublicKey {
   /// Checks if this key has been disposed.
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('PublicKey has been disposed');
+      throw LibSignalException.disposed('PublicKey');
     }
   }
 
@@ -311,9 +315,25 @@ final class PublicKey {
   @override
   int get hashCode {
     if (_disposed) return 0;
-    // Use first few bytes of serialized key for hash
+
+    // Return cached hash if available
+    if (_cachedHashCode != null) {
+      return _cachedHashCode!;
+    }
+
+    // Compute hash from first few bytes of serialized key
     final bytes = serialize();
-    if (bytes.length < 4) return 0;
-    return bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+    try {
+      if (bytes.length < 4) {
+        _cachedHashCode = 0;
+        return 0;
+      }
+      _cachedHashCode =
+          bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+      return _cachedHashCode!;
+    } finally {
+      // Securely zero key bytes after computing hash
+      LibSignalUtils.zeroBytes(bytes);
+    }
   }
 }

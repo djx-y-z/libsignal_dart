@@ -309,7 +309,7 @@ final class UnidentifiedSenderMessageContent {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('UnidentifiedSenderMessageContent has been disposed');
+      throw LibSignalException.disposed('UnidentifiedSenderMessageContent');
     }
   }
 

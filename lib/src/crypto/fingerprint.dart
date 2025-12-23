@@ -248,7 +248,7 @@ final class Fingerprint {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('Fingerprint has been disposed');
+      throw LibSignalException.disposed('Fingerprint');
     }
   }
 

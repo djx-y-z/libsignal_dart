@@ -238,7 +238,7 @@ void main() {
             plaintext: testMessage('test'),
             nonce: validNonce,
           ),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
       });
 
@@ -256,7 +256,7 @@ void main() {
             ciphertext: ciphertext,
             nonce: validNonce,
           ),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
       });
     });

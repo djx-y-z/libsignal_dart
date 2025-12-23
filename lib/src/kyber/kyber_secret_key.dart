@@ -144,7 +144,7 @@ final class KyberSecretKey {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('KyberSecretKey has been disposed');
+      throw LibSignalException.disposed('KyberSecretKey');
     }
   }
 

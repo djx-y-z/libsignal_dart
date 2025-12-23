@@ -209,7 +209,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final pub = keyPair.getPublicKey();
         pub.dispose();
-        expect(() => pub.serialize(), throwsStateError);
+        expect(() => pub.serialize(), throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });
@@ -219,7 +219,7 @@ void main() {
         final pub1 = keyPair.getPublicKey();
         final pub2 = keyPair.getPublicKey();
         pub1.dispose();
-        expect(() => pub1.equals(pub2), throwsStateError);
+        expect(() => pub1.equals(pub2), throwsA(isA<LibSignalException>()));
 
         pub2.dispose();
         keyPair.dispose();
@@ -229,7 +229,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final pub = keyPair.getPublicKey();
         pub.dispose();
-        expect(() => pub.clone(), throwsStateError);
+        expect(() => pub.clone(), throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });
@@ -238,7 +238,7 @@ void main() {
         final keyPair = KyberKeyPair.generate();
         final pub = keyPair.getPublicKey();
         pub.dispose();
-        expect(() => pub.pointer, throwsStateError);
+        expect(() => pub.pointer, throwsA(isA<LibSignalException>()));
 
         keyPair.dispose();
       });

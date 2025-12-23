@@ -267,7 +267,7 @@ final class SenderKeyMessage {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SenderKeyMessage has been disposed');
+      throw LibSignalException.disposed('SenderKeyMessage');
     }
   }
 

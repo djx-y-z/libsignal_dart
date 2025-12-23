@@ -192,13 +192,13 @@ void main() {
         final msg = distMessage.clone();
         msg.dispose();
 
-        expect(() => msg.serialize(), throwsStateError);
-        expect(() => msg.chainKey, throwsStateError);
-        expect(() => msg.distributionId, throwsStateError);
-        expect(() => msg.chainId, throwsStateError);
-        expect(() => msg.iteration, throwsStateError);
-        expect(() => msg.getSignatureKey(), throwsStateError);
-        expect(() => msg.clone(), throwsStateError);
+        expect(() => msg.serialize(), throwsA(isA<LibSignalException>()));
+        expect(() => msg.chainKey, throwsA(isA<LibSignalException>()));
+        expect(() => msg.distributionId, throwsA(isA<LibSignalException>()));
+        expect(() => msg.chainId, throwsA(isA<LibSignalException>()));
+        expect(() => msg.iteration, throwsA(isA<LibSignalException>()));
+        expect(() => msg.getSignatureKey(), throwsA(isA<LibSignalException>()));
+        expect(() => msg.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('double dispose is safe', () {

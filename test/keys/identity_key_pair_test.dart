@@ -286,7 +286,7 @@ void main() {
       test('serialize throws after dispose', () {
         final identity = IdentityKeyPair.generate();
         identity.dispose();
-        expect(() => identity.serialize(), throwsStateError);
+        expect(() => identity.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('signAlternateIdentity throws after dispose', () {
@@ -297,7 +297,7 @@ void main() {
 
         expect(
           () => identity.signAlternateIdentity(other.publicKey),
-          throwsStateError,
+          throwsA(isA<LibSignalException>()),
         );
 
         other.dispose();
@@ -306,13 +306,13 @@ void main() {
       test('privateKey getter throws after dispose', () {
         final identity = IdentityKeyPair.generate();
         identity.dispose();
-        expect(() => identity.privateKey, throwsStateError);
+        expect(() => identity.privateKey, throwsA(isA<LibSignalException>()));
       });
 
       test('publicKey getter throws after dispose', () {
         final identity = IdentityKeyPair.generate();
         identity.dispose();
-        expect(() => identity.publicKey, throwsStateError);
+        expect(() => identity.publicKey, throwsA(isA<LibSignalException>()));
       });
     });
   });

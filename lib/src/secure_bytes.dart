@@ -6,6 +6,7 @@ library;
 
 import 'dart:typed_data';
 
+import 'exception.dart';
 import 'utils.dart';
 
 /// Weak reference tracking for finalizer (safety net for forgotten dispose calls).
@@ -86,7 +87,7 @@ final class SecureBytes {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SecureBytes has been disposed');
+      throw LibSignalException.disposed('SecureBytes');
     }
   }
 

@@ -153,7 +153,7 @@ final class KyberPublicKey {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('KyberPublicKey has been disposed');
+      throw LibSignalException.disposed('KyberPublicKey');
     }
   }
 

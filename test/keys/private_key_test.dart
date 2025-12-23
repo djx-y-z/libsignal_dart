@@ -288,19 +288,19 @@ void main() {
       test('serialize throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.serialize(), throwsStateError);
+        expect(() => key.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getPublicKey throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.getPublicKey(), throwsStateError);
+        expect(() => key.getPublicKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('sign throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.sign(Uint8List(0)), throwsStateError);
+        expect(() => key.sign(Uint8List(0)), throwsA(isA<LibSignalException>()));
       });
 
       test('agree throws after dispose', () {
@@ -310,7 +310,7 @@ void main() {
 
         key.dispose();
 
-        expect(() => key.agree(otherPub), throwsStateError);
+        expect(() => key.agree(otherPub), throwsA(isA<LibSignalException>()));
 
         other.dispose();
         otherPub.dispose();
@@ -319,13 +319,13 @@ void main() {
       test('clone throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.clone(), throwsStateError);
+        expect(() => key.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.pointer, throwsStateError);
+        expect(() => key.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

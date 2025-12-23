@@ -46,8 +46,17 @@ final class ProtocolAddress {
   /// Creates a new protocol address.
   ///
   /// The [name] is typically a UUID string identifying the user.
-  /// The [deviceId] identifies a specific device of that user.
+  /// The [deviceId] identifies a specific device of that user (must be non-negative).
+  ///
+  /// Throws [LibSignalException] if [deviceId] is negative.
   factory ProtocolAddress(String name, int deviceId) {
+    if (deviceId < 0) {
+      throw LibSignalException.invalidArgument(
+        'deviceId',
+        'Device ID must be non-negative, got $deviceId',
+      );
+    }
+
     LibSignal.ensureInitialized();
 
     final outPtr = calloc<SignalMutPointerProtocolAddress>();
@@ -143,7 +152,7 @@ final class ProtocolAddress {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('ProtocolAddress has been disposed');
+      throw LibSignalException.disposed('ProtocolAddress');
     }
   }
 

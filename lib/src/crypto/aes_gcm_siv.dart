@@ -231,7 +231,7 @@ final class Aes256GcmSiv {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('Aes256GcmSiv has been disposed');
+      throw LibSignalException.disposed('Aes256GcmSiv');
     }
   }
 

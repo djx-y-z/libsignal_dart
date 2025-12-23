@@ -425,79 +425,79 @@ void main() {
       test('registrationId throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.registrationId, throwsStateError);
+        expect(() => bundle.registrationId, throwsA(isA<LibSignalException>()));
       });
 
       test('deviceId throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.deviceId, throwsStateError);
+        expect(() => bundle.deviceId, throwsA(isA<LibSignalException>()));
       });
 
       test('preKeyId throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.preKeyId, throwsStateError);
+        expect(() => bundle.preKeyId, throwsA(isA<LibSignalException>()));
       });
 
       test('getPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getPreKeyPublic(), throwsStateError);
+        expect(() => bundle.getPreKeyPublic(), throwsA(isA<LibSignalException>()));
       });
 
       test('signedPreKeyId throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.signedPreKeyId, throwsStateError);
+        expect(() => bundle.signedPreKeyId, throwsA(isA<LibSignalException>()));
       });
 
       test('getSignedPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getSignedPreKeyPublic(), throwsStateError);
+        expect(() => bundle.getSignedPreKeyPublic(), throwsA(isA<LibSignalException>()));
       });
 
       test('signedPreKeySignature throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.signedPreKeySignature, throwsStateError);
+        expect(() => bundle.signedPreKeySignature, throwsA(isA<LibSignalException>()));
       });
 
       test('getIdentityKey throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getIdentityKey(), throwsStateError);
+        expect(() => bundle.getIdentityKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('kyberPreKeyId throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.kyberPreKeyId, throwsStateError);
+        expect(() => bundle.kyberPreKeyId, throwsA(isA<LibSignalException>()));
       });
 
       test('getKyberPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getKyberPreKeyPublic(), throwsStateError);
+        expect(() => bundle.getKyberPreKeyPublic(), throwsA(isA<LibSignalException>()));
       });
 
       test('kyberPreKeySignature throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.kyberPreKeySignature, throwsStateError);
+        expect(() => bundle.kyberPreKeySignature, throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.clone(), throwsStateError);
+        expect(() => bundle.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.pointer, throwsStateError);
+        expect(() => bundle.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

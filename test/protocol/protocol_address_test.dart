@@ -222,28 +222,28 @@ void main() {
         final address = ProtocolAddress('user', 1);
         address.dispose();
 
-        expect(() => address.name, throwsStateError);
+        expect(() => address.name, throwsA(isA<LibSignalException>()));
       });
 
       test('deviceId throws after dispose', () {
         final address = ProtocolAddress('user', 1);
         address.dispose();
 
-        expect(() => address.deviceId, throwsStateError);
+        expect(() => address.deviceId, throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
         final address = ProtocolAddress('user', 1);
         address.dispose();
 
-        expect(() => address.clone(), throwsStateError);
+        expect(() => address.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final address = ProtocolAddress('user', 1);
         address.dispose();
 
-        expect(() => address.pointer, throwsStateError);
+        expect(() => address.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

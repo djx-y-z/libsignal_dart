@@ -157,13 +157,13 @@ final class KyberKeyPair {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('KyberKeyPair has been disposed');
+      throw LibSignalException.disposed('KyberKeyPair');
     }
   }
 
   /// Checks that this key pair has not been disposed.
   ///
-  /// Throws [StateError] if the key pair has been disposed.
+  /// Throws [LibSignalException] if the key pair has been disposed.
   void checkNotDisposed() => _checkDisposed();
 
   void dispose() {

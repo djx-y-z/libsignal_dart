@@ -329,7 +329,7 @@ final class SignalMessage {
 
   void _checkDisposed() {
     if (_disposed) {
-      throw StateError('SignalMessage has been disposed');
+      throw LibSignalException.disposed('SignalMessage');
     }
   }
 

@@ -391,19 +391,19 @@ void main() {
       test('serialize throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.serialize(), throwsStateError);
+        expect(() => key.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getPublicKeyBytes throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.getPublicKeyBytes(), throwsStateError);
+        expect(() => key.getPublicKeyBytes(), throwsA(isA<LibSignalException>()));
       });
 
       test('verify throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.verify(Uint8List(0), Uint8List(0)), throwsStateError);
+        expect(() => key.verify(Uint8List(0), Uint8List(0)), throwsA(isA<LibSignalException>()));
       });
 
       test('equals throws after dispose', () {
@@ -412,7 +412,7 @@ void main() {
 
         key1.dispose();
 
-        expect(() => key1.equals(key2), throwsStateError);
+        expect(() => key1.equals(key2), throwsA(isA<LibSignalException>()));
 
         key2.dispose();
       });
@@ -423,7 +423,7 @@ void main() {
 
         key1.dispose();
 
-        expect(() => key1.compare(key2), throwsStateError);
+        expect(() => key1.compare(key2), throwsA(isA<LibSignalException>()));
 
         key2.dispose();
       });
@@ -431,13 +431,13 @@ void main() {
       test('clone throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.clone(), throwsStateError);
+        expect(() => key.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.pointer, throwsStateError);
+        expect(() => key.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

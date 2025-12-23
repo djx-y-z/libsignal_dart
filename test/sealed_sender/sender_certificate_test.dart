@@ -477,7 +477,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.senderUuid, throwsStateError);
+        expect(() => cert.senderUuid, throwsA(isA<LibSignalException>()));
       });
 
       test('senderE164 throws after dispose', () {
@@ -492,7 +492,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.senderE164, throwsStateError);
+        expect(() => cert.senderE164, throwsA(isA<LibSignalException>()));
       });
 
       test('deviceId throws after dispose', () {
@@ -507,7 +507,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.deviceId, throwsStateError);
+        expect(() => cert.deviceId, throwsA(isA<LibSignalException>()));
       });
 
       test('expiration throws after dispose', () {
@@ -522,7 +522,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.expiration, throwsStateError);
+        expect(() => cert.expiration, throwsA(isA<LibSignalException>()));
       });
 
       test('serialize throws after dispose', () {
@@ -537,7 +537,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.serialize(), throwsStateError);
+        expect(() => cert.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getKey throws after dispose', () {
@@ -552,7 +552,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.getKey(), throwsStateError);
+        expect(() => cert.getKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('getServerCertificate throws after dispose', () {
@@ -567,7 +567,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.getServerCertificate(), throwsStateError);
+        expect(() => cert.getServerCertificate(), throwsA(isA<LibSignalException>()));
       });
 
       test('validate throws after dispose', () {
@@ -582,7 +582,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.validate(trustRootPublic), throwsStateError);
+        expect(() => cert.validate(trustRootPublic), throwsA(isA<LibSignalException>()));
       });
 
       test('certificate throws after dispose', () {
@@ -597,7 +597,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.certificate, throwsStateError);
+        expect(() => cert.certificate, throwsA(isA<LibSignalException>()));
       });
 
       test('signature throws after dispose', () {
@@ -612,7 +612,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.signature, throwsStateError);
+        expect(() => cert.signature, throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
@@ -627,7 +627,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.clone(), throwsStateError);
+        expect(() => cert.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
@@ -642,7 +642,7 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.pointer, throwsStateError);
+        expect(() => cert.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

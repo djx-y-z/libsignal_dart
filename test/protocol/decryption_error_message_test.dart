@@ -303,7 +303,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.timestamp, throwsStateError);
+        expect(() => errorMsg.timestamp, throwsA(isA<LibSignalException>()));
       });
 
       test('deviceId throws after dispose', () {
@@ -315,7 +315,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.deviceId, throwsStateError);
+        expect(() => errorMsg.deviceId, throwsA(isA<LibSignalException>()));
       });
 
       test('serialize throws after dispose', () {
@@ -327,7 +327,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.serialize(), throwsStateError);
+        expect(() => errorMsg.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('getRatchetKey throws after dispose', () {
@@ -339,7 +339,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.getRatchetKey(), throwsStateError);
+        expect(() => errorMsg.getRatchetKey(), throwsA(isA<LibSignalException>()));
       });
 
       test('clone throws after dispose', () {
@@ -351,7 +351,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.clone(), throwsStateError);
+        expect(() => errorMsg.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () {
@@ -363,7 +363,7 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.pointer, throwsStateError);
+        expect(() => errorMsg.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });
