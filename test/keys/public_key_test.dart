@@ -397,13 +397,19 @@ void main() {
       test('getPublicKeyBytes throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.getPublicKeyBytes(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => key.getPublicKeyBytes(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('verify throws after dispose', () {
         final key = PrivateKey.generate().getPublicKey();
         key.dispose();
-        expect(() => key.verify(Uint8List(0), Uint8List(0)), throwsA(isA<LibSignalException>()));
+        expect(
+          () => key.verify(Uint8List(0), Uint8List(0)),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('equals throws after dispose', () {

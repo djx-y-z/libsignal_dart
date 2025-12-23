@@ -22,10 +22,7 @@ void main() {
         final identity1 = IdentityKeyPair.generate();
         final identity2 = IdentityKeyPair.generate();
 
-        expect(
-          identity1.publicKey.equals(identity2.publicKey),
-          isFalse,
-        );
+        expect(identity1.publicKey.equals(identity2.publicKey), isFalse);
 
         identity1.dispose();
         identity2.dispose();
@@ -79,10 +76,7 @@ void main() {
         final restored = IdentityKeyPair.deserialize(serialized.bytes);
 
         // Public keys should be equal
-        expect(
-          original.publicKey.equals(restored.publicKey),
-          isTrue,
-        );
+        expect(original.publicKey.equals(restored.publicKey), isTrue);
 
         // Private keys should serialize to same bytes
         final origPrivBytes = original.privateKey.serialize();

@@ -106,10 +106,7 @@ void main() {
         expect(loaded!.id, equals(1));
 
         // Verify it's the new record by checking serialization differs
-        expect(
-          loaded.serialize(),
-          equals(newRecord.serialize()),
-        );
+        expect(loaded.serialize(), equals(newRecord.serialize()));
 
         loaded.dispose();
         newRecord.dispose();
@@ -146,10 +143,7 @@ void main() {
       });
 
       test('removing non-existent key is safe', () async {
-        await expectLater(
-          store.removePreKey(999),
-          completes,
-        );
+        await expectLater(store.removePreKey(999), completes);
       });
 
       test('removes only specified key', () async {

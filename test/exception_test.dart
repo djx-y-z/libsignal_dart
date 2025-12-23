@@ -139,7 +139,10 @@ void main() {
       test('formats message only', () {
         final exception = LibSignalException('Simple error');
 
-        expect(exception.toString(), equals('LibSignalException: Simple error'));
+        expect(
+          exception.toString(),
+          equals('LibSignalException: Simple error'),
+        );
       });
 
       test('formats message with error code', () {

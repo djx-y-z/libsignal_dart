@@ -300,7 +300,10 @@ void main() {
       test('sign throws after dispose', () {
         final key = PrivateKey.generate();
         key.dispose();
-        expect(() => key.sign(Uint8List(0)), throwsA(isA<LibSignalException>()));
+        expect(
+          () => key.sign(Uint8List(0)),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('agree throws after dispose', () {

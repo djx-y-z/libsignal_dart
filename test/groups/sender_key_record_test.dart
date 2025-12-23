@@ -203,8 +203,11 @@ void main() {
         await newStore.storeSenderKey(senderKeyName, recordBytes);
 
         // Create a new session using the new store
-        final newSession =
-            GroupSession(senderAddress, distributionId, newStore);
+        final newSession = GroupSession(
+          senderAddress,
+          distributionId,
+          newStore,
+        );
 
         // Should be able to encrypt with the restored state
         final plaintext = Uint8List.fromList([1, 2, 3, 4, 5]);

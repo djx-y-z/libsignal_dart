@@ -317,11 +317,11 @@ Future<void> installRustTarget(String target) async {
 
 /// Check if Rust target is installed
 Future<bool> isRustTargetInstalled(String target) async {
-  final result = await runCommand(
-    'rustup',
-    ['target', 'list', '--installed'],
-    printOutput: false,
-  );
+  final result = await runCommand('rustup', [
+    'target',
+    'list',
+    '--installed',
+  ], printOutput: false);
   return result.stdout.toString().contains(target);
 }
 
@@ -399,12 +399,14 @@ Future<String> buildLibsignalFfi({
   // libsignal uses nightly Rust (via rust-toolchain.toml in their repo).
   // We need to install targets for that specific toolchain.
   // Running rustup from sourceDir will use the correct toolchain.
-  logStep('Ensuring Rust target $rustTarget is installed for libsignal toolchain...');
-  await runCommandOrFail(
-    'rustup',
-    ['target', 'add', rustTarget],
-    workingDirectory: sourceDir,
+  logStep(
+    'Ensuring Rust target $rustTarget is installed for libsignal toolchain...',
   );
+  await runCommandOrFail('rustup', [
+    'target',
+    'add',
+    rustTarget,
+  ], workingDirectory: sourceDir);
 
   final env = {
     ...Platform.environment,
@@ -413,14 +415,7 @@ Future<String> buildLibsignalFfi({
 
   await runCommandOrFail(
     'cargo',
-    [
-      'build',
-      '--release',
-      '--target',
-      rustTarget,
-      '-p',
-      'libsignal-ffi',
-    ],
+    ['build', '--release', '--target', rustTarget, '-p', 'libsignal-ffi'],
     workingDirectory: sourceDir,
     environment: env,
   );
@@ -456,7 +451,8 @@ Future<String?> findAndroidNdk() async {
   }
 
   // Check common Android SDK locations
-  final androidHome = Platform.environment['ANDROID_HOME'] ??
+  final androidHome =
+      Platform.environment['ANDROID_HOME'] ??
       Platform.environment['ANDROID_SDK_ROOT'];
   if (androidHome != null) {
     final ndkDir = Directory('$androidHome/ndk');

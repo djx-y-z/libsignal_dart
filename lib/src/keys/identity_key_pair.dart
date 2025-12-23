@@ -148,8 +148,11 @@ final class IdentityKeyPair {
         'Buffer overrun: public key extends beyond data',
       );
     }
-    final publicKeyBytes =
-        Uint8List.sublistView(data, offset, offset + _kPublicKeyLength);
+    final publicKeyBytes = Uint8List.sublistView(
+      data,
+      offset,
+      offset + _kPublicKeyLength,
+    );
     offset += _kPublicKeyLength;
 
     // Field 2: Private Key
@@ -178,8 +181,11 @@ final class IdentityKeyPair {
         'Buffer overrun: private key extends beyond data',
       );
     }
-    final privateKeyBytes =
-        Uint8List.sublistView(data, offset, offset + _kPrivateKeyLength);
+    final privateKeyBytes = Uint8List.sublistView(
+      data,
+      offset,
+      offset + _kPrivateKeyLength,
+    );
 
     // Deserialize keys using their individual deserialize methods
     // (which work correctly, unlike signal_identitykeypair_deserialize)

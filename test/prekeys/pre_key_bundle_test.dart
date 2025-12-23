@@ -443,7 +443,10 @@ void main() {
       test('getPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getPreKeyPublic(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.getPreKeyPublic(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('signedPreKeyId throws after dispose', () {
@@ -455,19 +458,28 @@ void main() {
       test('getSignedPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getSignedPreKeyPublic(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.getSignedPreKeyPublic(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('signedPreKeySignature throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.signedPreKeySignature, throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.signedPreKeySignature,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getIdentityKey throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getIdentityKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.getIdentityKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('kyberPreKeyId throws after dispose', () {
@@ -479,13 +491,19 @@ void main() {
       test('getKyberPreKeyPublic throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.getKyberPreKeyPublic(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.getKyberPreKeyPublic(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('kyberPreKeySignature throws after dispose', () {
         final bundle = createFullBundle();
         bundle.dispose();
-        expect(() => bundle.kyberPreKeySignature, throwsA(isA<LibSignalException>()));
+        expect(
+          () => bundle.kyberPreKeySignature,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

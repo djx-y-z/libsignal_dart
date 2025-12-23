@@ -16,7 +16,7 @@ import '../serialization_validator.dart';
 
 /// Finalizer for SignedPreKeyRecord.
 final Finalizer<Pointer<SignalSignedPreKeyRecord>>
-    _signedPreKeyRecordFinalizer = Finalizer((ptr) {
+_signedPreKeyRecordFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerSignedPreKeyRecord>();
   mutPtr.ref.raw = ptr;
   signal_signed_pre_key_record_destroy(mutPtr.ref);
@@ -52,7 +52,9 @@ final class SignedPreKeyRecord {
   }
 
   /// Creates a SignedPreKeyRecord from a raw pointer.
-  factory SignedPreKeyRecord.fromPointer(Pointer<SignalSignedPreKeyRecord> ptr) {
+  factory SignedPreKeyRecord.fromPointer(
+    Pointer<SignalSignedPreKeyRecord> ptr,
+  ) {
     return SignedPreKeyRecord._(ptr);
   }
 
@@ -101,7 +103,9 @@ final class SignedPreKeyRecord {
       FfiHelpers.checkError(error, 'signal_signed_pre_key_record_new');
 
       if (outPtr.ref.raw == nullptr) {
-        throw LibSignalException.nullPointer('signal_signed_pre_key_record_new');
+        throw LibSignalException.nullPointer(
+          'signal_signed_pre_key_record_new',
+        );
       }
 
       return SignedPreKeyRecord._(outPtr.ref.raw);
@@ -205,7 +209,10 @@ final class SignedPreKeyRecord {
         outPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_signed_pre_key_record_get_timestamp');
+      FfiHelpers.checkError(
+        error,
+        'signal_signed_pre_key_record_get_timestamp',
+      );
 
       return outPtr.value;
     } finally {
@@ -227,7 +234,10 @@ final class SignedPreKeyRecord {
         outPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_signed_pre_key_record_get_signature');
+      FfiHelpers.checkError(
+        error,
+        'signal_signed_pre_key_record_get_signature',
+      );
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
     } finally {

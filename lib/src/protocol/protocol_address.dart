@@ -13,11 +13,11 @@ import '../libsignal.dart';
 /// Finalizer for ProtocolAddress.
 final Finalizer<Pointer<SignalProtocolAddress>> _protocolAddressFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerProtocolAddress>();
-  mutPtr.ref.raw = ptr;
-  signal_address_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerProtocolAddress>();
+      mutPtr.ref.raw = ptr;
+      signal_address_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A Signal Protocol address identifying a user and device.
 ///

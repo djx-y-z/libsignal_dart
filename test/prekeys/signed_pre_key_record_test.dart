@@ -45,7 +45,9 @@ void main() {
       test('creates valid signed pre-key record', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final signedPreKey = SignedPreKeyRecord.create(
           id: 1,
@@ -67,10 +69,7 @@ void main() {
 
       test('creates signed pre-key with various IDs', () {
         for (final id in [0, 1, 100, 0xFFFF, 0xFFFFFF]) {
-          final signedPreKey = createSignedPreKey(
-            id: id,
-            timestamp: 1000000,
-          );
+          final signedPreKey = createSignedPreKey(id: id, timestamp: 1000000);
 
           expect(signedPreKey.id, equals(id));
           signedPreKey.dispose();
@@ -95,7 +94,9 @@ void main() {
       test('created signed pre-key returns correct signature', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final signedPreKey = SignedPreKeyRecord.create(
           id: 42,
@@ -115,7 +116,9 @@ void main() {
       test('signature is verifiable by identity public key', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final signedPreKey = SignedPreKeyRecord.create(
           id: 1,
@@ -348,31 +351,46 @@ void main() {
       test('timestamp throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.timestamp, throwsA(isA<LibSignalException>()));
+        expect(
+          () => signedPreKey.timestamp,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('signature throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.signature, throwsA(isA<LibSignalException>()));
+        expect(
+          () => signedPreKey.signature,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('serialize throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.serialize(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => signedPreKey.serialize(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getPublicKey throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.getPublicKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => signedPreKey.getPublicKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getPrivateKey throws after dispose', () {
         final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
         signedPreKey.dispose();
-        expect(() => signedPreKey.getPrivateKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => signedPreKey.getPrivateKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

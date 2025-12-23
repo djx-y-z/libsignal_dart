@@ -99,7 +99,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       final privateBytes = privateKey.serialize();
       result.writeln('1. PrivateKey generated');
       result.writeln('   Size: ${privateBytes.bytes.length} bytes');
-      result.writeln('   Hex: ${_bytesToHex(privateBytes.bytes, maxLength: 32)}');
+      result.writeln(
+        '   Hex: ${_bytesToHex(privateBytes.bytes, maxLength: 32)}',
+      );
       result.writeln();
 
       // 2. Get PublicKey from PrivateKey
@@ -137,8 +139,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       identityKeyPair = IdentityKeyPair.generate();
       final identitySerialized = identityKeyPair.serialize();
       result.writeln('6. IdentityKeyPair generated');
-      result.writeln('   Serialized size: ${identitySerialized.bytes.length} bytes');
-      result.writeln('   Public key: ${_bytesToHex(identityKeyPair.publicKey.serialize(), maxLength: 32)}');
+      result.writeln(
+        '   Serialized size: ${identitySerialized.bytes.length} bytes',
+      );
+      result.writeln(
+        '   Public key: ${_bytesToHex(identityKeyPair.publicKey.serialize(), maxLength: 32)}',
+      );
 
       setState(() => _keysResult = result.toString());
     } catch (e) {
@@ -189,8 +195,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       result.writeln('   Plaintext: "$messageText"');
       result.writeln('   Plaintext size: ${plaintext.length} bytes');
       result.writeln('   Ciphertext size: ${ciphertext.length} bytes');
-      result.writeln('   Size diff: +${ciphertext.length - plaintext.length} bytes (auth tag)');
-      result.writeln('   Ciphertext: ${_bytesToHex(ciphertext, maxLength: 40)}');
+      result.writeln(
+        '   Size diff: +${ciphertext.length - plaintext.length} bytes (auth tag)',
+      );
+      result.writeln(
+        '   Ciphertext: ${_bytesToHex(ciphertext, maxLength: 40)}',
+      );
       result.writeln();
 
       // 4. Decrypt message
@@ -261,7 +271,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       // 3. Create stores and sessions
       final aliceStore = InMemorySenderKeyStore();
       final bobStore = InMemorySenderKeyStore();
-      final aliceSession = GroupSession(aliceAddress, distributionId, aliceStore);
+      final aliceSession = GroupSession(
+        aliceAddress,
+        distributionId,
+        aliceStore,
+      );
       final bobSession = GroupSession(bobAddress, distributionId, bobStore);
       result.writeln('3. Group sessions created');
       result.writeln('   Alice store: InMemorySenderKeyStore');
@@ -271,7 +285,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       // 4. Alice creates distribution message
       distMessage = await aliceSession.createDistributionMessage();
       result.writeln('4. Alice created distribution message');
-      result.writeln('   Distribution ID: ${GroupSession.uuidToString(distMessage.distributionId)}');
+      result.writeln(
+        '   Distribution ID: ${GroupSession.uuidToString(distMessage.distributionId)}',
+      );
       result.writeln('   Chain key size: ${distMessage.chainKey.length} bytes');
       result.writeln('   Iteration: ${distMessage.iteration}');
       result.writeln();
@@ -330,8 +346,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       aliceIdentity = IdentityKeyPair.generate();
       bobIdentity = IdentityKeyPair.generate();
       result.writeln('1. Identity keys generated');
-      result.writeln('   Alice public key: ${_bytesToHex(aliceIdentity.publicKey.serialize(), maxLength: 24)}');
-      result.writeln('   Bob public key: ${_bytesToHex(bobIdentity.publicKey.serialize(), maxLength: 24)}');
+      result.writeln(
+        '   Alice public key: ${_bytesToHex(aliceIdentity.publicKey.serialize(), maxLength: 24)}',
+      );
+      result.writeln(
+        '   Bob public key: ${_bytesToHex(bobIdentity.publicKey.serialize(), maxLength: 24)}',
+      );
       result.writeln();
 
       // 2. Create identifiers
@@ -413,9 +433,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             const SizedBox(height: 8),
             Text(
               description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -466,10 +486,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 ),
                 child: SelectableText(
                   result,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 ),
               ),
             ],

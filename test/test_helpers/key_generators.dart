@@ -16,9 +16,7 @@ IdentityKeyPair generateIdentityKeyPair() {
 /// Generates random bytes for testing.
 Uint8List randomBytes(int length) {
   final random = Random.secure();
-  return Uint8List.fromList(
-    List.generate(length, (_) => random.nextInt(256)),
-  );
+  return Uint8List.fromList(List.generate(length, (_) => random.nextInt(256)));
 }
 
 /// Creates a test message with the given content.

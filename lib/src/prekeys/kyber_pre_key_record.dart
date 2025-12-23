@@ -18,11 +18,11 @@ import '../serialization_validator.dart';
 /// Finalizer for KyberPreKeyRecord.
 final Finalizer<Pointer<SignalKyberPreKeyRecord>> _kyberPreKeyRecordFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerKyberPreKeyRecord>();
-  mutPtr.ref.raw = ptr;
-  signal_kyber_pre_key_record_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerKyberPreKeyRecord>();
+      mutPtr.ref.raw = ptr;
+      signal_kyber_pre_key_record_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A Kyber pre-key record for post-quantum Signal Protocol.
 ///
@@ -221,7 +221,10 @@ final class KyberPreKeyRecord {
         outPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_get_public_key');
+      FfiHelpers.checkError(
+        error,
+        'signal_kyber_pre_key_record_get_public_key',
+      );
 
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
@@ -249,7 +252,10 @@ final class KyberPreKeyRecord {
         outPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_get_secret_key');
+      FfiHelpers.checkError(
+        error,
+        'signal_kyber_pre_key_record_get_secret_key',
+      );
 
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(

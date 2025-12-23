@@ -9,32 +9,33 @@ import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 
 import '../bindings/libsignal_bindings.dart' as bindings;
-import '../bindings/libsignal_bindings.dart' show
-    SignalBorrowedBuffer,
-    SignalConstPointerCiphertextMessage,
-    SignalConstPointerFfiIdentityKeyStoreStruct,
-    SignalConstPointerFfiSessionStoreStruct,
-    SignalConstPointerPrivateKey,
-    SignalConstPointerProtocolAddress,
-    SignalConstPointerPublicKey,
-    SignalConstPointerSenderCertificate,
-    SignalConstPointerSessionRecord,
-    SignalConstPointerUnidentifiedSenderMessageContent,
-    SignalGetIdentityKeyFunction,
-    SignalGetIdentityKeyPairFunction,
-    SignalGetLocalRegistrationIdFunction,
-    SignalIdentityKeyStore,
-    SignalIsTrustedIdentityFunction,
-    SignalLoadSessionFunction,
-    SignalMutPointerCiphertextMessage,
-    SignalMutPointerPrivateKey,
-    SignalMutPointerPublicKey,
-    SignalMutPointerSessionRecord,
-    SignalMutPointerUnidentifiedSenderMessageContent,
-    SignalOwnedBuffer,
-    SignalSaveIdentityKeyFunction,
-    SignalSessionStore,
-    SignalStoreSessionFunction;
+import '../bindings/libsignal_bindings.dart'
+    show
+        SignalBorrowedBuffer,
+        SignalConstPointerCiphertextMessage,
+        SignalConstPointerFfiIdentityKeyStoreStruct,
+        SignalConstPointerFfiSessionStoreStruct,
+        SignalConstPointerPrivateKey,
+        SignalConstPointerProtocolAddress,
+        SignalConstPointerPublicKey,
+        SignalConstPointerSenderCertificate,
+        SignalConstPointerSessionRecord,
+        SignalConstPointerUnidentifiedSenderMessageContent,
+        SignalGetIdentityKeyFunction,
+        SignalGetIdentityKeyPairFunction,
+        SignalGetLocalRegistrationIdFunction,
+        SignalIdentityKeyStore,
+        SignalIsTrustedIdentityFunction,
+        SignalLoadSessionFunction,
+        SignalMutPointerCiphertextMessage,
+        SignalMutPointerPrivateKey,
+        SignalMutPointerPublicKey,
+        SignalMutPointerSessionRecord,
+        SignalMutPointerUnidentifiedSenderMessageContent,
+        SignalOwnedBuffer,
+        SignalSaveIdentityKeyFunction,
+        SignalSessionStore,
+        SignalStoreSessionFunction;
 import '../exception.dart';
 import '../ffi_helpers.dart';
 import '../keys/identity_key_pair.dart';
@@ -99,9 +100,9 @@ class _SealedSenderEncryptCallbacks {
   late final NativeCallable<SignalLoadSessionFunction> _loadSession;
   late final NativeCallable<SignalStoreSessionFunction> _storeSession;
   late final NativeCallable<SignalGetIdentityKeyPairFunction>
-      _getIdentityKeyPair;
+  _getIdentityKeyPair;
   late final NativeCallable<SignalGetLocalRegistrationIdFunction>
-      _getLocalRegistrationId;
+  _getLocalRegistrationId;
   late final NativeCallable<SignalSaveIdentityKeyFunction> _saveIdentity;
   late final NativeCallable<SignalGetIdentityKeyFunction> _getIdentity;
   late final NativeCallable<SignalIsTrustedIdentityFunction> _isTrustedIdentity;
@@ -117,14 +118,14 @@ class _SealedSenderEncryptCallbacks {
     );
     _getIdentityKeyPair =
         NativeCallable<SignalGetIdentityKeyPairFunction>.isolateLocal(
-      _getIdentityKeyPairCallback,
-      exceptionalReturn: -1,
-    );
+          _getIdentityKeyPairCallback,
+          exceptionalReturn: -1,
+        );
     _getLocalRegistrationId =
         NativeCallable<SignalGetLocalRegistrationIdFunction>.isolateLocal(
-      _getLocalRegistrationIdCallback,
-      exceptionalReturn: -1,
-    );
+          _getLocalRegistrationIdCallback,
+          exceptionalReturn: -1,
+        );
     _saveIdentity = NativeCallable<SignalSaveIdentityKeyFunction>.isolateLocal(
       _saveIdentityCallback,
       exceptionalReturn: -1,
@@ -135,9 +136,9 @@ class _SealedSenderEncryptCallbacks {
     );
     _isTrustedIdentity =
         NativeCallable<SignalIsTrustedIdentityFunction>.isolateLocal(
-      _isTrustedIdentityCallback,
-      exceptionalReturn: -1,
-    );
+          _isTrustedIdentityCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   int _loadSessionCallback(
@@ -162,7 +163,10 @@ class _SealedSenderEncryptCallbacks {
       final outPtr = calloc<SignalMutPointerSessionRecord>();
 
       try {
-        final error = bindings.signal_session_record_deserialize(outPtr, buffer.ref);
+        final error = bindings.signal_session_record_deserialize(
+          outPtr,
+          buffer.ref,
+        );
         if (error == nullptr && outPtr.ref.raw != nullptr) {
           recordp.ref.raw = outPtr.ref.raw;
           return 0;
@@ -232,10 +236,7 @@ class _SealedSenderEncryptCallbacks {
     }
   }
 
-  int _getLocalRegistrationIdCallback(
-    Pointer<Void> ctx,
-    Pointer<Uint32> idp,
-  ) {
+  int _getLocalRegistrationIdCallback(Pointer<Void> ctx, Pointer<Uint32> idp) {
     try {
       idp.value = _context.localRegistrationId;
       return 0;
@@ -352,7 +353,8 @@ class _SealedSenderEncryptCallbacks {
     final store = calloc<SignalIdentityKeyStore>();
     store.ref.ctx = nullptr;
     store.ref.get_identity_key_pair = _getIdentityKeyPair.nativeFunction;
-    store.ref.get_local_registration_id = _getLocalRegistrationId.nativeFunction;
+    store.ref.get_local_registration_id =
+        _getLocalRegistrationId.nativeFunction;
     store.ref.save_identity = _saveIdentity.nativeFunction;
     store.ref.get_identity = _getIdentity.nativeFunction;
     store.ref.is_trusted_identity = _isTrustedIdentity.nativeFunction;
@@ -377,9 +379,9 @@ class _SealedSenderDecryptCallbacks {
   final _SealedSenderDecryptContext _context;
 
   late final NativeCallable<SignalGetIdentityKeyPairFunction>
-      _getIdentityKeyPair;
+  _getIdentityKeyPair;
   late final NativeCallable<SignalGetLocalRegistrationIdFunction>
-      _getLocalRegistrationId;
+  _getLocalRegistrationId;
   late final NativeCallable<SignalSaveIdentityKeyFunction> _saveIdentity;
   late final NativeCallable<SignalGetIdentityKeyFunction> _getIdentity;
   late final NativeCallable<SignalIsTrustedIdentityFunction> _isTrustedIdentity;
@@ -387,14 +389,14 @@ class _SealedSenderDecryptCallbacks {
   _SealedSenderDecryptCallbacks(this._context) {
     _getIdentityKeyPair =
         NativeCallable<SignalGetIdentityKeyPairFunction>.isolateLocal(
-      _getIdentityKeyPairCallback,
-      exceptionalReturn: -1,
-    );
+          _getIdentityKeyPairCallback,
+          exceptionalReturn: -1,
+        );
     _getLocalRegistrationId =
         NativeCallable<SignalGetLocalRegistrationIdFunction>.isolateLocal(
-      _getLocalRegistrationIdCallback,
-      exceptionalReturn: -1,
-    );
+          _getLocalRegistrationIdCallback,
+          exceptionalReturn: -1,
+        );
     _saveIdentity = NativeCallable<SignalSaveIdentityKeyFunction>.isolateLocal(
       _saveIdentityCallback,
       exceptionalReturn: -1,
@@ -405,9 +407,9 @@ class _SealedSenderDecryptCallbacks {
     );
     _isTrustedIdentity =
         NativeCallable<SignalIsTrustedIdentityFunction>.isolateLocal(
-      _isTrustedIdentityCallback,
-      exceptionalReturn: -1,
-    );
+          _isTrustedIdentityCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   int _getIdentityKeyPairCallback(
@@ -439,10 +441,7 @@ class _SealedSenderDecryptCallbacks {
     }
   }
 
-  int _getLocalRegistrationIdCallback(
-    Pointer<Void> ctx,
-    Pointer<Uint32> idp,
-  ) {
+  int _getLocalRegistrationIdCallback(Pointer<Void> ctx, Pointer<Uint32> idp) {
     try {
       idp.value = _context.localRegistrationId;
       return 0;
@@ -484,7 +483,8 @@ class _SealedSenderDecryptCallbacks {
     final store = calloc<SignalIdentityKeyStore>();
     store.ref.ctx = nullptr;
     store.ref.get_identity_key_pair = _getIdentityKeyPair.nativeFunction;
-    store.ref.get_local_registration_id = _getLocalRegistrationId.nativeFunction;
+    store.ref.get_local_registration_id =
+        _getLocalRegistrationId.nativeFunction;
     store.ref.save_identity = _saveIdentity.nativeFunction;
     store.ref.get_identity = _getIdentity.nativeFunction;
     store.ref.is_trusted_identity = _isTrustedIdentity.nativeFunction;
@@ -534,8 +534,8 @@ class SealedSessionCipher {
   SealedSessionCipher({
     required SessionStore sessionStore,
     required IdentityKeyStore identityKeyStore,
-  })  : _sessionStore = sessionStore,
-        _identityKeyStore = identityKeyStore {
+  }) : _sessionStore = sessionStore,
+       _identityKeyStore = identityKeyStore {
     LibSignal.ensureInitialized();
   }
 
@@ -570,7 +570,8 @@ class SealedSessionCipher {
     }
 
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
     final existingIdentity = await _identityKeyStore.getIdentity(destination);
 
     // Serialize before creating context - stores may return shared references
@@ -626,7 +627,9 @@ class SealedSessionCipher {
         FfiHelpers.checkError(encryptError, 'bindings.signal_encrypt_message');
 
         if (ciphertextOutPtr.ref.raw == nullptr) {
-          throw LibSignalException.nullPointer('bindings.signal_encrypt_message');
+          throw LibSignalException.nullPointer(
+            'bindings.signal_encrypt_message',
+          );
         }
 
         // Step 2: Create USMC from ciphertext + sender certificate
@@ -638,7 +641,9 @@ class SealedSessionCipher {
             calloc<SignalConstPointerSenderCertificate>();
         senderCertConstPtr.ref.raw = senderCertificate.pointer;
 
-        final groupIdPtr = groupId != null ? calloc<Uint8>(groupId.length) : null;
+        final groupIdPtr = groupId != null
+            ? calloc<Uint8>(groupId.length)
+            : null;
         if (groupId != null) {
           groupIdPtr!.asTypedList(groupId.length).setAll(0, groupId);
         }
@@ -656,13 +661,14 @@ class SealedSessionCipher {
             calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
 
         try {
-          final usmcError = bindings.signal_unidentified_sender_message_content_new(
-            usmcOutPtr,
-            ciphertextConstPtr.ref,
-            senderCertConstPtr.ref,
-            contentHint,
-            groupIdBuffer.ref,
-          );
+          final usmcError = bindings
+              .signal_unidentified_sender_message_content_new(
+                usmcOutPtr,
+                ciphertextConstPtr.ref,
+                senderCertConstPtr.ref,
+                contentHint,
+                groupIdBuffer.ref,
+              );
           FfiHelpers.checkError(
             usmcError,
             'bindings.signal_unidentified_sender_message_content_new',
@@ -697,16 +703,18 @@ class SealedSessionCipher {
 
             // Save pending session update
             if (context.pendingSessionStore != null) {
-              final newSession =
-                  SessionRecord.deserialize(context.pendingSessionStore!);
+              final newSession = SessionRecord.deserialize(
+                context.pendingSessionStore!,
+              );
               await _sessionStore.storeSession(destination, newSession);
               newSession.dispose();
             }
 
             // Save pending identity
             if (context.pendingIdentitySave != null) {
-              final identity =
-                  PublicKey.deserialize(context.pendingIdentitySave!.identityBytes);
+              final identity = PublicKey.deserialize(
+                context.pendingIdentitySave!.identityBytes,
+              );
               await _identityKeyStore.saveIdentity(
                 context.pendingIdentitySave!.address,
                 identity,
@@ -767,7 +775,8 @@ class SealedSessionCipher {
     Uint8List ciphertext,
   ) async {
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
 
     final context = _SealedSenderDecryptContext(
       identityKeyPair: identityKeyPair,
@@ -790,8 +799,7 @@ class SealedSessionCipher {
       ctextBuffer.ref.base = ctextPtr.cast<UnsignedChar>();
       ctextBuffer.ref.length = ciphertext.length;
 
-      final outPtr =
-          calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
+      final outPtr = calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
 
       try {
         final error = bindings.signal_sealed_session_cipher_decrypt_to_usmc(

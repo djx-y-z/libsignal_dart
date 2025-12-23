@@ -16,11 +16,11 @@ import '../serialization_validator.dart';
 /// Finalizer for SessionRecord.
 final Finalizer<Pointer<SignalSessionRecord>> _sessionRecordFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerSessionRecord>();
-  mutPtr.ref.raw = ptr;
-  signal_session_record_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerSessionRecord>();
+      mutPtr.ref.raw = ptr;
+      signal_session_record_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A session record containing the state of a Signal Protocol session.
 ///
@@ -108,7 +108,10 @@ final class SessionRecord {
 
     try {
       final error = signal_session_record_archive_current_state(mutPtr.ref);
-      FfiHelpers.checkError(error, 'signal_session_record_archive_current_state');
+      FfiHelpers.checkError(
+        error,
+        'signal_session_record_archive_current_state',
+      );
     } finally {
       calloc.free(mutPtr);
     }

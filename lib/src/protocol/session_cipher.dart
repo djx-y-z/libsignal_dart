@@ -130,9 +130,9 @@ class _EncryptionCallbacks {
   late final NativeCallable<SignalLoadSessionFunction> _loadSession;
   late final NativeCallable<SignalStoreSessionFunction> _storeSession;
   late final NativeCallable<SignalGetIdentityKeyPairFunction>
-      _getIdentityKeyPair;
+  _getIdentityKeyPair;
   late final NativeCallable<SignalGetLocalRegistrationIdFunction>
-      _getLocalRegistrationId;
+  _getLocalRegistrationId;
   late final NativeCallable<SignalSaveIdentityKeyFunction> _saveIdentity;
   late final NativeCallable<SignalGetIdentityKeyFunction> _getIdentity;
   late final NativeCallable<SignalIsTrustedIdentityFunction> _isTrustedIdentity;
@@ -148,14 +148,14 @@ class _EncryptionCallbacks {
     );
     _getIdentityKeyPair =
         NativeCallable<SignalGetIdentityKeyPairFunction>.isolateLocal(
-      _getIdentityKeyPairCallback,
-      exceptionalReturn: -1,
-    );
+          _getIdentityKeyPairCallback,
+          exceptionalReturn: -1,
+        );
     _getLocalRegistrationId =
         NativeCallable<SignalGetLocalRegistrationIdFunction>.isolateLocal(
-      _getLocalRegistrationIdCallback,
-      exceptionalReturn: -1,
-    );
+          _getLocalRegistrationIdCallback,
+          exceptionalReturn: -1,
+        );
     _saveIdentity = NativeCallable<SignalSaveIdentityKeyFunction>.isolateLocal(
       _saveIdentityCallback,
       exceptionalReturn: -1,
@@ -166,9 +166,9 @@ class _EncryptionCallbacks {
     );
     _isTrustedIdentity =
         NativeCallable<SignalIsTrustedIdentityFunction>.isolateLocal(
-      _isTrustedIdentityCallback,
-      exceptionalReturn: -1,
-    );
+          _isTrustedIdentityCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   int _loadSessionCallback(
@@ -263,10 +263,7 @@ class _EncryptionCallbacks {
     }
   }
 
-  int _getLocalRegistrationIdCallback(
-    Pointer<Void> ctx,
-    Pointer<Uint32> idp,
-  ) {
+  int _getLocalRegistrationIdCallback(Pointer<Void> ctx, Pointer<Uint32> idp) {
     try {
       idp.value = _context.localRegistrationId;
       return 0;
@@ -383,7 +380,8 @@ class _EncryptionCallbacks {
     final store = calloc<SignalIdentityKeyStore>();
     store.ref.ctx = nullptr;
     store.ref.get_identity_key_pair = _getIdentityKeyPair.nativeFunction;
-    store.ref.get_local_registration_id = _getLocalRegistrationId.nativeFunction;
+    store.ref.get_local_registration_id =
+        _getLocalRegistrationId.nativeFunction;
     store.ref.save_identity = _saveIdentity.nativeFunction;
     store.ref.get_identity = _getIdentity.nativeFunction;
     store.ref.is_trusted_identity = _isTrustedIdentity.nativeFunction;
@@ -411,9 +409,9 @@ class _DecryptionCallbacks {
 
   // Identity store
   late final NativeCallable<SignalGetIdentityKeyPairFunction>
-      _getIdentityKeyPair;
+  _getIdentityKeyPair;
   late final NativeCallable<SignalGetLocalRegistrationIdFunction>
-      _getLocalRegistrationId;
+  _getLocalRegistrationId;
   late final NativeCallable<SignalSaveIdentityKeyFunction> _saveIdentity;
   late final NativeCallable<SignalGetIdentityKeyFunction> _getIdentity;
   late final NativeCallable<SignalIsTrustedIdentityFunction> _isTrustedIdentity;
@@ -431,7 +429,7 @@ class _DecryptionCallbacks {
   late final NativeCallable<SignalLoadKyberPreKeyFunction> _loadKyberPreKey;
   late final NativeCallable<SignalStoreKyberPreKeyFunction> _storeKyberPreKey;
   late final NativeCallable<SignalMarkKyberPreKeyUsedFunction>
-      _markKyberPreKeyUsed;
+  _markKyberPreKeyUsed;
 
   _DecryptionCallbacks(this._context) {
     _initializeSessionCallbacks();
@@ -455,14 +453,14 @@ class _DecryptionCallbacks {
   void _initializeIdentityCallbacks() {
     _getIdentityKeyPair =
         NativeCallable<SignalGetIdentityKeyPairFunction>.isolateLocal(
-      _getIdentityKeyPairCallback,
-      exceptionalReturn: -1,
-    );
+          _getIdentityKeyPairCallback,
+          exceptionalReturn: -1,
+        );
     _getLocalRegistrationId =
         NativeCallable<SignalGetLocalRegistrationIdFunction>.isolateLocal(
-      _getLocalRegistrationIdCallback,
-      exceptionalReturn: -1,
-    );
+          _getLocalRegistrationIdCallback,
+          exceptionalReturn: -1,
+        );
     _saveIdentity = NativeCallable<SignalSaveIdentityKeyFunction>.isolateLocal(
       _saveIdentityCallback,
       exceptionalReturn: -1,
@@ -473,9 +471,9 @@ class _DecryptionCallbacks {
     );
     _isTrustedIdentity =
         NativeCallable<SignalIsTrustedIdentityFunction>.isolateLocal(
-      _isTrustedIdentityCallback,
-      exceptionalReturn: -1,
-    );
+          _isTrustedIdentityCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   void _initializePreKeyCallbacks() {
@@ -496,32 +494,32 @@ class _DecryptionCallbacks {
   void _initializeSignedPreKeyCallbacks() {
     _loadSignedPreKey =
         NativeCallable<SignalLoadSignedPreKeyFunction>.isolateLocal(
-      _loadSignedPreKeyCallback,
-      exceptionalReturn: -1,
-    );
+          _loadSignedPreKeyCallback,
+          exceptionalReturn: -1,
+        );
     _storeSignedPreKey =
         NativeCallable<SignalStoreSignedPreKeyFunction>.isolateLocal(
-      _storeSignedPreKeyCallback,
-      exceptionalReturn: -1,
-    );
+          _storeSignedPreKeyCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   void _initializeKyberPreKeyCallbacks() {
     _loadKyberPreKey =
         NativeCallable<SignalLoadKyberPreKeyFunction>.isolateLocal(
-      _loadKyberPreKeyCallback,
-      exceptionalReturn: -1,
-    );
+          _loadKyberPreKeyCallback,
+          exceptionalReturn: -1,
+        );
     _storeKyberPreKey =
         NativeCallable<SignalStoreKyberPreKeyFunction>.isolateLocal(
-      _storeKyberPreKeyCallback,
-      exceptionalReturn: -1,
-    );
+          _storeKyberPreKeyCallback,
+          exceptionalReturn: -1,
+        );
     _markKyberPreKeyUsed =
         NativeCallable<SignalMarkKyberPreKeyUsedFunction>.isolateLocal(
-      _markKyberPreKeyUsedCallback,
-      exceptionalReturn: -1,
-    );
+          _markKyberPreKeyUsedCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   // Session callbacks (same as encryption)
@@ -618,10 +616,7 @@ class _DecryptionCallbacks {
     }
   }
 
-  int _getLocalRegistrationIdCallback(
-    Pointer<Void> ctx,
-    Pointer<Uint32> idp,
-  ) {
+  int _getLocalRegistrationIdCallback(Pointer<Void> ctx, Pointer<Uint32> idp) {
     try {
       idp.value = _context.localRegistrationId;
       return 0;
@@ -776,10 +771,7 @@ class _DecryptionCallbacks {
     return 0;
   }
 
-  int _removePreKeyCallback(
-    Pointer<Void> ctx,
-    int id,
-  ) {
+  int _removePreKeyCallback(Pointer<Void> ctx, int id) {
     try {
       _context.pendingPreKeyRemoval = id;
       return 0;
@@ -802,7 +794,9 @@ class _DecryptionCallbacks {
       }
 
       final dataPtr = calloc<Uint8>(signedPreKeyBytes.length);
-      dataPtr.asTypedList(signedPreKeyBytes.length).setAll(0, signedPreKeyBytes);
+      dataPtr
+          .asTypedList(signedPreKeyBytes.length)
+          .setAll(0, signedPreKeyBytes);
 
       final buffer = calloc<SignalBorrowedBuffer>();
       buffer.ref.base = dataPtr.cast<UnsignedChar>();
@@ -811,8 +805,10 @@ class _DecryptionCallbacks {
       final outPtr = calloc<SignalMutPointerSignedPreKeyRecord>();
 
       try {
-        final error =
-            signal_signed_pre_key_record_deserialize(outPtr, buffer.ref);
+        final error = signal_signed_pre_key_record_deserialize(
+          outPtr,
+          buffer.ref,
+        );
         if (error == nullptr && outPtr.ref.raw != nullptr) {
           recordp.ref.raw = outPtr.ref.raw;
           return 0;
@@ -862,8 +858,10 @@ class _DecryptionCallbacks {
       final outPtr = calloc<SignalMutPointerKyberPreKeyRecord>();
 
       try {
-        final error =
-            signal_kyber_pre_key_record_deserialize(outPtr, buffer.ref);
+        final error = signal_kyber_pre_key_record_deserialize(
+          outPtr,
+          buffer.ref,
+        );
         if (error == nullptr && outPtr.ref.raw != nullptr) {
           recordp.ref.raw = outPtr.ref.raw;
           return 0;
@@ -917,7 +915,8 @@ class _DecryptionCallbacks {
     final store = calloc<SignalIdentityKeyStore>();
     store.ref.ctx = nullptr;
     store.ref.get_identity_key_pair = _getIdentityKeyPair.nativeFunction;
-    store.ref.get_local_registration_id = _getLocalRegistrationId.nativeFunction;
+    store.ref.get_local_registration_id =
+        _getLocalRegistrationId.nativeFunction;
     store.ref.save_identity = _saveIdentity.nativeFunction;
     store.ref.get_identity = _getIdentity.nativeFunction;
     store.ref.is_trusted_identity = _isTrustedIdentity.nativeFunction;
@@ -1008,11 +1007,11 @@ class SessionCipher {
     PreKeyStore? preKeyStore,
     SignedPreKeyStore? signedPreKeyStore,
     KyberPreKeyStore? kyberPreKeyStore,
-  })  : _sessionStore = sessionStore,
-        _identityKeyStore = identityKeyStore,
-        _preKeyStore = preKeyStore,
-        _signedPreKeyStore = signedPreKeyStore,
-        _kyberPreKeyStore = kyberPreKeyStore {
+  }) : _sessionStore = sessionStore,
+       _identityKeyStore = identityKeyStore,
+       _preKeyStore = preKeyStore,
+       _signedPreKeyStore = signedPreKeyStore,
+       _kyberPreKeyStore = kyberPreKeyStore {
     LibSignal.ensureInitialized();
   }
 
@@ -1036,7 +1035,8 @@ class SessionCipher {
     }
 
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
     final existingIdentity = await _identityKeyStore.getIdentity(remoteAddress);
 
     final context = _EncryptionContext(
@@ -1092,7 +1092,8 @@ class SessionCipher {
 
         // Get message type
         final typePtr = calloc<Uint8>();
-        final ciphertextConstPtr = calloc<SignalConstPointerCiphertextMessage>();
+        final ciphertextConstPtr =
+            calloc<SignalConstPointerCiphertextMessage>();
         ciphertextConstPtr.ref.raw = outPtr.ref.raw;
 
         final typeError = signal_ciphertext_message_type(
@@ -1109,7 +1110,10 @@ class SessionCipher {
           serializedPtr,
           ciphertextConstPtr.ref,
         );
-        FfiHelpers.checkError(serializeError, 'signal_ciphertext_message_serialize');
+        FfiHelpers.checkError(
+          serializeError,
+          'signal_ciphertext_message_serialize',
+        );
 
         final encryptedBytes = FfiHelpers.fromOwnedBuffer(serializedPtr.ref);
 
@@ -1125,8 +1129,9 @@ class SessionCipher {
 
         // Save pending session update
         if (context.pendingSessionStore != null) {
-          final newSession =
-              SessionRecord.deserialize(context.pendingSessionStore!);
+          final newSession = SessionRecord.deserialize(
+            context.pendingSessionStore!,
+          );
           await _sessionStore.storeSession(remoteAddress, newSession);
           newSession.dispose();
         }
@@ -1163,7 +1168,8 @@ class SessionCipher {
     // Pre-load data
     final existingSession = await _sessionStore.loadSession(remoteAddress);
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
     final existingIdentity = await _identityKeyStore.getIdentity(remoteAddress);
 
     final context = _DecryptionContext(
@@ -1225,8 +1231,9 @@ class SessionCipher {
 
         // Save pending session update
         if (context.pendingSessionStore != null) {
-          final newSession =
-              SessionRecord.deserialize(context.pendingSessionStore!);
+          final newSession = SessionRecord.deserialize(
+            context.pendingSessionStore!,
+          );
           await _sessionStore.storeSession(remoteAddress, newSession);
           newSession.dispose();
         }
@@ -1307,7 +1314,8 @@ class SessionCipher {
     // Pre-load session and identity data
     final existingSession = await _sessionStore.loadSession(remoteAddress);
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
     final existingIdentity = await _identityKeyStore.getIdentity(remoteAddress);
 
     // Load only the specific pre-keys we need
@@ -1360,7 +1368,6 @@ class SessionCipher {
     final callbacks = _DecryptionCallbacks(context);
 
     try {
-
       final sessionStorePtr = callbacks.createSessionStore();
       final identityStorePtr = callbacks.createIdentityStore();
       final preKeyStorePtr = callbacks.createPreKeyStore();
@@ -1412,8 +1419,9 @@ class SessionCipher {
 
         // Save pending session update
         if (context.pendingSessionStore != null) {
-          final newSession =
-              SessionRecord.deserialize(context.pendingSessionStore!);
+          final newSession = SessionRecord.deserialize(
+            context.pendingSessionStore!,
+          );
           await _sessionStore.storeSession(remoteAddress, newSession);
           newSession.dispose();
         }
@@ -1478,13 +1486,18 @@ class SessionCipher {
   /// Extracts pre-key ID from a serialized PreKeySignalMessage.
   ///
   /// Returns null if the message doesn't contain a one-time pre-key.
-  int? _extractPreKeyId(Pointer<SignalMutPointerPreKeySignalMessage> messagePtr) {
+  int? _extractPreKeyId(
+    Pointer<SignalMutPointerPreKeySignalMessage> messagePtr,
+  ) {
     final idPtr = calloc<Uint32>();
     final constPtr = calloc<SignalConstPointerPreKeySignalMessage>();
     constPtr.ref.raw = messagePtr.ref.raw;
 
     try {
-      final error = signal_pre_key_signal_message_get_pre_key_id(idPtr, constPtr.ref);
+      final error = signal_pre_key_signal_message_get_pre_key_id(
+        idPtr,
+        constPtr.ref,
+      );
       // If error occurs, the message might not have a pre-key (optional field)
       if (error != nullptr) {
         signal_error_free(error);
@@ -1498,7 +1511,9 @@ class SessionCipher {
   }
 
   /// Extracts signed pre-key ID from a serialized PreKeySignalMessage.
-  int _extractSignedPreKeyId(Pointer<SignalMutPointerPreKeySignalMessage> messagePtr) {
+  int _extractSignedPreKeyId(
+    Pointer<SignalMutPointerPreKeySignalMessage> messagePtr,
+  ) {
     final idPtr = calloc<Uint32>();
     final constPtr = calloc<SignalConstPointerPreKeySignalMessage>();
     constPtr.ref.raw = messagePtr.ref.raw;
@@ -1508,7 +1523,10 @@ class SessionCipher {
         idPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_pre_key_signal_message_get_signed_pre_key_id');
+      FfiHelpers.checkError(
+        error,
+        'signal_pre_key_signal_message_get_signed_pre_key_id',
+      );
       return idPtr.value;
     } finally {
       calloc.free(idPtr);

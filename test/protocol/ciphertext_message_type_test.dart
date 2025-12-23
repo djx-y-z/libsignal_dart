@@ -115,10 +115,7 @@ void main() {
     group('round-trip', () {
       test('fromValue(type.value) returns same type', () {
         for (final type in CiphertextMessageType.values) {
-          expect(
-            CiphertextMessageType.fromValue(type.value),
-            equals(type),
-          );
+          expect(CiphertextMessageType.fromValue(type.value), equals(type));
         }
       });
     });

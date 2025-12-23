@@ -27,7 +27,10 @@ class InMemorySessionStore implements SessionStore {
   }
 
   @override
-  Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
+  Future<void> storeSession(
+    ProtocolAddress address,
+    SessionRecord record,
+  ) async {
     _sessions[_key(address)] = record.serialize();
   }
 

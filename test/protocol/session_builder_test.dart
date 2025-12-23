@@ -59,7 +59,10 @@ void main() {
     test('processes pre-key bundle and establishes session', () async {
       // Generate Bob's keys
       final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-      bobIdentityStore = InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+      bobIdentityStore = InMemoryIdentityKeyStore(
+        bobKeys.identityKeyPair,
+        67890,
+      );
 
       // Store Bob's pre-keys
       final preKeyRecord = PreKeyRecord.create(

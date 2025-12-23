@@ -384,7 +384,6 @@ void main() {
       });
     });
 
-
     // Round-trip tests use a two-step decryption approach because
     // libsignal C FFI (v0.67.3) doesn't pass Kyber pre-key store to
     // signal_sealed_session_cipher_decrypt. We use:
@@ -394,8 +393,10 @@ void main() {
       test('encrypts and decrypts message successfully', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -453,8 +454,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, senderCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          senderCert,
+        );
 
         // Bob decrypts using two-step approach:
         // 1. Unwrap sealed sender to get USMC
@@ -473,8 +477,10 @@ void main() {
 
         // 2. Decrypt the inner message using SessionCipher
         final encryptedContent = usmc.contents;
-        final senderAddress =
-            ProtocolAddress(usmcSenderCert.senderUuid, usmcSenderCert.deviceId);
+        final senderAddress = ProtocolAddress(
+          usmcSenderCert.senderUuid,
+          usmcSenderCert.deviceId,
+        );
 
         final bobSessionCipher = SessionCipher(
           sessionStore: bobSessionStore,
@@ -505,8 +511,10 @@ void main() {
       test('decrypted message contains correct sender info', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -564,8 +572,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, senderCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          senderCert,
+        );
 
         // Bob decrypts using two-step approach
         final bobCipher = SealedSessionCipher(
@@ -596,8 +607,10 @@ void main() {
       test('works without senderE164', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -655,8 +668,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, senderCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          senderCert,
+        );
 
         // Bob decrypts using two-step approach
         final bobCipher = SealedSessionCipher(
@@ -671,8 +687,10 @@ void main() {
         expect(usmcSenderCert.senderUuid, equals('alice-uuid'));
 
         // Decrypt the inner message
-        final senderAddress =
-            ProtocolAddress(usmcSenderCert.senderUuid, usmcSenderCert.deviceId);
+        final senderAddress = ProtocolAddress(
+          usmcSenderCert.senderUuid,
+          usmcSenderCert.deviceId,
+        );
         final bobSessionCipher = SessionCipher(
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
@@ -699,8 +717,10 @@ void main() {
       test('works with group ID', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -778,8 +798,10 @@ void main() {
 
         // Decrypt the inner message
         final usmcSenderCert = usmc.getSenderCertificate();
-        final senderAddress =
-            ProtocolAddress(usmcSenderCert.senderUuid, usmcSenderCert.deviceId);
+        final senderAddress = ProtocolAddress(
+          usmcSenderCert.senderUuid,
+          usmcSenderCert.deviceId,
+        );
         final bobSessionCipher = SessionCipher(
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
@@ -808,8 +830,10 @@ void main() {
       test('fails with wrong trust root', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -867,8 +891,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, senderCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          senderCert,
+        );
 
         // Bob decrypts to USMC and validates with WRONG trust root
         final wrongTrustRootPrivate = PrivateKey.generate();
@@ -905,8 +932,10 @@ void main() {
       test('fails with expired certificate', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -964,8 +993,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, expiredCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          expiredCert,
+        );
 
         // Bob decrypts to USMC and validates the expired cert
         final bobCipher = SealedSessionCipher(
@@ -997,8 +1029,10 @@ void main() {
       test('fails with tampered message', () async {
         // Setup Bob's keys and stores (with Kyber)
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore =
-            InMemoryIdentityKeyStore(bobKeys.identityKeyPair, 67890);
+        final bobIdentityStore = InMemoryIdentityKeyStore(
+          bobKeys.identityKeyPair,
+          67890,
+        );
 
         // Store Bob's pre-keys
         final preKeyRecord = PreKeyRecord.create(
@@ -1056,8 +1090,11 @@ void main() {
           identityKeyStore: aliceIdentityStore,
         );
         final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed =
-            await aliceCipher.encrypt(bobAddress, plaintext, senderCert);
+        final sealed = await aliceCipher.encrypt(
+          bobAddress,
+          plaintext,
+          senderCert,
+        );
 
         // Tamper with the message
         final tampered = Uint8List.fromList(sealed);

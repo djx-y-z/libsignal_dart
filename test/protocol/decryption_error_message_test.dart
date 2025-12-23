@@ -339,7 +339,10 @@ void main() {
         );
 
         errorMsg.dispose();
-        expect(() => errorMsg.getRatchetKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => errorMsg.getRatchetKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

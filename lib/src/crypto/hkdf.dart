@@ -44,7 +44,11 @@ abstract final class Hkdf {
     LibSignal.ensureInitialized();
 
     if (outputLength <= 0) {
-      throw ArgumentError.value(outputLength, 'outputLength', 'Must be positive');
+      throw ArgumentError.value(
+        outputLength,
+        'outputLength',
+        'Must be positive',
+      );
     }
 
     // Allocate output buffer

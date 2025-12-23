@@ -325,7 +325,9 @@ void main() {
 
       test('expired certificate fails validation', () {
         // Create a certificate that expired in the past
-        final expiration = DateTime.now().toUtc().subtract(const Duration(days: 1));
+        final expiration = DateTime.now().toUtc().subtract(
+          const Duration(days: 1),
+        );
         final cert = SenderCertificate.create(
           senderUuid: 'test-uuid-1234',
           deviceId: 1,
@@ -567,7 +569,10 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.getServerCertificate(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => cert.getServerCertificate(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('validate throws after dispose', () {
@@ -582,7 +587,10 @@ void main() {
         );
 
         cert.dispose();
-        expect(() => cert.validate(trustRootPublic), throwsA(isA<LibSignalException>()));
+        expect(
+          () => cert.validate(trustRootPublic),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('certificate throws after dispose', () {

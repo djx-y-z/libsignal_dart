@@ -40,10 +40,7 @@ void main() {
       test('throws for key longer than 32 bytes', () {
         final longKey = randomBytes(64);
 
-        expect(
-          () => Aes256GcmSiv(longKey),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => Aes256GcmSiv(longKey), throwsA(isA<LibSignalException>()));
       });
 
       test('throws for empty key', () {
@@ -127,20 +124,23 @@ void main() {
         cipher.dispose();
       });
 
-      test('same plaintext with different nonces produces different ciphertext', () {
-        final cipher = Aes256GcmSiv(validKey);
-        final plaintext = testMessage('Test message');
+      test(
+        'same plaintext with different nonces produces different ciphertext',
+        () {
+          final cipher = Aes256GcmSiv(validKey);
+          final plaintext = testMessage('Test message');
 
-        final nonce1 = randomBytes(12);
-        final nonce2 = randomBytes(12);
+          final nonce1 = randomBytes(12);
+          final nonce2 = randomBytes(12);
 
-        final ct1 = cipher.encrypt(plaintext: plaintext, nonce: nonce1);
-        final ct2 = cipher.encrypt(plaintext: plaintext, nonce: nonce2);
+          final ct1 = cipher.encrypt(plaintext: plaintext, nonce: nonce1);
+          final ct2 = cipher.encrypt(plaintext: plaintext, nonce: nonce2);
 
-        expect(ct1, isNot(equals(ct2)));
+          expect(ct1, isNot(equals(ct2)));
 
-        cipher.dispose();
-      });
+          cipher.dispose();
+        },
+      );
 
       test('same plaintext with same nonce is deterministic', () {
         final cipher = Aes256GcmSiv(validKey);
@@ -161,10 +161,8 @@ void main() {
         final shortNonce = randomBytes(8);
 
         expect(
-          () => cipher.encrypt(
-            plaintext: testMessage('test'),
-            nonce: shortNonce,
-          ),
+          () =>
+              cipher.encrypt(plaintext: testMessage('test'), nonce: shortNonce),
           throwsA(isA<LibSignalException>()),
         );
 
@@ -176,10 +174,8 @@ void main() {
         final longNonce = randomBytes(16);
 
         expect(
-          () => cipher.encrypt(
-            plaintext: testMessage('test'),
-            nonce: longNonce,
-          ),
+          () =>
+              cipher.encrypt(plaintext: testMessage('test'), nonce: longNonce),
           throwsA(isA<LibSignalException>()),
         );
 
@@ -194,10 +190,7 @@ void main() {
         );
 
         expect(
-          () => cipher.decrypt(
-            ciphertext: ciphertext,
-            nonce: randomBytes(8),
-          ),
+          () => cipher.decrypt(ciphertext: ciphertext, nonce: randomBytes(8)),
           throwsA(isA<LibSignalException>()),
         );
 
@@ -234,10 +227,8 @@ void main() {
         cipher.dispose();
 
         expect(
-          () => cipher.encrypt(
-            plaintext: testMessage('test'),
-            nonce: validNonce,
-          ),
+          () =>
+              cipher.encrypt(plaintext: testMessage('test'), nonce: validNonce),
           throwsA(isA<LibSignalException>()),
         );
       });
@@ -252,10 +243,7 @@ void main() {
         cipher.dispose();
 
         expect(
-          () => cipher.decrypt(
-            ciphertext: ciphertext,
-            nonce: validNonce,
-          ),
+          () => cipher.decrypt(ciphertext: ciphertext, nonce: validNonce),
           throwsA(isA<LibSignalException>()),
         );
       });

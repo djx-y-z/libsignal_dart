@@ -181,8 +181,7 @@ _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String fullVersion) {
     case OS.linux:
       final linuxArch = _linuxArchName(targetArch);
       return _AssetInfo(
-        downloadUrl:
-            '$baseUrl/libsignal-$fullVersion-linux-$linuxArch.tar.gz',
+        downloadUrl: '$baseUrl/libsignal-$fullVersion-linux-$linuxArch.tar.gz',
         archiveFileName: 'libsignal-$fullVersion-linux-$linuxArch.tar.gz',
         fileName: 'libsignal_ffi.so',
         linkMode: DynamicLoadingBundled(),

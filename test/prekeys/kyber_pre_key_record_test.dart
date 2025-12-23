@@ -44,7 +44,9 @@ void main() {
       test('creates valid Kyber pre-key record', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final kyberPreKey = KyberPreKeyRecord.create(
           id: 1,
@@ -89,7 +91,9 @@ void main() {
       test('created Kyber pre-key returns correct signature', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final kyberPreKey = KyberPreKeyRecord.create(
           id: 42,
@@ -108,7 +112,9 @@ void main() {
       test('signature is verifiable by identity public key', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+        final signature = identityKeyPair.privateKey.sign(
+          publicKey.serialize(),
+        );
 
         final kyberPreKey = KyberPreKeyRecord.create(
           id: 1,
@@ -349,25 +355,37 @@ void main() {
       test('serialize throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.serialize(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => kyberPreKey.serialize(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getPublicKey throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getPublicKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => kyberPreKey.getPublicKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getSecretKey throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getSecretKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => kyberPreKey.getSecretKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getKeyPair throws after dispose', () {
         final kyberPreKey = createKyberPreKey(id: 1, timestamp: 1000);
         kyberPreKey.dispose();
-        expect(() => kyberPreKey.getKeyPair(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => kyberPreKey.getKeyPair(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

@@ -38,7 +38,9 @@ void main(List<String> args) async {
     await _cleanup();
 
     print('');
-    logInfo('SUCCESS! Bindings regenerated for libsignal ${getLibsignalVersion()}');
+    logInfo(
+      'SUCCESS! Bindings regenerated for libsignal ${getLibsignalVersion()}',
+    );
     print('');
   } catch (e) {
     logError(e.toString());
@@ -86,11 +88,9 @@ Future<void> _installCbindgen() async {
   logStep('Installing cbindgen $cbindgenVersion...');
 
   // Check if correct version is already installed
-  final result = await runCommand(
-    'cbindgen',
-    ['--version'],
-    printOutput: false,
-  );
+  final result = await runCommand('cbindgen', [
+    '--version',
+  ], printOutput: false);
 
   if (result.exitCode == 0) {
     final installedVersion = result.stdout.toString().trim();

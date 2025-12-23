@@ -16,13 +16,14 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Finalizer for PreKeyRecord.
-final Finalizer<Pointer<SignalPreKeyRecord>> _preKeyRecordFinalizer =
-    Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerPreKeyRecord>();
-  mutPtr.ref.raw = ptr;
-  signal_pre_key_record_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+final Finalizer<Pointer<SignalPreKeyRecord>> _preKeyRecordFinalizer = Finalizer(
+  (ptr) {
+    final mutPtr = calloc<SignalMutPointerPreKeyRecord>();
+    mutPtr.ref.raw = ptr;
+    signal_pre_key_record_destroy(mutPtr.ref);
+    calloc.free(mutPtr);
+  },
+);
 
 /// A pre-key record for Signal Protocol session establishment.
 ///

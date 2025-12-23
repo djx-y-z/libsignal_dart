@@ -72,10 +72,7 @@ void main() {
         final originalKey = distMessage.getSignatureKey();
         final restoredKey = restored.getSignatureKey();
 
-        expect(
-          restoredKey.serialize(),
-          equals(originalKey.serialize()),
-        );
+        expect(restoredKey.serialize(), equals(originalKey.serialize()));
 
         originalKey.dispose();
         restoredKey.dispose();

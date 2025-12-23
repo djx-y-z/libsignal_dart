@@ -97,7 +97,10 @@ void main() {
 
         expect(ptr.address, isNot(0));
 
-        final restored = LibSignalUtils.pointerToUint8List(ptr, original.length);
+        final restored = LibSignalUtils.pointerToUint8List(
+          ptr,
+          original.length,
+        );
         expect(restored, equals(original));
 
         LibSignalUtils.freePointer(ptr);

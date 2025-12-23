@@ -135,13 +135,19 @@ void main() {
 
         try {
           // Deserialize PreKeySignalMessage
-          final error =
-              ffi.signal_pre_key_signal_message_deserialize(preKeyMsgPtr, buffer.ref);
-          FfiHelpers.checkError(error, 'signal_pre_key_signal_message_deserialize');
+          final error = ffi.signal_pre_key_signal_message_deserialize(
+            preKeyMsgPtr,
+            buffer.ref,
+          );
+          FfiHelpers.checkError(
+            error,
+            'signal_pre_key_signal_message_deserialize',
+          );
 
           // Extract the inner SignalMessage
           final signalMsgPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-          final constPreKeyPtr = calloc<ffi.SignalConstPointerPreKeySignalMessage>();
+          final constPreKeyPtr =
+              calloc<ffi.SignalConstPointerPreKeySignalMessage>();
           constPreKeyPtr.ref.raw = preKeyMsgPtr.ref.raw;
 
           try {
@@ -149,7 +155,10 @@ void main() {
               signalMsgPtr,
               constPreKeyPtr.ref,
             );
-            FfiHelpers.checkError(error2, 'signal_pre_key_signal_message_get_signal_message');
+            FfiHelpers.checkError(
+              error2,
+              'signal_pre_key_signal_message_get_signal_message',
+            );
 
             return SignalMessage.fromPointer(signalMsgPtr.ref.raw);
           } finally {
@@ -188,7 +197,10 @@ void main() {
 
         // Compare properties
         expect(deserialized.counter, equals(signalMessage.counter));
-        expect(deserialized.messageVersion, equals(signalMessage.messageVersion));
+        expect(
+          deserialized.messageVersion,
+          equals(signalMessage.messageVersion),
+        );
         expect(deserialized.body, equals(signalMessage.body));
 
         // Cleanup
@@ -337,8 +349,10 @@ void main() {
       test('dispose releases resources', () async {
         final aliceIdentity = IdentityKeyPair.generate();
         final aliceSessionStore = InMemorySessionStore();
-        final aliceIdentityStore =
-            InMemoryIdentityKeyStore(aliceIdentity, 12345);
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          12345,
+        );
         final bobAddress = ProtocolAddress('bob', 1);
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
 
@@ -370,7 +384,8 @@ void main() {
         ffi.signal_pre_key_signal_message_deserialize(preKeyMsgPtr, buffer.ref);
 
         final signalMsgPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-        final constPreKeyPtr = calloc<ffi.SignalConstPointerPreKeySignalMessage>();
+        final constPreKeyPtr =
+            calloc<ffi.SignalConstPointerPreKeySignalMessage>();
         constPreKeyPtr.ref.raw = preKeyMsgPtr.ref.raw;
         ffi.signal_pre_key_signal_message_get_signal_message(
           signalMsgPtr,
@@ -402,8 +417,10 @@ void main() {
       test('double dispose is safe', () async {
         final aliceIdentity = IdentityKeyPair.generate();
         final aliceSessionStore = InMemorySessionStore();
-        final aliceIdentityStore =
-            InMemoryIdentityKeyStore(aliceIdentity, 12345);
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          12345,
+        );
         final bobAddress = ProtocolAddress('bob', 1);
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
 
@@ -434,7 +451,8 @@ void main() {
         ffi.signal_pre_key_signal_message_deserialize(preKeyMsgPtr, buffer.ref);
 
         final signalMsgPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-        final constPreKeyPtr = calloc<ffi.SignalConstPointerPreKeySignalMessage>();
+        final constPreKeyPtr =
+            calloc<ffi.SignalConstPointerPreKeySignalMessage>();
         constPreKeyPtr.ref.raw = preKeyMsgPtr.ref.raw;
         ffi.signal_pre_key_signal_message_get_signal_message(
           signalMsgPtr,
@@ -465,8 +483,10 @@ void main() {
       test('operations after dispose throw StateError', () async {
         final aliceIdentity = IdentityKeyPair.generate();
         final aliceSessionStore = InMemorySessionStore();
-        final aliceIdentityStore =
-            InMemoryIdentityKeyStore(aliceIdentity, 12345);
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          12345,
+        );
         final bobAddress = ProtocolAddress('bob', 1);
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
 
@@ -497,7 +517,8 @@ void main() {
         ffi.signal_pre_key_signal_message_deserialize(preKeyMsgPtr, buffer.ref);
 
         final signalMsgPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-        final constPreKeyPtr = calloc<ffi.SignalConstPointerPreKeySignalMessage>();
+        final constPreKeyPtr =
+            calloc<ffi.SignalConstPointerPreKeySignalMessage>();
         constPreKeyPtr.ref.raw = preKeyMsgPtr.ref.raw;
         ffi.signal_pre_key_signal_message_get_signal_message(
           signalMsgPtr,
@@ -511,10 +532,19 @@ void main() {
         // All operations should throw StateError
         expect(() => signalMessage.body, throwsA(isA<LibSignalException>()));
         expect(() => signalMessage.counter, throwsA(isA<LibSignalException>()));
-        expect(() => signalMessage.messageVersion, throwsA(isA<LibSignalException>()));
+        expect(
+          () => signalMessage.messageVersion,
+          throwsA(isA<LibSignalException>()),
+        );
         // Note: pqRatchet test skipped - function not available in current native lib
-        expect(() => signalMessage.getSenderRatchetKey(), throwsA(isA<LibSignalException>()));
-        expect(() => signalMessage.serialize(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => signalMessage.getSenderRatchetKey(),
+          throwsA(isA<LibSignalException>()),
+        );
+        expect(
+          () => signalMessage.serialize(),
+          throwsA(isA<LibSignalException>()),
+        );
         expect(() => signalMessage.clone(), throwsA(isA<LibSignalException>()));
         expect(() => signalMessage.pointer, throwsA(isA<LibSignalException>()));
 
@@ -536,8 +566,10 @@ void main() {
       test('isDisposed returns correct state', () async {
         final aliceIdentity = IdentityKeyPair.generate();
         final aliceSessionStore = InMemorySessionStore();
-        final aliceIdentityStore =
-            InMemoryIdentityKeyStore(aliceIdentity, 12345);
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          12345,
+        );
         final bobAddress = ProtocolAddress('bob', 1);
         final bobKeys = generateRemotePartyKeys(registrationId: 67890);
 
@@ -568,7 +600,8 @@ void main() {
         ffi.signal_pre_key_signal_message_deserialize(preKeyMsgPtr, buffer.ref);
 
         final signalMsgPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-        final constPreKeyPtr = calloc<ffi.SignalConstPointerPreKeySignalMessage>();
+        final constPreKeyPtr =
+            calloc<ffi.SignalConstPointerPreKeySignalMessage>();
         constPreKeyPtr.ref.raw = preKeyMsgPtr.ref.raw;
         ffi.signal_pre_key_signal_message_get_signal_message(
           signalMsgPtr,

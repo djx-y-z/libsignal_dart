@@ -17,11 +17,11 @@ import '../serialization_validator.dart';
 /// Finalizer for ServerCertificate.
 final Finalizer<Pointer<SignalServerCertificate>> _serverCertificateFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerServerCertificate>();
-  mutPtr.ref.raw = ptr;
-  signal_server_certificate_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerServerCertificate>();
+      mutPtr.ref.raw = ptr;
+      signal_server_certificate_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A server certificate for sealed sender.
 ///
@@ -139,8 +139,10 @@ final class ServerCertificate {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_server_certificate_get_serialized(outPtr, constPtr.ref);
+      final error = signal_server_certificate_get_serialized(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_server_certificate_get_serialized');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
@@ -159,8 +161,10 @@ final class ServerCertificate {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_server_certificate_get_certificate(outPtr, constPtr.ref);
+      final error = signal_server_certificate_get_certificate(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_server_certificate_get_certificate');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
@@ -179,8 +183,10 @@ final class ServerCertificate {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_server_certificate_get_signature(outPtr, constPtr.ref);
+      final error = signal_server_certificate_get_signature(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_server_certificate_get_signature');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
@@ -199,8 +205,7 @@ final class ServerCertificate {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_server_certificate_get_key_id(outPtr, constPtr.ref);
+      final error = signal_server_certificate_get_key_id(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_server_certificate_get_key_id');
 
       return outPtr.value;
@@ -223,7 +228,9 @@ final class ServerCertificate {
       FfiHelpers.checkError(error, 'signal_server_certificate_get_key');
 
       if (outPtr.ref.raw == nullptr) {
-        throw LibSignalException.nullPointer('signal_server_certificate_get_key');
+        throw LibSignalException.nullPointer(
+          'signal_server_certificate_get_key',
+        );
       }
 
       return PublicKey.fromPointer(outPtr.ref.raw);

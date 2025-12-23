@@ -159,13 +159,19 @@ void main() {
       test('getPublicKey throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.getPublicKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => keyPair.getPublicKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('getSecretKey throws after dispose', () {
         final keyPair = KyberKeyPair.generate();
         keyPair.dispose();
-        expect(() => keyPair.getSecretKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => keyPair.getSecretKey(),
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

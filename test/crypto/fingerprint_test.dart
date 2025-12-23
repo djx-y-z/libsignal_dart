@@ -336,7 +336,10 @@ void main() {
 
         fingerprint.dispose();
 
-        expect(() => fingerprint.displayString, throwsA(isA<LibSignalException>()));
+        expect(
+          () => fingerprint.displayString,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('scannableEncoding throws after dispose', () {
@@ -349,7 +352,10 @@ void main() {
 
         fingerprint.dispose();
 
-        expect(() => fingerprint.scannableEncoding, throwsA(isA<LibSignalException>()));
+        expect(
+          () => fingerprint.scannableEncoding,
+          throwsA(isA<LibSignalException>()),
+        );
       });
 
       test('clone throws after dispose', () {

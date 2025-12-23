@@ -113,8 +113,11 @@ void main() {
     group('processDistributionMessage()', () {
       test('processes valid distribution message', () async {
         // Alice creates distribution message
-        final aliceSession =
-            GroupSession(aliceAddress, distributionId, aliceStore);
+        final aliceSession = GroupSession(
+          aliceAddress,
+          distributionId,
+          aliceStore,
+        );
         final distMessage = await aliceSession.createDistributionMessage();
 
         // Bob receives and processes it
@@ -134,8 +137,11 @@ void main() {
 
       test('allows decryption after processing', () async {
         // Alice creates and shares distribution message
-        final aliceSession =
-            GroupSession(aliceAddress, distributionId, aliceStore);
+        final aliceSession = GroupSession(
+          aliceAddress,
+          distributionId,
+          aliceStore,
+        );
         final distMessage = await aliceSession.createDistributionMessage();
 
         // Bob processes it
@@ -275,8 +281,10 @@ void main() {
 
         // Decrypt in order
         for (var i = 0; i < messages.length; i++) {
-          final decrypted =
-              await bobSession.decrypt(aliceAddress, ciphertexts[i]);
+          final decrypted = await bobSession.decrypt(
+            aliceAddress,
+            ciphertexts[i],
+          );
           expect(utf8.decode(decrypted), equals(messages[i]));
         }
       });
@@ -294,16 +302,25 @@ void main() {
         final bobStore = InMemorySenderKeyStore();
         final charlieStore = InMemorySenderKeyStore();
 
-        final aliceSession =
-            GroupSession(aliceAddress, distributionId, aliceStore);
+        final aliceSession = GroupSession(
+          aliceAddress,
+          distributionId,
+          aliceStore,
+        );
         final bobSession = GroupSession(bobAddress, distributionId, bobStore);
-        final charlieSession =
-            GroupSession(charlieAddress, distributionId, charlieStore);
+        final charlieSession = GroupSession(
+          charlieAddress,
+          distributionId,
+          charlieStore,
+        );
 
         // Alice shares her key with Bob and Charlie
         final aliceDist = await aliceSession.createDistributionMessage();
         await bobSession.processDistributionMessage(aliceAddress, aliceDist);
-        await charlieSession.processDistributionMessage(aliceAddress, aliceDist);
+        await charlieSession.processDistributionMessage(
+          aliceAddress,
+          aliceDist,
+        );
 
         // Bob shares his key with Alice and Charlie
         final bobDist = await bobSession.createDistributionMessage();
@@ -368,10 +385,7 @@ void main() {
         final cipherA = await aliceGroupA.encrypt(msgA);
 
         // Bob can decrypt group A message
-        expect(
-          await bobGroupA.decrypt(aliceAddress, cipherA),
-          equals(msgA),
-        );
+        expect(await bobGroupA.decrypt(aliceAddress, cipherA), equals(msgA));
 
         // Note: Test for cross-group decryption failure is skipped because
         // libsignal native library may crash when retrieving error messages

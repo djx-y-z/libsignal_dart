@@ -15,11 +15,11 @@ import '../serialization_validator.dart';
 /// Finalizer for KyberPublicKey.
 final Finalizer<Pointer<SignalKyberPublicKey>> _kyberPublicKeyFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerKyberPublicKey>();
-  mutPtr.ref.raw = ptr;
-  signal_kyber_public_key_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerKyberPublicKey>();
+      mutPtr.ref.raw = ptr;
+      signal_kyber_public_key_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A Kyber public key for post-quantum key encapsulation.
 ///

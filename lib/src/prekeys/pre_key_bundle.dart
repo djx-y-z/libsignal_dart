@@ -14,13 +14,14 @@ import '../kyber/kyber_public_key.dart';
 import '../libsignal.dart';
 
 /// Finalizer for PreKeyBundle.
-final Finalizer<Pointer<SignalPreKeyBundle>> _preKeyBundleFinalizer =
-    Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerPreKeyBundle>();
-  mutPtr.ref.raw = ptr;
-  signal_pre_key_bundle_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+final Finalizer<Pointer<SignalPreKeyBundle>> _preKeyBundleFinalizer = Finalizer(
+  (ptr) {
+    final mutPtr = calloc<SignalMutPointerPreKeyBundle>();
+    mutPtr.ref.raw = ptr;
+    signal_pre_key_bundle_destroy(mutPtr.ref);
+    calloc.free(mutPtr);
+  },
+);
 
 /// A pre-key bundle for Signal Protocol session establishment.
 ///
@@ -387,7 +388,10 @@ final class PreKeyBundle {
         outPtr,
         constPtr.ref,
       );
-      FfiHelpers.checkError(error, 'signal_pre_key_bundle_get_kyber_pre_key_id');
+      FfiHelpers.checkError(
+        error,
+        'signal_pre_key_bundle_get_kyber_pre_key_id',
+      );
 
       return outPtr.value;
     } finally {

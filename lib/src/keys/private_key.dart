@@ -16,14 +16,14 @@ import '../utils.dart';
 import 'public_key.dart';
 
 /// Weak reference tracking for finalizer.
-final Finalizer<Pointer<SignalPrivateKey>> _privateKeyFinalizer = Finalizer(
-  (ptr) {
-    final mutPtr = calloc<SignalMutPointerPrivateKey>();
-    mutPtr.ref.raw = ptr;
-    signal_privatekey_destroy(mutPtr.ref);
-    calloc.free(mutPtr);
-  },
-);
+final Finalizer<Pointer<SignalPrivateKey>> _privateKeyFinalizer = Finalizer((
+  ptr,
+) {
+  final mutPtr = calloc<SignalMutPointerPrivateKey>();
+  mutPtr.ref.raw = ptr;
+  signal_privatekey_destroy(mutPtr.ref);
+  calloc.free(mutPtr);
+});
 
 /// A private key for Signal Protocol operations.
 ///
@@ -162,7 +162,9 @@ final class PrivateKey {
       FfiHelpers.checkError(error, 'signal_privatekey_get_public_key');
 
       if (outPtr.ref.raw == nullptr) {
-        throw LibSignalException.nullPointer('signal_privatekey_get_public_key');
+        throw LibSignalException.nullPointer(
+          'signal_privatekey_get_public_key',
+        );
       }
 
       return PublicKey.fromPointer(outPtr.ref.raw);

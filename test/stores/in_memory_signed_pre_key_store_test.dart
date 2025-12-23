@@ -119,10 +119,7 @@ void main() {
         final loaded = await store.loadSignedPreKey(1);
         expect(loaded, isNotNull);
         expect(loaded!.id, equals(1));
-        expect(
-          loaded.serialize(),
-          equals(newRecord.serialize()),
-        );
+        expect(loaded.serialize(), equals(newRecord.serialize()));
 
         loaded.dispose();
         newRecord.dispose();
@@ -157,10 +154,7 @@ void main() {
       });
 
       test('removing non-existent key is safe', () async {
-        await expectLater(
-          store.removeSignedPreKey(999),
-          completes,
-        );
+        await expectLater(store.removeSignedPreKey(999), completes);
       });
 
       test('removes only specified key', () async {

@@ -16,11 +16,11 @@ import '../utils.dart';
 /// Finalizer for SenderKeyRecord.
 final Finalizer<Pointer<SignalSenderKeyRecord>> _senderKeyRecordFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerSenderKeyRecord>();
-  mutPtr.ref.raw = ptr;
-  signal_sender_key_record_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerSenderKeyRecord>();
+      mutPtr.ref.raw = ptr;
+      signal_sender_key_record_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A sender key record for group messaging.
 ///

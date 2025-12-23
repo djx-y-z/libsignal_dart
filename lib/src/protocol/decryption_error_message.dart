@@ -18,7 +18,7 @@ import '../serialization_validator.dart';
 
 /// Finalizer for DecryptionErrorMessage.
 final Finalizer<Pointer<SignalDecryptionErrorMessage>>
-    _decryptionErrorMessageFinalizer = Finalizer((ptr) {
+_decryptionErrorMessageFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerDecryptionErrorMessage>();
   mutPtr.ref.raw = ptr;
   signal_decryption_error_message_destroy(mutPtr.ref);
@@ -82,9 +82,14 @@ final class DecryptionErrorMessage {
     final outPtr = calloc<SignalMutPointerDecryptionErrorMessage>();
 
     try {
-      final error =
-          signal_decryption_error_message_deserialize(outPtr, buffer.ref);
-      FfiHelpers.checkError(error, 'signal_decryption_error_message_deserialize');
+      final error = signal_decryption_error_message_deserialize(
+        outPtr,
+        buffer.ref,
+      );
+      FfiHelpers.checkError(
+        error,
+        'signal_decryption_error_message_deserialize',
+      );
 
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
@@ -194,9 +199,9 @@ final class DecryptionErrorMessage {
     try {
       final error =
           signal_decryption_error_message_extract_from_serialized_content(
-        outPtr,
-        buffer.ref,
-      );
+            outPtr,
+            buffer.ref,
+          );
       FfiHelpers.checkError(
         error,
         'signal_decryption_error_message_extract_from_serialized_content',
@@ -228,8 +233,10 @@ final class DecryptionErrorMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_decryption_error_message_serialize(outPtr, constPtr.ref);
+      final error = signal_decryption_error_message_serialize(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_decryption_error_message_serialize');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
@@ -248,8 +255,10 @@ final class DecryptionErrorMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_decryption_error_message_get_timestamp(outPtr, constPtr.ref);
+      final error = signal_decryption_error_message_get_timestamp(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(
         error,
         'signal_decryption_error_message_get_timestamp',
@@ -271,8 +280,10 @@ final class DecryptionErrorMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_decryption_error_message_get_device_id(outPtr, constPtr.ref);
+      final error = signal_decryption_error_message_get_device_id(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(
         error,
         'signal_decryption_error_message_get_device_id',
@@ -297,8 +308,10 @@ final class DecryptionErrorMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_decryption_error_message_get_ratchet_key(outPtr, constPtr.ref);
+      final error = signal_decryption_error_message_get_ratchet_key(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(
         error,
         'signal_decryption_error_message_get_ratchet_key',
@@ -326,8 +339,7 @@ final class DecryptionErrorMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_decryption_error_message_clone(outPtr, constPtr.ref);
+      final error = signal_decryption_error_message_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_decryption_error_message_clone');
 
       if (outPtr.ref.raw == nullptr) {

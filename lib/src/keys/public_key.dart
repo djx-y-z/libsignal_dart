@@ -14,14 +14,14 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Weak reference tracking for finalizer.
-final Finalizer<Pointer<SignalPublicKey>> _publicKeyFinalizer = Finalizer(
-  (ptr) {
-    final mutPtr = calloc<SignalMutPointerPublicKey>();
-    mutPtr.ref.raw = ptr;
-    signal_publickey_destroy(mutPtr.ref);
-    calloc.free(mutPtr);
-  },
-);
+final Finalizer<Pointer<SignalPublicKey>> _publicKeyFinalizer = Finalizer((
+  ptr,
+) {
+  final mutPtr = calloc<SignalMutPointerPublicKey>();
+  mutPtr.ref.raw = ptr;
+  signal_publickey_destroy(mutPtr.ref);
+  calloc.free(mutPtr);
+});
 
 /// A public key for Signal Protocol operations.
 ///

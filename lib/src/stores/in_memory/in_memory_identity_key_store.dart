@@ -33,7 +33,10 @@ class InMemoryIdentityKeyStore implements IdentityKeyStore {
   Future<int> getLocalRegistrationId() async => _localRegistrationId;
 
   @override
-  Future<bool> saveIdentity(ProtocolAddress address, PublicKey identityKey) async {
+  Future<bool> saveIdentity(
+    ProtocolAddress address,
+    PublicKey identityKey,
+  ) async {
     final key = _key(address);
     final existing = _identities[key];
 

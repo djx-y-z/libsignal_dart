@@ -13,8 +13,9 @@ import '../keys/public_key.dart';
 import '../libsignal.dart';
 
 /// Finalizer for Fingerprint.
-final Finalizer<Pointer<SignalFingerprint>> _fingerprintFinalizer =
-    Finalizer((ptr) {
+final Finalizer<Pointer<SignalFingerprint>> _fingerprintFinalizer = Finalizer((
+  ptr,
+) {
   final mutPtr = calloc<SignalMutPointerFingerprint>();
   mutPtr.ref.raw = ptr;
   signal_fingerprint_destroy(mutPtr.ref);
@@ -96,7 +97,9 @@ final class Fingerprint {
     localKeyPtr.ref.raw = localKey.pointer;
 
     final remoteIdPtr = calloc<Uint8>(remoteIdentifier.length);
-    remoteIdPtr.asTypedList(remoteIdentifier.length).setAll(0, remoteIdentifier);
+    remoteIdPtr
+        .asTypedList(remoteIdentifier.length)
+        .setAll(0, remoteIdentifier);
     final remoteIdBuffer = calloc<SignalBorrowedBuffer>();
     remoteIdBuffer.ref.base = remoteIdPtr.cast<UnsignedChar>();
     remoteIdBuffer.ref.length = remoteIdentifier.length;
@@ -144,8 +147,7 @@ final class Fingerprint {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_fingerprint_display_string(outPtr, constPtr.ref);
+      final error = signal_fingerprint_display_string(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_fingerprint_display_string');
 
       if (outPtr.value == nullptr) {
@@ -174,8 +176,7 @@ final class Fingerprint {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_fingerprint_scannable_encoding(outPtr, constPtr.ref);
+      final error = signal_fingerprint_scannable_encoding(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_fingerprint_scannable_encoding');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);

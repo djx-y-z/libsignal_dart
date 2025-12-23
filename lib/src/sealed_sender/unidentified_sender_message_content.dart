@@ -29,7 +29,7 @@ abstract class ContentHint {
 
 /// Finalizer for UnidentifiedSenderMessageContent.
 final Finalizer<Pointer<SignalUnidentifiedSenderMessageContent>>
-    _usmcFinalizer = Finalizer((ptr) {
+_usmcFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
   mutPtr.ref.raw = ptr;
   signal_unidentified_sender_message_content_destroy(mutPtr.ref);
@@ -93,8 +93,7 @@ final class UnidentifiedSenderMessageContent {
     buffer.ref.base = dataPtr.cast<UnsignedChar>();
     buffer.ref.length = data.length;
 
-    final outPtr =
-        calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
+    final outPtr = calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
 
     try {
       final error = signal_unidentified_sender_message_content_deserialize(
@@ -188,9 +187,9 @@ final class UnidentifiedSenderMessageContent {
     try {
       final error =
           signal_unidentified_sender_message_content_get_group_id_or_empty(
-        outPtr,
-        constPtr.ref,
-      );
+            outPtr,
+            constPtr.ref,
+          );
       FfiHelpers.checkError(
         error,
         'signal_unidentified_sender_message_content_get_group_id_or_empty',
@@ -215,8 +214,7 @@ final class UnidentifiedSenderMessageContent {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_unidentified_sender_message_content_get_sender_cert(
+      final error = signal_unidentified_sender_message_content_get_sender_cert(
         outPtr,
         constPtr.ref,
       );
@@ -254,8 +252,7 @@ final class UnidentifiedSenderMessageContent {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_unidentified_sender_message_content_get_msg_type(
+      final error = signal_unidentified_sender_message_content_get_msg_type(
         outPtr,
         constPtr.ref,
       );
@@ -284,8 +281,7 @@ final class UnidentifiedSenderMessageContent {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_unidentified_sender_message_content_get_content_hint(
+      final error = signal_unidentified_sender_message_content_get_content_hint(
         outPtr,
         constPtr.ref,
       );
@@ -319,8 +315,7 @@ final class UnidentifiedSenderMessageContent {
       _disposed = true;
       _usmcFinalizer.detach(this);
 
-      final mutPtr =
-          calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
+      final mutPtr = calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
       mutPtr.ref.raw = _ptr;
       signal_unidentified_sender_message_content_destroy(mutPtr.ref);
       calloc.free(mutPtr);

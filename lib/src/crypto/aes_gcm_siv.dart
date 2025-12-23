@@ -12,13 +12,14 @@ import '../ffi_helpers.dart';
 import '../libsignal.dart';
 
 /// Finalizer for Aes256GcmSiv.
-final Finalizer<Pointer<SignalAes256GcmSiv>> _aes256GcmSivFinalizer =
-    Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerAes256GcmSiv>();
-  mutPtr.ref.raw = ptr;
-  signal_aes256_gcm_siv_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+final Finalizer<Pointer<SignalAes256GcmSiv>> _aes256GcmSivFinalizer = Finalizer(
+  (ptr) {
+    final mutPtr = calloc<SignalMutPointerAes256GcmSiv>();
+    mutPtr.ref.raw = ptr;
+    signal_aes256_gcm_siv_destroy(mutPtr.ref);
+    calloc.free(mutPtr);
+  },
+);
 
 /// AES-256-GCM-SIV encryption/decryption.
 ///

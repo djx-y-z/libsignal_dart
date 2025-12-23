@@ -17,11 +17,11 @@ import '../utils.dart';
 /// Finalizer for KyberSecretKey.
 final Finalizer<Pointer<SignalKyberSecretKey>> _kyberSecretKeyFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerKyberSecretKey>();
-  mutPtr.ref.raw = ptr;
-  signal_kyber_secret_key_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerKyberSecretKey>();
+      mutPtr.ref.raw = ptr;
+      signal_kyber_secret_key_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A Kyber secret key for post-quantum key encapsulation.
 ///

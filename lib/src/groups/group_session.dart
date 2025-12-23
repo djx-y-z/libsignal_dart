@@ -75,8 +75,7 @@ int _loadSenderKeyCallback(
 
       final recordPtr = calloc<SignalMutPointerSenderKeyRecord>();
 
-      final error =
-          signal_sender_key_record_deserialize(recordPtr, buffer.ref);
+      final error = signal_sender_key_record_deserialize(recordPtr, buffer.ref);
 
       // Free the temporary buffers (libsignal makes a copy of the data)
       calloc.free(dataPtr);
@@ -239,14 +238,14 @@ class GroupSession {
       storePtr.ref.ctx = Pointer.fromAddress(operationId);
       storePtr.ref.load_sender_key =
           Pointer.fromFunction<SignalLoadSenderKeyFunction>(
-        _loadSenderKeyCallback,
-        -1,
-      );
+            _loadSenderKeyCallback,
+            -1,
+          );
       storePtr.ref.store_sender_key =
           Pointer.fromFunction<SignalStoreSenderKeyFunction>(
-        _storeSenderKeyCallback,
-        -1,
-      );
+            _storeSenderKeyCallback,
+            -1,
+          );
 
       final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
       storeConstPtr.ref.raw = storePtr;
@@ -328,14 +327,14 @@ class GroupSession {
       storePtr.ref.ctx = Pointer.fromAddress(operationId);
       storePtr.ref.load_sender_key =
           Pointer.fromFunction<SignalLoadSenderKeyFunction>(
-        _loadSenderKeyCallback,
-        -1,
-      );
+            _loadSenderKeyCallback,
+            -1,
+          );
       storePtr.ref.store_sender_key =
           Pointer.fromFunction<SignalStoreSenderKeyFunction>(
-        _storeSenderKeyCallback,
-        -1,
-      );
+            _storeSenderKeyCallback,
+            -1,
+          );
 
       final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
       storeConstPtr.ref.raw = storePtr;
@@ -413,14 +412,14 @@ class GroupSession {
       storePtr.ref.ctx = Pointer.fromAddress(operationId);
       storePtr.ref.load_sender_key =
           Pointer.fromFunction<SignalLoadSenderKeyFunction>(
-        _loadSenderKeyCallback,
-        -1,
-      );
+            _loadSenderKeyCallback,
+            -1,
+          );
       storePtr.ref.store_sender_key =
           Pointer.fromFunction<SignalStoreSenderKeyFunction>(
-        _storeSenderKeyCallback,
-        -1,
-      );
+            _storeSenderKeyCallback,
+            -1,
+          );
 
       final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
       storeConstPtr.ref.raw = storePtr;
@@ -447,7 +446,8 @@ class GroupSession {
 
         // Serialize the ciphertext message
         final resultPtr = calloc<SignalOwnedBuffer>();
-        final ciphertextConstPtr = calloc<SignalConstPointerCiphertextMessage>();
+        final ciphertextConstPtr =
+            calloc<SignalConstPointerCiphertextMessage>();
         ciphertextConstPtr.ref.raw = outPtr.ref.raw;
 
         try {
@@ -455,7 +455,10 @@ class GroupSession {
             resultPtr,
             ciphertextConstPtr.ref,
           );
-          FfiHelpers.checkError(serError, 'signal_ciphertext_message_serialize');
+          FfiHelpers.checkError(
+            serError,
+            'signal_ciphertext_message_serialize',
+          );
 
           return FfiHelpers.fromOwnedBuffer(resultPtr.ref);
         } finally {
@@ -528,14 +531,14 @@ class GroupSession {
       storePtr.ref.ctx = Pointer.fromAddress(operationId);
       storePtr.ref.load_sender_key =
           Pointer.fromFunction<SignalLoadSenderKeyFunction>(
-        _loadSenderKeyCallback,
-        -1,
-      );
+            _loadSenderKeyCallback,
+            -1,
+          );
       storePtr.ref.store_sender_key =
           Pointer.fromFunction<SignalStoreSenderKeyFunction>(
-        _storeSenderKeyCallback,
-        -1,
-      );
+            _storeSenderKeyCallback,
+            -1,
+          );
 
       final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
       storeConstPtr.ref.raw = storePtr;

@@ -70,9 +70,9 @@ class _FfiStoreCallbacks {
 
   // Identity store callbacks
   late final NativeCallable<SignalGetIdentityKeyPairFunction>
-      _getIdentityKeyPair;
+  _getIdentityKeyPair;
   late final NativeCallable<SignalGetLocalRegistrationIdFunction>
-      _getLocalRegistrationId;
+  _getLocalRegistrationId;
   late final NativeCallable<SignalSaveIdentityKeyFunction> _saveIdentity;
   late final NativeCallable<SignalGetIdentityKeyFunction> _getIdentity;
   late final NativeCallable<SignalIsTrustedIdentityFunction> _isTrustedIdentity;
@@ -96,15 +96,15 @@ class _FfiStoreCallbacks {
     // Identity store callbacks
     _getIdentityKeyPair =
         NativeCallable<SignalGetIdentityKeyPairFunction>.isolateLocal(
-      _getIdentityKeyPairCallback,
-      exceptionalReturn: -1,
-    );
+          _getIdentityKeyPairCallback,
+          exceptionalReturn: -1,
+        );
 
     _getLocalRegistrationId =
         NativeCallable<SignalGetLocalRegistrationIdFunction>.isolateLocal(
-      _getLocalRegistrationIdCallback,
-      exceptionalReturn: -1,
-    );
+          _getLocalRegistrationIdCallback,
+          exceptionalReturn: -1,
+        );
 
     _saveIdentity = NativeCallable<SignalSaveIdentityKeyFunction>.isolateLocal(
       _saveIdentityCallback,
@@ -118,9 +118,9 @@ class _FfiStoreCallbacks {
 
     _isTrustedIdentity =
         NativeCallable<SignalIsTrustedIdentityFunction>.isolateLocal(
-      _isTrustedIdentityCallback,
-      exceptionalReturn: -1,
-    );
+          _isTrustedIdentityCallback,
+          exceptionalReturn: -1,
+        );
   }
 
   // ============================================
@@ -228,10 +228,7 @@ class _FfiStoreCallbacks {
     }
   }
 
-  int _getLocalRegistrationIdCallback(
-    Pointer<Void> ctx,
-    Pointer<Uint32> idp,
-  ) {
+  int _getLocalRegistrationIdCallback(Pointer<Void> ctx, Pointer<Uint32> idp) {
     try {
       idp.value = _context.localRegistrationId;
       return 0;
@@ -377,7 +374,8 @@ class _FfiStoreCallbacks {
     final store = calloc<SignalIdentityKeyStore>();
     store.ref.ctx = nullptr;
     store.ref.get_identity_key_pair = _getIdentityKeyPair.nativeFunction;
-    store.ref.get_local_registration_id = _getLocalRegistrationId.nativeFunction;
+    store.ref.get_local_registration_id =
+        _getLocalRegistrationId.nativeFunction;
     store.ref.save_identity = _saveIdentity.nativeFunction;
     store.ref.get_identity = _getIdentity.nativeFunction;
     store.ref.is_trusted_identity = _isTrustedIdentity.nativeFunction;
@@ -428,8 +426,8 @@ class SessionBuilder {
   SessionBuilder({
     required SessionStore sessionStore,
     required IdentityKeyStore identityKeyStore,
-  })  : _sessionStore = sessionStore,
-        _identityKeyStore = identityKeyStore {
+  }) : _sessionStore = sessionStore,
+       _identityKeyStore = identityKeyStore {
     LibSignal.ensureInitialized();
   }
 
@@ -452,7 +450,8 @@ class SessionBuilder {
     // Pre-load data from async stores
     final existingSession = await _sessionStore.loadSession(remoteAddress);
     final identityKeyPair = await _identityKeyStore.getIdentityKeyPair();
-    final localRegistrationId = await _identityKeyStore.getLocalRegistrationId();
+    final localRegistrationId = await _identityKeyStore
+        .getLocalRegistrationId();
     final existingIdentity = await _identityKeyStore.getIdentity(remoteAddress);
 
     // Create callback context with pre-loaded data
@@ -502,8 +501,9 @@ class SessionBuilder {
 
         // Save any pending session update
         if (context.pendingSessionStore != null) {
-          final newSession =
-              SessionRecord.deserialize(context.pendingSessionStore!);
+          final newSession = SessionRecord.deserialize(
+            context.pendingSessionStore!,
+          );
           await _sessionStore.storeSession(remoteAddress, newSession);
           newSession.dispose();
         }

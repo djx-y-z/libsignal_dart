@@ -28,11 +28,11 @@ final class _Uuid16 extends Struct {
 /// Finalizer for SenderKeyMessage.
 final Finalizer<Pointer<SignalSenderKeyMessage>> _senderKeyMessageFinalizer =
     Finalizer((ptr) {
-  final mutPtr = calloc<SignalMutPointerSenderKeyMessage>();
-  mutPtr.ref.raw = ptr;
-  signal_sender_key_message_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+      final mutPtr = calloc<SignalMutPointerSenderKeyMessage>();
+      mutPtr.ref.raw = ptr;
+      signal_sender_key_message_destroy(mutPtr.ref);
+      calloc.free(mutPtr);
+    });
 
 /// A sender key message for group messaging.
 ///
@@ -114,12 +114,11 @@ final class SenderKeyMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_sender_key_message_get_cipher_text(outPtr, constPtr.ref);
-      FfiHelpers.checkError(
-        error,
-        'signal_sender_key_message_get_cipher_text',
+      final error = signal_sender_key_message_get_cipher_text(
+        outPtr,
+        constPtr.ref,
       );
+      FfiHelpers.checkError(error, 'signal_sender_key_message_get_cipher_text');
 
       return FfiHelpers.fromOwnedBuffer(outPtr.ref);
     } finally {
@@ -172,8 +171,10 @@ final class SenderKeyMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_sender_key_message_get_chain_id(outPtr, constPtr.ref);
+      final error = signal_sender_key_message_get_chain_id(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_sender_key_message_get_chain_id');
 
       return outPtr.value;
@@ -192,8 +193,10 @@ final class SenderKeyMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_sender_key_message_get_iteration(outPtr, constPtr.ref);
+      final error = signal_sender_key_message_get_iteration(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_sender_key_message_get_iteration');
 
       return outPtr.value;

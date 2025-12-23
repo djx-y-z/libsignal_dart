@@ -39,19 +39,13 @@ void main() {
 
     group('deleteSession()', () {
       test('deleting non-existent session is safe', () async {
-        await expectLater(
-          store.deleteSession(aliceAddress),
-          completes,
-        );
+        await expectLater(store.deleteSession(aliceAddress), completes);
       });
     });
 
     group('deleteAllSessions()', () {
       test('deleting sessions for non-existent user is safe', () async {
-        await expectLater(
-          store.deleteAllSessions('unknown'),
-          completes,
-        );
+        await expectLater(store.deleteAllSessions('unknown'), completes);
       });
     });
 

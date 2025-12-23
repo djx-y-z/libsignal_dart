@@ -38,7 +38,7 @@ final class _Uuid16 extends Struct {
 
 /// Finalizer for SenderKeyDistributionMessage.
 final Finalizer<Pointer<SignalSenderKeyDistributionMessage>>
-    _senderKeyDistributionMessageFinalizer = Finalizer((ptr) {
+_senderKeyDistributionMessageFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerSenderKeyDistributionMessage>();
   mutPtr.ref.raw = ptr;
   signal_sender_key_distribution_message_destroy(mutPtr.ref);
@@ -95,8 +95,10 @@ final class SenderKeyDistributionMessage {
     final outPtr = calloc<SignalMutPointerSenderKeyDistributionMessage>();
 
     try {
-      final error =
-          signal_sender_key_distribution_message_deserialize(outPtr, buffer.ref);
+      final error = signal_sender_key_distribution_message_deserialize(
+        outPtr,
+        buffer.ref,
+      );
       FfiHelpers.checkError(
         error,
         'signal_sender_key_distribution_message_deserialize',
@@ -291,8 +293,10 @@ final class SenderKeyDistributionMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          signal_sender_key_distribution_message_clone(outPtr, constPtr.ref);
+      final error = signal_sender_key_distribution_message_clone(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(
         error,
         'signal_sender_key_distribution_message_clone',

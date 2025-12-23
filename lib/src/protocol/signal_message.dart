@@ -17,13 +17,14 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for SignalMessage native resources.
-final Finalizer<Pointer<ffi.SignalMessage>> _signalMessageFinalizer =
-    Finalizer((ptr) {
-  final mutPtr = calloc<ffi.SignalMutPointerSignalMessage>();
-  mutPtr.ref.raw = ptr;
-  ffi.signal_message_destroy(mutPtr.ref);
-  calloc.free(mutPtr);
-});
+final Finalizer<Pointer<ffi.SignalMessage>> _signalMessageFinalizer = Finalizer(
+  (ptr) {
+    final mutPtr = calloc<ffi.SignalMutPointerSignalMessage>();
+    mutPtr.ref.raw = ptr;
+    ffi.signal_message_destroy(mutPtr.ref);
+    calloc.free(mutPtr);
+  },
+);
 
 /// An encrypted Signal Protocol message (whisper message).
 ///
@@ -176,7 +177,10 @@ final class SignalMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error = ffi.signal_message_get_message_version(outPtr, constPtr.ref);
+      final error = ffi.signal_message_get_message_version(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_message_get_message_version');
 
       return outPtr.value;
@@ -197,8 +201,10 @@ final class SignalMessage {
     constPtr.ref.raw = _ptr;
 
     try {
-      final error =
-          ffi.signal_message_get_sender_ratchet_key(outPtr, constPtr.ref);
+      final error = ffi.signal_message_get_sender_ratchet_key(
+        outPtr,
+        constPtr.ref,
+      );
       FfiHelpers.checkError(error, 'signal_message_get_sender_ratchet_key');
 
       if (outPtr.ref.raw == nullptr) {

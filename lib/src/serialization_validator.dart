@@ -184,10 +184,7 @@ abstract final class SerializationValidator {
   /// Throws [LibSignalException] if validation fails.
   static void validatePublicKey(Uint8List data) {
     if (data.isEmpty) {
-      throw LibSignalException.invalidArgument(
-        'publicKey',
-        'Cannot be empty',
-      );
+      throw LibSignalException.invalidArgument('publicKey', 'Cannot be empty');
     }
 
     if (data.length != KeySize.publicKey) {
@@ -223,10 +220,7 @@ abstract final class SerializationValidator {
   /// Throws [LibSignalException] if validation fails.
   static void validatePrivateKey(Uint8List data) {
     if (data.isEmpty) {
-      throw LibSignalException.invalidArgument(
-        'privateKey',
-        'Cannot be empty',
-      );
+      throw LibSignalException.invalidArgument('privateKey', 'Cannot be empty');
     }
 
     if (data.length != KeySize.privateKey) {

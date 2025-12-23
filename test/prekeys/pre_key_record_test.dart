@@ -490,7 +490,10 @@ void main() {
         );
 
         preKey.dispose();
-        expect(() => preKey.getPrivateKey(), throwsA(isA<LibSignalException>()));
+        expect(
+          () => preKey.getPrivateKey(),
+          throwsA(isA<LibSignalException>()),
+        );
 
         privateKey.dispose();
         publicKey.dispose();
