@@ -1,0 +1,14 @@
+name: libsignal_example_cli
+description: CLI example demonstrating libsignal library usage
+publish_to: 'none'
+version: 1.0.0
+
+environment:
+  sdk: ^3.10.3
+
+dependencies:
+  libsignal:
+    path: ../
+
+dev_dependencies:
+  lints: ^6.0.0
