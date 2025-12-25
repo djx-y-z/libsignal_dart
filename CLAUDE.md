@@ -24,6 +24,7 @@ make build macos --arch arm64  # make interprets --arch as its own flag!
 | Show all commands | `make help` |
 | Build native library | `make build ARGS="<platform>"` |
 | Run tests | `make test` |
+| Run tests with coverage | `make coverage` |
 | Run analysis | `make analyze` |
 | Strict analysis | `make analyze ARGS="--fatal-infos"` |
 | Format code | `make format` |

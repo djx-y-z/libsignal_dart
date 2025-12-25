@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="windows" FVM="cmd //c fvm"
 
-.PHONY: help setup build regen check combine test analyze format format-check get clean version publish publish-dry-run
+.PHONY: help setup build regen check combine test coverage analyze format format-check get clean version publish publish-dry-run
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -46,6 +46,7 @@ help:
 	@echo "  QUALITY ASSURANCE"
 	@echo "    make test                         - Run tests"
 	@echo "                                        Example: make test ARGS=\"test/keys_test.dart\""
+	@echo "    make coverage                     - Run tests with coverage report"
 	@echo "    make analyze                      - Run static analysis"
 	@echo "                                        Example: make analyze ARGS=\"--fatal-infos\""
 	@echo "    make format                       - Format Dart code"
@@ -108,6 +109,12 @@ combine:
 
 test:
 	$(FVM) dart test $(ARGS)
+
+coverage:
+	$(FVM) dart test --coverage=coverage
+	$(FVM) dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+	lcov --remove coverage/lcov.info 'lib/src/bindings/*' -o coverage/lcov.info
+	lcov --summary coverage/lcov.info
 
 analyze:
 	$(FVM) flutter analyze $(ARGS)

@@ -41,3 +41,6 @@ macos/*.xcworkspace/
 
 # Build output
 build/
+
+# Coverage
+coverage/

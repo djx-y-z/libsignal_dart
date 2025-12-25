@@ -4,6 +4,7 @@ Dart FFI bindings for [libsignal](https://github.com/signalapp/libsignal) — Si
 
 [![pub package](https://img.shields.io/pub/v/libsignal.svg)](https://pub.dev/packages/libsignal)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/djx-y-z/246880c242ae85c452f4de0e6e91838c/raw/coverage.json)](https://gist.github.com/djx-y-z/246880c242ae85c452f4de0e6e91838c)
 
 ## Features
 
@@ -171,6 +172,7 @@ make build ARGS="macos"  # or linux, windows, ios, android
 make help           # Show all commands
 make build ARGS="<platform>"  # Build native libraries
 make test           # Run tests
+make coverage       # Run tests with coverage report
 make analyze        # Static analysis
 make regen          # Regenerate FFI bindings
 ```

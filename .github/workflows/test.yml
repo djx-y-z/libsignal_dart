@@ -45,5 +45,32 @@ jobs:
       - name: Check formatting
         run: fvm dart format --set-exit-if-changed .
 
-      - name: Run tests
-        run: fvm dart test
+      - name: Install lcov
+        run: sudo apt-get install -y lcov
+
+      - name: Run tests with coverage
+        run: |
+          fvm dart test --coverage=coverage
+          fvm dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          # Exclude auto-generated FFI bindings from coverage
+          lcov --remove coverage/lcov.info 'lib/src/bindings/*' -o coverage/lcov.info
+
+      - name: Calculate coverage percentage
+        id: coverage
+        run: |
+          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
+          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
+          echo "Coverage: $COVERAGE%"
+
+      - name: Update coverage badge
+        if: github.ref == 'refs/heads/main'
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ vars.COVERAGE_GIST_ID }}
+          filename: coverage.json
+          label: coverage
+          message: ${{ steps.coverage.outputs.percentage }}%
+          valColorRange: ${{ steps.coverage.outputs.percentage }}
+          minColorRange: 50
+          maxColorRange: 90
