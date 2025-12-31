@@ -1,18 +1,31 @@
-# libsignal
-
-Dart FFI bindings for [libsignal](https://github.com/signalapp/libsignal) — Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+# libsignal - Signal Protocol for Dart
 
 [![pub package](https://img.shields.io/pub/v/libsignal.svg)](https://pub.dev/packages/libsignal)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://opensource.org/licenses/AGPL-3.0)
+[![CI](https://github.com/djx-y-z/libsignal_dart/actions/workflows/test.yml/badge.svg)](https://github.com/djx-y-z/libsignal_dart/actions/workflows/test.yml)
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/djx-y-z/246880c242ae85c452f4de0e6e91838c/raw/coverage.json)](https://gist.github.com/djx-y-z/246880c242ae85c452f4de0e6e91838c)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-brightgreen.svg)](https://dart.dev)
+[![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.38.0-blue.svg)](https://flutter.dev)
+[![libsignal](https://img.shields.io/badge/libsignal-v0.86.9-orange.svg)](https://github.com/signalapp/libsignal)
+
+A Dart FFI wrapper for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+
+## Platform Support
+
+|             | Android | iOS   | macOS  | Linux      | Windows |
+|-------------|---------|-------|--------|------------|---------|
+| **Support** | SDK 21+ | 12.0+ | 10.14+ | arm64, x64 | x64     |
+| **Arch**    | arm64, armv7, x64 | arm64 | arm64, x64 | arm64, x64 | x64 |
 
 ## Features
 
-- **Signal Protocol** — End-to-end encryption with perfect forward secrecy (Double Ratchet, X3DH)
-- **Sealed Sender** — Anonymous message sending
-- **Group Messaging** — Efficient group encryption using SenderKey
-- **Cross-platform** — Android, iOS, Linux, macOS, Windows
-- **Automatic native library management** — Build hooks download pre-built libraries
+- **Flutter & CLI Support**: Works with Flutter apps and standalone Dart CLI applications
+- **Signal Protocol**: End-to-end encryption with perfect forward secrecy (Double Ratchet, X3DH)
+- **Sealed Sender**: Anonymous message sending (server won't know who sent the message)
+- **Group Messaging**: Efficient group encryption using SenderKey distribution
+- **Zero Configuration**: Pre-built native libraries included via Build Hooks
+- **High Performance**: Direct FFI bindings with minimal overhead
+- **Automated Updates**: Native libraries auto-rebuild when new libsignal versions are released
 
 ## Installation
 
@@ -20,28 +33,18 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  libsignal: ^0.1.0
+  libsignal: ^1.0.0
 ```
 
 Native libraries are downloaded automatically during the build process.
-
-## Supported Platforms
-
-| Platform | Architecture | Status |
-|----------|--------------|--------|
-| Android | arm64-v8a, armeabi-v7a, x86_64 | ✅ |
-| iOS | arm64 (device), arm64/x86_64 (simulator) | ✅ |
-| Linux | x86_64, arm64 | ✅ |
-| macOS | arm64, x86_64 | ✅ |
-| Windows | x86_64 | ✅ |
 
 ## Quick Start
 
 ```dart
 import 'package:libsignal/libsignal.dart';
 
-void main() async {
-  // Initialize the library
+void main() {
+  // Initialize the library (optional but recommended for performance)
   LibSignal.init();
 
   // Generate identity key pair
@@ -54,11 +57,43 @@ void main() async {
 }
 ```
 
-## Usage Examples
+## API Reference
+
+### Key Types
+
+```dart
+import 'package:libsignal/libsignal.dart';
+
+// Identity Key Pair (long-term identity)
+final identity = IdentityKeyPair.generate();
+print('Public key length: ${identity.publicKey.serialize().length}');
+print('Private key length: ${identity.privateKey.serialize().length}');
+
+// Pre-Keys (one-time keys for X3DH)
+final preKey = PreKeyPair.generate(preKeyId: 1);
+final signedPreKey = SignedPreKeyPair.generate(
+  signedPreKeyId: 1,
+  identityKeyPair: identity,
+);
+
+// Kyber Pre-Keys (post-quantum key exchange)
+final kyberPreKey = KyberPreKeyPair.generate(
+  kyberPreKeyId: 1,
+  identityKeyPair: identity,
+);
+
+// Clean up
+identity.dispose();
+preKey.dispose();
+signedPreKey.dispose();
+kyberPreKey.dispose();
+```
 
 ### Session Encryption (Double Ratchet)
 
 ```dart
+import 'package:libsignal/libsignal.dart';
+
 // Create stores
 final sessionStore = InMemorySessionStore();
 final identityStore = InMemoryIdentityKeyStore(identity, registrationId);
@@ -76,11 +111,16 @@ final cipher = SessionCipher(
   identityKeyStore: identityStore,
 );
 final encrypted = await cipher.encrypt(recipientAddress, plaintext);
+
+// Decrypt messages
+final decrypted = await cipher.decrypt(senderAddress, ciphertext);
 ```
 
 ### Sealed Sender (Anonymous Messaging)
 
 ```dart
+import 'package:libsignal/libsignal.dart';
+
 // Create sealed session cipher
 final sealedCipher = SealedSessionCipher(
   sessionStore: sessionStore,
@@ -119,6 +159,8 @@ print('Message from: ${result.senderUuid}');
 ### Group Messaging (SenderKey)
 
 ```dart
+import 'package:libsignal/libsignal.dart';
+
 // Create group session
 final groupSession = GroupSession(
   senderKeyStore: InMemorySenderKeyStore(),
@@ -136,13 +178,60 @@ final groupCiphertext = await groupSession.encrypt(
   distributionId: groupId,
   plaintext: message,
 );
+
+// Decrypt group message
+final plaintext = await groupSession.decrypt(
+  sender: senderAddress,
+  distributionId: groupId,
+  ciphertext: groupCiphertext,
+);
 ```
 
-## Documentation
+## Resource Management
 
-- [API Reference](https://pub.dev/documentation/libsignal/latest/)
-- [Signal Protocol Specification](https://signal.org/docs/)
-- [libsignal Repository](https://github.com/signalapp/libsignal)
+### Basic Usage
+
+```dart
+final identity = IdentityKeyPair.generate();
+// Use identity...
+identity.dispose(); // Clean up when done
+```
+
+### Performance Optimization
+
+For better performance, initialize once at app start:
+
+```dart
+void main() {
+  LibSignal.init(); // Recommended at app startup
+  runApp(MyApp());
+}
+```
+
+## Security Notes
+
+**Key Features:**
+- **Signal Protocol** - Battle-tested encryption used by Signal, WhatsApp, and others
+- **Perfect Forward Secrecy** - Past messages stay secure even if keys are compromised
+- **Kyber Support** - Post-quantum key exchange for future-proof security
+
+**Best Practices:**
+- Always call `dispose()` on key pairs and sessions to free native resources
+- Call `clearSecrets()` on sensitive data when done for immediate memory zeroing
+- Secrets are also auto-zeroed via Finalizers on GC (defense-in-depth), but don't rely solely on this
+- Use `LibSignalUtils.constantTimeEquals()` for comparing secrets (prevents timing attacks)
+- Keep the library updated to the latest version
+- Use UTC timestamps for certificate validation to avoid timezone issues
+
+```dart
+// Secure usage example
+final identity = IdentityKeyPair.generate();
+// ... use identity for encryption ...
+
+// Clean up sensitive data
+identity.clearSecrets();
+identity.dispose();
+```
 
 ## Building from Source
 
@@ -177,13 +266,6 @@ make analyze        # Static analysis
 make regen          # Regenerate FFI bindings
 ```
 
-## How It Works
-
-1. **Native Library Build**: libsignal is built from Rust source using Cargo
-2. **C Headers**: cbindgen generates C headers from Rust FFI layer
-3. **Dart Bindings**: ffigen generates Dart bindings from C headers
-4. **Build Hooks**: Dart build hooks download pre-built libraries from GitHub Releases
-
 ## Architecture
 
 ```
@@ -200,28 +282,24 @@ make regen          # Regenerate FFI bindings
 └─────────────────────────────────────────────┘
 ```
 
-## Security
+## Acknowledgements
 
-This package wraps the official Signal libsignal library. All cryptographic operations are performed by the native library, which is audited and used in production by Signal.
-
-- All native libraries are built from source in GitHub Actions
-- SHA256 checksums are verified during download
-- Sensitive data is securely zeroed before freeing (centralized `LibSignalUtils.zeroBytes()`)
-- Constant-time comparison for cryptographic data
-- Input validation and bounds checking
-- UTC timestamps for timezone-independent certificate validation
-- Finalizers as safety nets for sensitive data cleanup
-
-For detailed security guidelines and audit information, see [SECURITY.md](SECURITY.md).
-
-## Contributing
-
-Contributions are welcome! Please read the [contributing guidelines](CONTRIBUTING.md) first.
+This library would not be possible without [libsignal](https://github.com/signalapp/libsignal) by [Signal](https://signal.org/), which provides the underlying Rust implementation of the Signal Protocol.
 
 ## License
 
-This project is licensed under the [AGPL-3.0 License](LICENSE), consistent with the upstream libsignal library.
+This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+The bundled libsignal library is also licensed under AGPL-3.0 - see [LICENSE.libsignal](LICENSE.libsignal) for the Signal license.
 
-- [Signal](https://signal.org/) for the libsignal library
+## Related Projects
+
+- [libsignal](https://github.com/signalapp/libsignal) - The underlying Rust library
+- [Signal](https://signal.org/) - The Signal project
+- [Signal Protocol Specification](https://signal.org/docs/) - Protocol documentation
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) before submitting issues or pull requests.
+
+For major changes, please open an issue first to discuss what you would like to change.
