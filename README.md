@@ -225,4 +225,3 @@ This project is licensed under the [AGPL-3.0 License](LICENSE), consistent with 
 ## Acknowledgments
 
 - [Signal](https://signal.org/) for the libsignal library
-- [liboqs_dart](https://github.com/djx-y-z/liboqs_dart) for architecture inspiration

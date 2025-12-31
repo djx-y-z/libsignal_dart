@@ -2,8 +2,6 @@
 ///
 /// This file provides cross-platform utilities for building libsignal
 /// native libraries on Linux, macOS, iOS, Android, and Windows.
-///
-/// Key difference from liboqs: uses Rust/Cargo instead of CMake.
 
 import 'dart:io';
 
@@ -316,7 +314,7 @@ bool canBuildFor(BuildPlatform platform) {
 }
 
 // ============================================
-// Rust/Cargo utilities (different from liboqs CMake)
+// Rust/Cargo utilities
 // ============================================
 
 /// Get Rust target triple for platform/arch combination

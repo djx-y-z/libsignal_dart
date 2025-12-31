@@ -81,7 +81,7 @@ libsignal/
 
 ## Build System
 
-This project uses **Rust/Cargo** to build libsignal (unlike liboqs which uses CMake).
+This project uses **Rust/Cargo** to build libsignal.
 
 ### Rust Targets
 

@@ -14,8 +14,7 @@ import 'exception.dart';
 class LibSignalUtils {
   LibSignalUtils._();
 
-  /// Maximum allocation size (10MB - larger than liboqs due to potential
-  /// large messages and group data).
+  /// Maximum allocation size (10MB - allows for large messages and group data).
   static const int maxAllocationSize = 10 * 1024 * 1024;
 
   // ============================================
