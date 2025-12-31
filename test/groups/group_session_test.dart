@@ -368,9 +368,6 @@ void main() {
         final groupAId = GroupSession.uuidFromString(
           'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
         );
-        final groupBId = GroupSession.uuidFromString(
-          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-        );
 
         // Alice creates session for group A
         final aliceGroupA = GroupSession(aliceAddress, groupAId, aliceStore);
@@ -418,7 +415,7 @@ void main() {
       });
 
       test('round-trip UUID conversion', () {
-        final original = '01234567-89ab-cdef-0123-456789abcdef';
+        const original = '01234567-89ab-cdef-0123-456789abcdef';
         final bytes = GroupSession.uuidFromString(original);
         final result = GroupSession.uuidToString(bytes);
         expect(result, equals(original));

@@ -3,6 +3,7 @@ include: package:lints/recommended.yaml
 analyzer:
   exclude:
     - lib/src/bindings/libsignal_bindings.dart
+    - scripts/**
 
 linter:
   rules:
@@ -15,7 +16,6 @@ linter:
     - avoid_types_as_parameter_names
     - cancel_subscriptions
     - close_sinks
-    - comment_references
     - control_flow_in_finally
     - empty_statements
     - hash_and_equals
