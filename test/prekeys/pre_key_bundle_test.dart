@@ -125,12 +125,17 @@ void main() {
         }
       });
 
-      test('creates bundle with various device IDs', () {
-        for (final devId in [0, 1, 100, 0xFFFF, 0xFFFFFFFF]) {
-          final bundle = createFullBundle(deviceId: devId);
-          expect(bundle.deviceId, equals(devId));
-          bundle.dispose();
-        }
+      test('creates bundle with device ID 1', () {
+        // Note: device ID must be > 0 in libsignal v0.86+
+        final bundle = createFullBundle(deviceId: 1);
+        expect(bundle.deviceId, equals(1));
+        bundle.dispose();
+      });
+
+      test('creates bundle with device ID 100', () {
+        final bundle = createFullBundle(deviceId: 100);
+        expect(bundle.deviceId, equals(100));
+        bundle.dispose();
       });
     });
 

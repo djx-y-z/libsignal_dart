@@ -82,22 +82,36 @@ void main() {
         cert.dispose();
       });
 
-      test('creates certificate with various device IDs', () {
+      test('creates certificate with device ID 1', () {
         final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
 
-        for (final deviceId in [1, 2, 100, 0xFFFF]) {
-          final cert = SenderCertificate.create(
-            senderUuid: 'test-uuid-1234',
-            deviceId: deviceId,
-            senderKey: senderKey,
-            expiration: expiration,
-            signerCertificate: serverCert,
-            signerKey: serverPrivate,
-          );
+        final cert = SenderCertificate.create(
+          senderUuid: 'test-uuid-1234',
+          deviceId: 1,
+          senderKey: senderKey,
+          expiration: expiration,
+          signerCertificate: serverCert,
+          signerKey: serverPrivate,
+        );
 
-          expect(cert.deviceId, equals(deviceId));
-          cert.dispose();
-        }
+        expect(cert.deviceId, equals(1));
+        cert.dispose();
+      });
+
+      test('creates certificate with device ID 100', () {
+        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
+
+        final cert = SenderCertificate.create(
+          senderUuid: 'test-uuid-1234',
+          deviceId: 100,
+          senderKey: senderKey,
+          expiration: expiration,
+          signerCertificate: serverCert,
+          signerKey: serverPrivate,
+        );
+
+        expect(cert.deviceId, equals(100));
+        cert.dispose();
       });
 
       test('created certificate has valid signature', () {

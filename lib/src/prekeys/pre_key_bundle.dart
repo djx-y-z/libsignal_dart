@@ -61,7 +61,7 @@ final class PreKeyBundle {
   ///
   /// Required parameters:
   /// - [registrationId]: The registration ID of the device
-  /// - [deviceId]: The device ID
+  /// - [deviceId]: The device ID. Must be > 0
   /// - [signedPreKeyId]: The ID of the signed pre-key
   /// - [signedPreKey]: The signed pre-key public key
   /// - [signedPreKeySignature]: The signature over the signed pre-key

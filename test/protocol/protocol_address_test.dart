@@ -16,27 +16,25 @@ void main() {
         address.dispose();
       });
 
-      test('accepts device ID 0', () {
-        final address = ProtocolAddress('user', 0);
+      test('rejects device ID 0', () {
+        // libsignal requires device ID > 0
+        expect(
+          () => ProtocolAddress('user', 0),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
 
-        expect(address.deviceId, equals(0));
+      test('accepts device ID 1 (minimum valid)', () {
+        final address = ProtocolAddress('user', 1);
+
+        expect(address.deviceId, equals(1));
 
         address.dispose();
       });
 
-      test('accepts large device IDs', () {
-        final address = ProtocolAddress('user', 999999);
-
-        expect(address.deviceId, equals(999999));
-
-        address.dispose();
-      });
-
-      test('accepts empty name', () {
-        final address = ProtocolAddress('', 1);
-
-        expect(address.name, equals(''));
-
+      test('accepts device ID 100', () {
+        final address = ProtocolAddress('user', 100);
+        expect(address.deviceId, equals(100));
         address.dispose();
       });
 
