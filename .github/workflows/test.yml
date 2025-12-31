@@ -51,7 +51,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           fvm dart test --coverage=coverage
-          fvm dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+          fvm dart run coverage:format_coverage --check-ignore --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
           # Exclude auto-generated FFI bindings from coverage
           lcov --remove coverage/lcov.info 'lib/src/bindings/*' -o coverage/lcov.info
 
