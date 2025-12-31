@@ -112,7 +112,7 @@ test:
 
 coverage:
 	$(FVM) dart test --coverage=coverage
-	$(FVM) dart run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
+	$(FVM) dart run coverage:format_coverage --check-ignore --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
 	lcov --remove coverage/lcov.info 'lib/src/bindings/*' -o coverage/lcov.info
 	lcov --summary coverage/lcov.info
 

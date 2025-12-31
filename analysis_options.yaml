@@ -4,6 +4,7 @@ analyzer:
   exclude:
     - lib/src/bindings/libsignal_bindings.dart
     - scripts/**
+    - example_cli/**
 
 linter:
   rules:

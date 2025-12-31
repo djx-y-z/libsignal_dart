@@ -37,23 +37,19 @@ jobs:
         uses: ./.github/actions/setup-fvm
 
       - name: Get dependencies
-        run: fvm dart pub get --no-example
+        run: make get
 
       - name: Analyze
-        run: fvm flutter analyze --fatal-infos
+        run: make analyze ARGS="--fatal-infos"
 
       - name: Check formatting
-        run: fvm dart format --set-exit-if-changed .
+        run: make format-check
 
       - name: Install lcov
         run: sudo apt-get install -y lcov
 
       - name: Run tests with coverage
-        run: |
-          fvm dart test --coverage=coverage
-          fvm dart run coverage:format_coverage --check-ignore --lcov --in=coverage --out=coverage/lcov.info --report-on=lib
-          # Exclude auto-generated FFI bindings from coverage
-          lcov --remove coverage/lcov.info 'lib/src/bindings/*' -o coverage/lcov.info
+        run: make coverage
 
       - name: Calculate coverage percentage
         id: coverage
