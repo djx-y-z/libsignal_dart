@@ -1,0 +1,35 @@
+# Development files
+TODO.md
+CONTRIBUTING.md
+Makefile
+.fvmrc
+.skip_libsignal_hook
+
+# CI/CD
+.github/
+
+# Build scripts and headers (only needed for development/ffigen)
+scripts/
+headers/
+
+# IDE and editor files
+.vscode/
+.idea/
+.claude/
+.metadata
+*.iml
+
+# Build artifacts
+build/
+example/build/
+example/.dart_tool/
+example/.flutter-plugins
+example/.flutter-plugins-dependencies
+example/ios/Podfile.lock
+example/macos/Podfile.lock
+example/.idea/
+example/android/.gradle/
+example/ios/Pods/
+
+# FVM
+.fvm/
