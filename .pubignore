@@ -19,6 +19,12 @@ headers/
 .metadata
 *.iml
 
+# Coverage and test artifacts
+coverage/
+
+# Documentation (generated)
+docs/
+
 # Build artifacts
 build/
 example/build/
@@ -30,6 +36,17 @@ example/macos/Podfile.lock
 example/.idea/
 example/android/.gradle/
 example/ios/Pods/
+example/macos/Pods/
+
+# Xcode workspace files (tracked in git but not needed for pub)
+example/ios/Runner.xcworkspace/
+example/macos/Runner.xcworkspace/
+
+# CLI example (not part of the Flutter plugin example)
+example_cli/
 
 # FVM
 .fvm/
+
+# Hook build cache
+hook/.dart_tool/
