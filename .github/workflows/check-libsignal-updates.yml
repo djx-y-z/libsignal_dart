@@ -1,0 +1,527 @@
+# Automatically check for new libsignal releases and update the package
+#
+# This workflow:
+# 1. Runs daily (or manually) to check for new libsignal releases
+# 2. Compares with current libsignal.native_version in pubspec.yaml using proper semver
+# 3. If newer version found:
+#    - Fetches and analyzes libsignal changelog with AI (GitHub Models)
+#    - Determines appropriate version bump (major/minor/patch)
+#    - Handles RC/pre-release versions with -rc suffix
+#    - Updates pubspec.yaml (version, libsignal.native_version, libsignal.native_build), CHANGELOG.md
+#    - Creates PR with AI-generated analysis and recommendations
+# 4. The PR merge triggers build-libsignal.yml to build native libraries
+#
+# AI Analysis (GitHub Models):
+# - Analyzes libsignal release notes for breaking changes
+# - Recommends version bump type (major/minor/patch)
+# - Identifies potential code changes needed in Dart bindings
+# - Generates detailed changelog entry
+
+name: Check libsignal Updates
+
+on:
+  schedule:
+    # Run daily at 09:00 UTC
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: 'Force update even if version is the same'
+        required: false
+        default: false
+        type: boolean
+      target_version:
+        description: 'Specific version to update to (leave empty for latest)'
+        required: false
+        default: ''
+        type: string
+      skip_ai_analysis:
+        description: 'Skip AI analysis (faster, but less detailed)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  # GitHub Models endpoint
+  GITHUB_MODELS_ENDPOINT: "https://models.github.ai/inference"
+  # Model to use: gpt-4o is most capable, gpt-4o-mini as fallback
+  AI_MODEL: "openai/gpt-4o"
+  AI_MODEL_FALLBACK: "openai/gpt-4o-mini"
+
+jobs:
+  check-updates:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      models: read  # Required for GitHub Models
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Check for updates (using Makefile)
+        id: check
+        run: |
+          # Build version argument if specified
+          VERSION_ARG=""
+          if [ -n "${{ inputs.target_version }}" ]; then
+            VERSION_ARG="--version ${{ inputs.target_version }}"
+          fi
+
+          # Run the check script and capture JSON output
+          JSON_OUTPUT=$(make check ARGS="--json $VERSION_ARG") || true
+
+          echo "Script output:"
+          echo "$JSON_OUTPUT"
+
+          # Parse JSON output
+          CURRENT=$(echo "$JSON_OUTPUT" | jq -r '.libsignal.current_version')
+          LATEST=$(echo "$JSON_OUTPUT" | jq -r '.libsignal.latest_version')
+          NEEDS_UPDATE=$(echo "$JSON_OUTPUT" | jq -r '.libsignal.needs_update')
+          IS_PRERELEASE=$(echo "$JSON_OUTPUT" | jq -r '.libsignal.is_prerelease')
+          RELEASE_URL=$(echo "$JSON_OUTPUT" | jq -r '.libsignal.release_url')
+
+          # Package info (if update available)
+          PKG_CURRENT=$(echo "$JSON_OUTPUT" | jq -r '.package.current_version // empty')
+          PKG_NEW=$(echo "$JSON_OUTPUT" | jq -r '.package.new_version // empty')
+          BUMP_TYPE=$(echo "$JSON_OUTPUT" | jq -r '.package.bump_type // "minor"')
+
+          # Handle force update
+          FORCE="${{ inputs.force_update }}"
+          if [ "$FORCE" = "true" ] && [ "$NEEDS_UPDATE" = "false" ]; then
+            echo "Force update requested"
+            NEEDS_UPDATE="true"
+          fi
+
+          echo "current_version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "latest_version=$LATEST" >> $GITHUB_OUTPUT
+          echo "needs_update=$NEEDS_UPDATE" >> $GITHUB_OUTPUT
+          echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "release_url=$RELEASE_URL" >> $GITHUB_OUTPUT
+          echo "pkg_current=$PKG_CURRENT" >> $GITHUB_OUTPUT
+          echo "pkg_new=$PKG_NEW" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+          echo "Current: $CURRENT, Latest: $LATEST, Needs update: $NEEDS_UPDATE"
+
+      - name: Fetch libsignal release notes
+        if: steps.check.outputs.needs_update == 'true'
+        id: release_notes
+        run: |
+          LATEST="${{ steps.check.outputs.latest_version }}"
+
+          # Fetch release notes from GitHub API
+          RELEASE_BODY=$(curl -s "https://api.github.com/repos/signalapp/libsignal/releases/tags/$LATEST" | jq -r '.body // "No release notes available"')
+
+          # Save to file for AI analysis
+          echo "$RELEASE_BODY" > /tmp/release_notes.md
+
+          # Also save a truncated version for the output
+          TRUNCATED=$(echo "$RELEASE_BODY" | head -c 1000)
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$TRUNCATED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "Fetched release notes for $LATEST"
+
+      - name: AI Analysis of Release Notes
+        if: steps.check.outputs.needs_update == 'true' && inputs.skip_ai_analysis != 'true'
+        id: ai_analysis
+        continue-on-error: true  # Don't fail if AI is unavailable
+        run: |
+          CURRENT="${{ steps.check.outputs.current_version }}"
+          LATEST="${{ steps.check.outputs.latest_version }}"
+          RELEASE_NOTES=$(cat /tmp/release_notes.md)
+
+          # Read prompt template from file
+          PROMPT=$(cat .github/prompts/ai-analysis-prompt.md)
+
+          # Replace placeholders (limit release notes to 6000 chars)
+          PROMPT=$(echo "$PROMPT" | sed "s/CURRENT_VERSION/$CURRENT/g" | sed "s/NEW_VERSION/$LATEST/g")
+          PROMPT=$(echo "$PROMPT" | sed "s/RELEASE_NOTES_CONTENT/$(echo "$RELEASE_NOTES" | head -c 6000 | sed 's/"/\\"/g' | tr '\n' ' ')/g")
+
+          # Function to call AI model
+          call_ai_model() {
+            local MODEL=$1
+            curl -s -X POST "$GITHUB_MODELS_ENDPOINT/chat/completions" \
+              -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "$(jq -n \
+                --arg model "$MODEL" \
+                --arg prompt "$PROMPT" \
+                '{
+                  model: $model,
+                  messages: [
+                    {role: "system", content: "You are a precise technical analyst. Your task is to analyze software release notes and extract ONLY factual information. Never invent or assume information not present in the source. When uncertain, be conservative and explicit about uncertainty. Follow the exact response format requested."},
+                    {role: "user", content: $prompt}
+                  ],
+                  max_tokens: 2500,
+                  temperature: 0.1
+                }')" 2>/dev/null
+          }
+
+          # Try primary model (gpt-4o)
+          echo "Trying primary model: $AI_MODEL"
+          RESPONSE=$(call_ai_model "$AI_MODEL")
+          AI_CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+
+          # If primary model failed, try fallback (gpt-4o-mini)
+          if [ -z "$AI_CONTENT" ]; then
+            echo "Primary model failed, trying fallback: $AI_MODEL_FALLBACK"
+            RESPONSE=$(call_ai_model "$AI_MODEL_FALLBACK")
+            AI_CONTENT=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // "AI analysis unavailable"')
+            USED_MODEL="$AI_MODEL_FALLBACK"
+          else
+            USED_MODEL="$AI_MODEL"
+          fi
+
+          echo "Used model: $USED_MODEL"
+
+          if [ "$AI_CONTENT" = "AI analysis unavailable" ] || [ -z "$AI_CONTENT" ]; then
+            echo "AI analysis failed, using defaults"
+            echo "version_bump=minor" >> $GITHUB_OUTPUT
+            echo "breaking_changes=Unable to analyze automatically" >> $GITHUB_OUTPUT
+            echo "changelog_entry=- Updated libsignal native library to $LATEST" >> $GITHUB_OUTPUT
+            echo "binding_changes=unknown" >> $GITHUB_OUTPUT
+            echo "ai_available=false" >> $GITHUB_OUTPUT
+          else
+            echo "AI analysis completed"
+            echo "$AI_CONTENT" > /tmp/ai_analysis.txt
+
+            # Parse AI response
+            VERSION_BUMP=$(echo "$AI_CONTENT" | grep -oP 'VERSION_BUMP:\s*\K\w+' | head -1 || echo "minor")
+            BREAKING=$(echo "$AI_CONTENT" | grep -oP 'BREAKING_CHANGES:\s*\K.*' | head -1 || echo "none")
+            BINDING=$(echo "$AI_CONTENT" | grep -oP 'BINDING_CHANGES:\s*\K.*' | head -1 || echo "unknown")
+
+            # Extract changelog entry (everything after CHANGELOG_ENTRY:)
+            CHANGELOG=$(echo "$AI_CONTENT" | sed -n '/CHANGELOG_ENTRY:/,$ p' | tail -n +2)
+
+            echo "version_bump=$VERSION_BUMP" >> $GITHUB_OUTPUT
+            echo "breaking_changes=$BREAKING" >> $GITHUB_OUTPUT
+            echo "binding_changes=$BINDING" >> $GITHUB_OUTPUT
+            echo "ai_available=true" >> $GITHUB_OUTPUT
+            echo "model_used=$USED_MODEL" >> $GITHUB_OUTPUT
+
+            # Save changelog entry
+            echo "changelog_entry<<EOF" >> $GITHUB_OUTPUT
+            echo "$CHANGELOG" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+
+            # Save full analysis for PR
+            echo "full_analysis<<EOF" >> $GITHUB_OUTPUT
+            echo "$AI_CONTENT" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate new package version
+        if: steps.check.outputs.needs_update == 'true'
+        id: pkg_version
+        run: |
+          # Use values from Dart script if available, otherwise calculate
+          PKG_CURRENT="${{ steps.check.outputs.pkg_current }}"
+          PKG_NEW="${{ steps.check.outputs.pkg_new }}"
+          BUMP_TYPE="${{ steps.check.outputs.bump_type }}"
+
+          if [ -n "$PKG_CURRENT" ] && [ -n "$PKG_NEW" ]; then
+            echo "Using package version from Dart script"
+            echo "current=$PKG_CURRENT" >> $GITHUB_OUTPUT
+            echo "new=$PKG_NEW" >> $GITHUB_OUTPUT
+            echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+
+            IS_PRERELEASE="${{ steps.check.outputs.is_prerelease }}"
+            if [ "$IS_PRERELEASE" = "true" ]; then
+              echo "is_rc=true" >> $GITHUB_OUTPUT
+            else
+              echo "is_rc=false" >> $GITHUB_OUTPUT
+            fi
+            exit 0
+          fi
+
+          # Fallback: Calculate manually (shouldn't normally reach here)
+          CURRENT_PKG_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | tr -d '[:space:]')
+          echo "current=$CURRENT_PKG_VERSION" >> $GITHUB_OUTPUT
+          echo "Current package version: $CURRENT_PKG_VERSION"
+
+          # Get libsignal versions
+          CURRENT_LIBSIGNAL="${{ steps.check.outputs.current_version }}"
+          LATEST_LIBSIGNAL="${{ steps.check.outputs.latest_version }}"
+          IS_PRERELEASE="${{ steps.check.outputs.is_prerelease }}"
+
+          # Extract base versions (without -rc/-alpha/-beta suffixes)
+          CURRENT_LIBSIGNAL_BASE=$(echo "$CURRENT_LIBSIGNAL" | sed 's/^v//' | sed 's/-.*$//')
+          LATEST_LIBSIGNAL_BASE=$(echo "$LATEST_LIBSIGNAL" | sed 's/^v//' | sed 's/-.*$//')
+
+          # Remove any existing pre-release suffix from our package version
+          OUR_BASE_VERSION=$(echo "$CURRENT_PKG_VERSION" | sed 's/-.*$//')
+
+          # Parse our version components
+          MAJOR=$(echo "$OUR_BASE_VERSION" | cut -d. -f1)
+          MINOR=$(echo "$OUR_BASE_VERSION" | cut -d. -f2)
+          PATCH=$(echo "$OUR_BASE_VERSION" | cut -d. -f3)
+
+          echo "Current libsignal base: $CURRENT_LIBSIGNAL_BASE"
+          echo "Latest libsignal base: $LATEST_LIBSIGNAL_BASE"
+          echo "Our base version: $OUR_BASE_VERSION"
+
+          # Determine if we need to bump version or just change RC suffix
+          if [ "$CURRENT_LIBSIGNAL_BASE" = "$LATEST_LIBSIGNAL_BASE" ]; then
+            # Same base version - don't bump, just update RC suffix
+            echo "Same base libsignal version - only updating pre-release suffix"
+            VERSION_BUMP="none"
+            NEW_VERSION="$OUR_BASE_VERSION"
+          else
+            # Different base version - need to bump
+            VERSION_BUMP="${{ steps.ai_analysis.outputs.version_bump }}"
+            if [ -z "$VERSION_BUMP" ] || [ "$VERSION_BUMP" = "none" ]; then
+              VERSION_BUMP="minor"
+            fi
+
+            # Calculate new version based on bump type
+            case "$VERSION_BUMP" in
+              major)
+                MAJOR=$((MAJOR + 1))
+                MINOR=0
+                PATCH=0
+                ;;
+              minor)
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+              patch)
+                PATCH=$((PATCH + 1))
+                ;;
+              *)
+                # Default to minor
+                MINOR=$((MINOR + 1))
+                PATCH=0
+                ;;
+            esac
+
+            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          fi
+
+          # Add prerelease suffix if libsignal version is a pre-release
+          if [ "$IS_PRERELEASE" = "true" ]; then
+            PRERELEASE_SUFFIX=$(echo "$LATEST_LIBSIGNAL" | sed 's/^v//' | sed 's/^[0-9]*\.[0-9]*\.[0-9]*//')
+            if [ -z "$PRERELEASE_SUFFIX" ]; then
+              PRERELEASE_SUFFIX="-pre"
+            fi
+            NEW_VERSION="${NEW_VERSION}${PRERELEASE_SUFFIX}"
+            echo "is_rc=true" >> $GITHUB_OUTPUT
+            echo "Prerelease suffix: $PRERELEASE_SUFFIX"
+          else
+            echo "is_rc=false" >> $GITHUB_OUTPUT
+          fi
+
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "bump_type=$VERSION_BUMP" >> $GITHUB_OUTPUT
+          echo "New package version: $NEW_VERSION (bump: $VERSION_BUMP)"
+
+      - name: Update version files (using Makefile)
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          # Build arguments
+          ARGS="--update --no-changelog"
+          if [ -n "${{ inputs.target_version }}" ]; then
+            ARGS="$ARGS --version ${{ inputs.target_version }}"
+          fi
+
+          # Get bump type from AI analysis or use default
+          BUMP_TYPE="${{ steps.ai_analysis.outputs.version_bump }}"
+          if [ -n "$BUMP_TYPE" ] && [ "$BUMP_TYPE" != "null" ]; then
+            ARGS="$ARGS --bump $BUMP_TYPE"
+          fi
+
+          # Force if requested
+          if [ "${{ inputs.force_update }}" = "true" ]; then
+            ARGS="$ARGS --force"
+          fi
+
+          echo "Running: make check ARGS=\"$ARGS\""
+          make check ARGS="$ARGS"
+
+      - name: Update CHANGELOG.md
+        if: steps.check.outputs.needs_update == 'true'
+        run: |
+          NEW_VERSION="${{ steps.pkg_version.outputs.new }}"
+          NEW_LIBSIGNAL="${{ steps.check.outputs.latest_version }}"
+          OLD_LIBSIGNAL="${{ steps.check.outputs.current_version }}"
+          BUMP_TYPE="${{ steps.pkg_version.outputs.bump_type }}"
+          IS_RC="${{ steps.pkg_version.outputs.is_rc }}"
+
+          # Get AI-generated changelog or use default
+          AI_CHANGELOG="${{ steps.ai_analysis.outputs.changelog_entry }}"
+
+          if [ -n "$AI_CHANGELOG" ] && [ "$AI_CHANGELOG" != "" ]; then
+            CHANGELOG_CONTENT="$AI_CHANGELOG"
+          else
+            CHANGELOG_CONTENT="- Updated libsignal native library from $OLD_LIBSIGNAL to $NEW_LIBSIGNAL"
+          fi
+
+          # Determine section header based on bump type
+          case "$BUMP_TYPE" in
+            major)
+              SECTION_HEADER="### Breaking Changes"
+              ;;
+            minor)
+              SECTION_HEADER="### Added"
+              ;;
+            patch)
+              SECTION_HEADER="### Fixed"
+              ;;
+            *)
+              SECTION_HEADER="### Changed"
+              ;;
+          esac
+
+          # Add pre-release note if applicable
+          if [ "$IS_RC" = "true" ]; then
+            PRERELEASE_NOTE="\n> **Pre-release**: This version includes a release candidate of libsignal. Use with caution in production.\n"
+          else
+            PRERELEASE_NOTE=""
+          fi
+
+          # Create new changelog entry
+          cat > /tmp/changelog_entry.md << EOF
+          ## $NEW_VERSION
+          $PRERELEASE_NOTE
+          $SECTION_HEADER
+          $CHANGELOG_CONTENT
+          - See [libsignal $NEW_LIBSIGNAL release notes](https://github.com/signalapp/libsignal/releases/tag/$NEW_LIBSIGNAL)
+
+          EOF
+
+          # Prepend to CHANGELOG.md
+          cat /tmp/changelog_entry.md CHANGELOG.md > /tmp/new_changelog.md
+          mv /tmp/new_changelog.md CHANGELOG.md
+
+          echo "Updated CHANGELOG.md with new entry"
+
+      - name: Prepare PR body
+        if: steps.check.outputs.needs_update == 'true'
+        id: pr_body
+        run: |
+          IS_RC="${{ steps.pkg_version.outputs.is_rc }}"
+          AI_AVAILABLE="${{ steps.ai_analysis.outputs.ai_available }}"
+          BINDING_CHANGES="${{ steps.ai_analysis.outputs.binding_changes }}"
+          BREAKING_CHANGES="${{ steps.ai_analysis.outputs.breaking_changes }}"
+
+          # Build PR body
+          cat > /tmp/pr_body.md << 'EOF'
+          ## Automated libsignal Update
+
+          This PR updates the libsignal native library to version **${{ steps.check.outputs.latest_version }}**.
+
+          ### Version Changes
+          | Component | Old | New |
+          |-----------|-----|-----|
+          | libsignal | ${{ steps.check.outputs.current_version }} | ${{ steps.check.outputs.latest_version }} |
+          | Package | ${{ steps.pkg_version.outputs.current }} | ${{ steps.pkg_version.outputs.new }} |
+          | Bump Type | - | ${{ steps.pkg_version.outputs.bump_type }} |
+
+          EOF
+
+          if [ "$IS_RC" = "true" ]; then
+            cat >> /tmp/pr_body.md << 'EOF'
+
+            > **Pre-release Version**: This includes a release candidate of libsignal.
+            > Consider waiting for stable release unless you need specific features.
+
+            EOF
+          fi
+
+          if [ "$AI_AVAILABLE" = "true" ]; then
+            cat >> /tmp/pr_body.md << EOF
+
+            ### AI Analysis
+
+            **Breaking Changes:** $BREAKING_CHANGES
+
+            **Binding Changes Needed:** $BINDING_CHANGES
+
+            <details>
+            <summary>Full AI Analysis</summary>
+
+            \`\`\`
+            ${{ steps.ai_analysis.outputs.full_analysis }}
+            \`\`\`
+
+            </details>
+
+            EOF
+          fi
+
+          cat >> /tmp/pr_body.md << 'EOF'
+
+          ### Release Notes
+          See [libsignal ${{ steps.check.outputs.latest_version }} release notes](https://github.com/signalapp/libsignal/releases/tag/${{ steps.check.outputs.latest_version }})
+
+          ### Review Checklist
+
+          Before merging, please verify:
+          - [ ] Review libsignal release notes for breaking changes
+          - [ ] Check if FFI bindings need regeneration (`make regen`)
+          - [ ] Verify no security vulnerabilities in the new version
+          - [ ] Run tests locally if bindings changed
+
+          ### What happens after merge
+
+          1. The `build-libsignal.yml` workflow will automatically trigger
+          2. Native libraries will be built for all platforms
+          3. A GitHub Release will be created with pre-built binaries
+
+          ---
+          This PR was created automatically by the libsignal update checker.
+          EOF
+
+          # Read the body
+          PR_BODY=$(cat /tmp/pr_body.md)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.check.outputs.needs_update == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            Update libsignal to ${{ steps.check.outputs.latest_version }}
+
+            - Package version: ${{ steps.pkg_version.outputs.current }} -> ${{ steps.pkg_version.outputs.new }}
+            - Bump type: ${{ steps.pkg_version.outputs.bump_type }}
+          title: "Update libsignal to ${{ steps.check.outputs.latest_version }}"
+          body: ${{ steps.pr_body.outputs.body }}
+          branch: update-libsignal-${{ steps.check.outputs.latest_version }}
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            ${{ steps.pkg_version.outputs.is_rc == 'true' && 'pre-release' || '' }}
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check.outputs.needs_update }}" = "true" ]; then
+            echo "## Update Available" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Current libsignal | ${{ steps.check.outputs.current_version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| New libsignal | ${{ steps.check.outputs.latest_version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Package version | ${{ steps.pkg_version.outputs.current }} -> ${{ steps.pkg_version.outputs.new }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Bump type | ${{ steps.pkg_version.outputs.bump_type }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Pre-release | ${{ steps.check.outputs.is_prerelease }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| AI Analysis | ${{ steps.ai_analysis.outputs.ai_available || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| AI Model | ${{ steps.ai_analysis.outputs.model_used || 'N/A' }} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A pull request has been created for review." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Up to Date" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Current version **${{ steps.check.outputs.current_version }}** is the latest." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -87,34 +87,68 @@ Directory getPackageDir() {
   return dir;
 }
 
-/// Get the LIBSIGNAL_VERSION from file
+/// Get the native libsignal version from pubspec.yaml (libsignal.native_version)
 String getLibsignalVersion() {
   final packageDir = getPackageDir();
-  final versionFile = File('${packageDir.path}/LIBSIGNAL_VERSION');
+  final pubspecFile = File('${packageDir.path}/pubspec.yaml');
 
-  if (!versionFile.existsSync()) {
-    throw Exception('LIBSIGNAL_VERSION file not found');
+  if (!pubspecFile.existsSync()) {
+    throw Exception('pubspec.yaml not found');
   }
 
-  final version = versionFile.readAsStringSync().trim();
-  if (version.isEmpty) {
-    throw Exception('LIBSIGNAL_VERSION file is empty');
+  final content = pubspecFile.readAsStringSync();
+
+  // Extract the libsignal: block (until next top-level key or EOF)
+  final blockMatch = RegExp(
+    r'^libsignal:\s*$([\s\S]*?)(?=^\w|\z)',
+    multiLine: true,
+  ).firstMatch(content);
+
+  if (blockMatch == null) {
+    throw Exception('libsignal: block not found in pubspec.yaml');
   }
 
-  return version;
+  final block = blockMatch.group(1) ?? '';
+
+  // Extract native_version from the block (supports quoted and unquoted values)
+  final versionMatch = RegExp(
+    r'native_version:\s*"?([^"\s\n]+)"?',
+  ).firstMatch(block);
+
+  if (versionMatch == null) {
+    throw Exception('native_version not found in libsignal block');
+  }
+
+  return versionMatch.group(1)!.trim();
 }
 
-/// Get the NATIVE_BUILD number from file
+/// Get the native build number from pubspec.yaml (libsignal.native_build)
 String getNativeBuild() {
   final packageDir = getPackageDir();
-  final buildFile = File('${packageDir.path}/NATIVE_BUILD');
+  final pubspecFile = File('${packageDir.path}/pubspec.yaml');
 
-  if (!buildFile.existsSync()) {
+  if (!pubspecFile.existsSync()) {
     return '1';
   }
 
-  final build = buildFile.readAsStringSync().trim();
-  return build.isEmpty ? '1' : build;
+  final content = pubspecFile.readAsStringSync();
+
+  // Extract the libsignal: block
+  final blockMatch = RegExp(
+    r'^libsignal:\s*$([\s\S]*?)(?=^\w|\z)',
+    multiLine: true,
+  ).firstMatch(content);
+
+  if (blockMatch == null) {
+    return '1';
+  }
+
+  final block = blockMatch.group(1) ?? '';
+
+  // Extract native_build from the block
+  final buildMatch = RegExp(r'native_build:\s*(\d+)').firstMatch(block);
+
+  return buildMatch?.group(1)?.trim() ?? '1';
 }
 
 /// Get full version string (libsignal version + native build)

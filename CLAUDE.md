@@ -75,7 +75,7 @@ libsignal/
 ├── scripts/                        # Build scripts (use via Makefile!)
 ├── test/                           # Tests
 ├── Makefile                        # Entry point for all commands
-├── LIBSIGNAL_VERSION               # Current libsignal version
+├── pubspec.yaml                    # Package config (contains libsignal.native_version)
 └── .github/workflows/              # CI/CD workflows
 ```
 

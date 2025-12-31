@@ -116,33 +116,72 @@ void main(List<String> args) async {
       ),
     );
 
-    // Add dependency on version files for cache invalidation
-    output.dependencies.add(packageRoot.resolve('LIBSIGNAL_VERSION'));
-    output.dependencies.add(packageRoot.resolve('NATIVE_BUILD'));
+    // Add dependency on pubspec.yaml for cache invalidation
+    // (contains libsignal.native_version and libsignal.native_build)
+    output.dependencies.add(packageRoot.resolve('pubspec.yaml'));
   });
 }
 
-/// Reads the libsignal version from LIBSIGNAL_VERSION file.
+/// Reads the libsignal version from pubspec.yaml (libsignal.native_version).
 Future<String> _readVersion(Uri packageRoot) async {
-  final versionFile = File.fromUri(packageRoot.resolve('LIBSIGNAL_VERSION'));
-  if (!versionFile.existsSync()) {
-    throw HookException(
-      'LIBSIGNAL_VERSION file not found at ${versionFile.path}',
-    );
+  final pubspecFile = File.fromUri(packageRoot.resolve('pubspec.yaml'));
+  if (!pubspecFile.existsSync()) {
+    throw HookException('pubspec.yaml not found at ${pubspecFile.path}');
   }
+
+  final content = await pubspecFile.readAsString();
+
+  // Extract the libsignal: block (until next top-level key or EOF)
+  final blockMatch = RegExp(
+    r'^libsignal:\s*$([\s\S]*?)(?=^\w|\z)',
+    multiLine: true,
+  ).firstMatch(content);
+
+  if (blockMatch == null) {
+    throw HookException('libsignal: block not found in pubspec.yaml');
+  }
+
+  final block = blockMatch.group(1) ?? '';
+
+  // Extract native_version from the block
+  final versionMatch = RegExp(
+    r'native_version:\s*"?([^"\s\n]+)"?',
+  ).firstMatch(block);
+
+  if (versionMatch == null) {
+    throw HookException('native_version not found in libsignal block');
+  }
+
   // Remove 'v' prefix if present for archive naming
-  final version = (await versionFile.readAsString()).trim();
+  final version = versionMatch.group(1)!.trim();
   return version.startsWith('v') ? version.substring(1) : version;
 }
 
-/// Reads the native build number from NATIVE_BUILD file.
+/// Reads the native build number from pubspec.yaml (libsignal.native_build).
 Future<String> _readNativeBuild(Uri packageRoot) async {
-  final buildFile = File.fromUri(packageRoot.resolve('NATIVE_BUILD'));
-  if (!buildFile.existsSync()) {
-    return '1'; // Default if file doesn't exist
+  final pubspecFile = File.fromUri(packageRoot.resolve('pubspec.yaml'));
+  if (!pubspecFile.existsSync()) {
+    return '1';
   }
-  final build = (await buildFile.readAsString()).trim();
-  return build.isEmpty ? '1' : build;
+
+  final content = await pubspecFile.readAsString();
+
+  // Extract the libsignal: block
+  final blockMatch = RegExp(
+    r'^libsignal:\s*$([\s\S]*?)(?=^\w|\z)',
+    multiLine: true,
+  ).firstMatch(content);
+
+  if (blockMatch == null) {
+    return '1';
+  }
+
+  final block = blockMatch.group(1) ?? '';
+
+  // Extract native_build from the block
+  final buildMatch = RegExp(r'native_build:\s*(\d+)').firstMatch(block);
+
+  return buildMatch?.group(1)?.trim() ?? '1';
 }
 
 /// Reads full version (libsignal version + native build).

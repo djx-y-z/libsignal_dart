@@ -7,6 +7,11 @@ repository: https://github.com/djx-y-z/libsignal_dart
 homepage: https://github.com/djx-y-z/libsignal_dart
 issue_tracker: https://github.com/djx-y-z/libsignal_dart/issues
 
+# Native library version configuration
+libsignal:
+  native_version: "v0.86.9"
+  native_build: 1
+
 environment:
   sdk: ^3.10.0
   flutter: ">=3.38.0"

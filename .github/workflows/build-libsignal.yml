@@ -11,8 +11,8 @@
 # - Windows x86_64 (dynamic .dll)
 #
 # Trigger:
-# - Manual dispatch (workflow_dispatch)
-# - Push to main when LIBSIGNAL_VERSION file changes
+# - Manual dispatch (workflow_dispatch) - for first run or force rebuild
+# - Push to main when pubspec.yaml changes (contains libsignal.native_version)
 #
 # After successful build, creates GitHub Release with native library archives.
 
@@ -23,11 +23,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'LIBSIGNAL_VERSION'
+      - 'pubspec.yaml'
 
 jobs:
   # ============================================
-  # Read version from file
+  # Read version from pubspec.yaml
   # ============================================
   read-version:
     runs-on: ubuntu-latest
@@ -38,12 +38,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read version info
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Read version info from pubspec.yaml
         id: version
         run: |
-          VERSION=$(cat LIBSIGNAL_VERSION | tr -d '[:space:]' | sed 's/^v//')
-          BUILD=$(cat NATIVE_BUILD 2>/dev/null | tr -d '[:space:]' || echo '1')
-          FULL_VERSION="${VERSION}-${BUILD}"
+          # Use centralized Dart script for version parsing
+          VERSION=$(make get-version)
+          BUILD=$(make get-build)
+          FULL_VERSION=$(make get-full-version)
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "build=$BUILD" >> $GITHUB_OUTPUT
