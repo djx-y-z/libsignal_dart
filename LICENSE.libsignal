@@ -1,6 +1,7 @@
 The AGPL-3.0 license, the text of which is below, applies to libsignal.
 
-Copyright (c) 2025 The libsignal Authors
+
+Copyright 2020-2024 Signal Messenger, LLC
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
@@ -17,8 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ---
 
-This Dart package wraps the libsignal library by Signal, which is also
-licensed under AGPL-3.0. See LICENSE.libsignal for the upstream license.
-
 For the full text of the AGPL-3.0 license, see:
 https://www.gnu.org/licenses/agpl-3.0.html
+
+Source: https://github.com/signalapp/libsignal
