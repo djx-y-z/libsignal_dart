@@ -213,6 +213,64 @@ void main() {
         fp.dispose();
       });
 
+      test('returns true for matching fingerprints', () {
+        // Alice's view
+        final fpAlice = Fingerprint.create(
+          localIdentifier: localId,
+          localKey: localIdentity.publicKey,
+          remoteIdentifier: remoteId,
+          remoteKey: remoteIdentity.publicKey,
+        );
+
+        // Bob's view (local/remote swapped)
+        final fpBob = Fingerprint.create(
+          localIdentifier: remoteId,
+          localKey: remoteIdentity.publicKey,
+          remoteIdentifier: localId,
+          remoteKey: localIdentity.publicKey,
+        );
+
+        // Compare scannable encodings
+        final result = Fingerprint.compare(
+          fpAlice.scannableEncoding,
+          fpBob.scannableEncoding,
+        );
+
+        expect(result, isTrue);
+
+        fpAlice.dispose();
+        fpBob.dispose();
+      });
+
+      test('returns false for different fingerprints', () {
+        final fp1 = Fingerprint.create(
+          localIdentifier: localId,
+          localKey: localIdentity.publicKey,
+          remoteIdentifier: remoteId,
+          remoteKey: remoteIdentity.publicKey,
+        );
+
+        final otherIdentity = IdentityKeyPair.generate();
+        final fp2 = Fingerprint.create(
+          localIdentifier: localId,
+          localKey: localIdentity.publicKey,
+          remoteIdentifier: remoteId,
+          remoteKey: otherIdentity.publicKey,
+        );
+
+        // Different fingerprints should not match
+        final result = Fingerprint.compare(
+          fp1.scannableEncoding,
+          fp2.scannableEncoding,
+        );
+
+        expect(result, isFalse);
+
+        fp1.dispose();
+        fp2.dispose();
+        otherIdentity.dispose();
+      });
+
       test('symmetric fingerprints have same display string', () {
         // Alice's view
         final fpAlice = Fingerprint.create(
