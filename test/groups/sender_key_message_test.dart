@@ -209,10 +209,7 @@ void main() {
       test('serialize throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.serialize(),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('distributionId throws after dispose', () async {
@@ -227,28 +224,19 @@ void main() {
       test('chainId throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.chainId,
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.chainId, throwsA(isA<LibSignalException>()));
       });
 
       test('iteration throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.iteration,
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.iteration, throwsA(isA<LibSignalException>()));
       });
 
       test('cipherText throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.cipherText,
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.cipherText, throwsA(isA<LibSignalException>()));
       });
 
       test('verifySignature throws after dispose', () async {
@@ -265,19 +253,13 @@ void main() {
       test('clone throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.clone(),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () async {
         final message = await createValidMessage();
         message.dispose();
-        expect(
-          () => message.pointer,
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => message.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

@@ -39,7 +39,9 @@ void main() {
 
     /// Helper to create a valid session by processing a PreKeyBundle
     Future<SessionRecord> createTestSession() async {
-      final bobKeys = generateRemotePartyKeys(registrationId: bobRegistrationId);
+      final bobKeys = generateRemotePartyKeys(
+        registrationId: bobRegistrationId,
+      );
       final bobBundle = bobKeys.toBundle();
 
       final builder = SessionBuilder(
@@ -182,10 +184,7 @@ void main() {
         final session = await createTestSession();
         final cloned = session.clone();
 
-        expect(
-          cloned.localRegistrationId,
-          equals(session.localRegistrationId),
-        );
+        expect(cloned.localRegistrationId, equals(session.localRegistrationId));
         expect(
           cloned.remoteRegistrationId,
           equals(session.remoteRegistrationId),
@@ -245,10 +244,7 @@ void main() {
       test('serialize throws after dispose', () async {
         final session = await createTestSession();
         session.dispose();
-        expect(
-          () => session.serialize(),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => session.serialize(), throwsA(isA<LibSignalException>()));
       });
 
       test('archiveCurrentState throws after dispose', () async {
@@ -301,19 +297,13 @@ void main() {
       test('clone throws after dispose', () async {
         final session = await createTestSession();
         session.dispose();
-        expect(
-          () => session.clone(),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => session.clone(), throwsA(isA<LibSignalException>()));
       });
 
       test('pointer throws after dispose', () async {
         final session = await createTestSession();
         session.dispose();
-        expect(
-          () => session.pointer,
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => session.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

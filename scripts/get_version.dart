@@ -1,4 +1,5 @@
 #!/usr/bin/env dart
+
 /// Get version information from pubspec.yaml
 ///
 /// Usage:

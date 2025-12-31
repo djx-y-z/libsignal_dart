@@ -55,9 +55,7 @@ Future<void> runFingerprintDemo() async {
       remoteKey: aliceIdentity.publicKey,
     );
     final bobDisplay = bobFingerprint.displayString;
-    printStep(4, "Bob's Safety Number", [
-      formatFingerprint(bobDisplay),
-    ]);
+    printStep(4, "Bob's Safety Number", [formatFingerprint(bobDisplay)]);
     print('');
 
     // 5. Verify symmetry

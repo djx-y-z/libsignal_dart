@@ -52,10 +52,7 @@ void main() {
           ptr[i] = i;
         }
 
-        expect(
-          () => FfiHelpers.createBorrowedBuffer(ptr, 10),
-          returnsNormally,
-        );
+        expect(() => FfiHelpers.createBorrowedBuffer(ptr, 10), returnsNormally);
 
         calloc.free(ptr);
       });

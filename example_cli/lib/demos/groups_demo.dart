@@ -37,11 +37,7 @@ Future<void> runGroupsDemo() async {
     // 3. Create stores and sessions
     final aliceStore = InMemorySenderKeyStore();
     final bobStore = InMemorySenderKeyStore();
-    final aliceSession = GroupSession(
-      aliceAddress,
-      distributionId,
-      aliceStore,
-    );
+    final aliceSession = GroupSession(aliceAddress, distributionId, aliceStore);
     final bobSession = GroupSession(bobAddress, distributionId, bobStore);
     printStep(3, 'Group sessions created', [
       'Alice store: InMemorySenderKeyStore',

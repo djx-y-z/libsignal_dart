@@ -4,9 +4,7 @@ import 'dart:typed_data';
 /// Generate random bytes of the specified length.
 Uint8List randomBytes(int length) {
   final random = Random.secure();
-  return Uint8List.fromList(
-    List.generate(length, (_) => random.nextInt(256)),
-  );
+  return Uint8List.fromList(List.generate(length, (_) => random.nextInt(256)));
 }
 
 /// Convert bytes to hex string, optionally truncating with "...".

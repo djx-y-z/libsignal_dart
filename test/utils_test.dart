@@ -248,10 +248,7 @@ void main() {
       test('handles zero length', () {
         final ptr = calloc<Uint8>(10);
         // Should not zero but should not crash either
-        expect(
-          () => LibSignalUtils.secureFreePointer(ptr, 0),
-          returnsNormally,
-        );
+        expect(() => LibSignalUtils.secureFreePointer(ptr, 0), returnsNormally);
         // Ptr was not freed (length was 0), so we need to free it
         calloc.free(ptr);
       });

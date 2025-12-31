@@ -45,9 +45,7 @@ Future<void> runKeysDemo() async {
 
     // 4. Verify signature
     final isValid = publicKey.verify(message, signature);
-    printStep(4, 'Signature verification', [
-      'Valid: $isValid',
-    ]);
+    printStep(4, 'Signature verification', ['Valid: $isValid']);
     print('');
 
     // 5. Verify with wrong message fails

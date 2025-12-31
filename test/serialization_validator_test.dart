@@ -695,9 +695,8 @@ void main() {
         final data = Uint8List(RecordSize.senderKeyDistributionMessageMin);
         data[0] = 0x00; // version 0
         expect(
-          () => SerializationValidator.validateSenderKeyDistributionMessage(
-            data,
-          ),
+          () =>
+              SerializationValidator.validateSenderKeyDistributionMessage(data),
           throwsA(isA<LibSignalException>()),
         );
       });
@@ -706,9 +705,8 @@ void main() {
         final data = Uint8List(RecordSize.senderKeyDistributionMessageMin);
         data[0] = 0x33;
         expect(
-          () => SerializationValidator.validateSenderKeyDistributionMessage(
-            data,
-          ),
+          () =>
+              SerializationValidator.validateSenderKeyDistributionMessage(data),
           returnsNormally,
         );
       });
