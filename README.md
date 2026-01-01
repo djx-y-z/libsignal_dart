@@ -237,9 +237,12 @@ identity.dispose();
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (for building native libraries)
 - [Flutter](https://flutter.dev/) 3.38+
 - [FVM](https://fvm.app/) (optional, for version management)
+- **Rust toolchain** (for building native libraries):
+  - [rustup](https://rustup.rs/) - Rust toolchain installer and version manager
+  - `cargo` - Rust package manager (installed automatically with rustup)
+  - `cbindgen` - C header generator (installed automatically during build via `cargo install`)
 
 ### Setup
 
