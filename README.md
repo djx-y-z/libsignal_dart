@@ -233,6 +233,44 @@ identity.clearSecrets();
 identity.dispose();
 ```
 
+## Stores
+
+Signal Protocol requires persistent storage for session state (Double Ratchet). This library provides store interfaces and in-memory implementations.
+
+### In-Memory Stores (Testing Only)
+
+```dart
+final sessionStore = InMemorySessionStore();
+final identityStore = InMemoryIdentityKeyStore(identity, registrationId);
+final preKeyStore = InMemoryPreKeyStore();
+final signedPreKeyStore = InMemorySignedPreKeyStore();
+final kyberPreKeyStore = InMemoryKyberPreKeyStore();
+final senderKeyStore = InMemorySenderKeyStore();
+```
+
+> **Warning:** In-memory stores lose all data on app restart. Use only for:
+> - Unit tests
+> - Development/debugging
+> - Demo applications
+
+### Production Requirements
+
+For production apps, implement the store interfaces with secure storage:
+
+| Store | Purpose | Security Level |
+|-------|---------|----------------|
+| `SessionStore` | Encrypted session state | High (contains key material) |
+| `IdentityKeyStore` | Identity keys | Critical (long-term secrets) |
+| `PreKeyStore` | One-time pre-keys | High |
+| `SignedPreKeyStore` | Signed pre-keys | High |
+| `KyberPreKeyStore` | Post-quantum pre-keys | High |
+| `SenderKeyStore` | Group messaging keys | High |
+
+**Recommended storage options:**
+- `flutter_secure_storage` - for identity keys and other critical secrets
+- `drift` / `sqflite` with SQLCipher - for session records
+- `hive` with encryption - lightweight alternative
+
 ## Building from Source
 
 ### Prerequisites

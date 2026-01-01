@@ -228,3 +228,41 @@ Some libsignal features are not yet implemented in this library:
 ### SVR (Secure Value Recovery)
 - Server-side functionality for PIN-based backups
 - Not typically needed in client applications
+
+## Stores Architecture
+
+Stores are **required** for Signal Protocol operations due to Double Ratchet:
+- Each message changes session state (ratchet advances)
+- State must be persisted for correct encryption/decryption
+- Without stores, repeated operations will fail or produce incorrect results
+
+### Minimum Required Stores
+
+| Operation | SessionStore | IdentityKeyStore | PreKeyStore | SignedPreKeyStore | KyberPreKeyStore |
+|-----------|:---:|:---:|:---:|:---:|:---:|
+| Encrypt/Decrypt (existing session) | ✓ | ✓ | - | - | - |
+| Process PreKey message (new session) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Group messaging | - | - | - | - | - |
+
+**Note:** Group messaging uses `SenderKeyStore` with built-in FFI callbacks.
+
+### What Works WITHOUT Stores
+
+- Key generation (`PrivateKey.generate()`, `IdentityKeyPair.generate()`)
+- Signing and verification (`privateKey.sign()`, `publicKey.verifySignature()`)
+- Message parsing (`SignalMessage.deserialize()`)
+- Certificate validation (`SenderCertificate.validate()`)
+- Creating `PreKeyBundle` from existing keys
+
+### Available Implementations
+
+**In-memory stores** (in `lib/src/stores/in_memory/`) are for **testing only**:
+- `InMemorySessionStore`
+- `InMemoryIdentityKeyStore`
+- `InMemoryPreKeyStore`
+- `InMemorySignedPreKeyStore`
+- `InMemoryKyberPreKeyStore`
+- `InMemorySenderKeyStore`
+
+For production, implement store interfaces with secure storage (SQLite, SecureStorage, etc.).
+See `docs/stores-implementations-idea.md` for future plans.
