@@ -10,12 +10,18 @@
 ///
 /// Options:
 ///   --update          Update local files if new version available
-///   --no-changelog    Skip CHANGELOG.md update (use with --update, for CI)
+///   --no-changelog    Skip CHANGELOG.md update (use with --update)
 ///   --version <ver>   Check/update to specific version
 ///   --bump <type>     Version bump type: major, minor, patch (default: minor)
 ///   --force           Force update even if versions match
-///   --json            Output results as JSON (for CI integration)
+///   --json            Output results as JSON
+///   --ai              Enable AI analysis of release notes (requires GITHUB_TOKEN)
+///   --no-ai           Disable AI analysis (default for local runs)
+///   --ci              CI mode: enable AI, write to GITHUB_OUTPUT
 ///   --help, -h        Show this help
+///
+/// Environment:
+///   GITHUB_TOKEN      Required for AI analysis (GitHub Models API)
 ///
 /// Examples:
 ///   # Just check for updates
@@ -24,16 +30,19 @@
 ///   # Check and update files
 ///   fvm dart run scripts/check_updates.dart --update
 ///
+///   # Update with AI analysis (requires GITHUB_TOKEN)
+///   GITHUB_TOKEN=xxx fvm dart run scripts/check_updates.dart --update --ai
+///
+///   # CI mode (auto-enables AI, writes to GITHUB_OUTPUT)
+///   fvm dart run scripts/check_updates.dart --update --ci
+///
 ///   # Update to specific version
 ///   fvm dart run scripts/check_updates.dart --update --version v0.87.0
 ///
 ///   # Force major version bump
 ///   fvm dart run scripts/check_updates.dart --update --bump major
 ///
-///   # Update without changelog (for CI, AI generates changelog separately)
-///   fvm dart run scripts/check_updates.dart --update --no-changelog
-///
-///   # Output JSON for CI
+///   # Output JSON for scripting
 ///   fvm dart run scripts/check_updates.dart --json
 
 import 'dart:io';
@@ -52,6 +61,10 @@ void main(List<String> args) async {
   final force = args.contains('--force');
   final jsonOutput = args.contains('--json');
   final noChangelog = args.contains('--no-changelog');
+  final ciMode = args.contains('--ci');
+
+  // AI flags: --ai enables, --no-ai disables, --ci enables by default
+  final useAi = args.contains('--ai') || (ciMode && !args.contains('--no-ai'));
 
   String? targetVersion;
   final versionIndex = args.indexOf('--version');
@@ -71,66 +84,75 @@ void main(List<String> args) async {
     }
   }
 
+  // Get GitHub token from environment
+  final githubToken = Platform.environment['GITHUB_TOKEN'];
+
   if (!jsonOutput) {
     print('');
     print('========================================');
     print('  libsignal Update Checker');
     print('========================================');
     print('');
+    if (useAi) {
+      if (githubToken != null && githubToken.isNotEmpty) {
+        logInfo('AI analysis: enabled');
+      } else {
+        logWarning('AI analysis: requested but GITHUB_TOKEN not set');
+      }
+    }
   }
 
   try {
-    // Check for updates (suppress logs in JSON mode)
-    final checkResult = await checkForUpdates(
+    // Perform the update check with all options
+    final result = await performUpdateCheck(
       targetVersion: targetVersion,
+      doUpdate: doUpdate,
+      force: force,
+      useAi: useAi,
+      githubToken: githubToken,
+      bumpType: bumpType,
+      skipChangelog: noChangelog,
       silent: jsonOutput,
     );
 
-    PackageVersionResult? packageResult;
-
-    if (checkResult.needsUpdate || force) {
-      // Calculate new package version
-      packageResult = calculatePackageVersion(
-        currentLibsignal: checkResult.currentVersion,
-        newLibsignal: checkResult.latestVersion,
-        isPrerelease: checkResult.isPrerelease,
-        bumpType: bumpType,
-        silent: jsonOutput,
+    // Write to GITHUB_OUTPUT if in CI mode
+    if (ciMode) {
+      await writeGitHubOutputs(
+        checkResult: result.checkResult,
+        packageResult: result.packageResult,
+        aiResult: result.aiResult,
+        updated: result.updated,
       );
-
-      if (doUpdate) {
-        // Update files
-        await updateVersionFiles(
-          newLibsignalVersion: checkResult.latestVersion,
-          newPackageVersion: packageResult.newVersion,
-          bumpType: packageResult.bumpType,
-          isPrerelease: checkResult.isPrerelease,
-          releaseUrl: checkResult.releaseUrl,
-          silent: jsonOutput,
-          skipChangelog: noChangelog,
-        );
-      }
     }
-
-    final wasUpdated = doUpdate && (checkResult.needsUpdate || force);
 
     // Output results
     if (jsonOutput) {
       printJsonOutput(
-        checkResult: checkResult,
-        packageResult: packageResult,
-        updated: wasUpdated,
+        checkResult: result.checkResult,
+        packageResult: result.packageResult,
+        aiResult: result.aiResult,
+        updated: result.updated,
       );
     } else {
       printUpdateSummary(
-        checkResult: checkResult,
-        packageResult: packageResult,
-        updated: wasUpdated,
+        checkResult: result.checkResult,
+        packageResult: result.packageResult,
+        updated: result.updated,
       );
+
+      // Show AI analysis summary if available
+      if (result.aiResult != null) {
+        print('');
+        print('AI Analysis:');
+        print('  Model: ${result.aiResult!.modelUsed}');
+        print('  Recommended bump: ${result.aiResult!.versionBump}');
+        print('  Breaking changes: ${result.aiResult!.breakingChanges}');
+        print('  Binding changes: ${result.aiResult!.bindingChanges}');
+      }
     }
 
     // Exit code: 0 if up to date or updated, 1 if update available but not applied
-    if (checkResult.needsUpdate && !doUpdate) {
+    if (result.checkResult.needsUpdate && !doUpdate) {
       exit(1); // Signal that update is available
     }
   } catch (e) {
@@ -150,12 +172,18 @@ Usage:
 
 Options:
   --update          Update local files if new version available
-  --no-changelog    Skip CHANGELOG.md update (use with --update, for CI)
+  --no-changelog    Skip CHANGELOG.md update (use with --update)
   --version <ver>   Check/update to specific version
   --bump <type>     Version bump type: major, minor, patch (default: minor)
   --force           Force update even if versions match
-  --json            Output results as JSON (for CI integration)
+  --json            Output results as JSON
+  --ai              Enable AI analysis of release notes
+  --no-ai           Disable AI analysis
+  --ci              CI mode: enable AI, write to GITHUB_OUTPUT
   --help, -h        Show this help
+
+Environment:
+  GITHUB_TOKEN      Required for AI analysis (GitHub Models API)
 
 Examples:
   # Just check for updates
@@ -164,10 +192,16 @@ Examples:
   # Check and update files
   fvm dart run scripts/check_updates.dart --update
 
+  # Update with AI analysis
+  GITHUB_TOKEN=xxx fvm dart run scripts/check_updates.dart --update --ai
+
+  # CI mode (for GitHub Actions)
+  fvm dart run scripts/check_updates.dart --update --ci
+
   # Update to specific version with major bump
   fvm dart run scripts/check_updates.dart --update --version v0.87.0 --bump major
 
-  # Output JSON for CI
+  # Output JSON for scripting
   fvm dart run scripts/check_updates.dart --json
 
 Exit codes:

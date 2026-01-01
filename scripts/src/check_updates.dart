@@ -3,12 +3,17 @@
 /// This module provides functionality to:
 /// - Check for new libsignal releases on GitHub
 /// - Compare versions using semver
+/// - Analyze release notes with AI (optional)
 /// - Update pubspec.yaml (version, libsignal.native_version, libsignal.native_build) and CHANGELOG.md
 
 import 'dart:convert';
 import 'dart:io';
 
+import 'ai_analysis.dart';
 import 'common.dart';
+
+// Re-export for convenience
+export 'ai_analysis.dart' show AiAnalysisResult;
 
 /// Result of version check
 class UpdateCheckResult {
@@ -296,6 +301,7 @@ Future<void> updateVersionFiles({
   String? releaseUrl,
   bool silent = false,
   bool skipChangelog = false,
+  String? customChangelogEntry,
 }) async {
   final packageDir = getPackageDir();
 
@@ -353,6 +359,7 @@ Future<void> updateVersionFiles({
       bumpType: bumpType,
       isPrerelease: isPrerelease,
       releaseUrl: releaseUrl,
+      customEntry: customChangelogEntry,
     );
     if (!silent) logInfo('Updated CHANGELOG.md');
   } else {
@@ -368,6 +375,7 @@ Future<void> _updateChangelog({
   required String bumpType,
   required bool isPrerelease,
   String? releaseUrl,
+  String? customEntry,
 }) async {
   final changelogFile = File('${packageDir.path}/CHANGELOG.md');
   final currentContent = changelogFile.readAsStringSync();
@@ -398,13 +406,21 @@ Future<void> _updateChangelog({
       releaseUrl ??
       'https://github.com/signalapp/libsignal/releases/tag/$newLibsignal';
 
+  // Use custom entry from AI or default
+  String changelogContent;
+  if (customEntry != null && customEntry.trim().isNotEmpty) {
+    changelogContent = customEntry.trim();
+  } else {
+    changelogContent = '- Updated libsignal native library to $newLibsignal';
+  }
+
   // Create new entry
   final newEntry =
       '''
 ## $newVersion
 $prereleaseNote
 $sectionHeader
-- Updated libsignal native library to $newLibsignal
+$changelogContent
 - See [libsignal $newLibsignal release notes]($releaseLink)
 
 ''';
@@ -466,6 +482,7 @@ void printJsonOutput({
   required UpdateCheckResult checkResult,
   required PackageVersionResult? packageResult,
   required bool updated,
+  AiAnalysisResult? aiResult,
 }) {
   final output = <String, dynamic>{
     'libsignal': checkResult.toJson(),
@@ -476,7 +493,181 @@ void printJsonOutput({
     output['package'] = packageResult.toJson();
   }
 
+  if (aiResult != null) {
+    output['ai_analysis'] = aiResult.toJson();
+  }
+
   // Pretty print JSON
   const encoder = JsonEncoder.withIndent('  ');
   print(encoder.convert(output));
+}
+
+/// Perform full update check with optional AI analysis
+///
+/// This is the main entry point that orchestrates the entire update process:
+/// 1. Check for new libsignal version
+/// 2. Optionally analyze release notes with AI
+/// 3. Calculate new package version
+/// 4. Optionally update files
+///
+/// Returns a record with all results for further processing.
+Future<({
+  UpdateCheckResult checkResult,
+  PackageVersionResult? packageResult,
+  AiAnalysisResult? aiResult,
+  bool updated,
+})> performUpdateCheck({
+  String? targetVersion,
+  bool doUpdate = false,
+  bool force = false,
+  bool useAi = false,
+  String? githubToken,
+  String bumpType = 'minor',
+  bool skipChangelog = false,
+  bool silent = false,
+}) async {
+  // Step 1: Check for updates
+  final checkResult = await checkForUpdates(
+    targetVersion: targetVersion,
+    silent: silent,
+  );
+
+  PackageVersionResult? packageResult;
+  AiAnalysisResult? aiResult;
+
+  if (checkResult.needsUpdate || force) {
+    // Step 2: AI analysis (if enabled and token available)
+    if (useAi && githubToken != null && githubToken.isNotEmpty) {
+      if (!silent) {
+        logStep('Performing AI analysis of release notes...');
+      }
+
+      // Fetch release notes if not already available
+      String? releaseNotes = checkResult.releaseNotes;
+      if (releaseNotes == null || releaseNotes.isEmpty) {
+        releaseNotes = await _fetchReleaseNotes(checkResult.latestVersion);
+      }
+
+      if (releaseNotes != null && releaseNotes.isNotEmpty) {
+        aiResult = await analyzeReleaseNotes(
+          token: githubToken,
+          releaseNotes: releaseNotes,
+          currentVersion: checkResult.currentVersion,
+          newVersion: checkResult.latestVersion,
+          silent: silent,
+        );
+
+        if (aiResult != null && !silent) {
+          logInfo('AI recommends: ${aiResult.versionBump} bump');
+        }
+      }
+    } else if (useAi && !silent) {
+      logWarning('AI analysis requested but no GITHUB_TOKEN available');
+    }
+
+    // Step 3: Determine bump type (AI recommendation or manual)
+    final effectiveBumpType = aiResult?.versionBump ?? bumpType;
+
+    // Step 4: Calculate new package version
+    packageResult = calculatePackageVersion(
+      currentLibsignal: checkResult.currentVersion,
+      newLibsignal: checkResult.latestVersion,
+      isPrerelease: checkResult.isPrerelease,
+      bumpType: effectiveBumpType,
+      silent: silent,
+    );
+
+    // Step 5: Update files if requested
+    if (doUpdate) {
+      // Use AI-generated changelog if available
+      final changelogEntry = aiResult?.changelogEntry;
+
+      await updateVersionFiles(
+        newLibsignalVersion: checkResult.latestVersion,
+        newPackageVersion: packageResult.newVersion,
+        bumpType: packageResult.bumpType,
+        isPrerelease: checkResult.isPrerelease,
+        releaseUrl: checkResult.releaseUrl,
+        silent: silent,
+        skipChangelog: skipChangelog,
+        customChangelogEntry: changelogEntry,
+      );
+    }
+  }
+
+  final wasUpdated = doUpdate && (checkResult.needsUpdate || force);
+
+  return (
+    checkResult: checkResult,
+    packageResult: packageResult,
+    aiResult: aiResult,
+    updated: wasUpdated,
+  );
+}
+
+/// Fetch release notes for a specific version
+Future<String?> _fetchReleaseNotes(String version) async {
+  try {
+    final result = await Process.run('curl', [
+      '-s',
+      'https://api.github.com/repos/signalapp/libsignal/releases/tags/$version',
+    ]);
+
+    if (result.exitCode != 0) {
+      return null;
+    }
+
+    final json = jsonDecode(result.stdout as String) as Map<String, dynamic>;
+    return json['body'] as String?;
+  } catch (e) {
+    return null;
+  }
+}
+
+/// Write outputs to GitHub Actions output file
+///
+/// This allows the workflow to access the results without parsing JSON.
+Future<void> writeGitHubOutputs({
+  required UpdateCheckResult checkResult,
+  PackageVersionResult? packageResult,
+  AiAnalysisResult? aiResult,
+  required bool updated,
+}) async {
+  final githubOutput = Platform.environment['GITHUB_OUTPUT'];
+  if (githubOutput == null) {
+    return; // Not running in GitHub Actions
+  }
+
+  final file = File(githubOutput);
+  final buffer = StringBuffer();
+
+  // Check results
+  buffer.writeln('current_version=${checkResult.currentVersion}');
+  buffer.writeln('latest_version=${checkResult.latestVersion}');
+  buffer.writeln('needs_update=${checkResult.needsUpdate}');
+  buffer.writeln('is_prerelease=${checkResult.isPrerelease}');
+  buffer.writeln('release_url=${checkResult.releaseUrl ?? ""}');
+
+  // Package results
+  if (packageResult != null) {
+    buffer.writeln('pkg_current=${packageResult.currentVersion}');
+    buffer.writeln('pkg_new=${packageResult.newVersion}');
+    buffer.writeln('bump_type=${packageResult.bumpType}');
+    buffer.writeln('is_rc=${packageResult.isPrerelease}');
+  }
+
+  // AI results
+  if (aiResult != null) {
+    buffer.writeln('ai_available=true');
+    buffer.writeln('ai_model=${aiResult.modelUsed ?? ""}');
+    buffer.writeln('ai_bump=${aiResult.versionBump}');
+    buffer.writeln('breaking_changes=${aiResult.breakingChanges}');
+    buffer.writeln('binding_changes=${aiResult.bindingChanges}');
+  } else {
+    buffer.writeln('ai_available=false');
+  }
+
+  buffer.writeln('updated=$updated');
+
+  await file.writeAsString(buffer.toString(), mode: FileMode.append);
 }

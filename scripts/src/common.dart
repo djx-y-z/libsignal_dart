@@ -39,6 +39,9 @@ void logWarn(String message) {
   print(Colors.colorize('[WARN]', Colors.yellow) + ' $message');
 }
 
+/// Alias for logWarn
+void logWarning(String message) => logWarn(message);
+
 void logError(String message) {
   print(Colors.colorize('[ERROR]', Colors.red) + ' $message');
 }
