@@ -188,9 +188,9 @@ class GroupSession {
 
   /// Creates a new group session.
   ///
-  /// The [senderAddress] is the address of the message sender (typically us).
-  /// The [distributionId] is a UUID identifying this group/distribution.
-  /// The [store] provides persistent storage for sender keys.
+  /// - `senderAddress`: The address of the message sender (typically us).
+  /// - `distributionId`: A UUID identifying this group/distribution.
+  /// - `store`: A [SenderKeyStore] providing persistent storage for sender keys.
   GroupSession(this._senderAddress, this._distributionId, this._store) {
     LibSignal.ensureInitialized();
 

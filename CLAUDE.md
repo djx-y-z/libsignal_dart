@@ -28,6 +28,7 @@ make build macos --arch arm64  # make interprets --arch as its own flag!
 | Run analysis | `make analyze` |
 | Strict analysis | `make analyze ARGS="--fatal-infos"` |
 | Format code | `make format` |
+| Generate documentation | `make doc` |
 | Regenerate FFI bindings | `make regen` |
 | Check for updates | `make check` |
 | Get dependencies | `make get` |

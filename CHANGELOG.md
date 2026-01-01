@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `make doc` command for local API documentation generation
+
+### Fixed
+
+- Fixed unresolved dartdoc references in `LibSignalException`, `GroupSession`, and `InMemoryIdentityKeyStore`
+- Fixed `.pubignore` to include `CONTRIBUTING.md` in published package
+- Fixed `.pubignore` to exclude generated `doc/` directory
+
 ### Changed
 
 - Refactored CI update workflow: moved AI analysis from bash to Dart script

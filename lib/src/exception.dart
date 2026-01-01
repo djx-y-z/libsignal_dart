@@ -67,7 +67,8 @@ class LibSignalException implements Exception {
 
   /// Creates an exception for accessing a disposed object.
   ///
-  /// This is thrown when trying to use an object after [dispose] has been called.
+  /// This is thrown when trying to use an object after `dispose()` has been
+  /// called.
   factory LibSignalException.disposed(String objectType) {
     return LibSignalException(
       '$objectType has been disposed',

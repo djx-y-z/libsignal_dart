@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="windows" FVM="cmd //c fvm"
 
-.PHONY: help setup build regen check combine test coverage analyze format format-check get clean version get-version get-build get-full-version publish publish-dry-run
+.PHONY: help setup build regen check combine test coverage analyze format format-check get clean version get-version get-build get-full-version doc publish publish-dry-run
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -51,6 +51,7 @@ help:
 	@echo "                                        Example: make analyze ARGS=\"--fatal-infos\""
 	@echo "    make format                       - Format Dart code"
 	@echo "    make format-check                 - Check Dart code formatting"
+	@echo "    make doc                          - Generate API documentation"
 	@echo ""
 	@echo "  PUBLISHING"
 	@echo "    make publish-dry-run              - Validate package before publishing"
@@ -124,6 +125,13 @@ format:
 
 format-check:
 	$(FVM) dart format --set-exit-if-changed . $(ARGS)
+
+doc:
+	rm -rf doc
+	$(FVM) dart doc $(ARGS)
+	@echo ""
+	@echo "Documentation generated in doc/api/"
+	@echo "Open doc/api/index.html to view locally"
 
 # =============================================================================
 # Utilities

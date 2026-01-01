@@ -1,6 +1,5 @@
 # Development files
 TODO.md
-CONTRIBUTING.md
 Makefile
 .fvmrc
 .skip_libsignal_hook
@@ -22,7 +21,8 @@ headers/
 # Coverage and test artifacts
 coverage/
 
-# Documentation (generated)
+# Documentation
+doc/
 docs/
 
 # Build artifacts

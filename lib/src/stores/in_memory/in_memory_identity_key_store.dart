@@ -20,8 +20,8 @@ class InMemoryIdentityKeyStore implements IdentityKeyStore {
 
   /// Creates an in-memory identity key store.
   ///
-  /// The [identityKeyPair] is our own identity key pair.
-  /// The [localRegistrationId] is our registration ID.
+  /// - `identityKeyPair`: Our own [IdentityKeyPair].
+  /// - `localRegistrationId`: Our registration ID.
   InMemoryIdentityKeyStore(this._identityKeyPair, this._localRegistrationId);
 
   String _key(ProtocolAddress address) => address.name;

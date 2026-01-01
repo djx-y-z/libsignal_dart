@@ -44,3 +44,6 @@ build/
 
 # Coverage
 coverage/
+
+# Generated documentation
+doc/
