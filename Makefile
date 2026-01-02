@@ -78,6 +78,9 @@ setup:
 	@echo "Getting dependencies..."
 	$(FVM) dart pub get --no-example
 	@echo ""
+	@echo "Configuring git hooks..."
+	git config core.hooksPath .githooks
+	@echo ""
 	@echo "Setup complete! You can now use 'make help' to see available commands."
 
 # =============================================================================
