@@ -35,47 +35,21 @@ jobs:
   read-version:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      build: ${{ steps.version.outputs.build }}
-      full_version: ${{ steps.version.outputs.full_version }}
-      skip: ${{ steps.check-release.outputs.skip }}
+      version: ${{ steps.check.outputs.version }}
+      build: ${{ steps.check.outputs.build }}
+      full_version: ${{ steps.check.outputs.full_version }}
+      skip: ${{ steps.check.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup FVM and Flutter
         uses: ./.github/actions/setup-fvm
 
-      - name: Read version info from pubspec.yaml
-        id: version
-        run: |
-          # Use centralized Dart script for version parsing
-          VERSION=$(make get-version)
-          BUILD=$(make get-build)
-          FULL_VERSION=$(make get-full-version)
-
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "build=$BUILD" >> $GITHUB_OUTPUT
-          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
-
-          echo "Building libsignal version: $VERSION (Build $BUILD)"
-          echo "Full version: $FULL_VERSION"
-
-      - name: Check if release already exists
-        id: check-release
+      - name: Check version and release
+        id: check
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          FULL_VERSION="${{ steps.version.outputs.full_version }}"
-          TAG_NAME="libsignal-${FULL_VERSION}"
-
-          # Check if release with this tag exists
-          if gh release view "$TAG_NAME" --repo "${{ github.repository }}" > /dev/null 2>&1; then
-            echo "Release $TAG_NAME already exists. Skipping build."
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Release $TAG_NAME does not exist. Proceeding with build."
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make check-release ARGS="--ci"
 
   # ============================================
   # Linux (x86_64 + arm64)

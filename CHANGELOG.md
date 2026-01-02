@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed version parsing in `build-libsignal.yml` workflow (use Dart script instead of grep for reliable parsing)
 - Fixed unresolved dartdoc references in `LibSignalException`, `GroupSession`, and `InMemoryIdentityKeyStore`
 - Fixed `.pubignore` to include `CONTRIBUTING.md` in published package
 - Fixed `.pubignore` to exclude generated `doc/` directory
