@@ -77,7 +77,9 @@ class FfiHelpers {
   /// This copies the data to a new [Uint8List] and frees the native buffer.
   static Uint8List fromOwnedBuffer(SignalOwnedBuffer buffer) {
     if (buffer.base == nullptr || buffer.length == 0) {
-      return Uint8List(0); // coverage:ignore-line - defensive: FFI returns valid buffers
+      return Uint8List(
+        0,
+      ); // coverage:ignore-line - defensive: FFI returns valid buffers
     }
 
     final data = Uint8List.fromList(

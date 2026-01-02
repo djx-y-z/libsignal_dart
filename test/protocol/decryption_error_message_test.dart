@@ -194,9 +194,8 @@ void main() {
     group('extractFromSerializedContent()', () {
       test('rejects empty data', () {
         expect(
-          () => DecryptionErrorMessage.extractFromSerializedContent(
-            Uint8List(0),
-          ),
+          () =>
+              DecryptionErrorMessage.extractFromSerializedContent(Uint8List(0)),
           throwsA(isA<LibSignalException>()),
         );
       });

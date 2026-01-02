@@ -269,7 +269,10 @@ void main() {
         // Session should still be present with same remote registration ID
         final sessionAfter = await aliceSessionStore.loadSession(bobAddress);
         expect(sessionAfter, isNotNull);
-        expect(sessionAfter!.remoteRegistrationId, equals(registrationIdBefore));
+        expect(
+          sessionAfter!.remoteRegistrationId,
+          equals(registrationIdBefore),
+        );
         sessionAfter.dispose();
 
         bobBundle.dispose();
@@ -402,7 +405,9 @@ void main() {
         expect(encrypted.type, equals(CiphertextMessageType.preKey));
 
         // Bob should NOT have a session initially
-        final bobSessionBefore = await bobSessionStore.loadSession(aliceAddress);
+        final bobSessionBefore = await bobSessionStore.loadSession(
+          aliceAddress,
+        );
         expect(bobSessionBefore, isNull);
 
         // Create Bob's identity store with his own identity
@@ -665,28 +670,40 @@ void main() {
         final msg2 = Uint8List.fromList(utf8.encode('Message 2 from Bob'));
         final enc2 = await bobCipher.encrypt(aliceAddress, msg2);
         expect(enc2.type, equals(CiphertextMessageType.whisper));
-        final dec2 = await aliceCipher.decryptSignalMessage(bobAddress, enc2.bytes);
+        final dec2 = await aliceCipher.decryptSignalMessage(
+          bobAddress,
+          enc2.bytes,
+        );
         expect(dec2, equals(msg2));
 
         // Message 3: Alice -> Bob (SignalMessage now)
         final msg3 = Uint8List.fromList(utf8.encode('Message 3 from Alice'));
         final enc3 = await aliceCipher.encrypt(bobAddress, msg3);
         expect(enc3.type, equals(CiphertextMessageType.whisper));
-        final dec3 = await bobCipher.decryptSignalMessage(aliceAddress, enc3.bytes);
+        final dec3 = await bobCipher.decryptSignalMessage(
+          aliceAddress,
+          enc3.bytes,
+        );
         expect(dec3, equals(msg3));
 
         // Message 4: Bob -> Alice (SignalMessage)
         final msg4 = Uint8List.fromList(utf8.encode('Message 4 from Bob'));
         final enc4 = await bobCipher.encrypt(aliceAddress, msg4);
         expect(enc4.type, equals(CiphertextMessageType.whisper));
-        final dec4 = await aliceCipher.decryptSignalMessage(bobAddress, enc4.bytes);
+        final dec4 = await aliceCipher.decryptSignalMessage(
+          bobAddress,
+          enc4.bytes,
+        );
         expect(dec4, equals(msg4));
 
         // Message 5: Alice -> Bob (SignalMessage)
         final msg5 = Uint8List.fromList(utf8.encode('Message 5 from Alice'));
         final enc5 = await aliceCipher.encrypt(bobAddress, msg5);
         expect(enc5.type, equals(CiphertextMessageType.whisper));
-        final dec5 = await bobCipher.decryptSignalMessage(aliceAddress, enc5.bytes);
+        final dec5 = await bobCipher.decryptSignalMessage(
+          aliceAddress,
+          enc5.bytes,
+        );
         expect(dec5, equals(msg5));
 
         bobBundle.dispose();
@@ -729,7 +746,10 @@ void main() {
         // First message to establish session (Alice -> Bob)
         final firstMsg = Uint8List.fromList(utf8.encode('Init'));
         final firstEnc = await aliceCipher.encrypt(bobAddress, firstMsg);
-        await bobCipher.decryptPreKeySignalMessage(aliceAddress, firstEnc.bytes);
+        await bobCipher.decryptPreKeySignalMessage(
+          aliceAddress,
+          firstEnc.bytes,
+        );
 
         // Bob replies to Alice to complete full session
         final replyMsg = Uint8List.fromList(utf8.encode('Reply'));
@@ -746,12 +766,18 @@ void main() {
 
           // Alice -> Bob
           final enc = await aliceCipher.encrypt(bobAddress, data);
-          final dec = await bobCipher.decryptSignalMessage(aliceAddress, enc.bytes);
+          final dec = await bobCipher.decryptSignalMessage(
+            aliceAddress,
+            enc.bytes,
+          );
           expect(dec, equals(data), reason: 'Size $size A->B failed');
 
           // Bob -> Alice
           final enc2 = await bobCipher.encrypt(aliceAddress, data);
-          final dec2 = await aliceCipher.decryptSignalMessage(bobAddress, enc2.bytes);
+          final dec2 = await aliceCipher.decryptSignalMessage(
+            bobAddress,
+            enc2.bytes,
+          );
           expect(dec2, equals(data), reason: 'Size $size B->A failed');
         }
 
@@ -772,10 +798,16 @@ void main() {
       test('works with different types', () {
         final bytes = Uint8List.fromList([1, 2, 3]);
 
-        final preKeyMessage = CiphertextMessage(bytes, CiphertextMessageType.preKey);
+        final preKeyMessage = CiphertextMessage(
+          bytes,
+          CiphertextMessageType.preKey,
+        );
         expect(preKeyMessage.type, equals(CiphertextMessageType.preKey));
 
-        final whisperMessage = CiphertextMessage(bytes, CiphertextMessageType.whisper);
+        final whisperMessage = CiphertextMessage(
+          bytes,
+          CiphertextMessageType.whisper,
+        );
         expect(whisperMessage.type, equals(CiphertextMessageType.whisper));
       });
     });
@@ -816,7 +848,10 @@ Future<void> _storeBobPreKeys(
     keyPair: keys.kyberKeyPair,
     signature: keys.kyberPreKeySignature,
   );
-  await kyberPreKeyStore.storeKyberPreKey(keys.kyberPreKeyId, kyberPreKeyRecord);
+  await kyberPreKeyStore.storeKyberPreKey(
+    keys.kyberPreKeyId,
+    kyberPreKeyRecord,
+  );
   kyberPreKeyRecord.dispose();
 }
 
@@ -827,5 +862,10 @@ Future<void> _storeAlicePreKeys(
   InMemorySignedPreKeyStore signedPreKeyStore,
   InMemoryKyberPreKeyStore kyberPreKeyStore,
 ) async {
-  await _storeBobPreKeys(keys, preKeyStore, signedPreKeyStore, kyberPreKeyStore);
+  await _storeBobPreKeys(
+    keys,
+    preKeyStore,
+    signedPreKeyStore,
+    kyberPreKeyStore,
+  );
 }

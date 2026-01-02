@@ -93,7 +93,7 @@ void main() {
 
       /// Helper to create a valid USMC by encrypting a message.
       Future<(UnidentifiedSenderMessageContent, RemotePartyKeys)>
-          createValidUsmc({
+      createValidUsmc({
         int contentHint = ContentHint.none,
         Uint8List? groupId,
       }) async {
@@ -302,8 +302,9 @@ void main() {
           final serialized = usmc.serialize();
 
           // Deserialize
-          final restored =
-              UnidentifiedSenderMessageContent.deserialize(serialized);
+          final restored = UnidentifiedSenderMessageContent.deserialize(
+            serialized,
+          );
 
           // Verify all properties match
           expect(restored.messageType, equals(usmc.messageType));

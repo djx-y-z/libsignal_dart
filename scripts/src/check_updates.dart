@@ -511,12 +511,15 @@ void printJsonOutput({
 /// 4. Optionally update files
 ///
 /// Returns a record with all results for further processing.
-Future<({
-  UpdateCheckResult checkResult,
-  PackageVersionResult? packageResult,
-  AiAnalysisResult? aiResult,
-  bool updated,
-})> performUpdateCheck({
+Future<
+  ({
+    UpdateCheckResult checkResult,
+    PackageVersionResult? packageResult,
+    AiAnalysisResult? aiResult,
+    bool updated,
+  })
+>
+performUpdateCheck({
   String? targetVersion,
   bool doUpdate = false,
   bool force = false,

@@ -55,7 +55,8 @@ class AiAnalysisResult {
 }
 
 /// GitHub Models API endpoint
-const _githubModelsEndpoint = 'https://models.github.ai/inference/chat/completions';
+const _githubModelsEndpoint =
+    'https://models.github.ai/inference/chat/completions';
 
 /// Available models (in order of preference)
 const _primaryModel = 'openai/gpt-4o';
@@ -132,7 +133,9 @@ Future<String?> _loadPrompt(
   String releaseNotes,
 ) async {
   final packageDir = getPackageDir();
-  final promptFile = File('${packageDir.path}/.github/prompts/ai-analysis-prompt.md');
+  final promptFile = File(
+    '${packageDir.path}/.github/prompts/ai-analysis-prompt.md',
+  );
 
   String template;
   if (await promptFile.exists()) {
@@ -145,7 +148,8 @@ Future<String?> _loadPrompt(
   // Truncate release notes if too long
   var truncatedNotes = releaseNotes;
   if (truncatedNotes.length > _maxReleaseNotesLength) {
-    truncatedNotes = '${truncatedNotes.substring(0, _maxReleaseNotesLength)}...';
+    truncatedNotes =
+        '${truncatedNotes.substring(0, _maxReleaseNotesLength)}...';
   }
 
   // Replace placeholders
@@ -175,16 +179,14 @@ Future<AiAnalysisResult?> _callModel({
         'messages': [
           {
             'role': 'system',
-            'content': 'You are a precise technical analyst. Your task is to '
+            'content':
+                'You are a precise technical analyst. Your task is to '
                 'analyze software release notes and extract ONLY factual '
                 'information. Never invent or assume information not present '
                 'in the source. When uncertain, be conservative and explicit '
                 'about uncertainty. Follow the exact response format requested.',
           },
-          {
-            'role': 'user',
-            'content': prompt,
-          },
+          {'role': 'user', 'content': prompt},
         ],
         'max_tokens': 2500,
         'temperature': 0.1,
@@ -230,15 +232,18 @@ AiAnalysisResult? _parseAiResponse(String content, String model) {
   try {
     // Extract fields using regex
     String extractField(String name, {String defaultValue = 'none'}) {
-      final match = RegExp('$name:\\s*(.+)', caseSensitive: false)
-          .firstMatch(content);
+      final match = RegExp(
+        '$name:\\s*(.+)',
+        caseSensitive: false,
+      ).firstMatch(content);
       return match?.group(1)?.trim() ?? defaultValue;
     }
 
     // Extract changelog entry (everything after CHANGELOG_ENTRY:)
     String extractChangelog() {
-      final match = RegExp(r'CHANGELOG_ENTRY:\s*([\s\S]*?)(?=\n[A-Z_]+:|$)')
-          .firstMatch(content);
+      final match = RegExp(
+        r'CHANGELOG_ENTRY:\s*([\s\S]*?)(?=\n[A-Z_]+:|$)',
+      ).firstMatch(content);
       if (match != null) {
         return match.group(1)?.trim() ?? '';
       }
@@ -262,8 +267,10 @@ AiAnalysisResult? _parseAiResponse(String content, String model) {
       return changelogLines.join('\n');
     }
 
-    final versionBump = extractField('VERSION_BUMP', defaultValue: 'minor')
-        .toLowerCase();
+    final versionBump = extractField(
+      'VERSION_BUMP',
+      defaultValue: 'minor',
+    ).toLowerCase();
 
     // Validate version bump
     final validBumps = ['major', 'minor', 'patch'];
