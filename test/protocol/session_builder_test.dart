@@ -286,7 +286,7 @@ void main() {
       kyberPreKeyRecord.dispose();
 
       // First session establishment
-      var bobBundle = bobKeys1.toBundle();
+      final bobBundle = bobKeys1.toBundle();
       final aliceBuilder = SessionBuilder(
         sessionStore: aliceSessionStore,
         identityKeyStore: aliceIdentityStore,
