@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-01-02
+
 ### Added
 
 - Added `make doc` command for local API documentation generation
@@ -17,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved test coverage to 98.4%
 - Added `// coverage:ignore` comments to genuinely untestable code (FFI callbacks, finalizers, defensive null checks)
 - Removed unused `extractOwnedBuffer` function from `FfiHelpers`
+- Refactored CI update workflow: moved AI analysis from bash to Dart script
+- Simplified `check-libsignal-updates.yml` workflow (~530 → ~220 lines)
+- Added `--ai`, `--no-ai`, `--ci` flags to `check_updates.dart` script
+- Script now writes directly to `GITHUB_OUTPUT` in CI mode (no jq parsing needed)
+- `build-libsignal.yml` workflow now skips build if release already exists (prevents unnecessary rebuilds when only package version changes)
 
 ### Fixed
 
@@ -24,14 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `.pubignore` to include `CONTRIBUTING.md` in published package
 - Fixed `.pubignore` to exclude generated `doc/` directory
 - Fixed LICENSE file format for proper pub.dev recognition (added full AGPL-3.0 text with SPDX identifier)
-
-### Changed
-
-- Refactored CI update workflow: moved AI analysis from bash to Dart script
-- Simplified `check-libsignal-updates.yml` workflow (~530 → ~220 lines)
-- Added `--ai`, `--no-ai`, `--ci` flags to `check_updates.dart` script
-- Script now writes directly to `GITHUB_OUTPUT` in CI mode (no jq parsing needed)
-- `build-libsignal.yml` workflow now skips build if release already exists (prevents unnecessary rebuilds when only package version changes)
 
 ## [1.0.0] - 2025-12-31
 
@@ -65,5 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/djx-y-z/libsignal_dart/releases/tag/v1.0.0
