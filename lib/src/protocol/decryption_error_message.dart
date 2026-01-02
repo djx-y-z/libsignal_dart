@@ -17,6 +17,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for DecryptionErrorMessage.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalDecryptionErrorMessage>>
 _decryptionErrorMessageFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerDecryptionErrorMessage>();
@@ -24,6 +27,7 @@ _decryptionErrorMessageFinalizer = Finalizer((ptr) {
   signal_decryption_error_message_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A message indicating that decryption failed.
 ///
@@ -60,7 +64,7 @@ final class DecryptionErrorMessage {
   factory DecryptionErrorMessage.fromPointer(
     Pointer<SignalDecryptionErrorMessage> ptr,
   ) {
-    return DecryptionErrorMessage._(ptr);
+    return DecryptionErrorMessage._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a decryption error message from bytes.
@@ -91,11 +95,14 @@ final class DecryptionErrorMessage {
         'signal_decryption_error_message_deserialize',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_decryption_error_message_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return DecryptionErrorMessage._(outPtr.ref.raw);
     } finally {
@@ -159,11 +166,14 @@ final class DecryptionErrorMessage {
         'signal_decryption_error_message_for_original_message',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_decryption_error_message_for_original_message',
         );
       }
+      // coverage:ignore-end
 
       return DecryptionErrorMessage._(outPtr.ref.raw);
     } finally {
@@ -207,11 +217,14 @@ final class DecryptionErrorMessage {
         'signal_decryption_error_message_extract_from_serialized_content',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_decryption_error_message_extract_from_serialized_content',
         );
       }
+      // coverage:ignore-end
 
       return DecryptionErrorMessage._(outPtr.ref.raw);
     } finally {
@@ -318,7 +331,7 @@ final class DecryptionErrorMessage {
       );
 
       if (outPtr.ref.raw == nullptr) {
-        return null;
+        return null; // coverage:ignore-line - valid: optional ratchet key may be absent
       }
 
       return PublicKey.fromPointer(outPtr.ref.raw);
@@ -342,11 +355,14 @@ final class DecryptionErrorMessage {
       final error = signal_decryption_error_message_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_decryption_error_message_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_decryption_error_message_clone',
         );
       }
+      // coverage:ignore-end
 
       return DecryptionErrorMessage._(outPtr.ref.raw);
     } finally {

@@ -12,7 +12,7 @@ import 'exception.dart';
 
 /// Utility class for libsignal FFI operations.
 class LibSignalUtils {
-  LibSignalUtils._();
+  LibSignalUtils._(); // coverage:ignore-line - private constructor, never called
 
   /// Maximum allocation size (10MB - allows for large messages and group data).
   static const int maxAllocationSize = 10 * 1024 * 1024;

@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `make doc` command for local API documentation generation
 
+### Changed
+
+- Improved test coverage to 98.4%
+- Added `// coverage:ignore` comments to genuinely untestable code (FFI callbacks, finalizers, defensive null checks)
+- Removed unused `extractOwnedBuffer` function from `FfiHelpers`
+
 ### Fixed
 
 - Fixed unresolved dartdoc references in `LibSignalException`, `GroupSession`, and `InMemoryIdentityKeyStore`

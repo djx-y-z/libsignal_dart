@@ -14,6 +14,9 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Weak reference tracking for finalizer.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalPublicKey>> _publicKeyFinalizer = Finalizer((
   ptr,
 ) {
@@ -22,6 +25,7 @@ final Finalizer<Pointer<SignalPublicKey>> _publicKeyFinalizer = Finalizer((
   signal_publickey_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A public key for Signal Protocol operations.
 ///
@@ -52,7 +56,7 @@ final class PublicKey {
   ///
   /// This is intended for internal use by other libsignal classes.
   factory PublicKey.fromPointer(Pointer<SignalPublicKey> ptr) {
-    return PublicKey._(ptr);
+    return PublicKey._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a public key from bytes.
@@ -80,9 +84,11 @@ final class PublicKey {
       final error = signal_publickey_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_publickey_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_publickey_deserialize');
       }
+      // coverage:ignore-end
 
       return PublicKey._(outPtr.ref.raw);
     } finally {
@@ -255,9 +261,11 @@ final class PublicKey {
       final error = signal_publickey_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_publickey_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_publickey_clone');
       }
+      // coverage:ignore-end
 
       return PublicKey._(outPtr.ref.raw);
     } finally {

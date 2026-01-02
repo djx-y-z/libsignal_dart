@@ -13,6 +13,9 @@ import 'kyber_public_key.dart';
 import 'kyber_secret_key.dart';
 
 /// Finalizer for KyberKeyPair.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalKyberKeyPair>> _kyberKeyPairFinalizer = Finalizer(
   (ptr) {
     final mutPtr = calloc<SignalMutPointerKyberKeyPair>();
@@ -21,6 +24,7 @@ final Finalizer<Pointer<SignalKyberKeyPair>> _kyberKeyPairFinalizer = Finalizer(
     calloc.free(mutPtr);
   },
 );
+// coverage:ignore-end
 
 /// A Kyber key pair for post-quantum key encapsulation.
 ///
@@ -45,7 +49,7 @@ final class KyberKeyPair {
 
   /// Creates a KyberKeyPair from a raw pointer.
   factory KyberKeyPair.fromPointer(Pointer<SignalKyberKeyPair> ptr) {
-    return KyberKeyPair._(ptr);
+    return KyberKeyPair._(ptr); // coverage:ignore-line
   }
 
   /// Generates a new random Kyber key pair.
@@ -60,9 +64,12 @@ final class KyberKeyPair {
       final error = signal_kyber_key_pair_generate(outPtr);
       FfiHelpers.checkError(error, 'signal_kyber_key_pair_generate');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_kyber_key_pair_generate');
       }
+      // coverage:ignore-end
 
       return KyberKeyPair._(outPtr.ref.raw);
     } finally {
@@ -85,11 +92,14 @@ final class KyberKeyPair {
       final error = signal_kyber_key_pair_get_public_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_key_pair_get_public_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_kyber_key_pair_get_public_key',
         );
       }
+      // coverage:ignore-end
 
       return KyberPublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -113,11 +123,14 @@ final class KyberKeyPair {
       final error = signal_kyber_key_pair_get_secret_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_key_pair_get_secret_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_kyber_key_pair_get_secret_key',
         );
       }
+      // coverage:ignore-end
 
       return KyberSecretKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -138,9 +151,12 @@ final class KyberKeyPair {
       final error = signal_kyber_key_pair_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_key_pair_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_kyber_key_pair_clone');
       }
+      // coverage:ignore-end
 
       return KyberKeyPair._(outPtr.ref.raw);
     } finally {

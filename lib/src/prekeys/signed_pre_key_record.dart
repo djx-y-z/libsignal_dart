@@ -15,6 +15,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for SignedPreKeyRecord.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalSignedPreKeyRecord>>
 _signedPreKeyRecordFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerSignedPreKeyRecord>();
@@ -22,6 +25,7 @@ _signedPreKeyRecordFinalizer = Finalizer((ptr) {
   signal_signed_pre_key_record_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A signed pre-key record for Signal Protocol.
 ///
@@ -55,7 +59,7 @@ final class SignedPreKeyRecord {
   factory SignedPreKeyRecord.fromPointer(
     Pointer<SignalSignedPreKeyRecord> ptr,
   ) {
-    return SignedPreKeyRecord._(ptr);
+    return SignedPreKeyRecord._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new signed pre-key record.
@@ -102,11 +106,13 @@ final class SignedPreKeyRecord {
       );
       FfiHelpers.checkError(error, 'signal_signed_pre_key_record_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_signed_pre_key_record_new',
         );
       }
+      // coverage:ignore-end
 
       return SignedPreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -141,11 +147,13 @@ final class SignedPreKeyRecord {
       );
       FfiHelpers.checkError(error, 'signal_signed_pre_key_record_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_signed_pre_key_record_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return SignedPreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -264,11 +272,13 @@ final class SignedPreKeyRecord {
         'signal_signed_pre_key_record_get_public_key',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_signed_pre_key_record_get_public_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -295,11 +305,13 @@ final class SignedPreKeyRecord {
         'signal_signed_pre_key_record_get_private_key',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_signed_pre_key_record_get_private_key',
         );
       }
+      // coverage:ignore-end
 
       return PrivateKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -320,11 +332,13 @@ final class SignedPreKeyRecord {
       final error = signal_signed_pre_key_record_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_signed_pre_key_record_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_signed_pre_key_record_clone',
         );
       }
+      // coverage:ignore-end
 
       return SignedPreKeyRecord._(outPtr.ref.raw);
     } finally {

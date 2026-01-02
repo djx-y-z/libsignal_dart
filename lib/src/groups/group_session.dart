@@ -57,9 +57,11 @@ int _loadSenderKeyCallback(
     final operationId = ctx.address;
     final operation = _pendingStoreOperations[operationId];
 
+    // coverage:ignore-start
     if (operation == null) {
       return -1; // Error
     }
+    // coverage:ignore-end
 
     // This is synchronous - we pre-loaded the key before starting
     final recordBytes = _pendingSenderKeyRecordBytes[operationId];
@@ -87,13 +89,13 @@ int _loadSenderKeyCallback(
         return 0; // Success
       }
 
-      calloc.free(recordPtr);
+      calloc.free(recordPtr); // coverage:ignore-line
     }
 
     out.ref.raw = nullptr;
     return 0; // No record (not an error)
   } catch (e) {
-    return -1; // Error
+    return -1; // coverage:ignore-line
   }
 }
 
@@ -108,9 +110,11 @@ int _storeSenderKeyCallback(
     final operationId = ctx.address;
     final operation = _pendingStoreOperations[operationId];
 
+    // coverage:ignore-start
     if (operation == null) {
       return -1;
     }
+    // coverage:ignore-end
 
     // Serialize the record to bytes because the original pointer is owned
     // by libsignal and may be freed after callback returns
@@ -130,7 +134,7 @@ int _storeSenderKeyCallback(
 
     return 0;
   } catch (e) {
-    return -1;
+    return -1; // coverage:ignore-line
   }
 }
 
@@ -262,11 +266,13 @@ class GroupSession {
           'signal_sender_key_distribution_message_create',
         );
 
+        // coverage:ignore-start
         if (outPtr.ref.raw == nullptr) {
           throw LibSignalException.nullPointer(
             'signal_sender_key_distribution_message_create',
           );
         }
+        // coverage:ignore-end
 
         // Save any updated sender key record
         final updatedRecordBytes = _pendingSenderKeyRecordBytes[operationId];
@@ -434,9 +440,11 @@ class GroupSession {
         );
         FfiHelpers.checkError(error, 'signal_group_encrypt_message');
 
+        // coverage:ignore-start
         if (outPtr.ref.raw == nullptr) {
           throw LibSignalException.nullPointer('signal_group_encrypt_message');
         }
+        // coverage:ignore-end
 
         // Save any updated sender key record
         final updatedRecordBytes = _pendingSenderKeyRecordBytes[operationId];

@@ -16,6 +16,9 @@ import '../utils.dart';
 import 'public_key.dart';
 
 /// Weak reference tracking for finalizer.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalPrivateKey>> _privateKeyFinalizer = Finalizer((
   ptr,
 ) {
@@ -24,6 +27,7 @@ final Finalizer<Pointer<SignalPrivateKey>> _privateKeyFinalizer = Finalizer((
   signal_privatekey_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A private key for Signal Protocol operations.
 ///
@@ -51,7 +55,7 @@ final class PrivateKey {
   ///
   /// This is intended for internal use by other libsignal classes.
   factory PrivateKey.fromPointer(Pointer<SignalPrivateKey> ptr) {
-    return PrivateKey._(ptr);
+    return PrivateKey._(ptr); // coverage:ignore-line
   }
 
   /// Generates a new random private key.
@@ -65,9 +69,11 @@ final class PrivateKey {
       final error = signal_privatekey_generate(outPtr);
       FfiHelpers.checkError(error, 'signal_privatekey_generate');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_privatekey_generate');
       }
+      // coverage:ignore-end
 
       return PrivateKey._(outPtr.ref.raw);
     } finally {
@@ -99,9 +105,11 @@ final class PrivateKey {
       final error = signal_privatekey_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_privatekey_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_privatekey_deserialize');
       }
+      // coverage:ignore-end
 
       return PrivateKey._(outPtr.ref.raw);
     } finally {
@@ -161,11 +169,13 @@ final class PrivateKey {
       final error = signal_privatekey_get_public_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_privatekey_get_public_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_privatekey_get_public_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -255,9 +265,11 @@ final class PrivateKey {
       final error = signal_privatekey_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_privatekey_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_privatekey_clone');
       }
+      // coverage:ignore-end
 
       return PrivateKey._(outPtr.ref.raw);
     } finally {

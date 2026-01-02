@@ -17,7 +17,7 @@ import 'dart:isolate';
 /// }
 /// ```
 class LibSignal {
-  LibSignal._();
+  LibSignal._(); // coverage:ignore-line - private constructor, never called
 
   /// Track initialization per isolate.
   static final Set<int> _initializedIsolates = {};

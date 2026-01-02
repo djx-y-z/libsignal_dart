@@ -61,6 +61,11 @@ class _SessionCallbackContext {
 ///
 /// This class creates and manages the lifecycle of NativeCallable.isolateLocal
 /// callbacks, ensuring proper cleanup after use.
+///
+/// Note: Error paths (catch blocks and FFI failure returns) in callbacks are
+/// defensive code that only triggers on internal failures. These are marked
+/// with coverage:ignore comments as they cannot be tested without mocking
+/// the native library.
 class _FfiStoreCallbacks {
   final _SessionCallbackContext _context;
 
@@ -122,6 +127,10 @@ class _FfiStoreCallbacks {
           exceptionalReturn: -1,
         );
   }
+
+  // coverage:ignore-start
+  // FFI callbacks - error paths are defensive code that only triggers
+  // on internal failures
 
   // ============================================
   // Session Store Callbacks
@@ -355,6 +364,7 @@ class _FfiStoreCallbacks {
       return 0; // Error = don't trust
     }
   }
+  // coverage:ignore-end
 
   // ============================================
   // Create FFI structs

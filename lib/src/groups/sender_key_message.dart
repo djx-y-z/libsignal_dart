@@ -26,6 +26,9 @@ final class _Uuid16 extends Struct {
 }
 
 /// Finalizer for SenderKeyMessage.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalSenderKeyMessage>> _senderKeyMessageFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerSenderKeyMessage>();
@@ -33,6 +36,7 @@ final Finalizer<Pointer<SignalSenderKeyMessage>> _senderKeyMessageFinalizer =
       signal_sender_key_message_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A sender key message for group messaging.
 ///
@@ -49,7 +53,7 @@ final class SenderKeyMessage {
 
   /// Creates a SenderKeyMessage from a raw pointer.
   factory SenderKeyMessage.fromPointer(Pointer<SignalSenderKeyMessage> ptr) {
-    return SenderKeyMessage._(ptr);
+    return SenderKeyMessage._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a sender key message from bytes.
@@ -72,11 +76,13 @@ final class SenderKeyMessage {
       final error = signal_sender_key_message_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_sender_key_message_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_sender_key_message_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return SenderKeyMessage._(outPtr.ref.raw);
     } finally {
@@ -251,9 +257,11 @@ final class SenderKeyMessage {
       final error = signal_sender_key_message_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_sender_key_message_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_sender_key_message_clone');
       }
+      // coverage:ignore-end
 
       return SenderKeyMessage._(outPtr.ref.raw);
     } finally {

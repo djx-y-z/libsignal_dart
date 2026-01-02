@@ -67,6 +67,11 @@ void main() {
       return bundle;
     }
 
+    // Note: libsignal v0.86+ requires ALL keys (pre-key, signed pre-key, Kyber)
+    // to be present. Creating bundles without these keys is not supported.
+    // The null-pointer checks in getPreKeyPublic/getKyberPreKeyPublic are
+    // defensive code that may not be reachable in this libsignal version.
+
     group('create()', () {
       test('creates full bundle with all keys', () {
         final bundle = createFullBundle();

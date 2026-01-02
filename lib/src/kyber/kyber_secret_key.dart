@@ -15,6 +15,9 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Finalizer for KyberSecretKey.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalKyberSecretKey>> _kyberSecretKeyFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerKyberSecretKey>();
@@ -22,6 +25,7 @@ final Finalizer<Pointer<SignalKyberSecretKey>> _kyberSecretKeyFinalizer =
       signal_kyber_secret_key_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A Kyber secret key for post-quantum key encapsulation.
 ///
@@ -40,7 +44,7 @@ final class KyberSecretKey {
 
   /// Creates a KyberSecretKey from a raw pointer.
   factory KyberSecretKey.fromPointer(Pointer<SignalKyberSecretKey> ptr) {
-    return KyberSecretKey._(ptr);
+    return KyberSecretKey._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a Kyber secret key from bytes.
@@ -66,11 +70,14 @@ final class KyberSecretKey {
       final error = signal_kyber_secret_key_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_kyber_secret_key_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_kyber_secret_key_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return KyberSecretKey._(outPtr.ref.raw);
     } finally {
@@ -125,9 +132,12 @@ final class KyberSecretKey {
       final error = signal_kyber_secret_key_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_secret_key_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_kyber_secret_key_clone');
       }
+      // coverage:ignore-end
 
       return KyberSecretKey._(outPtr.ref.raw);
     } finally {

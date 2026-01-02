@@ -17,6 +17,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for SignalMessage native resources.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<ffi.SignalMessage>> _signalMessageFinalizer = Finalizer(
   (ptr) {
     final mutPtr = calloc<ffi.SignalMutPointerSignalMessage>();
@@ -25,6 +28,7 @@ final Finalizer<Pointer<ffi.SignalMessage>> _signalMessageFinalizer = Finalizer(
     calloc.free(mutPtr);
   },
 );
+// coverage:ignore-end
 
 /// An encrypted Signal Protocol message (whisper message).
 ///
@@ -69,7 +73,7 @@ final class SignalMessage {
   ///
   /// For internal use by other libsignal classes.
   factory SignalMessage.fromPointer(Pointer<ffi.SignalMessage> ptr) {
-    return SignalMessage._(ptr);
+    return SignalMessage._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a SignalMessage from bytes.
@@ -94,9 +98,11 @@ final class SignalMessage {
       final error = ffi.signal_message_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_message_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_message_deserialize');
       }
+      // coverage:ignore-end
 
       return SignalMessage._(outPtr.ref.raw);
     } finally {
@@ -207,11 +213,13 @@ final class SignalMessage {
       );
       FfiHelpers.checkError(error, 'signal_message_get_sender_ratchet_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_message_get_sender_ratchet_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -316,9 +324,11 @@ final class SignalMessage {
       final error = ffi.signal_message_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_message_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_message_clone');
       }
+      // coverage:ignore-end
 
       return SignalMessage._(outPtr.ref.raw);
     } finally {

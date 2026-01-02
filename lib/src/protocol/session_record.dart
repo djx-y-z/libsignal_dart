@@ -14,6 +14,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for SessionRecord.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalSessionRecord>> _sessionRecordFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerSessionRecord>();
@@ -21,6 +24,7 @@ final Finalizer<Pointer<SignalSessionRecord>> _sessionRecordFinalizer =
       signal_session_record_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A session record containing the state of a Signal Protocol session.
 ///
@@ -39,7 +43,7 @@ final class SessionRecord {
 
   /// Creates a SessionRecord from a raw pointer.
   factory SessionRecord.fromPointer(Pointer<SignalSessionRecord> ptr) {
-    return SessionRecord._(ptr);
+    return SessionRecord._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a session record from bytes.
@@ -62,11 +66,13 @@ final class SessionRecord {
       final error = signal_session_record_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_session_record_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_session_record_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return SessionRecord._(outPtr.ref.raw);
     } finally {
@@ -239,9 +245,11 @@ final class SessionRecord {
       final error = signal_session_record_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_session_record_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_session_record_clone');
       }
+      // coverage:ignore-end
 
       return SessionRecord._(outPtr.ref.raw);
     } finally {

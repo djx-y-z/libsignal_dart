@@ -10,9 +10,13 @@ import 'exception.dart';
 import 'utils.dart';
 
 /// Weak reference tracking for finalizer (safety net for forgotten dispose calls).
+///
+/// GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Uint8List> _secureBytesProtector = Finalizer(
   LibSignalUtils.zeroBytes,
 );
+// coverage:ignore-end
 
 /// A wrapper for sensitive byte data that provides secure disposal.
 ///

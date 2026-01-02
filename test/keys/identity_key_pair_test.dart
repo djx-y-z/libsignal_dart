@@ -133,6 +133,53 @@ void main() {
           throwsA(isA<LibSignalException>()),
         );
       });
+
+      test('deserialize rejects data with wrong public key length byte', () {
+        // Valid structure but wrong public key length
+        final invalidData = Uint8List(69);
+        invalidData[0] = 0x0a; // Correct public key tag
+        invalidData[1] = 0x32; // Wrong length (should be 0x21 = 33)
+        expect(
+          () => IdentityKeyPair.deserialize(invalidData),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      test('deserialize rejects data with wrong private key tag', () {
+        // Valid public key part but wrong private key tag
+        final identity = IdentityKeyPair.generate();
+        final serialized = identity.serialize();
+        final data = Uint8List.fromList(serialized.bytes);
+
+        // Corrupt the private key tag (offset 35 = 1 + 1 + 33)
+        data[35] = 0x99; // Wrong tag (should be 0x12)
+
+        expect(
+          () => IdentityKeyPair.deserialize(data),
+          throwsA(isA<LibSignalException>()),
+        );
+
+        serialized.dispose();
+        identity.dispose();
+      });
+
+      test('deserialize rejects data with wrong private key length byte', () {
+        // Valid public key part but wrong private key length
+        final identity = IdentityKeyPair.generate();
+        final serialized = identity.serialize();
+        final data = Uint8List.fromList(serialized.bytes);
+
+        // Corrupt the private key length (offset 36 = 1 + 1 + 33 + 1)
+        data[36] = 0x99; // Wrong length (should be 0x20 = 32)
+
+        expect(
+          () => IdentityKeyPair.deserialize(data),
+          throwsA(isA<LibSignalException>()),
+        );
+
+        serialized.dispose();
+        identity.dispose();
+      });
     });
 
     group('signAlternateIdentity()', () {

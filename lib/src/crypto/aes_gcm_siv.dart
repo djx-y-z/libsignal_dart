@@ -12,6 +12,9 @@ import '../ffi_helpers.dart';
 import '../libsignal.dart';
 
 /// Finalizer for Aes256GcmSiv.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalAes256GcmSiv>> _aes256GcmSivFinalizer = Finalizer(
   (ptr) {
     final mutPtr = calloc<SignalMutPointerAes256GcmSiv>();
@@ -20,6 +23,7 @@ final Finalizer<Pointer<SignalAes256GcmSiv>> _aes256GcmSivFinalizer = Finalizer(
     calloc.free(mutPtr);
   },
 );
+// coverage:ignore-end
 
 /// AES-256-GCM-SIV encryption/decryption.
 ///
@@ -82,9 +86,11 @@ final class Aes256GcmSiv {
       final error = signal_aes256_gcm_siv_new(outPtr, keyBuffer.ref);
       FfiHelpers.checkError(error, 'signal_aes256_gcm_siv_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_aes256_gcm_siv_new');
       }
+      // coverage:ignore-end
 
       return Aes256GcmSiv._(outPtr.ref.raw);
     } finally {

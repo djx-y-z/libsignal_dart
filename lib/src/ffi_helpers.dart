@@ -14,7 +14,7 @@ import 'exception.dart';
 
 /// Helper class for FFI buffer and error operations.
 class FfiHelpers {
-  FfiHelpers._();
+  FfiHelpers._(); // coverage:ignore-line - private constructor, never called
 
   // ============================================
   // Buffer conversion utilities
@@ -77,7 +77,7 @@ class FfiHelpers {
   /// This copies the data to a new [Uint8List] and frees the native buffer.
   static Uint8List fromOwnedBuffer(SignalOwnedBuffer buffer) {
     if (buffer.base == nullptr || buffer.length == 0) {
-      return Uint8List(0);
+      return Uint8List(0); // coverage:ignore-line - defensive: FFI returns valid buffers
     }
 
     final data = Uint8List.fromList(
@@ -87,14 +87,6 @@ class FfiHelpers {
     // Free the native buffer
     signal_free_buffer(buffer.base, buffer.length);
 
-    return data;
-  }
-
-  /// Extracts data from a [Pointer<SignalOwnedBuffer>] and frees it.
-  static Uint8List extractOwnedBuffer(Pointer<SignalOwnedBuffer> bufferPtr) {
-    final buffer = bufferPtr.ref;
-    final data = fromOwnedBuffer(buffer);
-    calloc.free(bufferPtr);
     return data;
   }
 
@@ -136,11 +128,17 @@ class FfiHelpers {
   /// Note: Some versions of libsignal may crash when calling
   /// signal_error_get_message for certain error types. This function
   /// attempts to safely retrieve the message but may return null.
+  ///
+  /// **Dead code warning**: This function is currently unused because
+  /// message retrieval is disabled in [checkError] due to crashes.
+  /// Kept for future use when libsignal stabilizes.
   static String? getErrorMessage(Pointer<SignalFfiError> error) {
     if (error == nullptr) {
       return null;
     }
 
+    // coverage:ignore-start
+    // Dead code: message retrieval disabled in checkError() due to crashes
     final messagePtr = calloc<Pointer<Char>>();
     try {
       // Note: signal_error_get_message may crash for certain error types
@@ -163,6 +161,7 @@ class FfiHelpers {
     } finally {
       calloc.free(messagePtr);
     }
+    // coverage:ignore-end
   }
 
   /// Gets the error code (type) from a [SignalFfiError].

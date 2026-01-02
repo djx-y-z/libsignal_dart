@@ -14,6 +14,9 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Finalizer for SenderKeyRecord.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalSenderKeyRecord>> _senderKeyRecordFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerSenderKeyRecord>();
@@ -21,6 +24,7 @@ final Finalizer<Pointer<SignalSenderKeyRecord>> _senderKeyRecordFinalizer =
       signal_sender_key_record_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A sender key record for group messaging.
 ///
@@ -37,7 +41,7 @@ final class SenderKeyRecord {
 
   /// Creates a SenderKeyRecord from a raw pointer.
   factory SenderKeyRecord.fromPointer(Pointer<SignalSenderKeyRecord> ptr) {
-    return SenderKeyRecord._(ptr);
+    return SenderKeyRecord._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a sender key record from bytes.
@@ -60,11 +64,14 @@ final class SenderKeyRecord {
       final error = signal_sender_key_record_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_sender_key_record_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_sender_key_record_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return SenderKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -118,9 +125,12 @@ final class SenderKeyRecord {
       final error = signal_sender_key_record_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_sender_key_record_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_sender_key_record_clone');
       }
+      // coverage:ignore-end
 
       return SenderKeyRecord._(outPtr.ref.raw);
     } finally {

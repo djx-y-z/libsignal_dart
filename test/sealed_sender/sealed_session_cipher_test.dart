@@ -109,6 +109,82 @@ void main() {
     });
 
     group('encrypt()', () {
+      test('throws when sender certificate is disposed', () async {
+        // Generate Bob's keys and establish session
+        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
+
+        // Store Bob's pre-keys
+        final preKeyRecord = PreKeyRecord.create(
+          id: bobKeys.preKeyId,
+          publicKey: bobKeys.preKeyPublic,
+          privateKey: bobKeys.preKeyPrivate,
+        );
+        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
+
+        final signedPreKeyRecord = SignedPreKeyRecord.create(
+          id: bobKeys.signedPreKeyId,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
+          publicKey: bobKeys.signedPreKeyPublic,
+          privateKey: bobKeys.signedPreKeyPrivate,
+          signature: bobKeys.signedPreKeySignature,
+        );
+        await bobSignedPreKeyStore.storeSignedPreKey(
+          bobKeys.signedPreKeyId,
+          signedPreKeyRecord,
+        );
+
+        final kyberPreKeyRecord = KyberPreKeyRecord.create(
+          id: bobKeys.kyberPreKeyId,
+          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
+          keyPair: bobKeys.kyberKeyPair,
+          signature: bobKeys.kyberPreKeySignature,
+        );
+        await bobKyberPreKeyStore.storeKyberPreKey(
+          bobKeys.kyberPreKeyId,
+          kyberPreKeyRecord,
+        );
+
+        // Alice establishes session with Bob
+        final bobBundle = bobKeys.toBundle();
+        final aliceBuilder = SessionBuilder(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
+
+        // Create sender certificate and dispose it
+        final localServerPrivate = PrivateKey.generate();
+        final senderCert = SenderCertificate.create(
+          senderUuid: 'alice-uuid',
+          deviceId: 1,
+          senderKey: aliceIdentity.publicKey,
+          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
+          signerCertificate: serverCert,
+          signerKey: localServerPrivate,
+        );
+        senderCert.dispose(); // Dispose before use
+
+        final cipher = SealedSessionCipher(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+
+        final plaintext = Uint8List.fromList(utf8.encode('Hello!'));
+
+        await expectLater(
+          () => cipher.encrypt(bobAddress, plaintext, senderCert),
+          throwsA(isA<LibSignalException>()),
+        );
+
+        // Cleanup
+        preKeyRecord.dispose();
+        signedPreKeyRecord.dispose();
+        kyberPreKeyRecord.dispose();
+        bobBundle.dispose();
+        localServerPrivate.dispose();
+        bobKeys.dispose();
+      });
+
       test('throws when no session exists', () async {
         final cipher = SealedSessionCipher(
           sessionStore: aliceSessionStore,
@@ -381,6 +457,52 @@ void main() {
         serverPrivate.dispose();
         senderCert.dispose();
         bobKeys.dispose();
+      });
+    });
+
+    group('decryptToUsmc()', () {
+      test('throws for empty data', () async {
+        final cipher = SealedSessionCipher(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+
+        await expectLater(
+          () => cipher.decryptToUsmc(Uint8List(0)),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      test('throws for garbage data', () async {
+        final cipher = SealedSessionCipher(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+
+        final garbage = Uint8List.fromList([0x12, 0x34, 0x56, 0x78, 0x9A]);
+
+        await expectLater(
+          () => cipher.decryptToUsmc(garbage),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      test('throws for truncated data', () async {
+        final cipher = SealedSessionCipher(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+
+        // Some random bytes that look like truncated sealed sender message
+        final truncated = Uint8List.fromList([
+          0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+          0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10,
+        ]);
+
+        await expectLater(
+          () => cipher.decryptToUsmc(truncated),
+          throwsA(isA<LibSignalException>()),
+        );
       });
     });
 

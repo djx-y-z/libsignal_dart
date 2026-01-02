@@ -16,6 +16,9 @@ import '../serialization_validator.dart';
 import '../utils.dart';
 
 /// Finalizer for PreKeyRecord.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalPreKeyRecord>> _preKeyRecordFinalizer = Finalizer(
   (ptr) {
     final mutPtr = calloc<SignalMutPointerPreKeyRecord>();
@@ -24,6 +27,7 @@ final Finalizer<Pointer<SignalPreKeyRecord>> _preKeyRecordFinalizer = Finalizer(
     calloc.free(mutPtr);
   },
 );
+// coverage:ignore-end
 
 /// A pre-key record for Signal Protocol session establishment.
 ///
@@ -47,7 +51,7 @@ final class PreKeyRecord {
 
   /// Creates a PreKeyRecord from a raw pointer.
   factory PreKeyRecord.fromPointer(Pointer<SignalPreKeyRecord> ptr) {
-    return PreKeyRecord._(ptr);
+    return PreKeyRecord._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new pre-key record.
@@ -79,9 +83,12 @@ final class PreKeyRecord {
       );
       FfiHelpers.checkError(error, 'signal_pre_key_record_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_pre_key_record_new');
       }
+      // coverage:ignore-end
 
       return PreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -111,11 +118,14 @@ final class PreKeyRecord {
       final error = signal_pre_key_record_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_pre_key_record_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_pre_key_record_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return PreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -188,11 +198,14 @@ final class PreKeyRecord {
       final error = signal_pre_key_record_get_public_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_pre_key_record_get_public_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_pre_key_record_get_public_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -213,11 +226,14 @@ final class PreKeyRecord {
       final error = signal_pre_key_record_get_private_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_pre_key_record_get_private_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_pre_key_record_get_private_key',
         );
       }
+      // coverage:ignore-end
 
       return PrivateKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -238,9 +254,12 @@ final class PreKeyRecord {
       final error = signal_pre_key_record_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_pre_key_record_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_pre_key_record_clone');
       }
+      // coverage:ignore-end
 
       return PreKeyRecord._(outPtr.ref.raw);
     } finally {

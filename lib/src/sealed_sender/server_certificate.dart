@@ -15,6 +15,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for ServerCertificate.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalServerCertificate>> _serverCertificateFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerServerCertificate>();
@@ -22,6 +25,7 @@ final Finalizer<Pointer<SignalServerCertificate>> _serverCertificateFinalizer =
       signal_server_certificate_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A server certificate for sealed sender.
 ///
@@ -51,7 +55,7 @@ final class ServerCertificate {
 
   /// Creates a ServerCertificate from a raw pointer.
   factory ServerCertificate.fromPointer(Pointer<SignalServerCertificate> ptr) {
-    return ServerCertificate._(ptr);
+    return ServerCertificate._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a server certificate from bytes.
@@ -74,11 +78,13 @@ final class ServerCertificate {
       final error = signal_server_certificate_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_server_certificate_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_server_certificate_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return ServerCertificate._(outPtr.ref.raw);
     } finally {
@@ -118,9 +124,11 @@ final class ServerCertificate {
       );
       FfiHelpers.checkError(error, 'signal_server_certificate_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_server_certificate_new');
       }
+      // coverage:ignore-end
 
       return ServerCertificate._(outPtr.ref.raw);
     } finally {
@@ -227,11 +235,13 @@ final class ServerCertificate {
       final error = signal_server_certificate_get_key(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_server_certificate_get_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_server_certificate_get_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -252,9 +262,11 @@ final class ServerCertificate {
       final error = signal_server_certificate_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_server_certificate_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_server_certificate_clone');
       }
+      // coverage:ignore-end
 
       return ServerCertificate._(outPtr.ref.raw);
     } finally {

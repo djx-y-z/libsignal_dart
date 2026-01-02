@@ -13,6 +13,9 @@ import '../keys/public_key.dart';
 import '../libsignal.dart';
 
 /// Finalizer for Fingerprint.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalFingerprint>> _fingerprintFinalizer = Finalizer((
   ptr,
 ) {
@@ -21,6 +24,7 @@ final Finalizer<Pointer<SignalFingerprint>> _fingerprintFinalizer = Finalizer((
   signal_fingerprint_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A fingerprint for verifying identity keys.
 ///
@@ -61,7 +65,7 @@ final class Fingerprint {
 
   /// Creates a Fingerprint from a raw pointer.
   factory Fingerprint.fromPointer(Pointer<SignalFingerprint> ptr) {
-    return Fingerprint._(ptr);
+    return Fingerprint._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new fingerprint for identity verification.
@@ -119,9 +123,12 @@ final class Fingerprint {
       );
       FfiHelpers.checkError(error, 'signal_fingerprint_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_fingerprint_new');
       }
+      // coverage:ignore-end
 
       return Fingerprint._(outPtr.ref.raw);
     } finally {
@@ -150,11 +157,14 @@ final class Fingerprint {
       final error = signal_fingerprint_display_string(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_fingerprint_display_string');
 
+      // coverage:ignore-start
       if (outPtr.value == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_fingerprint_display_string',
         );
       }
+      // coverage:ignore-end
 
       final result = outPtr.value.cast<Utf8>().toDartString();
       signal_free_string(outPtr.value);
@@ -236,9 +246,12 @@ final class Fingerprint {
       final error = signal_fingerprint_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_fingerprint_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_fingerprint_clone');
       }
+      // coverage:ignore-end
 
       return Fingerprint._(outPtr.ref.raw);
     } finally {

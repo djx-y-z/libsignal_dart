@@ -13,6 +13,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for KyberPublicKey.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalKyberPublicKey>> _kyberPublicKeyFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerKyberPublicKey>();
@@ -20,6 +23,7 @@ final Finalizer<Pointer<SignalKyberPublicKey>> _kyberPublicKeyFinalizer =
       signal_kyber_public_key_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A Kyber public key for post-quantum key encapsulation.
 ///
@@ -38,7 +42,7 @@ final class KyberPublicKey {
 
   /// Creates a KyberPublicKey from a raw pointer.
   factory KyberPublicKey.fromPointer(Pointer<SignalKyberPublicKey> ptr) {
-    return KyberPublicKey._(ptr);
+    return KyberPublicKey._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a Kyber public key from bytes.
@@ -61,11 +65,14 @@ final class KyberPublicKey {
       final error = signal_kyber_public_key_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_kyber_public_key_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer(
           'signal_kyber_public_key_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return KyberPublicKey._(outPtr.ref.raw);
     } finally {
@@ -134,9 +141,12 @@ final class KyberPublicKey {
       final error = signal_kyber_public_key_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_public_key_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_kyber_public_key_clone');
       }
+      // coverage:ignore-end
 
       return KyberPublicKey._(outPtr.ref.raw);
     } finally {

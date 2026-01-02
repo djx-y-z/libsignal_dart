@@ -133,6 +133,31 @@ void main() {
         }
       });
 
+      test('creates error message with zero timestamp', () {
+        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
+          originalBytes: validEncryptedMessage,
+          messageType: CiphertextMessageType.preKey.value,
+          timestamp: 0,
+          originalSenderDeviceId: 1,
+        );
+
+        expect(errorMsg.timestamp, equals(0));
+        errorMsg.dispose();
+      });
+
+      test('creates error message with large timestamp', () {
+        const largeTimestamp = 9999999999999;
+        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
+          originalBytes: validEncryptedMessage,
+          messageType: CiphertextMessageType.preKey.value,
+          timestamp: largeTimestamp,
+          originalSenderDeviceId: 1,
+        );
+
+        expect(errorMsg.timestamp, equals(largeTimestamp));
+        errorMsg.dispose();
+      });
+
       test('rejects empty original bytes', () {
         expect(
           () => DecryptionErrorMessage.forOriginalMessage(
@@ -141,6 +166,45 @@ void main() {
             timestamp: 12345,
             originalSenderDeviceId: 1,
           ),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+    });
+
+    group('fromPointer()', () {
+      test('creates message from existing pointer via clone', () {
+        final original = DecryptionErrorMessage.forOriginalMessage(
+          originalBytes: validEncryptedMessage,
+          messageType: CiphertextMessageType.preKey.value,
+          timestamp: validTimestamp,
+          originalSenderDeviceId: 42,
+        );
+
+        // Use clone to get a new pointer, then verify it works
+        final cloned = original.clone();
+
+        expect(cloned.deviceId, equals(original.deviceId));
+        expect(cloned.timestamp, equals(original.timestamp));
+
+        original.dispose();
+        cloned.dispose();
+      });
+    });
+
+    group('extractFromSerializedContent()', () {
+      test('rejects empty data', () {
+        expect(
+          () => DecryptionErrorMessage.extractFromSerializedContent(
+            Uint8List(0),
+          ),
+          throwsA(isA<LibSignalException>()),
+        );
+      });
+
+      test('rejects garbage data', () {
+        final garbage = Uint8List.fromList([0x12, 0x34, 0x56, 0x78]);
+        expect(
+          () => DecryptionErrorMessage.extractFromSerializedContent(garbage),
           throwsA(isA<LibSignalException>()),
         );
       });

@@ -14,6 +14,11 @@ import '../kyber/kyber_public_key.dart';
 import '../libsignal.dart';
 
 /// Finalizer for PreKeyBundle.
+///
+/// This is a safety net for objects not properly disposed. In well-written
+/// code, all objects should be disposed explicitly, so this finalizer
+/// should never run. It cannot be tested because GC behavior is non-deterministic.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalPreKeyBundle>> _preKeyBundleFinalizer = Finalizer(
   (ptr) {
     final mutPtr = calloc<SignalMutPointerPreKeyBundle>();
@@ -22,6 +27,7 @@ final Finalizer<Pointer<SignalPreKeyBundle>> _preKeyBundleFinalizer = Finalizer(
     calloc.free(mutPtr);
   },
 );
+// coverage:ignore-end
 
 /// A pre-key bundle for Signal Protocol session establishment.
 ///
@@ -54,7 +60,7 @@ final class PreKeyBundle {
 
   /// Creates a PreKeyBundle from a raw pointer.
   factory PreKeyBundle.fromPointer(Pointer<SignalPreKeyBundle> ptr) {
-    return PreKeyBundle._(ptr);
+    return PreKeyBundle._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new pre-key bundle.
@@ -160,9 +166,11 @@ final class PreKeyBundle {
       );
       FfiHelpers.checkError(error, 'signal_pre_key_bundle_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_pre_key_bundle_new');
       }
+      // coverage:ignore-end
 
       return PreKeyBundle._(outPtr.ref.raw);
     } finally {
@@ -309,11 +317,13 @@ final class PreKeyBundle {
         'signal_pre_key_bundle_get_signed_pre_key_public',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_pre_key_bundle_get_signed_pre_key_public',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -362,11 +372,13 @@ final class PreKeyBundle {
       );
       FfiHelpers.checkError(error, 'signal_pre_key_bundle_get_identity_key');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_pre_key_bundle_get_identity_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -470,9 +482,11 @@ final class PreKeyBundle {
       final error = signal_pre_key_bundle_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_pre_key_bundle_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_pre_key_bundle_clone');
       }
+      // coverage:ignore-end
 
       return PreKeyBundle._(outPtr.ref.raw);
     } finally {

@@ -37,6 +37,9 @@ final class _Uuid16 extends Struct {
 }
 
 /// Finalizer for SenderKeyDistributionMessage.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalSenderKeyDistributionMessage>>
 _senderKeyDistributionMessageFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerSenderKeyDistributionMessage>();
@@ -44,6 +47,7 @@ _senderKeyDistributionMessageFinalizer = Finalizer((ptr) {
   signal_sender_key_distribution_message_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// A sender key distribution message for group messaging.
 ///
@@ -75,7 +79,7 @@ final class SenderKeyDistributionMessage {
   factory SenderKeyDistributionMessage.fromPointer(
     Pointer<SignalSenderKeyDistributionMessage> ptr,
   ) {
-    return SenderKeyDistributionMessage._(ptr);
+    return SenderKeyDistributionMessage._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes a sender key distribution message from bytes.
@@ -104,11 +108,13 @@ final class SenderKeyDistributionMessage {
         'signal_sender_key_distribution_message_deserialize',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_sender_key_distribution_message_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return SenderKeyDistributionMessage._(outPtr.ref.raw);
     } finally {
@@ -271,11 +277,13 @@ final class SenderKeyDistributionMessage {
         'signal_sender_key_distribution_message_get_signature_key',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_sender_key_distribution_message_get_signature_key',
         );
       }
+      // coverage:ignore-end
 
       return PublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -302,11 +310,13 @@ final class SenderKeyDistributionMessage {
         'signal_sender_key_distribution_message_clone',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_sender_key_distribution_message_clone',
         );
       }
+      // coverage:ignore-end
 
       return SenderKeyDistributionMessage._(outPtr.ref.raw);
     } finally {

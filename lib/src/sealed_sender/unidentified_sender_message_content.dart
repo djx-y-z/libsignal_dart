@@ -28,6 +28,9 @@ abstract class ContentHint {
 }
 
 /// Finalizer for UnidentifiedSenderMessageContent.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalUnidentifiedSenderMessageContent>>
 _usmcFinalizer = Finalizer((ptr) {
   final mutPtr = calloc<SignalMutPointerUnidentifiedSenderMessageContent>();
@@ -35,6 +38,7 @@ _usmcFinalizer = Finalizer((ptr) {
   signal_unidentified_sender_message_content_destroy(mutPtr.ref);
   calloc.free(mutPtr);
 });
+// coverage:ignore-end
 
 /// Unidentified sender message content (USMC).
 ///
@@ -73,7 +77,7 @@ final class UnidentifiedSenderMessageContent {
   factory UnidentifiedSenderMessageContent.fromPointer(
     Pointer<SignalUnidentifiedSenderMessageContent> ptr,
   ) {
-    return UnidentifiedSenderMessageContent._(ptr);
+    return UnidentifiedSenderMessageContent._(ptr); // coverage:ignore-line
   }
 
   /// Deserializes an USMC from bytes.
@@ -105,11 +109,13 @@ final class UnidentifiedSenderMessageContent {
         'signal_unidentified_sender_message_content_deserialize',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_unidentified_sender_message_content_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return UnidentifiedSenderMessageContent._(outPtr.ref.raw);
     } finally {
@@ -223,11 +229,13 @@ final class UnidentifiedSenderMessageContent {
         'signal_unidentified_sender_message_content_get_sender_cert',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_unidentified_sender_message_content_get_sender_cert',
         );
       }
+      // coverage:ignore-end
 
       return SenderCertificate.fromPointer(outPtr.ref.raw);
     } finally {

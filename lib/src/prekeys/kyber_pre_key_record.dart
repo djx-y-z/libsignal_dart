@@ -16,6 +16,9 @@ import '../libsignal.dart';
 import '../serialization_validator.dart';
 
 /// Finalizer for KyberPreKeyRecord.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalKyberPreKeyRecord>> _kyberPreKeyRecordFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerKyberPreKeyRecord>();
@@ -23,6 +26,7 @@ final Finalizer<Pointer<SignalKyberPreKeyRecord>> _kyberPreKeyRecordFinalizer =
       signal_kyber_pre_key_record_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A Kyber pre-key record for post-quantum Signal Protocol.
 ///
@@ -38,7 +42,7 @@ final class KyberPreKeyRecord {
 
   /// Creates a KyberPreKeyRecord from a raw pointer.
   factory KyberPreKeyRecord.fromPointer(Pointer<SignalKyberPreKeyRecord> ptr) {
-    return KyberPreKeyRecord._(ptr);
+    return KyberPreKeyRecord._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new Kyber pre-key record.
@@ -79,9 +83,11 @@ final class KyberPreKeyRecord {
       );
       FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer('signal_kyber_pre_key_record_new');
       }
+      // coverage:ignore-end
 
       return KyberPreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -112,11 +118,13 @@ final class KyberPreKeyRecord {
       final error = signal_kyber_pre_key_record_deserialize(outPtr, buffer.ref);
       FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_deserialize');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_kyber_pre_key_record_deserialize',
         );
       }
+      // coverage:ignore-end
 
       return KyberPreKeyRecord._(outPtr.ref.raw);
     } finally {
@@ -226,11 +234,13 @@ final class KyberPreKeyRecord {
         'signal_kyber_pre_key_record_get_public_key',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_kyber_pre_key_record_get_public_key',
         );
       }
+      // coverage:ignore-end
 
       return KyberPublicKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -257,11 +267,13 @@ final class KyberPreKeyRecord {
         'signal_kyber_pre_key_record_get_secret_key',
       );
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_kyber_pre_key_record_get_secret_key',
         );
       }
+      // coverage:ignore-end
 
       return KyberSecretKey.fromPointer(outPtr.ref.raw);
     } finally {
@@ -285,11 +297,13 @@ final class KyberPreKeyRecord {
       );
       FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_get_key_pair');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_kyber_pre_key_record_get_key_pair',
         );
       }
+      // coverage:ignore-end
 
       return KyberKeyPair.fromPointer(outPtr.ref.raw);
     } finally {
@@ -310,11 +324,13 @@ final class KyberPreKeyRecord {
       final error = signal_kyber_pre_key_record_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_kyber_pre_key_record_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
         throw LibSignalException.nullPointer(
           'signal_kyber_pre_key_record_clone',
         );
       }
+      // coverage:ignore-end
 
       return KyberPreKeyRecord._(outPtr.ref.raw);
     } finally {

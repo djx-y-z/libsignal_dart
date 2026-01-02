@@ -11,6 +11,9 @@ import '../ffi_helpers.dart';
 import '../libsignal.dart';
 
 /// Finalizer for ProtocolAddress.
+///
+/// Safety net for undisposed objects. GC-dependent, cannot be tested.
+// coverage:ignore-start
 final Finalizer<Pointer<SignalProtocolAddress>> _protocolAddressFinalizer =
     Finalizer((ptr) {
       final mutPtr = calloc<SignalMutPointerProtocolAddress>();
@@ -18,6 +21,7 @@ final Finalizer<Pointer<SignalProtocolAddress>> _protocolAddressFinalizer =
       signal_address_destroy(mutPtr.ref);
       calloc.free(mutPtr);
     });
+// coverage:ignore-end
 
 /// A Signal Protocol address identifying a user and device.
 ///
@@ -40,7 +44,7 @@ final class ProtocolAddress {
 
   /// Creates a ProtocolAddress from a raw pointer.
   factory ProtocolAddress.fromPointer(Pointer<SignalProtocolAddress> ptr) {
-    return ProtocolAddress._(ptr);
+    return ProtocolAddress._(ptr); // coverage:ignore-line
   }
 
   /// Creates a new protocol address.
@@ -66,9 +70,12 @@ final class ProtocolAddress {
       final error = signal_address_new(outPtr, namePtr, deviceId);
       FfiHelpers.checkError(error, 'signal_address_new');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_address_new');
       }
+      // coverage:ignore-end
 
       return ProtocolAddress._(outPtr.ref.raw);
     } finally {
@@ -89,9 +96,12 @@ final class ProtocolAddress {
       final error = signal_address_get_name(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_address_get_name');
 
+      // coverage:ignore-start
       if (outPtr.value == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_address_get_name');
       }
+      // coverage:ignore-end
 
       final name = outPtr.value.cast<Utf8>().toDartString();
       signal_free_string(outPtr.value);
@@ -133,9 +143,12 @@ final class ProtocolAddress {
       final error = signal_address_clone(outPtr, constPtr.ref);
       FfiHelpers.checkError(error, 'signal_address_clone');
 
+      // coverage:ignore-start
       if (outPtr.ref.raw == nullptr) {
+        // defensive: FFI always returns valid pointer on success
         throw LibSignalException.nullPointer('signal_address_clone');
       }
+      // coverage:ignore-end
 
       return ProtocolAddress._(outPtr.ref.raw);
     } finally {
