@@ -133,7 +133,7 @@ Add to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  libsignal: ^1.0.0
+  libsignal: ^x.x.x
 ```
 
 Native libraries are downloaded automatically during the build process.
