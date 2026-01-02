@@ -14,6 +14,9 @@
 # - Manual dispatch (workflow_dispatch) - for first run or force rebuild
 # - Push to main when pubspec.yaml changes (contains libsignal.native_version)
 #
+# Note: If release with tag libsignal-{version}-{build} already exists, build is skipped.
+# This prevents unnecessary rebuilds when only package version changes (not native version).
+#
 # After successful build, creates GitHub Release with native library archives.
 
 name: Build libsignal Native Libraries
@@ -35,6 +38,7 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       build: ${{ steps.version.outputs.build }}
       full_version: ${{ steps.version.outputs.full_version }}
+      skip: ${{ steps.check-release.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
 
@@ -56,11 +60,29 @@ jobs:
           echo "Building libsignal version: $VERSION (Build $BUILD)"
           echo "Full version: $FULL_VERSION"
 
+      - name: Check if release already exists
+        id: check-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FULL_VERSION="${{ steps.version.outputs.full_version }}"
+          TAG_NAME="libsignal-${FULL_VERSION}"
+
+          # Check if release with this tag exists
+          if gh release view "$TAG_NAME" --repo "${{ github.repository }}" > /dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists. Skipping build."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Release $TAG_NAME does not exist. Proceeding with build."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
   # ============================================
   # Linux (x86_64 + arm64)
   # ============================================
   build-linux:
     needs: read-version
+    if: needs.read-version.outputs.skip != 'true'
     strategy:
       matrix:
         include:
@@ -102,6 +124,7 @@ jobs:
   # ============================================
   build-macos:
     needs: read-version
+    if: needs.read-version.outputs.skip != 'true'
     strategy:
       matrix:
         include:
@@ -142,6 +165,7 @@ jobs:
   # ============================================
   build-ios:
     needs: read-version
+    if: needs.read-version.outputs.skip != 'true'
     strategy:
       matrix:
         include:
@@ -191,6 +215,7 @@ jobs:
   # ============================================
   build-android:
     needs: read-version
+    if: needs.read-version.outputs.skip != 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -241,6 +266,7 @@ jobs:
   # ============================================
   build-windows:
     needs: read-version
+    if: needs.read-version.outputs.skip != 'true'
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -280,6 +306,7 @@ jobs:
   # ============================================
   create-release:
     needs: [read-version, build-linux, build-macos, build-ios, build-android, build-windows]
+    if: needs.read-version.outputs.skip != 'true'
     runs-on: ubuntu-latest
     env:
       LIBSIGNAL_VERSION: ${{ needs.read-version.outputs.version }}

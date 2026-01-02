@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Simplified `check-libsignal-updates.yml` workflow (~530 → ~220 lines)
 - Added `--ai`, `--no-ai`, `--ci` flags to `check_updates.dart` script
 - Script now writes directly to `GITHUB_OUTPUT` in CI mode (no jq parsing needed)
+- `build-libsignal.yml` workflow now skips build if release already exists (prevents unnecessary rebuilds when only package version changes)
 
 ## [1.0.0] - 2025-12-31
 
