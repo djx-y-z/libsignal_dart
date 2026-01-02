@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `make doc` command for local API documentation generation
+- Added "Implementation Status" section to README.md with overview of wrapped native functionality
 
 ### Changed
 

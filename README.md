@@ -27,6 +27,106 @@ A Dart FFI wrapper for [libsignal](https://github.com/signalapp/libsignal), prov
 - **High Performance**: Direct FFI bindings with minimal overhead
 - **Automated Updates**: Native libraries auto-rebuild when new libsignal versions are released
 
+## Implementation Status
+
+Overview of wrapped functionality from the native [libsignal](https://github.com/signalapp/libsignal) library:
+
+| Category | Status | Description |
+|----------|:------:|-------------|
+| Signal Protocol | ✓ | Double Ratchet, X3DH, session encryption/decryption |
+| Key Management | ✓ | Ed25519, X25519, Kyber (post-quantum) |
+| Pre-Keys | ✓ | Regular, signed, and Kyber pre-keys |
+| Group Messaging | ✓ | SenderKey protocol for efficient group encryption |
+| Sealed Sender | ✓ | Anonymous message sending with certificates |
+| Fingerprints | ✓ | Safety numbers for identity verification |
+| Crypto Utilities | ✓ | HKDF, AES-256-GCM-SIV |
+| Store Interfaces | ✓ | All 6 store types with in-memory implementations |
+| zkgroup | ✗ | Zero-knowledge groups, profile credentials |
+| Registration | ✗ | Account registration service |
+| Backup | ✗ | Message backup and restore |
+| SVR | ✗ | Secure Value Recovery (PIN-based backup) |
+| Call Links | ✗ | Call link credentials and authentication |
+| Connection Manager | ✗ | Network connection handling |
+
+<details>
+<summary><strong>Detailed Implementation</strong></summary>
+
+### Implemented Features
+
+#### Keys (`lib/src/keys/`)
+
+| Class | Key Methods | Native Functions |
+|-------|-------------|------------------|
+| `PrivateKey` | generate, sign, agree, serialize | `signal_privatekey_*` |
+| `PublicKey` | verify, serialize, compare | `signal_publickey_*` |
+| `IdentityKeyPair` | generate, serialize, signAlternateIdentity | `signal_identitykeypair_*` |
+| `PreKeyPair` | generate, serialize | `signal_pre_key_record_*` |
+| `SignedPreKeyPair` | generate, serialize | `signal_signed_pre_key_record_*` |
+| `KyberPreKeyPair` | generate, serialize | `signal_kyber_*` |
+
+#### Protocol (`lib/src/protocol/`)
+
+| Class | Key Methods | Native Functions |
+|-------|-------------|------------------|
+| `SessionCipher` | encrypt, decryptSignalMessage, decryptPreKeySignalMessage | `signal_encrypt_message`, `signal_decrypt_*` |
+| `SessionBuilder` | processPreKeyBundle | `signal_process_prekey_bundle` |
+| `SessionRecord` | serialize, deserialize | `signal_session_record_*` |
+| `ProtocolAddress` | new, name, deviceId | `signal_address_*` |
+| `SignalMessage` | serialize, body, counter, verifyMac | `signal_message_*` |
+| `PreKeySignalMessage` | serialize, preKeyId, signedPreKeyId | `signal_pre_key_signal_message_*` |
+
+#### Groups (`lib/src/groups/`)
+
+| Class | Key Methods | Native Functions |
+|-------|-------------|------------------|
+| `GroupSession` | createDistributionMessage, encrypt, decrypt | `signal_group_encrypt_message`, `signal_group_decrypt_message` |
+| `SenderKeyRecord` | serialize, deserialize | `signal_sender_key_record_*` |
+| `SenderKeyMessage` | serialize, getDistributionId | `signal_sender_key_message_*` |
+| `SenderKeyDistributionMessage` | create, serialize | `signal_sender_key_distribution_message_*` |
+
+#### Sealed Sender (`lib/src/sealed_sender/`)
+
+| Class | Key Methods | Native Functions |
+|-------|-------------|------------------|
+| `SealedSessionCipher` | encrypt, decrypt | `signal_sealed_session_cipher_*` |
+| `SenderCertificate` | create, validate, serialize | `signal_sender_certificate_*` |
+| `ServerCertificate` | create, serialize | `signal_server_certificate_*` |
+| `UnidentifiedSenderMessageContent` | create, serialize | `signal_unidentified_sender_message_content_*` |
+
+#### Crypto (`lib/src/crypto/`)
+
+| Class | Key Methods | Native Functions |
+|-------|-------------|------------------|
+| `Hkdf` | deriveSecrets | `signal_hkdf_derive` |
+| `Aes256GcmSiv` | encrypt, decrypt | `signal_aes_gcm_siv_*` |
+| `Fingerprint` | displayString, scannableEncoding, compare | `signal_fingerprint_*` |
+
+#### Stores (`lib/src/stores/`)
+
+| Interface | In-Memory Implementation | Purpose |
+|-----------|-------------------------|---------|
+| `SessionStore` | `InMemorySessionStore` | Session state persistence |
+| `IdentityKeyStore` | `InMemoryIdentityKeyStore` | Identity key management |
+| `PreKeyStore` | `InMemoryPreKeyStore` | One-time pre-keys |
+| `SignedPreKeyStore` | `InMemorySignedPreKeyStore` | Signed pre-keys |
+| `KyberPreKeyStore` | `InMemoryKyberPreKeyStore` | Post-quantum pre-keys |
+| `SenderKeyStore` | `InMemorySenderKeyStore` | Group messaging keys |
+
+### Not Implemented
+
+| Category | Native Functions | Reason |
+|----------|------------------|--------|
+| zkgroup | `signal_group_secret_params_*`, `signal_profile_key_*` | Server-side verification, not needed for basic messaging |
+| Registration | `signal_registration_*` | Account registration service |
+| Backup | `signal_backup_*`, `signal_message_backup_*` | Message backup and restore |
+| SVR | `signal_svr_*` | Secure Value Recovery for PIN-based backup |
+| Call Links | `signal_call_link_*` | Call link credentials |
+| Connection Manager | `signal_connection_manager_*` | Network connection handling |
+| HSM Enclave | `signal_hsm_enclave_*` | Hardware security module communication |
+| CDSI | `signal_cdsi_*` | Contact Discovery Service |
+
+</details>
+
 ## Installation
 
 Add to your `pubspec.yaml`:
