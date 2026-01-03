@@ -1,6 +1,7 @@
 # Run tests and static analysis
 #
 # Triggers:
+# - Manual dispatch (workflow_dispatch)
 # - Push to main or develop branches (relevant files)
 # - Pull requests (relevant files)
 # - After successful build-libsignal workflow
@@ -8,6 +9,7 @@
 name: Test
 
 on:
+  workflow_dispatch:
   push:
     branches: [main, develop]
     paths:

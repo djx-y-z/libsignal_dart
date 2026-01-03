@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `make doc` command for local API documentation generation
 - Added "Implementation Status" section to README.md with overview of wrapped native functionality
 - Added pre-commit git hook for format check and static analysis (configured via `make setup`)
+- Added `workflow_dispatch` trigger to test workflow (allows manual test runs from GitHub Actions)
 
 ### Changed
 
