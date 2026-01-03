@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed `publish.yml` workflow: use Flutter SDK (via FVM) instead of Dart SDK for publishing Flutter packages
+- Added `workflow_dispatch` with dry-run option to publish workflow
+- Added duplicate version check (validates against pub.dev API before publishing)
+- Added `publish-dry-run` validation step before actual publishing
+- Aligned publish workflow structure with liboqs_dart for consistency
 - Fixed version parsing in `build-libsignal.yml` workflow (use Dart script instead of grep for reliable parsing)
 - Fixed unresolved dartdoc references in `LibSignalException`, `GroupSession`, and `InMemoryIdentityKeyStore`
 - Fixed `.pubignore` to include `CONTRIBUTING.md` in published package
