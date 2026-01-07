@@ -50,3 +50,7 @@ runs:
       if: runner.os == 'Windows'
       run: fvm install
       shell: pwsh
+
+    - name: Discard FVM config changes
+      run: git checkout -- .fvmrc .vscode/settings.json 2>/dev/null || true
+      shell: bash

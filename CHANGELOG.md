@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `check-libsignal-updates.yml`: PR creation, GitHub Models API
   - `build-libsignal.yml`: release version checks
 - Skip tests for bot PRs in `test.yml` (native libraries not yet built for version updates)
+- Discard FVM config changes in CI to prevent unwanted `.fvmrc` and `.vscode/settings.json` modifications in PRs
 
 ## [1.0.1] - 2026-01-02
 
