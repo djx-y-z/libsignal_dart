@@ -1,3 +1,9 @@
+## 1.1.0
+
+### Added
+- Updated libsignal native library to v0.86.10
+- See [libsignal v0.86.10 release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10)
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
