@@ -1,7 +1,7 @@
 name: libsignal
 description: Dart FFI bindings for libsignal — Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
-version: 1.0.1
+version: 1.1.0
 license: AGPL-3.0
 repository: https://github.com/djx-y-z/libsignal_dart
 homepage: https://github.com/djx-y-z/libsignal_dart
@@ -9,7 +9,7 @@ issue_tracker: https://github.com/djx-y-z/libsignal_dart/issues
 
 # Native library version configuration
 libsignal:
-  native_version: "v0.86.9"
+  native_version: "v0.86.10"
   native_build: 1
 
 environment:
