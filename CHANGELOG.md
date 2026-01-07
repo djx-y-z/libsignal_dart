@@ -17,12 +17,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update libsignal native library to v0.86.10 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10))
+- Simplify `check-libsignal-updates.yml` workflow:
+  - Remove AI analysis (GitHub Models) - now only updates `native_version` in pubspec.yaml
+  - Remove automatic FFI bindings regeneration (now manual step after merge)
+  - Add clear instructions in PR body for manual steps after build completes
+- Simplify `check_updates.dart` script:
+  - Remove `--ai`, `--no-ai`, `--bump`, `--no-changelog` options
+  - No longer updates package version or CHANGELOG.md automatically
+- Remove `scripts/src/ai_analysis.dart` (no longer needed)
 - Use GitHub App token instead of `GITHUB_TOKEN` in workflows:
-  - `check-libsignal-updates.yml`: PR creation, GitHub Models API
+  - `check-libsignal-updates.yml`: PR creation
   - `build-libsignal.yml`: release version checks
 - Skip tests for bot PRs in `test.yml` (native libraries not yet built for version updates)
 - Discard FVM config changes in CI to prevent unwanted `.fvmrc` and `.vscode/settings.json` modifications in PRs
-- Auto-regenerate FFI bindings in `check-libsignal-updates.yml` workflow (headers + Dart code)
 - Extract Rust setup into reusable `.github/actions/setup-rust` action
 
 ### Fixed

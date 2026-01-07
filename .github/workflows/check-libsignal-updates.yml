@@ -1,15 +1,10 @@
-# Automatically check for new libsignal releases and update the package
+# Automatically check for new libsignal releases and create PR to update pubspec.yaml
 #
 # This workflow:
 # 1. Runs daily (or manually) to check for new libsignal releases
 # 2. Compares with current libsignal.native_version in pubspec.yaml
-# 3. If newer version found:
-#    - Analyzes release notes with AI (GitHub Models)
-#    - Determines appropriate version bump (major/minor/patch)
-#    - Updates pubspec.yaml and CHANGELOG.md
-#    - Regenerates FFI bindings (headers + Dart code)
-#    - Creates PR with all changes
-# 4. The PR merge triggers build-libsignal.yml to build native libraries
+# 3. If newer version found, updates pubspec.yaml and creates a PR
+# 4. After merge, manual steps are needed (see PR description)
 
 name: Check libsignal Updates
 
@@ -29,11 +24,6 @@ on:
         required: false
         default: ''
         type: string
-      skip_ai_analysis:
-        description: 'Skip AI analysis (faster, but less detailed)'
-        required: false
-        default: false
-        type: boolean
 
 jobs:
   check-updates:
@@ -41,7 +31,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      models: read  # Required for GitHub Models
 
     steps:
       - name: Generate GitHub App Token
@@ -60,8 +49,6 @@ jobs:
 
       - name: Check for updates
         id: check
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Build arguments
           ARGS="--ci"
@@ -74,20 +61,14 @@ jobs:
             ARGS="$ARGS --force"
           fi
 
-          if [ "${{ inputs.skip_ai_analysis }}" = "true" ]; then
-            ARGS="$ARGS --no-ai"
-          fi
-
           echo "Running: make check ARGS=\"$ARGS\""
           make check ARGS="$ARGS" || true
 
           echo "Check completed. Outputs:"
           cat $GITHUB_OUTPUT || true
 
-      - name: Update files
+      - name: Update pubspec.yaml
         if: steps.check.outputs.needs_update == 'true'
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           # Build arguments for update
           ARGS="--update --ci"
@@ -100,97 +81,8 @@ jobs:
             ARGS="$ARGS --force"
           fi
 
-          if [ "${{ inputs.skip_ai_analysis }}" = "true" ]; then
-            ARGS="$ARGS --no-ai"
-          fi
-
           echo "Running: make check ARGS=\"$ARGS\""
           make check ARGS="$ARGS"
-
-      - name: Setup Rust
-        uses: ./.github/actions/setup-rust
-
-      - name: Install protoc
-        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
-
-      - name: Regenerate FFI bindings
-        run: make regen
-
-      - name: Prepare PR body
-        if: steps.check.outputs.needs_update == 'true'
-        id: pr_body
-        run: |
-          IS_RC="${{ steps.check.outputs.is_rc }}"
-          AI_AVAILABLE="${{ steps.check.outputs.ai_available }}"
-          BREAKING_CHANGES="${{ steps.check.outputs.breaking_changes }}"
-          BINDING_CHANGES="${{ steps.check.outputs.binding_changes }}"
-
-          # Build PR body
-          cat > /tmp/pr_body.md << 'PREOF'
-          ## Automated libsignal Update
-
-          This PR updates the libsignal native library to version **${{ steps.check.outputs.latest_version }}**.
-
-          ### Version Changes
-          | Component | Old | New |
-          |-----------|-----|-----|
-          | libsignal | ${{ steps.check.outputs.current_version }} | ${{ steps.check.outputs.latest_version }} |
-          | Package | ${{ steps.check.outputs.pkg_current }} | ${{ steps.check.outputs.pkg_new }} |
-          | Bump Type | - | ${{ steps.check.outputs.bump_type }} |
-
-          PREOF
-
-          if [ "$IS_RC" = "true" ]; then
-            cat >> /tmp/pr_body.md << 'PREOF'
-
-          > **Pre-release Version**: This includes a release candidate of libsignal.
-          > Consider waiting for stable release unless you need specific features.
-
-          PREOF
-          fi
-
-          if [ "$AI_AVAILABLE" = "true" ]; then
-            cat >> /tmp/pr_body.md << EOF
-
-          ### AI Analysis
-
-          **Model:** ${{ steps.check.outputs.ai_model }}
-
-          **Breaking Changes:** $BREAKING_CHANGES
-
-          **Binding Changes Needed:** $BINDING_CHANGES
-
-          EOF
-          fi
-
-          cat >> /tmp/pr_body.md << 'PREOF'
-
-          ### Release Notes
-          See [libsignal ${{ steps.check.outputs.latest_version }} release notes](${{ steps.check.outputs.release_url }})
-
-          ### Review Checklist
-
-          Before merging, please verify:
-          - [ ] Review libsignal release notes for breaking changes
-          - [ ] Check FFI bindings diff for API changes
-          - [ ] Verify no security vulnerabilities in the new version
-
-          ### What happens after merge
-
-          1. The `build-libsignal.yml` workflow will automatically trigger
-          2. Native libraries will be built for all platforms
-          3. A GitHub Release will be created with pre-built binaries
-
-          ---
-          This PR was created automatically by the libsignal update checker.
-          PREOF
-
-          # Output PR body
-          {
-            echo 'body<<EOF'
-            cat /tmp/pr_body.md
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
         if: steps.check.outputs.needs_update == 'true'
@@ -199,18 +91,67 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           sign-commits: true
           commit-message: |
-            Update libsignal to ${{ steps.check.outputs.latest_version }}
-
-            - Package version: ${{ steps.check.outputs.pkg_current }} -> ${{ steps.check.outputs.pkg_new }}
-            - Bump type: ${{ steps.check.outputs.bump_type }}
+            chore(deps): update libsignal native_version to ${{ steps.check.outputs.latest_version }}
           title: "Update libsignal to ${{ steps.check.outputs.latest_version }}"
-          body: ${{ steps.pr_body.outputs.body }}
+          body: |
+            ## Automated libsignal Update
+
+            This PR updates the libsignal native library version in pubspec.yaml.
+
+            ### Version Change
+
+            | Component | Old | New |
+            |-----------|-----|-----|
+            | libsignal | ${{ steps.check.outputs.current_version }} | ${{ steps.check.outputs.latest_version }} |
+
+            ${{ steps.check.outputs.is_prerelease == 'true' && '> **Pre-release**: This is a release candidate. Consider waiting for stable release unless you need specific features.' || '' }}
+
+            ### Release Notes
+
+            See [libsignal ${{ steps.check.outputs.latest_version }} release notes](${{ steps.check.outputs.release_url }})
+
+            ### What Happens After Merge
+
+            1. **Automatic build starts**: The `build-libsignal.yml` workflow will automatically trigger and build native libraries for all platforms.
+
+            2. **Wait for build completion**: Monitor the [Actions](../../actions) page until the build succeeds and a new Release is published.
+
+            ### Manual Steps (after build completes)
+
+            Once native libraries are published to Releases, complete these steps:
+
+            1. **Regenerate FFI bindings:**
+               ```bash
+               make regen
+               ```
+
+            2. **Update README.md badge** (line 9):
+               ```markdown
+               [![libsignal](https://img.shields.io/badge/libsignal-${{ steps.check.outputs.latest_version }}-orange.svg)](https://github.com/signalapp/libsignal)
+               ```
+
+            3. **Update CHANGELOG.md** with appropriate version entry
+
+            4. **Run tests to verify:**
+               ```bash
+               make test
+               ```
+
+            5. **Commit and push all changes:**
+               ```bash
+               git add .
+               git commit -m "chore: regenerate bindings and update docs for libsignal ${{ steps.check.outputs.latest_version }}"
+               git push
+               ```
+
+            ---
+            *This PR was created automatically by the libsignal update checker.*
           branch: update-libsignal-${{ steps.check.outputs.latest_version }}
           delete-branch: true
           labels: |
             dependencies
             automated
-            ${{ steps.check.outputs.is_rc == 'true' && 'pre-release' || '' }}
+            ${{ steps.check.outputs.is_prerelease == 'true' && 'pre-release' || '' }}
 
       - name: Summary
         run: |
@@ -221,11 +162,7 @@ jobs:
             echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
             echo "| Current libsignal | ${{ steps.check.outputs.current_version }} |" >> $GITHUB_STEP_SUMMARY
             echo "| New libsignal | ${{ steps.check.outputs.latest_version }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Package version | ${{ steps.check.outputs.pkg_current }} -> ${{ steps.check.outputs.pkg_new }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Bump type | ${{ steps.check.outputs.bump_type }} |" >> $GITHUB_STEP_SUMMARY
             echo "| Pre-release | ${{ steps.check.outputs.is_prerelease }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| AI Analysis | ${{ steps.check.outputs.ai_available }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| AI Model | ${{ steps.check.outputs.ai_model }} |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "A pull request has been created for review." >> $GITHUB_STEP_SUMMARY
           else
