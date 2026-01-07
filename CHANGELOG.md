@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `make setup-build` command to install native build dependencies (Rust, protoc)
+- Add `make setup-fvm` command (renamed from previous `make setup`)
+- Restructure `make setup` to run full setup (FVM + build dependencies)
+- Add "Skip Build Hook Pattern" documentation to CLAUDE.md
+
 ### Fixed
 
 - Fix `make regen` CI failure when `cbindgen` is not pre-installed

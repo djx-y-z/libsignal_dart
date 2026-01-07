@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="windows" FVM="cmd //c fvm"
 
-.PHONY: help setup build regen check combine test coverage analyze format format-check get clean version get-version get-build get-full-version check-release doc publish publish-dry-run
+.PHONY: help setup setup-fvm setup-build build regen check combine test coverage analyze format format-check get clean version get-version get-build get-full-version check-release doc publish publish-dry-run
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -30,7 +30,9 @@ help:
 	@echo "  Pass arguments via ARGS variable: make <target> ARGS=\"...\""
 	@echo ""
 	@echo "  SETUP"
-	@echo "    make setup                        - Install FVM and project Flutter version (run once)"
+	@echo "    make setup                        - Full setup (FVM + build dependencies)"
+	@echo "    make setup-fvm                    - Install FVM and project Flutter version only"
+	@echo "    make setup-build                  - Install native build dependencies (Rust, protoc)"
 	@echo ""
 	@echo "  BUILD"
 	@echo "    make build ARGS=\"<platform>\"      - Build native libraries"
@@ -68,7 +70,11 @@ help:
 # Setup
 # =============================================================================
 
-setup:
+setup: setup-fvm setup-build
+	@echo ""
+	@echo "Full setup complete! You can now use 'make help' to see available commands."
+
+setup-fvm:
 	@echo "Installing FVM (Flutter Version Management)..."
 	dart pub global activate fvm
 	@echo ""
@@ -81,7 +87,11 @@ setup:
 	@echo "Configuring git hooks..."
 	git config core.hooksPath .githooks
 	@echo ""
-	@echo "Setup complete! You can now use 'make help' to see available commands."
+	@echo "FVM setup complete!"
+
+setup-build:
+	@touch .skip_libsignal_hook
+	@$(FVM) dart run scripts/setup_build.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
 # =============================================================================
 # Build

@@ -20,7 +20,9 @@ make build macos --arch arm64  # make interprets --arch as its own flag!
 
 | Task | Command |
 |------|---------|
-| Initial setup | `make setup` |
+| Full setup | `make setup` |
+| FVM/Flutter setup only | `make setup-fvm` |
+| Build dependencies only | `make setup-build` |
 | Show all commands | `make help` |
 | Build native library | `make build ARGS="<platform>"` |
 | Run tests | `make test` |
@@ -33,6 +35,22 @@ make build macos --arch arm64  # make interprets --arch as its own flag!
 | Check for updates | `make check` |
 | Get dependencies | `make get` |
 | Show libsignal version | `make version` |
+
+## Makefile: Skip Build Hook Pattern
+
+When adding new Makefile commands that run Dart scripts, use the `.skip_libsignal_hook` pattern to prevent the build hook from trying to download native libraries:
+
+```makefile
+my-command:
+	@touch .skip_libsignal_hook
+	@$(FVM) dart run scripts/my_script.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+```
+
+**Why:** Dart's build hooks automatically trigger when running scripts. The libsignal build hook attempts to download native libraries, which is unnecessary for most development commands and can cause failures if libraries aren't published yet.
+
+**Exceptions:** Commands that require native libraries should NOT create this file:
+- `make test` - tests need native libraries to run
+- `make coverage` - same as test
 
 ## Project Overview
 

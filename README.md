@@ -393,8 +393,12 @@ For production apps, implement the store interfaces with secure storage:
 git clone https://github.com/djx-y-z/libsignal_dart.git
 cd libsignal_dart
 
-# Install dependencies
+# Full setup (FVM + Rust + protoc)
 make setup
+
+# Or install components separately:
+make setup-fvm      # FVM, Flutter, dependencies, git hooks
+make setup-build    # Rust toolchain, protoc
 
 # Build native libraries for your platform
 make build ARGS="macos"  # or linux, windows, ios, android
@@ -403,12 +407,31 @@ make build ARGS="macos"  # or linux, windows, ios, android
 ### Available Commands
 
 ```bash
-make help           # Show all commands
-make build ARGS="<platform>"  # Build native libraries
+# Setup
+make setup          # Full setup (FVM + build dependencies)
+make setup-fvm      # Install FVM and Flutter only
+make setup-build    # Install native build dependencies (Rust, protoc)
+
+# Build
+make build ARGS="<platform>"  # Build native libraries (macos, ios, android, linux, windows)
+
+# Development
+make regen          # Regenerate FFI bindings from libsignal headers
+make check          # Check for libsignal updates
+
+# Quality Assurance
 make test           # Run tests
 make coverage       # Run tests with coverage report
-make analyze        # Static analysis
-make regen          # Regenerate FFI bindings
+make analyze        # Run static analysis
+make format         # Format Dart code
+make format-check   # Check Dart code formatting
+make doc            # Generate API documentation
+
+# Utilities
+make get            # Get dependencies
+make clean          # Clean build artifacts
+make version        # Show current libsignal version
+make help           # Show all commands
 ```
 
 ## Architecture
