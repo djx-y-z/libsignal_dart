@@ -43,6 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix ARM64 group messaging crash caused by `SignalUuid` 16-byte struct-by-value FFI limitation ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730))
   - Pass `SignalUuid` as two `Int64` values matching ARM64 AAPCS64 register layout
   - Affects `signal_sender_key_distribution_message_create` and `signal_group_encrypt_message`
+- Fix Windows native library build in CI (PowerShell escaping issue with `cmd /c`)
+  - Use `shell: bash` (Git Bash) instead of `pwsh` for Windows build step
 - Fix `make regen` CI failure when `cbindgen` is not pre-installed
 - Fix `make regen` CI failure due to missing `protoc` (required by libsignal's spqr dependency)
 - Add `protoc` to build prerequisites documentation (README.md, CLAUDE.md)

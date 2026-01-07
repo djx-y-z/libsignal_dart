@@ -270,11 +270,15 @@ jobs:
         run: choco install protoc -y
 
       - name: Build libsignal for Windows
-        shell: pwsh
+        shell: bash
         run: |
-          # Ensure MSVC link.exe is found before Git's /usr/bin/link
-          # by running make through cmd which has correct PATH from msvc-dev-cmd
-          cmd /c "make build ARGS=`"windows`" FVM=`"cmd /c fvm`""
+          echo "=== Environment check ==="
+          which fvm
+          fvm --version
+          which cargo
+          cargo --version
+          echo "=== Starting build ==="
+          make build ARGS="windows"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
