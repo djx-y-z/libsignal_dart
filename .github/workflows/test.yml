@@ -1,10 +1,12 @@
-# Run tests and static analysis
+# Run tests on multiple platforms
 #
 # Triggers:
 # - Manual dispatch (workflow_dispatch)
 # - Push to main or develop branches (relevant files)
 # - Pull requests (relevant files) - skipped for bot PRs (e.g., libsignal updates)
 # - After successful build-libsignal workflow
+#
+# Platforms: Linux x86_64, Linux ARM64, macOS ARM64, Windows x86_64
 
 name: Test
 
@@ -17,6 +19,7 @@ on:
       - 'test/**'
       - 'pubspec.yaml'
       - '.github/workflows/test.yml'
+      - '.github/workflows/test-reusable.yml'
   pull_request:
     paths:
       - 'lib/**'
@@ -29,50 +32,15 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
     # Skip tests for:
     # - Failed workflow_run triggers
     # - Bot PRs (automated libsignal updates) - native libraries not yet built
     if: |
       (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
       (github.event_name != 'pull_request' || github.event.pull_request.user.type != 'Bot')
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup FVM and Flutter
-        uses: ./.github/actions/setup-fvm
-
-      - name: Get dependencies
-        run: make get
-
-      - name: Analyze
-        run: make analyze ARGS="--fatal-infos"
-
-      - name: Check formatting
-        run: make format-check
-
-      - name: Install lcov
-        run: sudo apt-get install -y lcov
-
-      - name: Run tests with coverage
-        run: make coverage
-
-      - name: Calculate coverage percentage
-        id: coverage
-        run: |
-          COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
-          echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
-          echo "Coverage: $COVERAGE%"
-
-      - name: Update coverage badge
-        if: github.ref == 'refs/heads/main'
-        uses: schneegans/dynamic-badges-action@v1.7.0
-        with:
-          auth: ${{ secrets.GIST_TOKEN }}
-          gistID: ${{ vars.COVERAGE_GIST_ID }}
-          filename: coverage.json
-          label: coverage
-          message: ${{ steps.coverage.outputs.percentage }}%
-          valColorRange: ${{ steps.coverage.outputs.percentage }}
-          minColorRange: 50
-          maxColorRange: 90
+    uses: ./.github/workflows/test-reusable.yml
+    with:
+      run-coverage: true
+      update-badge: ${{ github.ref == 'refs/heads/main' }}
+    secrets:
+      GIST_TOKEN: ${{ secrets.GIST_TOKEN }}

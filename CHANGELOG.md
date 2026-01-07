@@ -13,9 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `make setup-fvm` command (renamed from previous `make setup`)
 - Restructure `make setup` to run full setup (FVM + build dependencies)
 - Add "Skip Build Hook Pattern" documentation to CLAUDE.md
+- Add multi-platform testing: Linux x86_64, Linux ARM64, macOS ARM64, Windows x86_64
+- Add reusable test workflow (`test-reusable.yml`) to eliminate code duplication between `test.yml` and `publish.yml`
 
 ### Changed
 
+- Tests now run in parallel on all 4 platforms
+- Extract test logic into reusable workflow for better maintainability
 - Update libsignal native library to v0.86.10 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10))
 - Simplify `check-libsignal-updates.yml` workflow:
   - Remove AI analysis (GitHub Models) - now only updates `native_version` in pubspec.yaml

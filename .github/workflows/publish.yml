@@ -127,10 +127,20 @@ jobs:
           fi
 
   # ============================================
-  # Run tests
+  # Run tests on all platforms
   # ============================================
   test:
     needs: validate
+    uses: ./.github/workflows/test-reusable.yml
+    with:
+      run-coverage: false
+      update-badge: false
+
+  # ============================================
+  # Validate package
+  # ============================================
+  validate-package:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -141,15 +151,6 @@ jobs:
       - name: Install dependencies
         run: make get
 
-      - name: Analyze code
-        run: make analyze ARGS="--fatal-infos"
-
-      - name: Run tests
-        run: make test
-
-      - name: Check formatting
-        run: make format-check
-
       - name: Validate package
         run: make publish-dry-run
 
@@ -157,7 +158,7 @@ jobs:
   # Publish to pub.dev
   # ============================================
   publish:
-    needs: [validate, test]
+    needs: [validate, test, validate-package]
     runs-on: ubuntu-latest
     environment: pub.dev
     steps:
