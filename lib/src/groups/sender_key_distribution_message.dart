@@ -13,29 +13,6 @@ import '../keys/public_key.dart';
 import '../libsignal.dart';
 import '../serialization_validator.dart';
 
-/// A struct to hold a 16-byte UUID array for FFI calls.
-///
-/// **FFI Workaround**: This struct is needed because of a limitation in ffigen.
-/// The C header declares functions with `uint8_t (*out)[16]` (pointer to array
-/// of 16 bytes), but ffigen incorrectly generates `Pointer<Pointer<Uint8>>`.
-///
-/// The workaround:
-/// 1. Use a Struct with `Array<Uint8>[16]` to allocate exactly 16 bytes
-/// 2. Cast the struct pointer when calling the FFI function
-/// 3. Read bytes from the struct after the call
-///
-/// This approach is safe because:
-/// - The allocated size (16 bytes) exactly matches the C expectation
-/// - We copy data before freeing memory
-/// - Tests verify the correct UUID values are returned
-///
-/// This workaround survives `make regen` because it's in wrapper code,
-/// not in the auto-generated bindings.
-final class _Uuid16 extends Struct {
-  @Array.multi([16])
-  external Array<Uint8> bytes;
-}
-
 /// Finalizer for SenderKeyDistributionMessage.
 ///
 /// Safety net for undisposed objects. GC-dependent, cannot be tested.
@@ -178,18 +155,13 @@ final class SenderKeyDistributionMessage {
   Uint8List get distributionId {
     _checkDisposed();
 
-    // The C function signature is: uint8_t (*out)[16]
-    // This means "pointer to array of 16 uint8_t".
-    // We use a Struct with Array<Uint8>[16] to properly allocate and access it.
-    final outPtr = calloc<_Uuid16>();
+    final outPtr = calloc<SignalUuid>();
     final constPtr = calloc<SignalConstPointerSenderKeyDistributionMessage>();
     constPtr.ref.raw = _ptr;
 
     try {
-      // The binding expects Pointer<Pointer<Uint8>> due to ffigen limitation,
-      // but the actual C type is uint8_t (*)[16]. We cast our struct pointer.
       final error = signal_sender_key_distribution_message_get_distribution_id(
-        outPtr.cast<Pointer<Uint8>>(),
+        outPtr,
         constPtr.ref,
       );
       FfiHelpers.checkError(

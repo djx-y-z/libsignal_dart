@@ -1,9 +1,3 @@
-## 1.1.0
-
-### Added
-- Updated libsignal native library to v0.86.10
-- See [libsignal v0.86.10 release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10)
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
@@ -20,14 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructure `make setup` to run full setup (FVM + build dependencies)
 - Add "Skip Build Hook Pattern" documentation to CLAUDE.md
 
-### Fixed
-
-- Fix `make regen` CI failure when `cbindgen` is not pre-installed
-- Fix `make regen` CI failure due to missing `protoc` (required by libsignal's spqr dependency)
-- Add `protoc` to build prerequisites documentation (README.md, CLAUDE.md)
-
 ### Changed
 
+- Update libsignal native library to v0.86.10 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10))
 - Use GitHub App token instead of `GITHUB_TOKEN` in workflows:
   - `check-libsignal-updates.yml`: PR creation, GitHub Models API
   - `build-libsignal.yml`: release version checks
@@ -35,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Discard FVM config changes in CI to prevent unwanted `.fvmrc` and `.vscode/settings.json` modifications in PRs
 - Auto-regenerate FFI bindings in `check-libsignal-updates.yml` workflow (headers + Dart code)
 - Extract Rust setup into reusable `.github/actions/setup-rust` action
+
+### Fixed
+
+- Fix ARM64 group messaging crash caused by `SignalUuid` struct-by-value FFI limitation ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730))
+- Fix `make regen` CI failure when `cbindgen` is not pre-installed
+- Fix `make regen` CI failure due to missing `protoc` (required by libsignal's spqr dependency)
+- Add `protoc` to build prerequisites documentation (README.md, CLAUDE.md)
 
 ## [1.0.1] - 2026-01-02
 

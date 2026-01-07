@@ -7,6 +7,12 @@ library;
 
 import 'dart:ffi' as ffi;
 
+@ffi.Native<ffi.Int>()
+external int __mb_cur_max;
+
+@ffi.Native<ffi.Pointer<ffi.Char>>()
+external ffi.Pointer<ffi.Char> suboptarg;
+
 @ffi.Native<
   ffi.Pointer<SignalFfiError> Function(
     ffi.Pointer<ffi.Pointer<ffi.Uint8>>,
@@ -6814,16 +6820,9 @@ external ffi.Pointer<SignalFfiError> signal_webp_sanitizer_sanitize(
   SignalConstPointerFfiSyncInputStreamStruct input,
 );
 
-typedef ptrdiff_t = ffi.Long;
-typedef Dartptrdiff_t = int;
-typedef __u_char = ffi.UnsignedChar;
-typedef Dart__u_char = int;
-typedef __u_short = ffi.UnsignedShort;
-typedef Dart__u_short = int;
-typedef __u_int = ffi.UnsignedInt;
-typedef Dart__u_int = int;
-typedef __u_long = ffi.UnsignedLong;
-typedef Dart__u_long = int;
+typedef __builtin_va_list = ffi.Pointer<ffi.Char>;
+typedef __gnuc_va_list = __builtin_va_list;
+typedef va_list = __builtin_va_list;
 typedef __int8_t = ffi.SignedChar;
 typedef Dart__int8_t = int;
 typedef __uint8_t = ffi.UnsignedChar;
@@ -6836,398 +6835,489 @@ typedef __int32_t = ffi.Int;
 typedef Dart__int32_t = int;
 typedef __uint32_t = ffi.UnsignedInt;
 typedef Dart__uint32_t = int;
-typedef __int64_t = ffi.Long;
+typedef __int64_t = ffi.LongLong;
 typedef Dart__int64_t = int;
-typedef __uint64_t = ffi.UnsignedLong;
+typedef __uint64_t = ffi.UnsignedLongLong;
 typedef Dart__uint64_t = int;
-typedef __int_least8_t = __int8_t;
-typedef __uint_least8_t = __uint8_t;
-typedef __int_least16_t = __int16_t;
-typedef __uint_least16_t = __uint16_t;
-typedef __int_least32_t = __int32_t;
-typedef __uint_least32_t = __uint32_t;
-typedef __int_least64_t = __int64_t;
-typedef __uint_least64_t = __uint64_t;
-typedef __quad_t = ffi.Long;
-typedef Dart__quad_t = int;
-typedef __u_quad_t = ffi.UnsignedLong;
-typedef Dart__u_quad_t = int;
-typedef __intmax_t = ffi.Long;
-typedef Dart__intmax_t = int;
-typedef __uintmax_t = ffi.UnsignedLong;
-typedef Dart__uintmax_t = int;
-typedef __dev_t = ffi.UnsignedLong;
-typedef Dart__dev_t = int;
-typedef __uid_t = ffi.UnsignedInt;
-typedef Dart__uid_t = int;
-typedef __gid_t = ffi.UnsignedInt;
-typedef Dart__gid_t = int;
-typedef __ino_t = ffi.UnsignedLong;
-typedef Dart__ino_t = int;
-typedef __ino64_t = ffi.UnsignedLong;
-typedef Dart__ino64_t = int;
-typedef __mode_t = ffi.UnsignedInt;
-typedef Dart__mode_t = int;
-typedef __nlink_t = ffi.UnsignedLong;
-typedef Dart__nlink_t = int;
-typedef __off_t = ffi.Long;
-typedef Dart__off_t = int;
-typedef __off64_t = ffi.Long;
-typedef Dart__off64_t = int;
-typedef __pid_t = ffi.Int;
-typedef Dart__pid_t = int;
+typedef __darwin_intptr_t = ffi.Long;
+typedef Dart__darwin_intptr_t = int;
+typedef __darwin_natural_t = ffi.UnsignedInt;
+typedef Dart__darwin_natural_t = int;
+typedef __darwin_ct_rune_t = ffi.Int;
+typedef Dart__darwin_ct_rune_t = int;
 
-final class __fsid_t extends ffi.Struct {
-  @ffi.Array.multi([2])
-  external ffi.Array<ffi.Int> __val;
-}
-
-typedef __clock_t = ffi.Long;
-typedef Dart__clock_t = int;
-typedef __rlim_t = ffi.UnsignedLong;
-typedef Dart__rlim_t = int;
-typedef __rlim64_t = ffi.UnsignedLong;
-typedef Dart__rlim64_t = int;
-typedef __id_t = ffi.UnsignedInt;
-typedef Dart__id_t = int;
-typedef __time_t = ffi.Long;
-typedef Dart__time_t = int;
-typedef __useconds_t = ffi.UnsignedInt;
-typedef Dart__useconds_t = int;
-typedef __suseconds_t = ffi.Long;
-typedef Dart__suseconds_t = int;
-typedef __suseconds64_t = ffi.Long;
-typedef Dart__suseconds64_t = int;
-typedef __daddr_t = ffi.Int;
-typedef Dart__daddr_t = int;
-typedef __key_t = ffi.Int;
-typedef Dart__key_t = int;
-typedef __clockid_t = ffi.Int;
-typedef Dart__clockid_t = int;
-typedef __timer_t = ffi.Pointer<ffi.Void>;
-typedef __blksize_t = ffi.Long;
-typedef Dart__blksize_t = int;
-typedef __blkcnt_t = ffi.Long;
-typedef Dart__blkcnt_t = int;
-typedef __blkcnt64_t = ffi.Long;
-typedef Dart__blkcnt64_t = int;
-typedef __fsblkcnt_t = ffi.UnsignedLong;
-typedef Dart__fsblkcnt_t = int;
-typedef __fsblkcnt64_t = ffi.UnsignedLong;
-typedef Dart__fsblkcnt64_t = int;
-typedef __fsfilcnt_t = ffi.UnsignedLong;
-typedef Dart__fsfilcnt_t = int;
-typedef __fsfilcnt64_t = ffi.UnsignedLong;
-typedef Dart__fsfilcnt64_t = int;
-typedef __fsword_t = ffi.Long;
-typedef Dart__fsword_t = int;
-typedef __ssize_t = ffi.Long;
-typedef Dart__ssize_t = int;
-typedef __syscall_slong_t = ffi.Long;
-typedef Dart__syscall_slong_t = int;
-typedef __syscall_ulong_t = ffi.UnsignedLong;
-typedef Dart__syscall_ulong_t = int;
-typedef __loff_t = __off64_t;
-typedef __caddr_t = ffi.Pointer<ffi.Char>;
-typedef __intptr_t = ffi.Long;
-typedef Dart__intptr_t = int;
-typedef __socklen_t = ffi.UnsignedInt;
-typedef Dart__socklen_t = int;
-typedef __sig_atomic_t = ffi.Int;
-typedef Dart__sig_atomic_t = int;
-typedef int_least8_t = __int_least8_t;
-typedef int_least16_t = __int_least16_t;
-typedef int_least32_t = __int_least32_t;
-typedef int_least64_t = __int_least64_t;
-typedef uint_least8_t = __uint_least8_t;
-typedef uint_least16_t = __uint_least16_t;
-typedef uint_least32_t = __uint_least32_t;
-typedef uint_least64_t = __uint_least64_t;
-typedef int_fast8_t = ffi.SignedChar;
-typedef Dartint_fast8_t = int;
-typedef int_fast16_t = ffi.Long;
-typedef Dartint_fast16_t = int;
-typedef int_fast32_t = ffi.Long;
-typedef Dartint_fast32_t = int;
-typedef int_fast64_t = ffi.Long;
-typedef Dartint_fast64_t = int;
-typedef uint_fast8_t = ffi.UnsignedChar;
-typedef Dartuint_fast8_t = int;
-typedef uint_fast16_t = ffi.UnsignedLong;
-typedef Dartuint_fast16_t = int;
-typedef uint_fast32_t = ffi.UnsignedLong;
-typedef Dartuint_fast32_t = int;
-typedef uint_fast64_t = ffi.UnsignedLong;
-typedef Dartuint_fast64_t = int;
-typedef intmax_t = __intmax_t;
-typedef uintmax_t = __uintmax_t;
-typedef _Float32 = ffi.Float;
-typedef Dart_Float32 = double;
-typedef _Float64 = ffi.Double;
-typedef Dart_Float64 = double;
-typedef _Float32x = ffi.Double;
-typedef Dart_Float32x = double;
-typedef u_char = __u_char;
-typedef u_short = __u_short;
-typedef u_int = __u_int;
-typedef u_long = __u_long;
-typedef quad_t = __quad_t;
-typedef u_quad_t = __u_quad_t;
-typedef fsid_t = __fsid_t;
-typedef loff_t = __loff_t;
-typedef ino_t = __ino_t;
-typedef dev_t = __dev_t;
-typedef gid_t = __gid_t;
-typedef mode_t = __mode_t;
-typedef nlink_t = __nlink_t;
-typedef uid_t = __uid_t;
-typedef off_t = __off_t;
-typedef pid_t = __pid_t;
-typedef id_t = __id_t;
-typedef ssize_t = __ssize_t;
-typedef daddr_t = __daddr_t;
-typedef caddr_t = __caddr_t;
-typedef key_t = __key_t;
-typedef clock_t = __clock_t;
-typedef clockid_t = __clockid_t;
-typedef time_t = __time_t;
-typedef timer_t = __timer_t;
-typedef ulong = ffi.UnsignedLong;
-typedef Dartulong = int;
-typedef ushort = ffi.UnsignedShort;
-typedef Dartushort = int;
-typedef uint = ffi.UnsignedInt;
-typedef Dartuint = int;
-typedef u_int8_t = __uint8_t;
-typedef u_int16_t = __uint16_t;
-typedef u_int32_t = __uint32_t;
-typedef u_int64_t = __uint64_t;
-typedef register_t = ffi.Long;
-typedef Dartregister_t = int;
-
-final class __sigset_t extends ffi.Struct {
-  @ffi.Array.multi([16])
-  external ffi.Array<ffi.UnsignedLong> __val;
-}
-
-typedef sigset_t = __sigset_t;
-typedef suseconds_t = __suseconds_t;
-typedef __fd_mask = ffi.Long;
-typedef Dart__fd_mask = int;
-typedef fd_mask = __fd_mask;
-typedef blksize_t = __blksize_t;
-typedef blkcnt_t = __blkcnt_t;
-typedef fsblkcnt_t = __fsblkcnt_t;
-typedef fsfilcnt_t = __fsfilcnt_t;
-
-final class UnnamedStruct extends ffi.Struct {
-  @ffi.UnsignedInt()
-  external int __low;
-
-  @ffi.UnsignedInt()
-  external int __high;
-}
-
-final class __atomic_wide_counter extends ffi.Union {
-  @ffi.UnsignedLongLong()
-  external int __value64;
-
-  external UnnamedStruct __value32;
-}
-
-final class __pthread_internal_list extends ffi.Struct {
-  external ffi.Pointer<__pthread_internal_list> __prev;
-
-  external ffi.Pointer<__pthread_internal_list> __next;
-}
-
-typedef __pthread_list_t = __pthread_internal_list;
-
-final class __pthread_internal_slist extends ffi.Struct {
-  external ffi.Pointer<__pthread_internal_slist> __next;
-}
-
-typedef __pthread_slist_t = __pthread_internal_slist;
-
-final class __pthread_mutex_s extends ffi.Struct {
-  @ffi.Int()
-  external int __lock;
-
-  @ffi.UnsignedInt()
-  external int __count;
-
-  @ffi.Int()
-  external int __owner;
-
-  @ffi.UnsignedInt()
-  external int __nusers;
-
-  @ffi.Int()
-  external int __kind;
-
-  @ffi.Short()
-  external int __spins;
-
-  @ffi.Short()
-  external int __elision;
-
-  external __pthread_list_t __list;
-}
-
-final class __pthread_rwlock_arch_t extends ffi.Struct {
-  @ffi.UnsignedInt()
-  external int __readers;
-
-  @ffi.UnsignedInt()
-  external int __writers;
-
-  @ffi.UnsignedInt()
-  external int __wrphase_futex;
-
-  @ffi.UnsignedInt()
-  external int __writers_futex;
-
-  @ffi.UnsignedInt()
-  external int __pad3;
-
-  @ffi.UnsignedInt()
-  external int __pad4;
-
-  @ffi.Int()
-  external int __cur_writer;
-
-  @ffi.Int()
-  external int __shared;
-
-  @ffi.SignedChar()
-  external int __rwelision;
-
-  @ffi.Array.multi([7])
-  external ffi.Array<ffi.UnsignedChar> __pad1;
-
-  @ffi.UnsignedLong()
-  external int __pad2;
-
-  @ffi.UnsignedInt()
-  external int __flags;
-}
-
-final class __pthread_cond_s extends ffi.Struct {
-  external __atomic_wide_counter __wseq;
-
-  external __atomic_wide_counter __g1_start;
-
-  @ffi.Array.multi([2])
-  external ffi.Array<ffi.UnsignedInt> __g_refs;
-
-  @ffi.Array.multi([2])
-  external ffi.Array<ffi.UnsignedInt> __g_size;
-
-  @ffi.UnsignedInt()
-  external int __g1_orig_size;
-
-  @ffi.UnsignedInt()
-  external int __wrefs;
-
-  @ffi.Array.multi([2])
-  external ffi.Array<ffi.UnsignedInt> __g_signals;
-}
-
-typedef __tss_t = ffi.UnsignedInt;
-typedef Dart__tss_t = int;
-typedef __thrd_t = ffi.UnsignedLong;
-typedef Dart__thrd_t = int;
-typedef pthread_t = ffi.UnsignedLong;
-typedef Dartpthread_t = int;
-
-final class pthread_mutexattr_t extends ffi.Union {
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Int()
-  external int __align;
-}
-
-final class pthread_condattr_t extends ffi.Union {
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Int()
-  external int __align;
-}
-
-typedef pthread_key_t = ffi.UnsignedInt;
-typedef Dartpthread_key_t = int;
-typedef pthread_once_t = ffi.Int;
-typedef Dartpthread_once_t = int;
-
-final class pthread_attr_t extends ffi.Union {
-  @ffi.Array.multi([56])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Long()
-  external int __align;
-}
-
-final class pthread_mutex_t extends ffi.Union {
-  external __pthread_mutex_s __data;
-
-  @ffi.Array.multi([40])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Long()
-  external int __align;
-}
-
-final class pthread_cond_t extends ffi.Union {
-  external __pthread_cond_s __data;
-
-  @ffi.Array.multi([48])
-  external ffi.Array<ffi.Char> __size;
+final class __mbstate_t extends ffi.Union {
+  @ffi.Array.multi([128])
+  external ffi.Array<ffi.Char> __mbstate8;
 
   @ffi.LongLong()
-  external int __align;
+  external int _mbstateL;
 }
 
-final class pthread_rwlock_t extends ffi.Union {
-  external __pthread_rwlock_arch_t __data;
+typedef __darwin_mbstate_t = __mbstate_t;
+typedef __darwin_ptrdiff_t = ffi.Long;
+typedef Dart__darwin_ptrdiff_t = int;
+typedef __darwin_size_t = ffi.UnsignedLong;
+typedef Dart__darwin_size_t = int;
+typedef __darwin_va_list = __builtin_va_list;
+typedef __darwin_wchar_t = ffi.Int;
+typedef Dart__darwin_wchar_t = int;
+typedef __darwin_rune_t = __darwin_wchar_t;
+typedef __darwin_wint_t = ffi.Int;
+typedef Dart__darwin_wint_t = int;
+typedef __darwin_clock_t = ffi.UnsignedLong;
+typedef Dart__darwin_clock_t = int;
+typedef __darwin_socklen_t = __uint32_t;
+typedef __darwin_ssize_t = ffi.Long;
+typedef Dart__darwin_ssize_t = int;
+typedef __darwin_time_t = ffi.Long;
+typedef Dart__darwin_time_t = int;
+typedef __darwin_blkcnt_t = __int64_t;
+typedef __darwin_blksize_t = __int32_t;
+typedef __darwin_dev_t = __int32_t;
+typedef __darwin_fsblkcnt_t = ffi.UnsignedInt;
+typedef Dart__darwin_fsblkcnt_t = int;
+typedef __darwin_fsfilcnt_t = ffi.UnsignedInt;
+typedef Dart__darwin_fsfilcnt_t = int;
+typedef __darwin_gid_t = __uint32_t;
+typedef __darwin_id_t = __uint32_t;
+typedef __darwin_ino64_t = __uint64_t;
+typedef __darwin_ino_t = __darwin_ino64_t;
+typedef __darwin_mach_port_name_t = __darwin_natural_t;
+typedef __darwin_mach_port_t = __darwin_mach_port_name_t;
+typedef __darwin_mode_t = __uint16_t;
+typedef __darwin_off_t = __int64_t;
+typedef __darwin_pid_t = __int32_t;
+typedef __darwin_sigset_t = __uint32_t;
+typedef __darwin_suseconds_t = __int32_t;
+typedef __darwin_uid_t = __uint32_t;
+typedef __darwin_useconds_t = __uint32_t;
+
+final class __darwin_pthread_handler_rec extends ffi.Struct {
+  external ffi.Pointer<
+    ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>
+  >
+  __routine;
+
+  external ffi.Pointer<ffi.Void> __arg;
+
+  external ffi.Pointer<__darwin_pthread_handler_rec> __next;
+}
+
+final class _opaque_pthread_attr_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
 
   @ffi.Array.multi([56])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Long()
-  external int __align;
+  external ffi.Array<ffi.Char> __opaque;
 }
 
-final class pthread_rwlockattr_t extends ffi.Union {
+final class _opaque_pthread_cond_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  @ffi.Array.multi([40])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+final class _opaque_pthread_condattr_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
   @ffi.Array.multi([8])
-  external ffi.Array<ffi.Char> __size;
-
-  @ffi.Long()
-  external int __align;
+  external ffi.Array<ffi.Char> __opaque;
 }
 
-final class pthread_barrier_t extends ffi.Union {
-  @ffi.Array.multi([32])
-  external ffi.Array<ffi.Char> __size;
-
+final class _opaque_pthread_mutex_t extends ffi.Struct {
   @ffi.Long()
-  external int __align;
+  external int __sig;
+
+  @ffi.Array.multi([56])
+  external ffi.Array<ffi.Char> __opaque;
 }
 
-final class pthread_barrierattr_t extends ffi.Union {
-  @ffi.Array.multi([4])
-  external ffi.Array<ffi.Char> __size;
+final class _opaque_pthread_mutexattr_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  @ffi.Array.multi([8])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+final class _opaque_pthread_once_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  @ffi.Array.multi([8])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+final class _opaque_pthread_rwlock_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  @ffi.Array.multi([192])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+final class _opaque_pthread_rwlockattr_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  @ffi.Array.multi([16])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+final class _opaque_pthread_t extends ffi.Struct {
+  @ffi.Long()
+  external int __sig;
+
+  external ffi.Pointer<__darwin_pthread_handler_rec> __cleanup_stack;
+
+  @ffi.Array.multi([8176])
+  external ffi.Array<ffi.Char> __opaque;
+}
+
+typedef __darwin_pthread_attr_t = _opaque_pthread_attr_t;
+typedef __darwin_pthread_cond_t = _opaque_pthread_cond_t;
+typedef __darwin_pthread_condattr_t = _opaque_pthread_condattr_t;
+typedef __darwin_pthread_key_t = ffi.UnsignedLong;
+typedef Dart__darwin_pthread_key_t = int;
+typedef __darwin_pthread_mutex_t = _opaque_pthread_mutex_t;
+typedef __darwin_pthread_mutexattr_t = _opaque_pthread_mutexattr_t;
+typedef __darwin_pthread_once_t = _opaque_pthread_once_t;
+typedef __darwin_pthread_rwlock_t = _opaque_pthread_rwlock_t;
+typedef __darwin_pthread_rwlockattr_t = _opaque_pthread_rwlockattr_t;
+typedef __darwin_pthread_t = ffi.Pointer<_opaque_pthread_t>;
+typedef __darwin_nl_item = ffi.Int;
+typedef Dart__darwin_nl_item = int;
+typedef __darwin_wctrans_t = ffi.Int;
+typedef Dart__darwin_wctrans_t = int;
+typedef __darwin_wctype_t = __uint32_t;
+typedef u_int8_t = ffi.UnsignedChar;
+typedef Dartu_int8_t = int;
+typedef u_int16_t = ffi.UnsignedShort;
+typedef Dartu_int16_t = int;
+typedef u_int32_t = ffi.UnsignedInt;
+typedef Dartu_int32_t = int;
+typedef u_int64_t = ffi.UnsignedLongLong;
+typedef Dartu_int64_t = int;
+typedef register_t = ffi.Int64;
+typedef Dartregister_t = int;
+typedef user_addr_t = u_int64_t;
+typedef user_size_t = u_int64_t;
+typedef user_ssize_t = ffi.Int64;
+typedef Dartuser_ssize_t = int;
+typedef user_long_t = ffi.Int64;
+typedef Dartuser_long_t = int;
+typedef user_ulong_t = u_int64_t;
+typedef user_time_t = ffi.Int64;
+typedef Dartuser_time_t = int;
+typedef user_off_t = ffi.Int64;
+typedef Dartuser_off_t = int;
+typedef syscall_arg_t = u_int64_t;
+typedef ptrdiff_t = __darwin_ptrdiff_t;
+typedef rsize_t = __darwin_size_t;
+typedef wint_t = __darwin_wint_t;
+typedef int_least8_t = ffi.Int8;
+typedef Dartint_least8_t = int;
+typedef int_least16_t = ffi.Int16;
+typedef Dartint_least16_t = int;
+typedef int_least32_t = ffi.Int32;
+typedef Dartint_least32_t = int;
+typedef int_least64_t = ffi.Int64;
+typedef Dartint_least64_t = int;
+typedef uint_least8_t = ffi.Uint8;
+typedef Dartuint_least8_t = int;
+typedef uint_least16_t = ffi.Uint16;
+typedef Dartuint_least16_t = int;
+typedef uint_least32_t = ffi.Uint32;
+typedef Dartuint_least32_t = int;
+typedef uint_least64_t = ffi.Uint64;
+typedef Dartuint_least64_t = int;
+typedef int_fast8_t = ffi.Int8;
+typedef Dartint_fast8_t = int;
+typedef int_fast16_t = ffi.Int16;
+typedef Dartint_fast16_t = int;
+typedef int_fast32_t = ffi.Int32;
+typedef Dartint_fast32_t = int;
+typedef int_fast64_t = ffi.Int64;
+typedef Dartint_fast64_t = int;
+typedef uint_fast8_t = ffi.Uint8;
+typedef Dartuint_fast8_t = int;
+typedef uint_fast16_t = ffi.Uint16;
+typedef Dartuint_fast16_t = int;
+typedef uint_fast32_t = ffi.Uint32;
+typedef Dartuint_fast32_t = int;
+typedef uint_fast64_t = ffi.Uint64;
+typedef Dartuint_fast64_t = int;
+typedef intmax_t = ffi.Long;
+typedef Dartintmax_t = int;
+typedef uintmax_t = ffi.UnsignedLong;
+typedef Dartuintmax_t = int;
+typedef pid_t = __darwin_pid_t;
+typedef id_t = __darwin_id_t;
+typedef sig_atomic_t = ffi.Int;
+typedef Dartsig_atomic_t = int;
+
+final class __darwin_mcontext64 extends ffi.Opaque {}
+
+typedef mcontext_t = ffi.Pointer<__darwin_mcontext64>;
+typedef pthread_attr_t = __darwin_pthread_attr_t;
+
+final class __darwin_sigaltstack extends ffi.Struct {
+  external ffi.Pointer<ffi.Void> ss_sp;
+
+  @__darwin_size_t()
+  external int ss_size;
 
   @ffi.Int()
-  external int __align;
+  external int ss_flags;
 }
 
-typedef __compar_fn_tFunction =
-    ffi.Int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>);
-typedef Dart__compar_fn_tFunction =
-    int Function(ffi.Pointer<ffi.Void>, ffi.Pointer<ffi.Void>);
-typedef __compar_fn_t = ffi.Pointer<ffi.NativeFunction<__compar_fn_tFunction>>;
+typedef stack_t = __darwin_sigaltstack;
+
+final class __darwin_ucontext extends ffi.Struct {
+  @ffi.Int()
+  external int uc_onstack;
+
+  @__darwin_sigset_t()
+  external int uc_sigmask;
+
+  external __darwin_sigaltstack uc_stack;
+
+  external ffi.Pointer<__darwin_ucontext> uc_link;
+
+  @__darwin_size_t()
+  external int uc_mcsize;
+
+  external ffi.Pointer<__darwin_mcontext64> uc_mcontext;
+}
+
+typedef ucontext_t = __darwin_ucontext;
+typedef sigset_t = __darwin_sigset_t;
+typedef uid_t = __darwin_uid_t;
+
+final class sigval extends ffi.Union {
+  @ffi.Int()
+  external int sival_int;
+
+  external ffi.Pointer<ffi.Void> sival_ptr;
+}
+
+final class __siginfo extends ffi.Struct {
+  @ffi.Int()
+  external int si_signo;
+
+  @ffi.Int()
+  external int si_errno;
+
+  @ffi.Int()
+  external int si_code;
+
+  @pid_t()
+  external int si_pid;
+
+  @uid_t()
+  external int si_uid;
+
+  @ffi.Int()
+  external int si_status;
+
+  external ffi.Pointer<ffi.Void> si_addr;
+
+  external sigval si_value;
+
+  @ffi.Long()
+  external int si_band;
+
+  @ffi.Array.multi([7])
+  external ffi.Array<ffi.UnsignedLong> __pad;
+}
+
+typedef siginfo_t = __siginfo;
+
+final class __sigaction_u extends ffi.Union {
+  external ffi.Pointer<ffi.NativeFunction<ffi.Void Function(ffi.Int)>>
+  __sa_handler;
+
+  external ffi.Pointer<
+    ffi.NativeFunction<
+      ffi.Void Function(ffi.Int, ffi.Pointer<__siginfo>, ffi.Pointer<ffi.Void>)
+    >
+  >
+  __sa_sigaction;
+}
+
+typedef sig_tFunction = ffi.Void Function(ffi.Int);
+typedef Dartsig_tFunction = void Function(int);
+typedef sig_t = ffi.Pointer<ffi.NativeFunction<sig_tFunction>>;
+typedef rlim_t = __uint64_t;
+typedef rusage_info_t = ffi.Pointer<ffi.Void>;
+
+final class rusage_info_v6 extends ffi.Struct {
+  @ffi.Array.multi([16])
+  external ffi.Array<ffi.Uint8> ri_uuid;
+
+  @ffi.Uint64()
+  external int ri_user_time;
+
+  @ffi.Uint64()
+  external int ri_system_time;
+
+  @ffi.Uint64()
+  external int ri_pkg_idle_wkups;
+
+  @ffi.Uint64()
+  external int ri_interrupt_wkups;
+
+  @ffi.Uint64()
+  external int ri_pageins;
+
+  @ffi.Uint64()
+  external int ri_wired_size;
+
+  @ffi.Uint64()
+  external int ri_resident_size;
+
+  @ffi.Uint64()
+  external int ri_phys_footprint;
+
+  @ffi.Uint64()
+  external int ri_proc_start_abstime;
+
+  @ffi.Uint64()
+  external int ri_proc_exit_abstime;
+
+  @ffi.Uint64()
+  external int ri_child_user_time;
+
+  @ffi.Uint64()
+  external int ri_child_system_time;
+
+  @ffi.Uint64()
+  external int ri_child_pkg_idle_wkups;
+
+  @ffi.Uint64()
+  external int ri_child_interrupt_wkups;
+
+  @ffi.Uint64()
+  external int ri_child_pageins;
+
+  @ffi.Uint64()
+  external int ri_child_elapsed_abstime;
+
+  @ffi.Uint64()
+  external int ri_diskio_bytesread;
+
+  @ffi.Uint64()
+  external int ri_diskio_byteswritten;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_default;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_maintenance;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_background;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_utility;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_legacy;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_user_initiated;
+
+  @ffi.Uint64()
+  external int ri_cpu_time_qos_user_interactive;
+
+  @ffi.Uint64()
+  external int ri_billed_system_time;
+
+  @ffi.Uint64()
+  external int ri_serviced_system_time;
+
+  @ffi.Uint64()
+  external int ri_logical_writes;
+
+  @ffi.Uint64()
+  external int ri_lifetime_max_phys_footprint;
+
+  @ffi.Uint64()
+  external int ri_instructions;
+
+  @ffi.Uint64()
+  external int ri_cycles;
+
+  @ffi.Uint64()
+  external int ri_billed_energy;
+
+  @ffi.Uint64()
+  external int ri_serviced_energy;
+
+  @ffi.Uint64()
+  external int ri_interval_max_phys_footprint;
+
+  @ffi.Uint64()
+  external int ri_runnable_time;
+
+  @ffi.Uint64()
+  external int ri_flags;
+
+  @ffi.Uint64()
+  external int ri_user_ptime;
+
+  @ffi.Uint64()
+  external int ri_system_ptime;
+
+  @ffi.Uint64()
+  external int ri_pinstructions;
+
+  @ffi.Uint64()
+  external int ri_pcycles;
+
+  @ffi.Uint64()
+  external int ri_energy_nj;
+
+  @ffi.Uint64()
+  external int ri_penergy_nj;
+
+  @ffi.Uint64()
+  external int ri_secure_time_in_system;
+
+  @ffi.Uint64()
+  external int ri_secure_ptime_in_system;
+
+  @ffi.Uint64()
+  external int ri_neural_footprint;
+
+  @ffi.Uint64()
+  external int ri_lifetime_max_neural_footprint;
+
+  @ffi.Uint64()
+  external int ri_interval_max_neural_footprint;
+
+  @ffi.Array.multi([9])
+  external ffi.Array<ffi.Uint64> ri_reserved;
+}
+
+typedef rusage_info_current = rusage_info_v6;
+
+final class wait extends ffi.Opaque {}
+
+typedef ct_rune_t = __darwin_ct_rune_t;
+typedef rune_t = __darwin_rune_t;
+typedef malloc_type_id_t = ffi.UnsignedLongLong;
+typedef Dartmalloc_type_id_t = int;
+
+final class _malloc_zone_t extends ffi.Opaque {}
+
+typedef malloc_zone_t = _malloc_zone_t;
+typedef dev_t = __darwin_dev_t;
+typedef mode_t = __darwin_mode_t;
 
 enum SignalLogLevel {
   SignalLogLevelError(1),
@@ -9370,141 +9460,79 @@ const int true$ = 1;
 
 const int false$ = 0;
 
+const int __has_safe_buffers = 0;
+
+const int __DARWIN_ONLY_64_BIT_INO_T = 1;
+
+const int __DARWIN_ONLY_UNIX_CONFORMANCE = 1;
+
+const int __DARWIN_ONLY_VERS_1050 = 1;
+
+const int __DARWIN_UNIX03 = 1;
+
+const int __DARWIN_64_BIT_INO_T = 1;
+
+const int __DARWIN_VERS_1050 = 1;
+
+const int __DARWIN_NON_CANCELABLE = 0;
+
+const String __DARWIN_SUF_EXTSN = '\$DARWIN_EXTSN';
+
+const int __DARWIN_C_ANSI = 4096;
+
+const int __DARWIN_C_FULL = 900000;
+
+const int __DARWIN_C_LEVEL = 900000;
+
+const int __STDC_WANT_LIB_EXT1__ = 1;
+
+const int __DARWIN_NO_LONG_LONG = 0;
+
+const int _DARWIN_FEATURE_64_BIT_INODE = 1;
+
+const int _DARWIN_FEATURE_ONLY_64_BIT_INODE = 1;
+
+const int _DARWIN_FEATURE_ONLY_VERS_1050 = 1;
+
+const int _DARWIN_FEATURE_ONLY_UNIX_CONFORMANCE = 1;
+
+const int _DARWIN_FEATURE_UNIX_CONFORMANCE = 3;
+
+const int __has_ptrcheck = 0;
+
+const int __DARWIN_NULL = 0;
+
+const int __PTHREAD_SIZE__ = 8176;
+
+const int __PTHREAD_ATTR_SIZE__ = 56;
+
+const int __PTHREAD_MUTEXATTR_SIZE__ = 8;
+
+const int __PTHREAD_MUTEX_SIZE__ = 56;
+
+const int __PTHREAD_CONDATTR_SIZE__ = 8;
+
+const int __PTHREAD_COND_SIZE__ = 40;
+
+const int __PTHREAD_ONCE_SIZE__ = 8;
+
+const int __PTHREAD_RWLOCK_SIZE__ = 192;
+
+const int __PTHREAD_RWLOCKATTR_SIZE__ = 16;
+
+const int __DARWIN_WCHAR_MAX = 2147483647;
+
+const int __DARWIN_WCHAR_MIN = -2147483648;
+
+const int __DARWIN_WEOF = -1;
+
+const int _FORTIFY_SOURCE = 2;
+
 const int NULL = 0;
 
-const int _STDINT_H = 1;
-
-const int _FEATURES_H = 1;
-
-const int _DEFAULT_SOURCE = 1;
-
-const int __GLIBC_USE_ISOC2X = 1;
-
-const int __USE_ISOC11 = 1;
-
-const int __USE_ISOC99 = 1;
-
-const int __USE_ISOC95 = 1;
-
-const int _POSIX_SOURCE = 1;
-
-const int _POSIX_C_SOURCE = 200809;
-
-const int __USE_POSIX = 1;
-
-const int __USE_POSIX2 = 1;
-
-const int __USE_POSIX199309 = 1;
-
-const int __USE_POSIX199506 = 1;
-
-const int __USE_XOPEN2K = 1;
-
-const int __USE_XOPEN2K8 = 1;
-
-const int _ATFILE_SOURCE = 1;
+const int USER_ADDR_NULL = 0;
 
 const int __WORDSIZE = 64;
-
-const int __WORDSIZE_TIME64_COMPAT32 = 1;
-
-const int __SYSCALL_WORDSIZE = 64;
-
-const int __TIMESIZE = 64;
-
-const int __USE_MISC = 1;
-
-const int __USE_ATFILE = 1;
-
-const int __USE_FORTIFY_LEVEL = 0;
-
-const int __GLIBC_USE_DEPRECATED_GETS = 0;
-
-const int __GLIBC_USE_DEPRECATED_SCANF = 0;
-
-const int __GLIBC_USE_C2X_STRTOL = 1;
-
-const int _STDC_PREDEF_H = 1;
-
-const int __STDC_IEC_559__ = 1;
-
-const int __STDC_IEC_60559_BFP__ = 201404;
-
-const int __STDC_IEC_559_COMPLEX__ = 1;
-
-const int __STDC_IEC_60559_COMPLEX__ = 201404;
-
-const int __STDC_ISO_10646__ = 201706;
-
-const int __GNU_LIBRARY__ = 6;
-
-const int __GLIBC__ = 2;
-
-const int __GLIBC_MINOR__ = 39;
-
-const int _SYS_CDEFS_H = 1;
-
-const int __THROW = 1;
-
-const int __THROWNL = 1;
-
-const int __glibc_c99_flexarr_available = 1;
-
-const int __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI = 0;
-
-const int __HAVE_GENERIC_SELECTION = 0;
-
-const int __GLIBC_USE_LIB_EXT2 = 1;
-
-const int __GLIBC_USE_IEC_60559_BFP_EXT = 1;
-
-const int __GLIBC_USE_IEC_60559_BFP_EXT_C2X = 1;
-
-const int __GLIBC_USE_IEC_60559_EXT = 1;
-
-const int __GLIBC_USE_IEC_60559_FUNCS_EXT = 1;
-
-const int __GLIBC_USE_IEC_60559_FUNCS_EXT_C2X = 1;
-
-const int __GLIBC_USE_IEC_60559_TYPES_EXT = 1;
-
-const int _BITS_TYPES_H = 1;
-
-const int _BITS_TYPESIZES_H = 1;
-
-const int __OFF_T_MATCHES_OFF64_T = 1;
-
-const int __INO_T_MATCHES_INO64_T = 1;
-
-const int __RLIM_T_MATCHES_RLIM64_T = 1;
-
-const int __STATFS_MATCHES_STATFS64 = 1;
-
-const int __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64 = 1;
-
-const int __FD_SETSIZE = 1024;
-
-const int _BITS_TIME64_H = 1;
-
-const int _BITS_WCHAR_H = 1;
-
-const int __WCHAR_MAX = 2147483647;
-
-const int __WCHAR_MIN = -2147483648;
-
-const int _BITS_STDINT_INTN_H = 1;
-
-const int _BITS_STDINT_UINTN_H = 1;
-
-const int _BITS_STDINT_LEAST_H = 1;
-
-const int INT8_MIN = -128;
-
-const int INT16_MIN = -32768;
-
-const int INT32_MIN = -2147483648;
-
-const int INT64_MIN = -9223372036854775808;
 
 const int INT8_MAX = 127;
 
@@ -9513,6 +9541,14 @@ const int INT16_MAX = 32767;
 const int INT32_MAX = 2147483647;
 
 const int INT64_MAX = 9223372036854775807;
+
+const int INT8_MIN = -128;
+
+const int INT16_MIN = -32768;
+
+const int INT32_MIN = -2147483648;
+
+const int INT64_MIN = -9223372036854775808;
 
 const int UINT8_MAX = 255;
 
@@ -9548,153 +9584,1191 @@ const int UINT_LEAST64_MAX = -1;
 
 const int INT_FAST8_MIN = -128;
 
-const int INT_FAST16_MIN = -9223372036854775808;
+const int INT_FAST16_MIN = -32768;
 
-const int INT_FAST32_MIN = -9223372036854775808;
+const int INT_FAST32_MIN = -2147483648;
 
 const int INT_FAST64_MIN = -9223372036854775808;
 
 const int INT_FAST8_MAX = 127;
 
-const int INT_FAST16_MAX = 9223372036854775807;
+const int INT_FAST16_MAX = 32767;
 
-const int INT_FAST32_MAX = 9223372036854775807;
+const int INT_FAST32_MAX = 2147483647;
 
 const int INT_FAST64_MAX = 9223372036854775807;
 
 const int UINT_FAST8_MAX = 255;
 
-const int UINT_FAST16_MAX = -1;
+const int UINT_FAST16_MAX = 65535;
 
-const int UINT_FAST32_MAX = -1;
+const int UINT_FAST32_MAX = 4294967295;
 
 const int UINT_FAST64_MAX = -1;
 
-const int INTPTR_MIN = -9223372036854775808;
-
 const int INTPTR_MAX = 9223372036854775807;
 
-const int UINTPTR_MAX = -1;
+const int INTPTR_MIN = -9223372036854775808;
 
-const int INTMAX_MIN = -9223372036854775808;
+const int UINTPTR_MAX = -1;
 
 const int INTMAX_MAX = 9223372036854775807;
 
 const int UINTMAX_MAX = -1;
 
+const int INTMAX_MIN = -9223372036854775808;
+
 const int PTRDIFF_MIN = -9223372036854775808;
 
 const int PTRDIFF_MAX = 9223372036854775807;
+
+const int SIZE_MAX = -1;
+
+const int RSIZE_MAX = 9223372036854775807;
+
+const int WCHAR_MAX = 2147483647;
+
+const int WCHAR_MIN = -2147483648;
+
+const int WINT_MIN = -2147483648;
+
+const int WINT_MAX = 2147483647;
 
 const int SIG_ATOMIC_MIN = -2147483648;
 
 const int SIG_ATOMIC_MAX = 2147483647;
 
-const int SIZE_MAX = -1;
+const int __API_TO_BE_DEPRECATED = 100000;
 
-const int WCHAR_MIN = -2147483648;
+const int __API_TO_BE_DEPRECATED_MACOS = 100000;
 
-const int WCHAR_MAX = 2147483647;
+const int __API_TO_BE_DEPRECATED_IOS = 100000;
 
-const int WINT_MIN = 0;
+const int __API_TO_BE_DEPRECATED_MACCATALYST = 100000;
 
-const int WINT_MAX = 4294967295;
+const int __API_TO_BE_DEPRECATED_WATCHOS = 100000;
 
-const int _STDLIB_H = 1;
+const int __API_TO_BE_DEPRECATED_TVOS = 100000;
+
+const int __API_TO_BE_DEPRECATED_DRIVERKIT = 100000;
+
+const int __API_TO_BE_DEPRECATED_VISIONOS = 100000;
+
+const int __MAC_10_0 = 1000;
+
+const int __MAC_10_1 = 1010;
+
+const int __MAC_10_2 = 1020;
+
+const int __MAC_10_3 = 1030;
+
+const int __MAC_10_4 = 1040;
+
+const int __MAC_10_5 = 1050;
+
+const int __MAC_10_6 = 1060;
+
+const int __MAC_10_7 = 1070;
+
+const int __MAC_10_8 = 1080;
+
+const int __MAC_10_9 = 1090;
+
+const int __MAC_10_10 = 101000;
+
+const int __MAC_10_10_2 = 101002;
+
+const int __MAC_10_10_3 = 101003;
+
+const int __MAC_10_11 = 101100;
+
+const int __MAC_10_11_2 = 101102;
+
+const int __MAC_10_11_3 = 101103;
+
+const int __MAC_10_11_4 = 101104;
+
+const int __MAC_10_12 = 101200;
+
+const int __MAC_10_12_1 = 101201;
+
+const int __MAC_10_12_2 = 101202;
+
+const int __MAC_10_12_4 = 101204;
+
+const int __MAC_10_13 = 101300;
+
+const int __MAC_10_13_1 = 101301;
+
+const int __MAC_10_13_2 = 101302;
+
+const int __MAC_10_13_4 = 101304;
+
+const int __MAC_10_14 = 101400;
+
+const int __MAC_10_14_1 = 101401;
+
+const int __MAC_10_14_4 = 101404;
+
+const int __MAC_10_14_5 = 101405;
+
+const int __MAC_10_14_6 = 101406;
+
+const int __MAC_10_15 = 101500;
+
+const int __MAC_10_15_1 = 101501;
+
+const int __MAC_10_15_4 = 101504;
+
+const int __MAC_10_16 = 101600;
+
+const int __MAC_11_0 = 110000;
+
+const int __MAC_11_1 = 110100;
+
+const int __MAC_11_3 = 110300;
+
+const int __MAC_11_4 = 110400;
+
+const int __MAC_11_5 = 110500;
+
+const int __MAC_11_6 = 110600;
+
+const int __MAC_12_0 = 120000;
+
+const int __MAC_12_1 = 120100;
+
+const int __MAC_12_2 = 120200;
+
+const int __MAC_12_3 = 120300;
+
+const int __MAC_12_4 = 120400;
+
+const int __MAC_12_5 = 120500;
+
+const int __MAC_12_6 = 120600;
+
+const int __MAC_12_7 = 120700;
+
+const int __MAC_13_0 = 130000;
+
+const int __MAC_13_1 = 130100;
+
+const int __MAC_13_2 = 130200;
+
+const int __MAC_13_3 = 130300;
+
+const int __MAC_13_4 = 130400;
+
+const int __MAC_13_5 = 130500;
+
+const int __MAC_13_6 = 130600;
+
+const int __MAC_14_0 = 140000;
+
+const int __MAC_14_1 = 140100;
+
+const int __MAC_14_2 = 140200;
+
+const int __MAC_14_3 = 140300;
+
+const int __MAC_14_4 = 140400;
+
+const int __MAC_14_5 = 140500;
+
+const int __MAC_15_0 = 150000;
+
+const int __IPHONE_2_0 = 20000;
+
+const int __IPHONE_2_1 = 20100;
+
+const int __IPHONE_2_2 = 20200;
+
+const int __IPHONE_3_0 = 30000;
+
+const int __IPHONE_3_1 = 30100;
+
+const int __IPHONE_3_2 = 30200;
+
+const int __IPHONE_4_0 = 40000;
+
+const int __IPHONE_4_1 = 40100;
+
+const int __IPHONE_4_2 = 40200;
+
+const int __IPHONE_4_3 = 40300;
+
+const int __IPHONE_5_0 = 50000;
+
+const int __IPHONE_5_1 = 50100;
+
+const int __IPHONE_6_0 = 60000;
+
+const int __IPHONE_6_1 = 60100;
+
+const int __IPHONE_7_0 = 70000;
+
+const int __IPHONE_7_1 = 70100;
+
+const int __IPHONE_8_0 = 80000;
+
+const int __IPHONE_8_1 = 80100;
+
+const int __IPHONE_8_2 = 80200;
+
+const int __IPHONE_8_3 = 80300;
+
+const int __IPHONE_8_4 = 80400;
+
+const int __IPHONE_9_0 = 90000;
+
+const int __IPHONE_9_1 = 90100;
+
+const int __IPHONE_9_2 = 90200;
+
+const int __IPHONE_9_3 = 90300;
+
+const int __IPHONE_10_0 = 100000;
+
+const int __IPHONE_10_1 = 100100;
+
+const int __IPHONE_10_2 = 100200;
+
+const int __IPHONE_10_3 = 100300;
+
+const int __IPHONE_11_0 = 110000;
+
+const int __IPHONE_11_1 = 110100;
+
+const int __IPHONE_11_2 = 110200;
+
+const int __IPHONE_11_3 = 110300;
+
+const int __IPHONE_11_4 = 110400;
+
+const int __IPHONE_12_0 = 120000;
+
+const int __IPHONE_12_1 = 120100;
+
+const int __IPHONE_12_2 = 120200;
+
+const int __IPHONE_12_3 = 120300;
+
+const int __IPHONE_12_4 = 120400;
+
+const int __IPHONE_13_0 = 130000;
+
+const int __IPHONE_13_1 = 130100;
+
+const int __IPHONE_13_2 = 130200;
+
+const int __IPHONE_13_3 = 130300;
+
+const int __IPHONE_13_4 = 130400;
+
+const int __IPHONE_13_5 = 130500;
+
+const int __IPHONE_13_6 = 130600;
+
+const int __IPHONE_13_7 = 130700;
+
+const int __IPHONE_14_0 = 140000;
+
+const int __IPHONE_14_1 = 140100;
+
+const int __IPHONE_14_2 = 140200;
+
+const int __IPHONE_14_3 = 140300;
+
+const int __IPHONE_14_5 = 140500;
+
+const int __IPHONE_14_4 = 140400;
+
+const int __IPHONE_14_6 = 140600;
+
+const int __IPHONE_14_7 = 140700;
+
+const int __IPHONE_14_8 = 140800;
+
+const int __IPHONE_15_0 = 150000;
+
+const int __IPHONE_15_1 = 150100;
+
+const int __IPHONE_15_2 = 150200;
+
+const int __IPHONE_15_3 = 150300;
+
+const int __IPHONE_15_4 = 150400;
+
+const int __IPHONE_15_5 = 150500;
+
+const int __IPHONE_15_6 = 150600;
+
+const int __IPHONE_15_7 = 150700;
+
+const int __IPHONE_15_8 = 150800;
+
+const int __IPHONE_16_0 = 160000;
+
+const int __IPHONE_16_1 = 160100;
+
+const int __IPHONE_16_2 = 160200;
+
+const int __IPHONE_16_3 = 160300;
+
+const int __IPHONE_16_4 = 160400;
+
+const int __IPHONE_16_5 = 160500;
+
+const int __IPHONE_16_6 = 160600;
+
+const int __IPHONE_16_7 = 160700;
+
+const int __IPHONE_17_0 = 170000;
+
+const int __IPHONE_17_1 = 170100;
+
+const int __IPHONE_17_2 = 170200;
+
+const int __IPHONE_17_3 = 170300;
+
+const int __IPHONE_17_4 = 170400;
+
+const int __IPHONE_17_5 = 170500;
+
+const int __IPHONE_18_0 = 180000;
+
+const int __WATCHOS_1_0 = 10000;
+
+const int __WATCHOS_2_0 = 20000;
+
+const int __WATCHOS_2_1 = 20100;
+
+const int __WATCHOS_2_2 = 20200;
+
+const int __WATCHOS_3_0 = 30000;
+
+const int __WATCHOS_3_1 = 30100;
+
+const int __WATCHOS_3_1_1 = 30101;
+
+const int __WATCHOS_3_2 = 30200;
+
+const int __WATCHOS_4_0 = 40000;
+
+const int __WATCHOS_4_1 = 40100;
+
+const int __WATCHOS_4_2 = 40200;
+
+const int __WATCHOS_4_3 = 40300;
+
+const int __WATCHOS_5_0 = 50000;
+
+const int __WATCHOS_5_1 = 50100;
+
+const int __WATCHOS_5_2 = 50200;
+
+const int __WATCHOS_5_3 = 50300;
+
+const int __WATCHOS_6_0 = 60000;
+
+const int __WATCHOS_6_1 = 60100;
+
+const int __WATCHOS_6_2 = 60200;
+
+const int __WATCHOS_7_0 = 70000;
+
+const int __WATCHOS_7_1 = 70100;
+
+const int __WATCHOS_7_2 = 70200;
+
+const int __WATCHOS_7_3 = 70300;
+
+const int __WATCHOS_7_4 = 70400;
+
+const int __WATCHOS_7_5 = 70500;
+
+const int __WATCHOS_7_6 = 70600;
+
+const int __WATCHOS_8_0 = 80000;
+
+const int __WATCHOS_8_1 = 80100;
+
+const int __WATCHOS_8_3 = 80300;
+
+const int __WATCHOS_8_4 = 80400;
+
+const int __WATCHOS_8_5 = 80500;
+
+const int __WATCHOS_8_6 = 80600;
+
+const int __WATCHOS_8_7 = 80700;
+
+const int __WATCHOS_8_8 = 80800;
+
+const int __WATCHOS_9_0 = 90000;
+
+const int __WATCHOS_9_1 = 90100;
+
+const int __WATCHOS_9_2 = 90200;
+
+const int __WATCHOS_9_3 = 90300;
+
+const int __WATCHOS_9_4 = 90400;
+
+const int __WATCHOS_9_5 = 90500;
+
+const int __WATCHOS_9_6 = 90600;
+
+const int __WATCHOS_10_0 = 100000;
+
+const int __WATCHOS_10_1 = 100100;
+
+const int __WATCHOS_10_2 = 100200;
+
+const int __WATCHOS_10_3 = 100300;
+
+const int __WATCHOS_10_4 = 100400;
+
+const int __WATCHOS_10_5 = 100500;
+
+const int __WATCHOS_11_0 = 110000;
+
+const int __TVOS_9_0 = 90000;
+
+const int __TVOS_9_1 = 90100;
+
+const int __TVOS_9_2 = 90200;
+
+const int __TVOS_10_0 = 100000;
+
+const int __TVOS_10_0_1 = 100001;
+
+const int __TVOS_10_1 = 100100;
+
+const int __TVOS_10_2 = 100200;
+
+const int __TVOS_11_0 = 110000;
+
+const int __TVOS_11_1 = 110100;
+
+const int __TVOS_11_2 = 110200;
+
+const int __TVOS_11_3 = 110300;
+
+const int __TVOS_11_4 = 110400;
+
+const int __TVOS_12_0 = 120000;
+
+const int __TVOS_12_1 = 120100;
+
+const int __TVOS_12_2 = 120200;
+
+const int __TVOS_12_3 = 120300;
+
+const int __TVOS_12_4 = 120400;
+
+const int __TVOS_13_0 = 130000;
+
+const int __TVOS_13_2 = 130200;
+
+const int __TVOS_13_3 = 130300;
+
+const int __TVOS_13_4 = 130400;
+
+const int __TVOS_14_0 = 140000;
+
+const int __TVOS_14_1 = 140100;
+
+const int __TVOS_14_2 = 140200;
+
+const int __TVOS_14_3 = 140300;
+
+const int __TVOS_14_5 = 140500;
+
+const int __TVOS_14_6 = 140600;
+
+const int __TVOS_14_7 = 140700;
+
+const int __TVOS_15_0 = 150000;
+
+const int __TVOS_15_1 = 150100;
+
+const int __TVOS_15_2 = 150200;
+
+const int __TVOS_15_3 = 150300;
+
+const int __TVOS_15_4 = 150400;
+
+const int __TVOS_15_5 = 150500;
+
+const int __TVOS_15_6 = 150600;
+
+const int __TVOS_16_0 = 160000;
+
+const int __TVOS_16_1 = 160100;
+
+const int __TVOS_16_2 = 160200;
+
+const int __TVOS_16_3 = 160300;
+
+const int __TVOS_16_4 = 160400;
+
+const int __TVOS_16_5 = 160500;
+
+const int __TVOS_16_6 = 160600;
+
+const int __TVOS_17_0 = 170000;
+
+const int __TVOS_17_1 = 170100;
+
+const int __TVOS_17_2 = 170200;
+
+const int __TVOS_17_3 = 170300;
+
+const int __TVOS_17_4 = 170400;
+
+const int __TVOS_17_5 = 170500;
+
+const int __TVOS_18_0 = 180000;
+
+const int __BRIDGEOS_2_0 = 20000;
+
+const int __BRIDGEOS_3_0 = 30000;
+
+const int __BRIDGEOS_3_1 = 30100;
+
+const int __BRIDGEOS_3_4 = 30400;
+
+const int __BRIDGEOS_4_0 = 40000;
+
+const int __BRIDGEOS_4_1 = 40100;
+
+const int __BRIDGEOS_5_0 = 50000;
+
+const int __BRIDGEOS_5_1 = 50100;
+
+const int __BRIDGEOS_5_3 = 50300;
+
+const int __BRIDGEOS_6_0 = 60000;
+
+const int __BRIDGEOS_6_2 = 60200;
+
+const int __BRIDGEOS_6_4 = 60400;
+
+const int __BRIDGEOS_6_5 = 60500;
+
+const int __BRIDGEOS_6_6 = 60600;
+
+const int __BRIDGEOS_7_0 = 70000;
+
+const int __BRIDGEOS_7_1 = 70100;
+
+const int __BRIDGEOS_7_2 = 70200;
+
+const int __BRIDGEOS_7_3 = 70300;
+
+const int __BRIDGEOS_7_4 = 70400;
+
+const int __BRIDGEOS_7_6 = 70600;
+
+const int __BRIDGEOS_8_0 = 80000;
+
+const int __BRIDGEOS_8_1 = 80100;
+
+const int __BRIDGEOS_8_2 = 80200;
+
+const int __BRIDGEOS_8_3 = 80300;
+
+const int __BRIDGEOS_8_4 = 80400;
+
+const int __BRIDGEOS_8_5 = 80500;
+
+const int __BRIDGEOS_9_0 = 90000;
+
+const int __DRIVERKIT_19_0 = 190000;
+
+const int __DRIVERKIT_20_0 = 200000;
+
+const int __DRIVERKIT_21_0 = 210000;
+
+const int __DRIVERKIT_22_0 = 220000;
+
+const int __DRIVERKIT_22_4 = 220400;
+
+const int __DRIVERKIT_22_5 = 220500;
+
+const int __DRIVERKIT_22_6 = 220600;
+
+const int __DRIVERKIT_23_0 = 230000;
+
+const int __DRIVERKIT_23_1 = 230100;
+
+const int __DRIVERKIT_23_2 = 230200;
+
+const int __DRIVERKIT_23_3 = 230300;
+
+const int __DRIVERKIT_23_4 = 230400;
+
+const int __DRIVERKIT_23_5 = 230500;
+
+const int __DRIVERKIT_24_0 = 240000;
+
+const int __VISIONOS_1_0 = 10000;
+
+const int __VISIONOS_1_1 = 10100;
+
+const int __VISIONOS_1_2 = 10200;
+
+const int __VISIONOS_2_0 = 20000;
+
+const int MAC_OS_X_VERSION_10_0 = 1000;
+
+const int MAC_OS_X_VERSION_10_1 = 1010;
+
+const int MAC_OS_X_VERSION_10_2 = 1020;
+
+const int MAC_OS_X_VERSION_10_3 = 1030;
+
+const int MAC_OS_X_VERSION_10_4 = 1040;
+
+const int MAC_OS_X_VERSION_10_5 = 1050;
+
+const int MAC_OS_X_VERSION_10_6 = 1060;
+
+const int MAC_OS_X_VERSION_10_7 = 1070;
+
+const int MAC_OS_X_VERSION_10_8 = 1080;
+
+const int MAC_OS_X_VERSION_10_9 = 1090;
+
+const int MAC_OS_X_VERSION_10_10 = 101000;
+
+const int MAC_OS_X_VERSION_10_10_2 = 101002;
+
+const int MAC_OS_X_VERSION_10_10_3 = 101003;
+
+const int MAC_OS_X_VERSION_10_11 = 101100;
+
+const int MAC_OS_X_VERSION_10_11_2 = 101102;
+
+const int MAC_OS_X_VERSION_10_11_3 = 101103;
+
+const int MAC_OS_X_VERSION_10_11_4 = 101104;
+
+const int MAC_OS_X_VERSION_10_12 = 101200;
+
+const int MAC_OS_X_VERSION_10_12_1 = 101201;
+
+const int MAC_OS_X_VERSION_10_12_2 = 101202;
+
+const int MAC_OS_X_VERSION_10_12_4 = 101204;
+
+const int MAC_OS_X_VERSION_10_13 = 101300;
+
+const int MAC_OS_X_VERSION_10_13_1 = 101301;
+
+const int MAC_OS_X_VERSION_10_13_2 = 101302;
+
+const int MAC_OS_X_VERSION_10_13_4 = 101304;
+
+const int MAC_OS_X_VERSION_10_14 = 101400;
+
+const int MAC_OS_X_VERSION_10_14_1 = 101401;
+
+const int MAC_OS_X_VERSION_10_14_4 = 101404;
+
+const int MAC_OS_X_VERSION_10_14_5 = 101405;
+
+const int MAC_OS_X_VERSION_10_14_6 = 101406;
+
+const int MAC_OS_X_VERSION_10_15 = 101500;
+
+const int MAC_OS_X_VERSION_10_15_1 = 101501;
+
+const int MAC_OS_X_VERSION_10_15_4 = 101504;
+
+const int MAC_OS_X_VERSION_10_16 = 101600;
+
+const int MAC_OS_VERSION_11_0 = 110000;
+
+const int MAC_OS_VERSION_11_1 = 110100;
+
+const int MAC_OS_VERSION_11_3 = 110300;
+
+const int MAC_OS_VERSION_11_4 = 110400;
+
+const int MAC_OS_VERSION_11_5 = 110500;
+
+const int MAC_OS_VERSION_11_6 = 110600;
+
+const int MAC_OS_VERSION_12_0 = 120000;
+
+const int MAC_OS_VERSION_12_1 = 120100;
+
+const int MAC_OS_VERSION_12_2 = 120200;
+
+const int MAC_OS_VERSION_12_3 = 120300;
+
+const int MAC_OS_VERSION_12_4 = 120400;
+
+const int MAC_OS_VERSION_12_5 = 120500;
+
+const int MAC_OS_VERSION_12_6 = 120600;
+
+const int MAC_OS_VERSION_12_7 = 120700;
+
+const int MAC_OS_VERSION_13_0 = 130000;
+
+const int MAC_OS_VERSION_13_1 = 130100;
+
+const int MAC_OS_VERSION_13_2 = 130200;
+
+const int MAC_OS_VERSION_13_3 = 130300;
+
+const int MAC_OS_VERSION_13_4 = 130400;
+
+const int MAC_OS_VERSION_13_5 = 130500;
+
+const int MAC_OS_VERSION_13_6 = 130600;
+
+const int MAC_OS_VERSION_14_0 = 140000;
+
+const int MAC_OS_VERSION_14_1 = 140100;
+
+const int MAC_OS_VERSION_14_2 = 140200;
+
+const int MAC_OS_VERSION_14_3 = 140300;
+
+const int MAC_OS_VERSION_14_4 = 140400;
+
+const int MAC_OS_VERSION_14_5 = 140500;
+
+const int MAC_OS_VERSION_15_0 = 150000;
+
+const int __MAC_OS_X_VERSION_MAX_ALLOWED = 150000;
+
+const int __ENABLE_LEGACY_MAC_AVAILABILITY = 1;
+
+const int __DARWIN_NSIG = 32;
+
+const int NSIG = 32;
+
+const int _ARM_SIGNAL_ = 1;
+
+const int SIGHUP = 1;
+
+const int SIGINT = 2;
+
+const int SIGQUIT = 3;
+
+const int SIGILL = 4;
+
+const int SIGTRAP = 5;
+
+const int SIGABRT = 6;
+
+const int SIGIOT = 6;
+
+const int SIGEMT = 7;
+
+const int SIGFPE = 8;
+
+const int SIGKILL = 9;
+
+const int SIGBUS = 10;
+
+const int SIGSEGV = 11;
+
+const int SIGSYS = 12;
+
+const int SIGPIPE = 13;
+
+const int SIGALRM = 14;
+
+const int SIGTERM = 15;
+
+const int SIGURG = 16;
+
+const int SIGSTOP = 17;
+
+const int SIGTSTP = 18;
+
+const int SIGCONT = 19;
+
+const int SIGCHLD = 20;
+
+const int SIGTTIN = 21;
+
+const int SIGTTOU = 22;
+
+const int SIGIO = 23;
+
+const int SIGXCPU = 24;
+
+const int SIGXFSZ = 25;
+
+const int SIGVTALRM = 26;
+
+const int SIGPROF = 27;
+
+const int SIGWINCH = 28;
+
+const int SIGINFO = 29;
+
+const int SIGUSR1 = 30;
+
+const int SIGUSR2 = 31;
+
+const int __DARWIN_OPAQUE_ARM_THREAD_STATE64 = 0;
+
+const int SIGEV_NONE = 0;
+
+const int SIGEV_SIGNAL = 1;
+
+const int SIGEV_THREAD = 3;
+
+const int ILL_NOOP = 0;
+
+const int ILL_ILLOPC = 1;
+
+const int ILL_ILLTRP = 2;
+
+const int ILL_PRVOPC = 3;
+
+const int ILL_ILLOPN = 4;
+
+const int ILL_ILLADR = 5;
+
+const int ILL_PRVREG = 6;
+
+const int ILL_COPROC = 7;
+
+const int ILL_BADSTK = 8;
+
+const int FPE_NOOP = 0;
+
+const int FPE_FLTDIV = 1;
+
+const int FPE_FLTOVF = 2;
+
+const int FPE_FLTUND = 3;
+
+const int FPE_FLTRES = 4;
+
+const int FPE_FLTINV = 5;
+
+const int FPE_FLTSUB = 6;
+
+const int FPE_INTDIV = 7;
+
+const int FPE_INTOVF = 8;
+
+const int SEGV_NOOP = 0;
+
+const int SEGV_MAPERR = 1;
+
+const int SEGV_ACCERR = 2;
+
+const int BUS_NOOP = 0;
+
+const int BUS_ADRALN = 1;
+
+const int BUS_ADRERR = 2;
+
+const int BUS_OBJERR = 3;
+
+const int TRAP_BRKPT = 1;
+
+const int TRAP_TRACE = 2;
+
+const int CLD_NOOP = 0;
+
+const int CLD_EXITED = 1;
+
+const int CLD_KILLED = 2;
+
+const int CLD_DUMPED = 3;
+
+const int CLD_TRAPPED = 4;
+
+const int CLD_STOPPED = 5;
+
+const int CLD_CONTINUED = 6;
+
+const int POLL_IN = 1;
+
+const int POLL_OUT = 2;
+
+const int POLL_MSG = 3;
+
+const int POLL_ERR = 4;
+
+const int POLL_PRI = 5;
+
+const int POLL_HUP = 6;
+
+const int SA_ONSTACK = 1;
+
+const int SA_RESTART = 2;
+
+const int SA_RESETHAND = 4;
+
+const int SA_NOCLDSTOP = 8;
+
+const int SA_NODEFER = 16;
+
+const int SA_NOCLDWAIT = 32;
+
+const int SA_SIGINFO = 64;
+
+const int SA_USERTRAMP = 256;
+
+const int SA_64REGSET = 512;
+
+const int SA_USERSPACE_MASK = 127;
+
+const int SIG_BLOCK = 1;
+
+const int SIG_UNBLOCK = 2;
+
+const int SIG_SETMASK = 3;
+
+const int SI_USER = 65537;
+
+const int SI_QUEUE = 65538;
+
+const int SI_TIMER = 65539;
+
+const int SI_ASYNCIO = 65540;
+
+const int SI_MESGQ = 65541;
+
+const int SS_ONSTACK = 1;
+
+const int SS_DISABLE = 4;
+
+const int MINSIGSTKSZ = 32768;
+
+const int SIGSTKSZ = 131072;
+
+const int SV_ONSTACK = 1;
+
+const int SV_INTERRUPT = 2;
+
+const int SV_RESETHAND = 4;
+
+const int SV_NODEFER = 16;
+
+const int SV_NOCLDSTOP = 8;
+
+const int SV_SIGINFO = 64;
+
+const int PRIO_PROCESS = 0;
+
+const int PRIO_PGRP = 1;
+
+const int PRIO_USER = 2;
+
+const int PRIO_DARWIN_THREAD = 3;
+
+const int PRIO_DARWIN_PROCESS = 4;
+
+const int PRIO_MIN = -20;
+
+const int PRIO_MAX = 20;
+
+const int PRIO_DARWIN_BG = 4096;
+
+const int PRIO_DARWIN_NONUI = 4097;
+
+const int RUSAGE_SELF = 0;
+
+const int RUSAGE_CHILDREN = -1;
+
+const int RUSAGE_INFO_V0 = 0;
+
+const int RUSAGE_INFO_V1 = 1;
+
+const int RUSAGE_INFO_V2 = 2;
+
+const int RUSAGE_INFO_V3 = 3;
+
+const int RUSAGE_INFO_V4 = 4;
+
+const int RUSAGE_INFO_V5 = 5;
+
+const int RUSAGE_INFO_V6 = 6;
+
+const int RUSAGE_INFO_CURRENT = 6;
+
+const int RU_PROC_RUNS_RESLIDE = 1;
+
+const int RLIM_INFINITY = 9223372036854775807;
+
+const int RLIM_SAVED_MAX = 9223372036854775807;
+
+const int RLIM_SAVED_CUR = 9223372036854775807;
+
+const int RLIMIT_CPU = 0;
+
+const int RLIMIT_FSIZE = 1;
+
+const int RLIMIT_DATA = 2;
+
+const int RLIMIT_STACK = 3;
+
+const int RLIMIT_CORE = 4;
+
+const int RLIMIT_AS = 5;
+
+const int RLIMIT_RSS = 5;
+
+const int RLIMIT_MEMLOCK = 6;
+
+const int RLIMIT_NPROC = 7;
+
+const int RLIMIT_NOFILE = 8;
+
+const int RLIM_NLIMITS = 9;
+
+const int _RLIMIT_POSIX_FLAG = 4096;
+
+const int RLIMIT_WAKEUPS_MONITOR = 1;
+
+const int RLIMIT_CPU_USAGE_MONITOR = 2;
+
+const int RLIMIT_THREAD_CPULIMITS = 3;
+
+const int RLIMIT_FOOTPRINT_INTERVAL = 4;
+
+const int WAKEMON_ENABLE = 1;
+
+const int WAKEMON_DISABLE = 2;
+
+const int WAKEMON_GET_PARAMS = 4;
+
+const int WAKEMON_SET_DEFAULTS = 8;
+
+const int WAKEMON_MAKE_FATAL = 16;
+
+const int CPUMON_MAKE_FATAL = 4096;
+
+const int FOOTPRINT_INTERVAL_RESET = 1;
+
+const int IOPOL_TYPE_DISK = 0;
+
+const int IOPOL_TYPE_VFS_ATIME_UPDATES = 2;
+
+const int IOPOL_TYPE_VFS_MATERIALIZE_DATALESS_FILES = 3;
+
+const int IOPOL_TYPE_VFS_STATFS_NO_DATA_VOLUME = 4;
+
+const int IOPOL_TYPE_VFS_TRIGGER_RESOLVE = 5;
+
+const int IOPOL_TYPE_VFS_IGNORE_CONTENT_PROTECTION = 6;
+
+const int IOPOL_TYPE_VFS_IGNORE_PERMISSIONS = 7;
+
+const int IOPOL_TYPE_VFS_SKIP_MTIME_UPDATE = 8;
+
+const int IOPOL_TYPE_VFS_ALLOW_LOW_SPACE_WRITES = 9;
+
+const int IOPOL_TYPE_VFS_DISALLOW_RW_FOR_O_EVTONLY = 10;
+
+const int IOPOL_SCOPE_PROCESS = 0;
+
+const int IOPOL_SCOPE_THREAD = 1;
+
+const int IOPOL_SCOPE_DARWIN_BG = 2;
+
+const int IOPOL_DEFAULT = 0;
+
+const int IOPOL_IMPORTANT = 1;
+
+const int IOPOL_PASSIVE = 2;
+
+const int IOPOL_THROTTLE = 3;
+
+const int IOPOL_UTILITY = 4;
+
+const int IOPOL_STANDARD = 5;
+
+const int IOPOL_APPLICATION = 5;
+
+const int IOPOL_NORMAL = 1;
+
+const int IOPOL_ATIME_UPDATES_DEFAULT = 0;
+
+const int IOPOL_ATIME_UPDATES_OFF = 1;
+
+const int IOPOL_MATERIALIZE_DATALESS_FILES_DEFAULT = 0;
+
+const int IOPOL_MATERIALIZE_DATALESS_FILES_OFF = 1;
+
+const int IOPOL_MATERIALIZE_DATALESS_FILES_ON = 2;
+
+const int IOPOL_VFS_STATFS_NO_DATA_VOLUME_DEFAULT = 0;
+
+const int IOPOL_VFS_STATFS_FORCE_NO_DATA_VOLUME = 1;
+
+const int IOPOL_VFS_TRIGGER_RESOLVE_DEFAULT = 0;
+
+const int IOPOL_VFS_TRIGGER_RESOLVE_OFF = 1;
+
+const int IOPOL_VFS_CONTENT_PROTECTION_DEFAULT = 0;
+
+const int IOPOL_VFS_CONTENT_PROTECTION_IGNORE = 1;
+
+const int IOPOL_VFS_IGNORE_PERMISSIONS_OFF = 0;
+
+const int IOPOL_VFS_IGNORE_PERMISSIONS_ON = 1;
+
+const int IOPOL_VFS_SKIP_MTIME_UPDATE_OFF = 0;
+
+const int IOPOL_VFS_SKIP_MTIME_UPDATE_ON = 1;
+
+const int IOPOL_VFS_ALLOW_LOW_SPACE_WRITES_OFF = 0;
+
+const int IOPOL_VFS_ALLOW_LOW_SPACE_WRITES_ON = 1;
+
+const int IOPOL_VFS_DISALLOW_RW_FOR_O_EVTONLY_DEFAULT = 0;
+
+const int IOPOL_VFS_DISALLOW_RW_FOR_O_EVTONLY_ON = 1;
+
+const int IOPOL_VFS_NOCACHE_WRITE_FS_BLKSIZE_DEFAULT = 0;
+
+const int IOPOL_VFS_NOCACHE_WRITE_FS_BLKSIZE_ON = 1;
 
 const int WNOHANG = 1;
 
 const int WUNTRACED = 2;
 
-const int WSTOPPED = 2;
+const int WCOREFLAG = 128;
+
+const int _WSTOPPED = 127;
 
 const int WEXITED = 4;
 
-const int WCONTINUED = 8;
+const int WSTOPPED = 8;
 
-const int WNOWAIT = 16777216;
+const int WCONTINUED = 16;
 
-const int __WNOTHREAD = 536870912;
+const int WNOWAIT = 32;
 
-const int __WALL = 1073741824;
+const int WAIT_ANY = -1;
 
-const int __WCLONE = 2147483648;
+const int WAIT_MYPGRP = 0;
 
-const int __W_CONTINUED = 65535;
+const int _QUAD_HIGHWORD = 1;
 
-const int __WCOREFLAG = 128;
+const int _QUAD_LOWWORD = 0;
 
-const int __HAVE_FLOAT128 = 0;
+const int __DARWIN_LITTLE_ENDIAN = 1234;
 
-const int __HAVE_DISTINCT_FLOAT128 = 0;
+const int __DARWIN_BIG_ENDIAN = 4321;
 
-const int __HAVE_FLOAT64X = 1;
-
-const int __HAVE_FLOAT64X_LONG_DOUBLE = 1;
-
-const int __HAVE_FLOAT16 = 0;
-
-const int __HAVE_FLOAT32 = 1;
-
-const int __HAVE_FLOAT64 = 1;
-
-const int __HAVE_FLOAT32X = 1;
-
-const int __HAVE_FLOAT128X = 0;
-
-const int __HAVE_DISTINCT_FLOAT16 = 0;
-
-const int __HAVE_DISTINCT_FLOAT32 = 0;
-
-const int __HAVE_DISTINCT_FLOAT64 = 0;
-
-const int __HAVE_DISTINCT_FLOAT32X = 0;
-
-const int __HAVE_DISTINCT_FLOAT64X = 0;
-
-const int __HAVE_DISTINCT_FLOAT128X = 0;
-
-const int __HAVE_FLOAT128_UNLIKE_LDBL = 0;
-
-const int __HAVE_FLOATN_NOT_TYPEDEF = 0;
-
-const int __ldiv_t_defined = 1;
-
-const int __lldiv_t_defined = 1;
-
-const int RAND_MAX = 2147483647;
-
-const int EXIT_FAILURE = 1;
-
-const int EXIT_SUCCESS = 0;
-
-const int _SYS_TYPES_H = 1;
-
-const int __clock_t_defined = 1;
-
-const int __clockid_t_defined = 1;
-
-const int __time_t_defined = 1;
-
-const int __timer_t_defined = 1;
-
-const int __BIT_TYPES_DEFINED__ = 1;
-
-const int _ENDIAN_H = 1;
-
-const int _BITS_ENDIAN_H = 1;
-
-const int __LITTLE_ENDIAN = 1234;
-
-const int __BIG_ENDIAN = 4321;
-
-const int __PDP_ENDIAN = 3412;
-
-const int _BITS_ENDIANNESS_H = 1;
-
-const int __BYTE_ORDER = 1234;
-
-const int __FLOAT_WORD_ORDER = 1234;
+const int __DARWIN_PDP_ENDIAN = 3412;
 
 const int LITTLE_ENDIAN = 1234;
 
@@ -9702,61 +10776,15 @@ const int BIG_ENDIAN = 4321;
 
 const int PDP_ENDIAN = 3412;
 
+const int __DARWIN_BYTE_ORDER = 1234;
+
 const int BYTE_ORDER = 1234;
 
-const int _BITS_BYTESWAP_H = 1;
+const int EXIT_FAILURE = 1;
 
-const int _BITS_UINTN_IDENTITY_H = 1;
+const int EXIT_SUCCESS = 0;
 
-const int _SYS_SELECT_H = 1;
-
-const int __sigset_t_defined = 1;
-
-const int _SIGSET_NWORDS = 16;
-
-const int __timeval_defined = 1;
-
-const int _STRUCT_TIMESPEC = 1;
-
-const int __NFDBITS = 64;
-
-const int FD_SETSIZE = 1024;
-
-const int NFDBITS = 64;
-
-const int _BITS_PTHREADTYPES_COMMON_H = 1;
-
-const int _THREAD_SHARED_TYPES_H = 1;
-
-const int _BITS_PTHREADTYPES_ARCH_H = 1;
-
-const int __SIZEOF_PTHREAD_MUTEX_T = 40;
-
-const int __SIZEOF_PTHREAD_ATTR_T = 56;
-
-const int __SIZEOF_PTHREAD_RWLOCK_T = 56;
-
-const int __SIZEOF_PTHREAD_BARRIER_T = 32;
-
-const int __SIZEOF_PTHREAD_MUTEXATTR_T = 4;
-
-const int __SIZEOF_PTHREAD_COND_T = 48;
-
-const int __SIZEOF_PTHREAD_CONDATTR_T = 4;
-
-const int __SIZEOF_PTHREAD_RWLOCKATTR_T = 8;
-
-const int __SIZEOF_PTHREAD_BARRIERATTR_T = 4;
-
-const int _THREAD_MUTEX_INTERNAL_H = 1;
-
-const int __PTHREAD_MUTEX_HAVE_PREV = 1;
-
-const int __PTHREAD_RWLOCK_ELISION_EXTRA = 0;
-
-const int __have_pthread_attr_t = 1;
-
-const int _ALLOCA_H = 1;
+const int RAND_MAX = 2147483647;
 
 const int SignalSVR_KEY_LEN = 32;
 

@@ -1,6 +1,8 @@
 /// Group session for Signal Protocol group messaging.
+@ffi.DefaultAsset('package:libsignal/libsignal')
 library;
 
+import 'dart:ffi' as ffi;
 import 'dart:ffi';
 import 'dart:typed_data';
 
@@ -14,6 +16,63 @@ import '../protocol/protocol_address.dart';
 import '../stores/sender_key_store.dart';
 import '../utils.dart';
 import 'sender_key_distribution_message.dart';
+
+// ARM64 workaround: Alternative function signatures with raw pointers.
+// The Rust ABI on ARM64 expects all struct parameters as raw pointers,
+// not as struct-by-value despite what the C header declares.
+// Using @Native annotation ensures the library is resolved via native_assets.
+
+/// ARM64 version of signal_sender_key_distribution_message_create.
+/// Uses raw pointers instead of struct-by-value.
+@Native<
+  Pointer<SignalFfiError> Function(
+    Pointer<SignalMutPointerSenderKeyDistributionMessage>,
+    Pointer<Void>,
+    Pointer<Uint8>,
+    Pointer<Void>,
+  )
+>(symbol: 'signal_sender_key_distribution_message_create')
+external Pointer<SignalFfiError> _signalSenderKeyDistMsgCreateArm64(
+  Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
+  Pointer<Void> sender,
+  Pointer<Uint8> distributionId,
+  Pointer<Void> store,
+);
+
+/// ARM64 version of signal_group_encrypt_message.
+/// Uses raw pointers instead of struct-by-value.
+@Native<
+  Pointer<SignalFfiError> Function(
+    Pointer<SignalMutPointerCiphertextMessage>,
+    Pointer<Void>,
+    Pointer<Uint8>,
+    Pointer<Uint8>,
+    IntPtr,
+    Pointer<Void>,
+  )
+>(symbol: 'signal_group_encrypt_message')
+external Pointer<SignalFfiError> _signalGroupEncryptMessageArm64(
+  Pointer<SignalMutPointerCiphertextMessage> out,
+  Pointer<Void> sender,
+  Pointer<Uint8> distributionId,
+  Pointer<Uint8> message,
+  int messageLength,
+  Pointer<Void> store,
+);
+
+/// Whether we're running on ARM64 architecture.
+///
+/// On ARM64, we need to use alternative FFI function signatures because
+/// the Rust ABI expects raw pointers, not struct-by-value for SignalUuid.
+final bool _isArm64 = _detectArm64();
+
+bool _detectArm64() {
+  final abi = Abi.current();
+  return abi == Abi.macosArm64 ||
+      abi == Abi.linuxArm64 ||
+      abi == Abi.androidArm64 ||
+      abi == Abi.iosArm64;
+}
 
 /// A map to store sender key record bytes during FFI callback execution.
 ///
@@ -228,14 +287,12 @@ class GroupSession {
 
     try {
       final outPtr = calloc<SignalMutPointerSenderKeyDistributionMessage>();
-      final senderPtr = calloc<SignalConstPointerProtocolAddress>();
-      senderPtr.ref.raw = _senderAddress.pointer;
 
-      // The C function expects uint8_t (*distribution_id)[16] - a pointer to a
-      // 16-byte array. The binding incorrectly uses Pointer<Pointer<Uint8>>,
-      // so we allocate a 16-byte buffer and cast it appropriately.
-      final distIdData = calloc<Uint8>(16);
-      distIdData.asTypedList(16).setAll(0, _distributionId);
+      // Prepare UUID as raw bytes pointer (works on both ARM64 and x86_64)
+      final distIdPtr = calloc<Uint8>(16);
+      for (var i = 0; i < 16; i++) {
+        distIdPtr[i] = _distributionId[i];
+      }
 
       // Create the store struct with callbacks
       final storePtr = calloc<SignalSenderKeyStore>();
@@ -251,16 +308,46 @@ class GroupSession {
             -1,
           );
 
-      final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
-      storeConstPtr.ref.raw = storePtr;
-
       try {
-        final error = signal_sender_key_distribution_message_create(
-          outPtr,
-          senderPtr.ref,
-          distIdData.cast<Pointer<Uint8>>(),
-          storeConstPtr.ref,
-        );
+        Pointer<SignalFfiError> error;
+
+        if (_isArm64) {
+          // ARM64 workaround: Use alternative function signature with raw pointers.
+          // The Rust ABI on ARM64 expects raw pointers, not struct-by-value.
+          error = _signalSenderKeyDistMsgCreateArm64(
+            outPtr,
+            _senderAddress.pointer.cast<Void>(),
+            distIdPtr,
+            storePtr.cast<Void>(),
+          );
+        } else {
+          // x86_64: Use standard FFI bindings with struct-by-value
+          final senderPtr = calloc<SignalConstPointerProtocolAddress>();
+          senderPtr.ref.raw = _senderAddress.pointer;
+
+          final distIdStruct = calloc<SignalUuid>();
+          for (var i = 0; i < 16; i++) {
+            distIdStruct.ref.bytes[i] = _distributionId[i];
+          }
+
+          final storeConstPtr =
+              calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
+          storeConstPtr.ref.raw = storePtr;
+
+          try {
+            error = signal_sender_key_distribution_message_create(
+              outPtr,
+              senderPtr.ref,
+              distIdStruct.ref,
+              storeConstPtr.ref,
+            );
+          } finally {
+            calloc.free(senderPtr);
+            calloc.free(distIdStruct);
+            calloc.free(storeConstPtr);
+          }
+        }
+
         FfiHelpers.checkError(
           error,
           'signal_sender_key_distribution_message_create',
@@ -283,10 +370,8 @@ class GroupSession {
         return SenderKeyDistributionMessage.fromPointer(outPtr.ref.raw);
       } finally {
         calloc.free(outPtr);
-        calloc.free(senderPtr);
-        calloc.free(distIdData);
+        calloc.free(distIdPtr);
         calloc.free(storePtr);
-        calloc.free(storeConstPtr);
       }
     } finally {
       _pendingStoreOperations.remove(operationId);
@@ -397,21 +482,15 @@ class GroupSession {
 
     try {
       final outPtr = calloc<SignalMutPointerCiphertextMessage>();
-      final senderPtr = calloc<SignalConstPointerProtocolAddress>();
-      senderPtr.ref.raw = _senderAddress.pointer;
 
-      // The C function expects uint8_t (*distribution_id)[16] - a pointer to a
-      // 16-byte array. The binding incorrectly uses Pointer<Pointer<Uint8>>,
-      // so we allocate a 16-byte buffer and cast it appropriately.
-      final distIdData = calloc<Uint8>(16);
-      distIdData.asTypedList(16).setAll(0, _distributionId);
+      // Prepare UUID as raw bytes pointer (works on both ARM64 and x86_64)
+      final distIdPtr = calloc<Uint8>(16);
+      for (var i = 0; i < 16; i++) {
+        distIdPtr[i] = _distributionId[i];
+      }
 
       final msgPtr = calloc<Uint8>(plaintext.length);
       msgPtr.asTypedList(plaintext.length).setAll(0, plaintext);
-
-      final buffer = calloc<SignalBorrowedBuffer>();
-      buffer.ref.base = msgPtr.cast<UnsignedChar>();
-      buffer.ref.length = plaintext.length;
 
       // Create the store struct with callbacks
       final storePtr = calloc<SignalSenderKeyStore>();
@@ -427,17 +506,54 @@ class GroupSession {
             -1,
           );
 
-      final storeConstPtr = calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
-      storeConstPtr.ref.raw = storePtr;
-
       try {
-        final error = signal_group_encrypt_message(
-          outPtr,
-          senderPtr.ref,
-          distIdData.cast<Pointer<Uint8>>(),
-          buffer.ref,
-          storeConstPtr.ref,
-        );
+        Pointer<SignalFfiError> error;
+
+        if (_isArm64) {
+          // ARM64 workaround: Use alternative function signature with raw pointers.
+          // The Rust ABI on ARM64 expects raw pointers, not struct-by-value.
+          error = _signalGroupEncryptMessageArm64(
+            outPtr,
+            _senderAddress.pointer.cast<Void>(),
+            distIdPtr,
+            msgPtr,
+            plaintext.length,
+            storePtr.cast<Void>(),
+          );
+        } else {
+          // x86_64: Use standard FFI bindings with struct-by-value
+          final senderPtr = calloc<SignalConstPointerProtocolAddress>();
+          senderPtr.ref.raw = _senderAddress.pointer;
+
+          final distIdStruct = calloc<SignalUuid>();
+          for (var i = 0; i < 16; i++) {
+            distIdStruct.ref.bytes[i] = _distributionId[i];
+          }
+
+          final buffer = calloc<SignalBorrowedBuffer>();
+          buffer.ref.base = msgPtr.cast<UnsignedChar>();
+          buffer.ref.length = plaintext.length;
+
+          final storeConstPtr =
+              calloc<SignalConstPointerFfiSenderKeyStoreStruct>();
+          storeConstPtr.ref.raw = storePtr;
+
+          try {
+            error = signal_group_encrypt_message(
+              outPtr,
+              senderPtr.ref,
+              distIdStruct.ref,
+              buffer.ref,
+              storeConstPtr.ref,
+            );
+          } finally {
+            calloc.free(senderPtr);
+            calloc.free(distIdStruct);
+            calloc.free(buffer);
+            calloc.free(storeConstPtr);
+          }
+        }
+
         FfiHelpers.checkError(error, 'signal_group_encrypt_message');
 
         // coverage:ignore-start
@@ -483,12 +599,9 @@ class GroupSession {
         // Securely zero plaintext before freeing
         LibSignalUtils.zeroBytes(msgPtr.asTypedList(plaintext.length));
         calloc.free(outPtr);
-        calloc.free(senderPtr);
-        calloc.free(distIdData);
+        calloc.free(distIdPtr);
         calloc.free(msgPtr);
-        calloc.free(buffer);
         calloc.free(storePtr);
-        calloc.free(storeConstPtr);
       }
     } finally {
       _pendingStoreOperations.remove(operationId);
