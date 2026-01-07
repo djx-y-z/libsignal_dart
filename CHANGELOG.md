@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replace `softprops/action-gh-release` with official `gh` CLI in CI workflows
+- Update GitHub Actions to latest versions:
+  - `actions/create-github-app-token` v1 → v2
+  - `peter-evans/create-pull-request` v7 → v8
+  - `ilammy/msvc-dev-cmd` v1 → v1.13.0
 - Tests now run in parallel on all 4 platforms
 - Extract test logic into reusable workflow for better maintainability
 - Update libsignal native library to v0.86.10 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.10))
