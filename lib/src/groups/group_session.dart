@@ -17,53 +17,61 @@ import '../stores/sender_key_store.dart';
 import '../utils.dart';
 import 'sender_key_distribution_message.dart';
 
-// ARM64 workaround: Alternative function signatures with raw pointers.
-// The Rust ABI on ARM64 expects all struct parameters as raw pointers,
-// not as struct-by-value despite what the C header declares.
-// Using @Native annotation ensures the library is resolved via native_assets.
+// ARM64 workaround: Alternative function signatures for 16-byte struct issue.
+// Dart FFI on ARM64 has issues passing 16-byte structs by value (dart-lang/sdk#36730).
+// SignalUuid is a 16-byte struct that gets passed in two 64-bit registers (x2, x3)
+// on ARM64 AAPCS64. We declare these as two Int64 parameters to match the ABI.
+//
+// For 8-byte wrapper structs (SignalConstPointerProtocolAddress, etc.),
+// we pass the inner pointer directly since the struct just wraps a single pointer.
 
 /// ARM64 version of signal_sender_key_distribution_message_create.
-/// Uses raw pointers instead of struct-by-value.
+/// SignalUuid (16 bytes) is passed as two Int64 values matching ARM64 register layout.
 @Native<
   Pointer<SignalFfiError> Function(
     Pointer<SignalMutPointerSenderKeyDistributionMessage>,
-    Pointer<Void>,
-    Pointer<Uint8>,
-    Pointer<Void>,
+    Pointer<SignalProtocolAddress>,
+    Int64,
+    Int64,
+    Pointer<SignalSenderKeyStore>,
   )
 >(symbol: 'signal_sender_key_distribution_message_create')
 external Pointer<SignalFfiError> _signalSenderKeyDistMsgCreateArm64(
   Pointer<SignalMutPointerSenderKeyDistributionMessage> out,
-  Pointer<Void> sender,
-  Pointer<Uint8> distributionId,
-  Pointer<Void> store,
+  Pointer<SignalProtocolAddress> sender,
+  int uuidLow,
+  int uuidHigh,
+  Pointer<SignalSenderKeyStore> store,
 );
 
 /// ARM64 version of signal_group_encrypt_message.
-/// Uses raw pointers instead of struct-by-value.
+/// SignalUuid (16 bytes) and SignalBorrowedBuffer (16 bytes) are passed as
+/// pairs of Int64 values matching ARM64 register layout.
 @Native<
   Pointer<SignalFfiError> Function(
     Pointer<SignalMutPointerCiphertextMessage>,
-    Pointer<Void>,
-    Pointer<Uint8>,
-    Pointer<Uint8>,
+    Pointer<SignalProtocolAddress>,
+    Int64,
+    Int64,
+    Pointer<UnsignedChar>,
     IntPtr,
-    Pointer<Void>,
+    Pointer<SignalSenderKeyStore>,
   )
 >(symbol: 'signal_group_encrypt_message')
 external Pointer<SignalFfiError> _signalGroupEncryptMessageArm64(
   Pointer<SignalMutPointerCiphertextMessage> out,
-  Pointer<Void> sender,
-  Pointer<Uint8> distributionId,
-  Pointer<Uint8> message,
+  Pointer<SignalProtocolAddress> sender,
+  int uuidLow,
+  int uuidHigh,
+  Pointer<UnsignedChar> messageBase,
   int messageLength,
-  Pointer<Void> store,
+  Pointer<SignalSenderKeyStore> store,
 );
 
 /// Whether we're running on ARM64 architecture.
 ///
 /// On ARM64, we need to use alternative FFI function signatures because
-/// the Rust ABI expects raw pointers, not struct-by-value for SignalUuid.
+/// Dart FFI has issues passing 16-byte structs by value (SignalUuid).
 final bool _isArm64 = _detectArm64();
 
 bool _detectArm64() {
@@ -72,6 +80,18 @@ bool _detectArm64() {
       abi == Abi.linuxArm64 ||
       abi == Abi.androidArm64 ||
       abi == Abi.iosArm64;
+}
+
+/// Converts 16-byte UUID to two Int64 values for ARM64 ABI.
+/// On ARM64 AAPCS64, a 16-byte struct is passed in two registers.
+/// Returns (low, high) tuple where low is bytes 0-7 and high is bytes 8-15.
+(int, int) _uuidToInt64Pair(Uint8List uuid) {
+  assert(uuid.length == 16);
+  final data = ByteData.sublistView(uuid);
+  // Little-endian: first 8 bytes go to first register (low)
+  final low = data.getInt64(0, Endian.little);
+  final high = data.getInt64(8, Endian.little);
+  return (low, high);
 }
 
 /// A map to store sender key record bytes during FFI callback execution.
@@ -312,13 +332,15 @@ class GroupSession {
         Pointer<SignalFfiError> error;
 
         if (_isArm64) {
-          // ARM64 workaround: Use alternative function signature with raw pointers.
-          // The Rust ABI on ARM64 expects raw pointers, not struct-by-value.
+          // ARM64 workaround: Pass SignalUuid as two Int64 values.
+          // On ARM64 AAPCS64, 16-byte structs are passed in two registers.
+          final (uuidLow, uuidHigh) = _uuidToInt64Pair(_distributionId);
           error = _signalSenderKeyDistMsgCreateArm64(
             outPtr,
-            _senderAddress.pointer.cast<Void>(),
-            distIdPtr,
-            storePtr.cast<Void>(),
+            _senderAddress.pointer,
+            uuidLow,
+            uuidHigh,
+            storePtr,
           );
         } else {
           // x86_64: Use standard FFI bindings with struct-by-value
@@ -510,15 +532,17 @@ class GroupSession {
         Pointer<SignalFfiError> error;
 
         if (_isArm64) {
-          // ARM64 workaround: Use alternative function signature with raw pointers.
-          // The Rust ABI on ARM64 expects raw pointers, not struct-by-value.
+          // ARM64 workaround: Pass SignalUuid as two Int64 values.
+          // On ARM64 AAPCS64, 16-byte structs are passed in two registers.
+          final (uuidLow, uuidHigh) = _uuidToInt64Pair(_distributionId);
           error = _signalGroupEncryptMessageArm64(
             outPtr,
-            _senderAddress.pointer.cast<Void>(),
-            distIdPtr,
-            msgPtr,
+            _senderAddress.pointer,
+            uuidLow,
+            uuidHigh,
+            msgPtr.cast<UnsignedChar>(),
             plaintext.length,
-            storePtr.cast<Void>(),
+            storePtr,
           );
         } else {
           // x86_64: Use standard FFI bindings with struct-by-value

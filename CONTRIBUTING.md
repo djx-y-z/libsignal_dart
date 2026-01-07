@@ -265,6 +265,7 @@ When working with FFI code:
 - Use `try/finally` to ensure cleanup
 - Zero out sensitive data before freeing
 - Test for memory leaks
+- **ARM64 limitation**: Dart FFI cannot pass 16-byte structs by value on ARM64 ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730)). See `CLAUDE.md` for workaround details.
 
 Example:
 

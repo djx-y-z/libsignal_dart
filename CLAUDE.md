@@ -150,8 +150,14 @@ On ARM64, Dart FFI has issues passing 16-byte structs by value ([dart-lang/sdk#3
 
 | Issue | Workaround | File |
 |-------|------------|------|
-| `SignalUuid` struct by value | Alternative `@Native` signatures with raw pointers | `lib/src/groups/group_session.dart` |
+| `SignalUuid` struct by value | Pass as two `Int64` values matching ARM64 AAPCS64 register layout | `lib/src/groups/group_session.dart` |
 | `SignalBorrowedSliceOfConstPointerPublicKey` by value | Pure Dart signature verification | `lib/src/sealed_sender/sender_certificate.dart` |
+
+**ARM64 AAPCS64 workaround details:**
+- On ARM64, 16-byte structs are passed in two 64-bit registers (x2, x3)
+- `SignalUuid` (16 bytes) is split into `uuidLow` and `uuidHigh` Int64 values
+- 8-byte wrapper structs (e.g., `SignalConstPointerProtocolAddress`) pass inner pointer directly
+- Helper function `_uuidToInt64Pair()` converts UUID bytes to register values
 
 All group messaging and sealed sender methods work on all platforms (ARM64 and x86_64).
 
