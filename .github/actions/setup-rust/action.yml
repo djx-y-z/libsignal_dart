@@ -1,0 +1,16 @@
+name: Setup Rust
+description: Setup Rust toolchain with optional cross-compilation targets
+
+inputs:
+  targets:
+    description: 'Comma-separated list of Rust targets to install (e.g., aarch64-apple-darwin,x86_64-apple-darwin)'
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ inputs.targets }}

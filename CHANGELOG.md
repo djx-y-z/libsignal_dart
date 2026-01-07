@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `build-libsignal.yml`: release version checks
 - Skip tests for bot PRs in `test.yml` (native libraries not yet built for version updates)
 - Discard FVM config changes in CI to prevent unwanted `.fvmrc` and `.vscode/settings.json` modifications in PRs
+- Auto-regenerate FFI bindings in `check-libsignal-updates.yml` workflow (headers + Dart code)
+- Extract Rust setup into reusable `.github/actions/setup-rust` action
 
 ## [1.0.1] - 2026-01-02
 

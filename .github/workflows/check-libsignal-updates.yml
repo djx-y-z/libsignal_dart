@@ -7,7 +7,8 @@
 #    - Analyzes release notes with AI (GitHub Models)
 #    - Determines appropriate version bump (major/minor/patch)
 #    - Updates pubspec.yaml and CHANGELOG.md
-#    - Creates PR with AI-generated analysis
+#    - Regenerates FFI bindings (headers + Dart code)
+#    - Creates PR with all changes
 # 4. The PR merge triggers build-libsignal.yml to build native libraries
 
 name: Check libsignal Updates
@@ -106,6 +107,12 @@ jobs:
           echo "Running: make check ARGS=\"$ARGS\""
           make check ARGS="$ARGS"
 
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+
+      - name: Regenerate FFI bindings
+        run: make regen
+
       - name: Prepare PR body
         if: steps.check.outputs.needs_update == 'true'
         id: pr_body
@@ -162,9 +169,8 @@ jobs:
 
           Before merging, please verify:
           - [ ] Review libsignal release notes for breaking changes
-          - [ ] Check if FFI bindings need regeneration (`make regen`)
+          - [ ] Check FFI bindings diff for API changes
           - [ ] Verify no security vulnerabilities in the new version
-          - [ ] Run tests locally if bindings changed
 
           ### What happens after merge
 
