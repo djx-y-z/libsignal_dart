@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fix `make regen` CI failure when `cbindgen` is not pre-installed
+- Fix `make regen` CI failure due to missing `protoc` (required by libsignal's spqr dependency)
+- Add `protoc` to build prerequisites documentation (README.md, CLAUDE.md)
 
 ### Changed
 

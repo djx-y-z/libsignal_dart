@@ -104,6 +104,7 @@ This project uses **Rust/Cargo** to build libsignal.
 
 - **Rust toolchain** (rustup, cargo)
 - **cbindgen** (for C header generation)
+- **protoc** (Protocol Buffers compiler, required by libsignal's spqr dependency)
 - **Android NDK** (for Android builds)
 - **Xcode** (for iOS/macOS builds)
 

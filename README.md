@@ -381,6 +381,10 @@ For production apps, implement the store interfaces with secure storage:
   - [rustup](https://rustup.rs/) - Rust toolchain installer and version manager
   - `cargo` - Rust package manager (installed automatically with rustup)
   - `cbindgen` - C header generator (installed automatically during build via `cargo install`)
+- **protoc** - Protocol Buffers compiler (required by libsignal's spqr dependency):
+  - macOS: `brew install protobuf`
+  - Ubuntu/Debian: `apt-get install protobuf-compiler`
+  - Windows: [Download from GitHub](https://github.com/protocolbuffers/protobuf/releases)
 
 ### Setup
 
