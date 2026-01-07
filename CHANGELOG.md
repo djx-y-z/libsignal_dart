@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use GitHub App token instead of `GITHUB_TOKEN` and `GIST_TOKEN` across all workflows for consistent authentication:
+  - `check-libsignal-updates.yml`: signed commits, GitHub Models API
+  - `test.yml`: coverage badge updates via Gist API
+  - `build-libsignal.yml`: release version checks
+
 ## [1.0.1] - 2026-01-02
 
 ### Added
