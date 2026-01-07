@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fix duplicate "v" prefix in native library release notes (`vv0.86.10` → `v0.86.10`)
+- Remove redundant "Usage" section from native library release description
 - Fix ARM64 group messaging crash caused by `SignalUuid` struct-by-value FFI limitation ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730))
 - Fix `make regen` CI failure when `cbindgen` is not pre-installed
 - Fix `make regen` CI failure due to missing `protoc` (required by libsignal's spqr dependency)

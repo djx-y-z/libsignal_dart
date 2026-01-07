@@ -376,7 +376,7 @@ jobs:
             **These archives are downloaded automatically by Dart Build Hooks.**
 
             ### Version Info
-            - **libsignal version**: v${{ env.LIBSIGNAL_VERSION }}
+            - **libsignal version**: ${{ env.LIBSIGNAL_VERSION }}
             - **Build number**: ${{ env.NATIVE_BUILD }}
             - **Full identifier**: ${{ env.FULL_VERSION }}
 
@@ -398,11 +398,3 @@ jobs:
 
             ### Checksums
             SHA256 checksums are available in `libsignal-${{ env.FULL_VERSION }}-checksums.sha256`
-
-            ### Usage
-            Add `libsignal` to your `pubspec.yaml`:
-
-            ```yaml
-            dependencies:
-              libsignal: ^0.1.0
-            ```
