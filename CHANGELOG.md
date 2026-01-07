@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix `make regen` CI failure when `cbindgen` is not pre-installed
+
 ### Changed
 
 - Use GitHub App token instead of `GITHUB_TOKEN` in workflows:

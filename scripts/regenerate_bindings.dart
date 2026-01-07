@@ -87,29 +87,12 @@ Future<void> _installCbindgen() async {
   final cbindgenVersion = getCbindgenVersion(_sourceDir!);
   logStep('Installing cbindgen $cbindgenVersion...');
 
-  // Check if correct version is already installed
-  final result = await runCommand('cbindgen', [
-    '--version',
-  ], printOutput: false);
-
-  if (result.exitCode == 0) {
-    final installedVersion = result.stdout.toString().trim();
-    if (installedVersion.contains(cbindgenVersion)) {
-      logInfo('cbindgen $cbindgenVersion already installed');
-      return;
-    }
-  }
-
-  // Install specific version
   await runCommandOrFail('cargo', [
     'install',
     'cbindgen',
     '--version',
     cbindgenVersion,
-    '--force',
   ]);
-
-  logInfo('Installed cbindgen $cbindgenVersion');
 }
 
 Future<void> _generateHeaders() async {
