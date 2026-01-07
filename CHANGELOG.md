@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Use GitHub App token instead of `GITHUB_TOKEN` in workflows for signed commits:
-  - `check-libsignal-updates.yml`: signed commits, GitHub Models API
+- Use GitHub App token instead of `GITHUB_TOKEN` in workflows:
+  - `check-libsignal-updates.yml`: PR creation, GitHub Models API
   - `build-libsignal.yml`: release version checks
+- Skip tests for bot PRs in `test.yml` (native libraries not yet built for version updates)
 
 ## [1.0.1] - 2026-01-02
 

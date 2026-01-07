@@ -3,7 +3,7 @@
 # Triggers:
 # - Manual dispatch (workflow_dispatch)
 # - Push to main or develop branches (relevant files)
-# - Pull requests (relevant files)
+# - Pull requests (relevant files) - skipped for bot PRs (e.g., libsignal updates)
 # - After successful build-libsignal workflow
 
 name: Test
@@ -30,8 +30,12 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Only run on completed workflow if it was successful
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    # Skip tests for:
+    # - Failed workflow_run triggers
+    # - Bot PRs (automated libsignal updates) - native libraries not yet built
+    if: |
+      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+      (github.event_name != 'pull_request' || github.event.pull_request.user.type != 'Bot')
     steps:
       - uses: actions/checkout@v4
 
