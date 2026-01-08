@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-08
+
 ### Added
 
 - Add `make setup-build` command to install native build dependencies (Rust, protoc)
@@ -120,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/djx-y-z/libsignal_dart/releases/tag/v1.0.0
