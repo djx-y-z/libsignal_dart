@@ -276,10 +276,21 @@ jobs:
           fvm --version
           cargo --version
           Write-Host "=== Starting build ==="
-          # Remove Git's /usr/bin from PATH to prevent its `link` from shadowing MSVC's link.exe
-          # This affects make's shell (sh.exe) which inherits this PATH
-          $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*Git\usr\bin*' }) -join ';'
-          make build ARGS="windows"
+          # Temporarily rename Git's link.exe to prevent it from shadowing MSVC's link.exe
+          # We can't remove Git\usr\bin from PATH because make needs touch, rm, etc.
+          $gitLink = "C:\Program Files\Git\usr\bin\link.exe"
+          $gitLinkBak = "$gitLink.bak"
+          if (Test-Path $gitLink) {
+            Rename-Item $gitLink $gitLinkBak
+          }
+          try {
+            make build ARGS="windows"
+          } finally {
+            # Restore Git's link.exe
+            if (Test-Path $gitLinkBak) {
+              Rename-Item $gitLinkBak $gitLink
+            }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
