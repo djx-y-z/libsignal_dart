@@ -270,13 +270,15 @@ jobs:
         run: choco install protoc -y
 
       - name: Build libsignal for Windows
-        shell: bash
+        shell: pwsh
         run: |
-          echo "=== Environment check ==="
+          Write-Host "=== Environment check ==="
           fvm --version
           cargo --version
-          echo "=== Starting build ==="
-          make build ARGS="windows"
+          Write-Host "=== Starting build ==="
+          # Use cmd to run make - this ensures MSVC link.exe is used (not Git's /usr/bin/link)
+          # and Makefile's bash commands (touch, rm) work through make's shell
+          cmd /c "make build ARGS=`"windows`""
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
