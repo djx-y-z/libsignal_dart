@@ -276,9 +276,10 @@ jobs:
           fvm --version
           cargo --version
           Write-Host "=== Starting build ==="
-          # Use cmd to run make - this ensures MSVC link.exe is used (not Git's /usr/bin/link)
-          # and Makefile's bash commands (touch, rm) work through make's shell
-          cmd /c "make build ARGS=`"windows`""
+          # Remove Git's /usr/bin from PATH to prevent its `link` from shadowing MSVC's link.exe
+          # This affects make's shell (sh.exe) which inherits this PATH
+          $env:Path = ($env:Path -split ';' | Where-Object { $_ -notlike '*Git\usr\bin*' }) -join ';'
+          make build ARGS="windows"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
