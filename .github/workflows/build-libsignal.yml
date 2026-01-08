@@ -273,9 +273,7 @@ jobs:
         shell: bash
         run: |
           echo "=== Environment check ==="
-          which fvm
           fvm --version
-          which cargo
           cargo --version
           echo "=== Starting build ==="
           make build ARGS="windows"

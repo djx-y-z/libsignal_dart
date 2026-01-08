@@ -20,7 +20,13 @@ runs:
       if: runner.os == 'Windows'
       run: |
         dart pub global activate fvm
+        # Add pub-cache bin to PATH
         echo "$env:LOCALAPPDATA\Pub\Cache\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+        # Create a shell script wrapper for fvm so it works in Git Bash
+        # Git Bash cannot execute .bat files directly, but can run shell scripts
+        $wrapperPath = "$env:LOCALAPPDATA\Pub\Cache\bin\fvm"
+        $wrapperContent = "#!/bin/sh`nexec cmd //c fvm.bat `"`$@`""
+        [System.IO.File]::WriteAllText($wrapperPath, $wrapperContent)
       shell: pwsh
 
     - name: Cache FVM (Unix)
