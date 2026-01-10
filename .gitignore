@@ -18,7 +18,8 @@ pubspec.lock
 # .vscode/ is committed for FVM settings
 
 # Claude Code
-.claude/
+.claude/*
+!.claude/skills/
 
 # Development files
 TODO.md

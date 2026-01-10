@@ -14,7 +14,8 @@ headers/
 # IDE and editor files
 .vscode/
 .idea/
-.claude/
+.claude/*
+!.claude/skills/
 .metadata
 *.iml
 
