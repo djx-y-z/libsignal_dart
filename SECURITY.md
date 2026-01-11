@@ -1,7 +1,5 @@
 # Security
 
-This document describes the security audit performed on the library and provides guidelines for secure development.
-
 ## Security Audit Summary
 
 A comprehensive security audit was conducted covering the following categories:
