@@ -7888,28 +7888,36 @@ final class SignalMutPointerChatConnectionInfo extends ffi.Struct {
   external ffi.Pointer<SignalChatConnectionInfo> raw;
 }
 
-typedef SignalReceivedIncomingMessageFunction =
-    ffi.Void Function(
+final class SignalMutPointerServerMessageAck extends ffi.Struct {
+  external ffi.Pointer<SignalServerMessageAck> raw;
+}
+
+typedef SignalFfiChatListenerReceivedIncomingMessageFunction =
+    ffi.Int Function(
       ffi.Pointer<ffi.Void> ctx,
       SignalOwnedBuffer envelope,
-      ffi.Uint64 timestamp_millis,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      ffi.Uint64 timestamp,
+      SignalMutPointerServerMessageAck ack,
     );
-typedef DartSignalReceivedIncomingMessageFunction =
-    void Function(
+typedef DartSignalFfiChatListenerReceivedIncomingMessageFunction =
+    int Function(
       ffi.Pointer<ffi.Void> ctx,
       SignalOwnedBuffer envelope,
-      int timestamp_millis,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      int timestamp,
+      SignalMutPointerServerMessageAck ack,
     );
-typedef SignalReceivedIncomingMessage =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedIncomingMessageFunction>>;
-typedef SignalReceivedQueueEmptyFunction =
-    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
-typedef DartSignalReceivedQueueEmptyFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx);
-typedef SignalReceivedQueueEmpty =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedQueueEmptyFunction>>;
+typedef SignalFfiChatListenerReceivedIncomingMessage =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiChatListenerReceivedIncomingMessageFunction>
+    >;
+typedef SignalFfiChatListenerReceivedQueueEmptyFunction =
+    ffi.Int Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalFfiChatListenerReceivedQueueEmptyFunction =
+    int Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalFfiChatListenerReceivedQueueEmpty =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiChatListenerReceivedQueueEmptyFunction>
+    >;
 
 /// A representation of a array allocated on the Rust heap for use in C code.
 final class SignalOwnedBufferOfusize extends ffi.Struct {
@@ -7927,53 +7935,48 @@ final class SignalBytestringArray extends ffi.Struct {
 }
 
 typedef SignalStringArray = SignalBytestringArray;
-typedef SignalReceivedAlertsFunction =
-    ffi.Void Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
-typedef DartSignalReceivedAlertsFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
-typedef SignalReceivedAlerts =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedAlertsFunction>>;
-typedef SignalConnectionInterruptedFunction =
-    ffi.Void Function(
+typedef SignalFfiChatListenerReceivedAlertsFunction =
+    ffi.Int Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
+typedef DartSignalFfiChatListenerReceivedAlertsFunction =
+    int Function(ffi.Pointer<ffi.Void> ctx, SignalStringArray alerts);
+typedef SignalFfiChatListenerReceivedAlerts =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiChatListenerReceivedAlertsFunction>
+    >;
+typedef SignalFfiChatListenerConnectionInterruptedFunction =
+    ffi.Int Function(
       ffi.Pointer<ffi.Void> ctx,
-      ffi.Pointer<SignalFfiError> error,
+      ffi.Pointer<SignalFfiError> disconnect_cause,
     );
-typedef DartSignalConnectionInterruptedFunction =
-    void Function(ffi.Pointer<ffi.Void> ctx, ffi.Pointer<SignalFfiError> error);
-typedef SignalConnectionInterrupted =
-    ffi.Pointer<ffi.NativeFunction<SignalConnectionInterruptedFunction>>;
-typedef SignalDestroyChatListenerFunction =
+typedef DartSignalFfiChatListenerConnectionInterruptedFunction =
+    int Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalFfiError> disconnect_cause,
+    );
+typedef SignalFfiChatListenerConnectionInterrupted =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiChatListenerConnectionInterruptedFunction>
+    >;
+typedef SignalFfiChatListenerDestroyFunction =
     ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
-typedef DartSignalDestroyChatListenerFunction =
+typedef DartSignalFfiChatListenerDestroyFunction =
     void Function(ffi.Pointer<ffi.Void> ctx);
-typedef SignalDestroyChatListener =
-    ffi.Pointer<ffi.NativeFunction<SignalDestroyChatListenerFunction>>;
+typedef SignalFfiChatListenerDestroy =
+    ffi.Pointer<ffi.NativeFunction<SignalFfiChatListenerDestroyFunction>>;
 
-/// Callbacks for [`ChatListener`].
-///
-/// Callbacks will be serialized (i.e. two calls will not come in at the same time), but may not
-/// always happen on the same thread. Calls should be responded to promptly to avoid blocking later
-/// messages.
-///
-/// # Safety
-///
-/// This type contains raw pointers. Code that constructs an instance of this type must ensure
-/// memory safety assuming that
-/// - the callback function pointer fields are called with `ctx` as an argument;
-/// - the `destroy` function pointer field is called with `ctx` as an argument;
-/// - no function pointer fields are called after `destroy` is called.
 final class SignalFfiChatListenerStruct extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ctx;
 
-  external SignalReceivedIncomingMessage received_incoming_message;
+  external SignalFfiChatListenerReceivedIncomingMessage
+  received_incoming_message;
 
-  external SignalReceivedQueueEmpty received_queue_empty;
+  external SignalFfiChatListenerReceivedQueueEmpty received_queue_empty;
 
-  external SignalReceivedAlerts received_alerts;
+  external SignalFfiChatListenerReceivedAlerts received_alerts;
 
-  external SignalConnectionInterrupted connection_interrupted;
+  external SignalFfiChatListenerConnectionInterrupted connection_interrupted;
 
-  external SignalDestroyChatListener destroy;
+  external SignalFfiChatListenerDestroy destroy;
 }
 
 final class SignalConstPointerFfiChatListenerStruct extends ffi.Struct {
@@ -8457,65 +8460,83 @@ final class SignalMutPointerKyberPreKeyRecord extends ffi.Struct {
   external ffi.Pointer<SignalKyberPreKeyRecord> raw;
 }
 
-typedef SignalLoadKyberPreKeyFunction =
+typedef SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKeyFunction =
     ffi.Int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
       ffi.Uint32 id,
     );
-typedef DartSignalLoadKyberPreKeyFunction =
+typedef DartSignalFfiBridgeKyberPreKeyStoreLoadKyberPreKeyFunction =
     int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
-      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> recordp,
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalMutPointerKyberPreKeyRecord> out,
       int id,
     );
-typedef SignalLoadKyberPreKey =
-    ffi.Pointer<ffi.NativeFunction<SignalLoadKyberPreKeyFunction>>;
-
-final class SignalConstPointerKyberPreKeyRecord extends ffi.Struct {
-  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
-}
-
-typedef SignalStoreKyberPreKeyFunction =
+typedef SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKey =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKeyFunction>
+    >;
+typedef SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKeyFunction =
     ffi.Int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<ffi.Void> ctx,
       ffi.Uint32 id,
-      SignalConstPointerKyberPreKeyRecord record,
+      SignalMutPointerKyberPreKeyRecord record,
     );
-typedef DartSignalStoreKyberPreKeyFunction =
+typedef DartSignalFfiBridgeKyberPreKeyStoreStoreKyberPreKeyFunction =
     int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<ffi.Void> ctx,
       int id,
-      SignalConstPointerKyberPreKeyRecord record,
+      SignalMutPointerKyberPreKeyRecord record,
     );
-typedef SignalStoreKyberPreKey =
-    ffi.Pointer<ffi.NativeFunction<SignalStoreKyberPreKeyFunction>>;
-typedef SignalMarkKyberPreKeyUsedFunction =
+typedef SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKey =
+    ffi.Pointer<
+      ffi.NativeFunction<
+        SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKeyFunction
+      >
+    >;
+typedef SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsedFunction =
     ffi.Int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<ffi.Void> ctx,
       ffi.Uint32 id,
-      ffi.Uint32 signed_prekey_id,
-      SignalConstPointerPublicKey base_key,
+      ffi.Uint32 ec_prekey_id,
+      SignalMutPointerPublicKey base_key,
     );
-typedef DartSignalMarkKyberPreKeyUsedFunction =
+typedef DartSignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsedFunction =
     int Function(
-      ffi.Pointer<ffi.Void> store_ctx,
+      ffi.Pointer<ffi.Void> ctx,
       int id,
-      int signed_prekey_id,
-      SignalConstPointerPublicKey base_key,
+      int ec_prekey_id,
+      SignalMutPointerPublicKey base_key,
     );
-typedef SignalMarkKyberPreKeyUsed =
-    ffi.Pointer<ffi.NativeFunction<SignalMarkKyberPreKeyUsedFunction>>;
+typedef SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsed =
+    ffi.Pointer<
+      ffi.NativeFunction<
+        SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsedFunction
+      >
+    >;
+typedef SignalFfiBridgeKyberPreKeyStoreDestroyFunction =
+    ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
+typedef DartSignalFfiBridgeKyberPreKeyStoreDestroyFunction =
+    void Function(ffi.Pointer<ffi.Void> ctx);
+typedef SignalFfiBridgeKyberPreKeyStoreDestroy =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiBridgeKyberPreKeyStoreDestroyFunction>
+    >;
 
-final class SignalKyberPreKeyStore extends ffi.Struct {
+final class SignalFfiBridgeKyberPreKeyStoreStruct extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ctx;
 
-  external SignalLoadKyberPreKey load_kyber_pre_key;
+  external SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKey load_kyber_pre_key;
 
-  external SignalStoreKyberPreKey store_kyber_pre_key;
+  external SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKey store_kyber_pre_key;
 
-  external SignalMarkKyberPreKeyUsed mark_kyber_pre_key_used;
+  external SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsed
+  mark_kyber_pre_key_used;
+
+  external SignalFfiBridgeKyberPreKeyStoreDestroy destroy;
 }
+
+typedef SignalKyberPreKeyStore = SignalFfiBridgeKyberPreKeyStoreStruct;
 
 final class SignalConstPointerFfiKyberPreKeyStoreStruct extends ffi.Struct {
   external ffi.Pointer<SignalKyberPreKeyStore> raw;
@@ -8810,6 +8831,10 @@ final class SignalMutPointerKyberSecretKey extends ffi.Struct {
   external ffi.Pointer<SignalKyberSecretKey> raw;
 }
 
+final class SignalConstPointerKyberPreKeyRecord extends ffi.Struct {
+  external ffi.Pointer<SignalKyberPreKeyRecord> raw;
+}
+
 final class SignalConstPointerKyberPublicKey extends ffi.Struct {
   external ffi.Pointer<SignalKyberPublicKey> raw;
 }
@@ -8946,64 +8971,74 @@ final class SignalConstPointerProvisioningChatConnection extends ffi.Struct {
   external ffi.Pointer<SignalProvisioningChatConnection> raw;
 }
 
-typedef SignalReceivedProvisioningAddressFunction =
-    ffi.Void Function(
+typedef SignalFfiProvisioningListenerReceivedAddressFunction =
+    ffi.Int Function(
       ffi.Pointer<ffi.Void> ctx,
-      ffi.Pointer<ffi.Char> addr,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      ffi.Pointer<ffi.Char> address,
+      SignalMutPointerServerMessageAck send_ack,
     );
-typedef DartSignalReceivedProvisioningAddressFunction =
-    void Function(
+typedef DartSignalFfiProvisioningListenerReceivedAddressFunction =
+    int Function(
       ffi.Pointer<ffi.Void> ctx,
-      ffi.Pointer<ffi.Char> addr,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      ffi.Pointer<ffi.Char> address,
+      SignalMutPointerServerMessageAck send_ack,
     );
-typedef SignalReceivedProvisioningAddress =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedProvisioningAddressFunction>>;
-typedef SignalReceivedProvisioningEnvelopeFunction =
-    ffi.Void Function(
+typedef SignalFfiProvisioningListenerReceivedAddress =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiProvisioningListenerReceivedAddressFunction>
+    >;
+typedef SignalFfiProvisioningListenerReceivedEnvelopeFunction =
+    ffi.Int Function(
       ffi.Pointer<ffi.Void> ctx,
-      SignalOwnedBuffer data,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      SignalOwnedBuffer envelope,
+      SignalMutPointerServerMessageAck send_ack,
     );
-typedef DartSignalReceivedProvisioningEnvelopeFunction =
-    void Function(
+typedef DartSignalFfiProvisioningListenerReceivedEnvelopeFunction =
+    int Function(
       ffi.Pointer<ffi.Void> ctx,
-      SignalOwnedBuffer data,
-      ffi.Pointer<SignalServerMessageAck> cleanup,
+      SignalOwnedBuffer envelope,
+      SignalMutPointerServerMessageAck send_ack,
     );
-typedef SignalReceivedProvisioningEnvelope =
-    ffi.Pointer<ffi.NativeFunction<SignalReceivedProvisioningEnvelopeFunction>>;
-typedef SignalDestroyProvisioningListenerFunction =
+typedef SignalFfiProvisioningListenerReceivedEnvelope =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiProvisioningListenerReceivedEnvelopeFunction>
+    >;
+typedef SignalFfiProvisioningListenerConnectionInterruptedFunction =
+    ffi.Int Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalFfiError> disconnect_cause,
+    );
+typedef DartSignalFfiProvisioningListenerConnectionInterruptedFunction =
+    int Function(
+      ffi.Pointer<ffi.Void> ctx,
+      ffi.Pointer<SignalFfiError> disconnect_cause,
+    );
+typedef SignalFfiProvisioningListenerConnectionInterrupted =
+    ffi.Pointer<
+      ffi.NativeFunction<
+        SignalFfiProvisioningListenerConnectionInterruptedFunction
+      >
+    >;
+typedef SignalFfiProvisioningListenerDestroyFunction =
     ffi.Void Function(ffi.Pointer<ffi.Void> ctx);
-typedef DartSignalDestroyProvisioningListenerFunction =
+typedef DartSignalFfiProvisioningListenerDestroyFunction =
     void Function(ffi.Pointer<ffi.Void> ctx);
-typedef SignalDestroyProvisioningListener =
-    ffi.Pointer<ffi.NativeFunction<SignalDestroyProvisioningListenerFunction>>;
+typedef SignalFfiProvisioningListenerDestroy =
+    ffi.Pointer<
+      ffi.NativeFunction<SignalFfiProvisioningListenerDestroyFunction>
+    >;
 
-/// Callbacks for [`ProvisioningListener`].
-///
-/// Callbacks will be serialized (i.e. two calls will not come in at the same time), but may not
-/// always happen on the same thread. Calls should be responded to promptly to avoid blocking later
-/// messages.
-///
-/// # Safety
-///
-/// This type contains raw pointers. Code that constructs an instance of this type must ensure
-/// memory safety assuming that
-/// - the callback function pointer fields are called with `ctx` as an argument;
-/// - the `destroy` function pointer field is called with `ctx` as an argument;
-/// - no function pointer fields are called after `destroy` is called.
 final class SignalFfiProvisioningListenerStruct extends ffi.Struct {
   external ffi.Pointer<ffi.Void> ctx;
 
-  external SignalReceivedProvisioningAddress received_address;
+  external SignalFfiProvisioningListenerReceivedAddress received_address;
 
-  external SignalReceivedProvisioningEnvelope received_envelope;
+  external SignalFfiProvisioningListenerReceivedEnvelope received_envelope;
 
-  external SignalConnectionInterrupted connection_interrupted;
+  external SignalFfiProvisioningListenerConnectionInterrupted
+  connection_interrupted;
 
-  external SignalDestroyProvisioningListener destroy;
+  external SignalFfiProvisioningListenerDestroy destroy;
 }
 
 final class SignalConstPointerFfiProvisioningListenerStruct extends ffi.Struct {
@@ -9302,10 +9337,6 @@ final class SignalMutPointerSenderKeyMessage extends ffi.Struct {
 
 final class SignalConstPointerSenderKeyMessage extends ffi.Struct {
   external ffi.Pointer<SignalSenderKeyMessage> raw;
-}
-
-final class SignalMutPointerServerMessageAck extends ffi.Struct {
-  external ffi.Pointer<SignalServerMessageAck> raw;
 }
 
 final class SignalConstPointerServerMessageAck extends ffi.Struct {

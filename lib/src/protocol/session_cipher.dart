@@ -439,10 +439,20 @@ class _DecryptionCallbacks {
   late final NativeCallable<SignalStoreSignedPreKeyFunction> _storeSignedPreKey;
 
   // Kyber pre-key store
-  late final NativeCallable<SignalLoadKyberPreKeyFunction> _loadKyberPreKey;
-  late final NativeCallable<SignalStoreKyberPreKeyFunction> _storeKyberPreKey;
-  late final NativeCallable<SignalMarkKyberPreKeyUsedFunction>
+  late final NativeCallable<
+    SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKeyFunction
+  >
+  _loadKyberPreKey;
+  late final NativeCallable<
+    SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKeyFunction
+  >
+  _storeKyberPreKey;
+  late final NativeCallable<
+    SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsedFunction
+  >
   _markKyberPreKeyUsed;
+  late final NativeCallable<SignalFfiBridgeKyberPreKeyStoreDestroyFunction>
+  _destroyKyberPreKeyStore;
 
   _DecryptionCallbacks(this._context) {
     _initializeSessionCallbacks();
@@ -519,20 +529,21 @@ class _DecryptionCallbacks {
 
   void _initializeKyberPreKeyCallbacks() {
     _loadKyberPreKey =
-        NativeCallable<SignalLoadKyberPreKeyFunction>.isolateLocal(
-          _loadKyberPreKeyCallback,
-          exceptionalReturn: -1,
-        );
+        NativeCallable<
+          SignalFfiBridgeKyberPreKeyStoreLoadKyberPreKeyFunction
+        >.isolateLocal(_loadKyberPreKeyCallback, exceptionalReturn: -1);
     _storeKyberPreKey =
-        NativeCallable<SignalStoreKyberPreKeyFunction>.isolateLocal(
-          _storeKyberPreKeyCallback,
-          exceptionalReturn: -1,
-        );
+        NativeCallable<
+          SignalFfiBridgeKyberPreKeyStoreStoreKyberPreKeyFunction
+        >.isolateLocal(_storeKyberPreKeyCallback, exceptionalReturn: -1);
     _markKyberPreKeyUsed =
-        NativeCallable<SignalMarkKyberPreKeyUsedFunction>.isolateLocal(
-          _markKyberPreKeyUsedCallback,
-          exceptionalReturn: -1,
-        );
+        NativeCallable<
+          SignalFfiBridgeKyberPreKeyStoreMarkKyberPreKeyUsedFunction
+        >.isolateLocal(_markKyberPreKeyUsedCallback, exceptionalReturn: -1);
+    _destroyKyberPreKeyStore =
+        NativeCallable<
+          SignalFfiBridgeKyberPreKeyStoreDestroyFunction
+        >.isolateLocal(_destroyKyberPreKeyStoreCallback);
   }
 
   // coverage:ignore-start
@@ -899,7 +910,7 @@ class _DecryptionCallbacks {
   int _storeKyberPreKeyCallback(
     Pointer<Void> ctx,
     int id,
-    SignalConstPointerKyberPreKeyRecord record,
+    SignalMutPointerKyberPreKeyRecord record,
   ) {
     // We don't need to store Kyber pre-keys during decryption
     return 0;
@@ -908,8 +919,8 @@ class _DecryptionCallbacks {
   int _markKyberPreKeyUsedCallback(
     Pointer<Void> ctx,
     int id,
-    int signedPreKeyId,
-    SignalConstPointerPublicKey baseKey,
+    int ecPreKeyId,
+    SignalMutPointerPublicKey baseKey,
   ) {
     try {
       _context.pendingKyberPreKeyRemoval = id;
@@ -917,6 +928,20 @@ class _DecryptionCallbacks {
     } catch (_) {
       return -1;
     }
+  }
+
+  void _destroyKyberPreKeyStoreCallback(Pointer<Void> ctx) {
+    // No-op: This callback is intentionally empty.
+    //
+    // Security note: This is safe because:
+    // 1. ctx is nullptr - we don't allocate native memory for context
+    // 2. All sensitive data (Kyber pre-keys, session keys) is stored in
+    //    Dart heap (_DecryptionContext.kyberPreKeys)
+    // 3. Secure zeroing of sensitive data happens in context.clear()
+    //    which is called in the finally block after each operation
+    //
+    // If we were to pass a pointer to sensitive data via ctx, we would
+    // need to securely zero and free that memory here.
   }
   // coverage:ignore-end
 
@@ -964,6 +989,7 @@ class _DecryptionCallbacks {
     store.ref.load_kyber_pre_key = _loadKyberPreKey.nativeFunction;
     store.ref.store_kyber_pre_key = _storeKyberPreKey.nativeFunction;
     store.ref.mark_kyber_pre_key_used = _markKyberPreKeyUsed.nativeFunction;
+    store.ref.destroy = _destroyKyberPreKeyStore.nativeFunction;
     return store;
   }
 
@@ -983,6 +1009,7 @@ class _DecryptionCallbacks {
     _loadKyberPreKey.close();
     _storeKyberPreKey.close();
     _markKyberPreKeyUsed.close();
+    _destroyKyberPreKeyStore.close();
   }
 }
 
