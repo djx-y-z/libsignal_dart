@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-01-13
+
 ### Added
 
 - `.claude/skills/` folder now included in repository and published package
@@ -131,11 +133,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- Based on libsignal v0.86.9 from Signal Foundation
+- Based on libsignal v0.86.11 from Signal Foundation
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/djx-y-z/libsignal_dart/releases/tag/v1.0.0
