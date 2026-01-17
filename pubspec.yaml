@@ -9,7 +9,7 @@ issue_tracker: https://github.com/djx-y-z/libsignal_dart/issues
 
 # Native library version configuration
 libsignal:
-  native_version: "v0.86.11"
+  native_version: "v0.86.13"
   native_build: 1
 
 environment:
