@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-01-19
+
+### Changed
+
+- Update libsignal native library to v0.86.12 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.12))
+  - H2 support for unauthenticated chat (new remote config option)
+  - Updated libcrux-ml-kem and spqr dependencies
+
 ## [1.1.1] - 2026-01-13
 
 ### Added
