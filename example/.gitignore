@@ -66,3 +66,6 @@ app.*.map.json
 **/generated_plugin_registrant.*
 **/generated_plugins.cmake
 **/GeneratedPluginRegistrant.swift
+
+# Downloaded WASM files (auto-downloaded by hook/build.dart)
+web/pkg/

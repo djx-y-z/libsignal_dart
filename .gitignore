@@ -64,3 +64,6 @@ rust/target/
 # Example Podfile.lock (not committed for library packages)
 example/ios/Podfile.lock
 example/macos/Podfile.lock
+
+# Downloaded WASM files (auto-downloaded by hook/build.dart)
+example/web/pkg/

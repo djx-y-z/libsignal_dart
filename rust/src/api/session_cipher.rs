@@ -14,7 +14,6 @@ use libsignal_protocol::{
     SignedPreKeyStore,
 };
 use rand::{rngs::OsRng, TryRngCore as _};
-use std::time::SystemTime;
 use zeroize::Zeroize;
 
 /// Result of encrypting a message.
@@ -149,7 +148,7 @@ fn message_encrypt_inner(
             &remote_address,
             &mut session_store,
             &mut identity_store,
-            SystemTime::now(),
+            crate::current_time(),
             &mut OsRng.unwrap_err(),
         )
         .await

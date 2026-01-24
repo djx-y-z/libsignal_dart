@@ -6,8 +6,6 @@
 //! 2. Uses in-memory stores temporarily during operations
 //! 3. Returns results for Dart to persist via callbacks
 
-use std::time::SystemTime;
-
 use flutter_rust_bridge::DartFnFuture;
 use futures::executor::block_on;
 use libsignal_protocol::{
@@ -133,7 +131,7 @@ fn process_prekey_bundle_inner(
             &mut session_store,
             &mut identity_store,
             bundle.native(),
-            SystemTime::now(),
+            crate::current_time(),
             &mut OsRng.unwrap_err(),
         )
         .await

@@ -20,7 +20,6 @@ use libsignal_protocol::{
     SignalProtocolError, CiphertextMessageType,
 };
 use rand::{TryRngCore as _, rngs::OsRng};
-use std::time::SystemTime;
 use zeroize::Zeroize;
 
 // ============================================================================
@@ -265,7 +264,7 @@ fn sealed_sender_encrypt_inner(
             plaintext,
             &mut session_store,
             &mut identity_store,
-            SystemTime::now(),
+            crate::current_time(),
             &mut OsRng.unwrap_err(),
         ).await
     }).map_err(|e| e.to_string())?;

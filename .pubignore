@@ -47,5 +47,8 @@ example/macos/Runner.xcworkspace/
 # CLI example (not part of the Flutter plugin example)
 example_cli/
 
+# Downloaded WASM files (auto-downloaded by hook/build.dart)
+example/web/pkg/
+
 # FVM
 .fvm/

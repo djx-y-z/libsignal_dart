@@ -9,5 +9,9 @@
 #![allow(dead_code)]
 
 mod frb_generated;
+mod utils;
 
 pub mod api;
+
+// Re-export utilities for internal use
+pub use utils::current_time;
