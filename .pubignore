@@ -40,7 +40,7 @@ example/android/.gradle/
 example/ios/Pods/
 example/macos/Pods/
 
-# Xcode workspace files (tracked in git but not needed for pub)
+# Xcode workspace
 example/ios/Runner.xcworkspace/
 example/macos/Runner.xcworkspace/
 
@@ -52,3 +52,13 @@ example/web/pkg/
 
 # FVM
 .fvm/
+
+# Rust build artifacts
+rust/target/
+
+# Generated plugin files (not needed for plugin distribution)
+android/app/
+ios/Flutter/ephemeral/
+ios/Runner/
+macos/Flutter/ephemeral/
+linux/flutter/generated_*
