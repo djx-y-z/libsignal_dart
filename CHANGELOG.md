@@ -4,6 +4,7 @@
 
 #### ⚠️ Breaking Changes
 
+- **Platform requirements**: Minimum iOS raised to 13.0, macOS to 10.15
 - **Architecture**: Migrated from C FFI to Flutter Rust Bridge (FRB)
   - No more `dispose()` calls needed — memory managed automatically by Rust
   - Store operations now use DartFn callbacks for async Dart-to-Rust communication
@@ -22,6 +23,7 @@
 - **Web platform support (WASM)** — run Signal Protocol in browsers
 - **Flutter Rust Bridge architecture** — cleaner API, automatic memory management
 - **libsignal v0.86.14** — latest upstream Signal Protocol library
+- **Modern platform support** — iOS 13.0+, macOS 10.15+ (Catalina)
 
 #### Security
 
