@@ -112,7 +112,7 @@ jobs:
             runner: macos-latest
             rust_target: aarch64-apple-darwin
           - arch: x86_64
-            runner: macos-13
+            runner: macos-latest  # Cross-compile x86_64 on arm64 runner
             rust_target: x86_64-apple-darwin
     runs-on: ${{ matrix.runner }}
     steps:
@@ -159,7 +159,7 @@ jobs:
             rust_target: aarch64-apple-ios-sim
           - target: simulator
             arch: x86_64
-            runner: macos-13
+            runner: macos-latest  # Cross-compile x86_64 on arm64 runner
             rust_target: x86_64-apple-ios
     runs-on: ${{ matrix.runner }}
     steps:
