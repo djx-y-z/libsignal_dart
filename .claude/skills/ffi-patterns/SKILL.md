@@ -1,262 +1,286 @@
 ---
 name: ffi-patterns
-description: Dart FFI patterns and best practices for libsignal. Use when writing FFI code, working with native memory, creating wrappers, implementing new bindings, or fixing ARM64 issues.
+description: Flutter Rust Bridge patterns and best practices for libsignal. Use when writing Rust API code, adding new bindings, implementing DartFn callbacks, or troubleshooting FRB issues.
 ---
 
-# FFI Patterns for libsignal_dart
+# FRB Patterns for libsignal_dart
 
-Patterns and templates for writing correct Dart FFI code in this project.
+Patterns and templates for writing correct Flutter Rust Bridge code in this project.
 
-## Memory Allocation
+## Architecture Overview
 
-### Basic Pattern
-
-```dart
-final ptr = calloc<Uint8>(length);
-try {
-  // Use ptr...
-} finally {
-  LibSignalUtils.zeroBytes(ptr.asTypedList(length)); // Zero sensitive data!
-  calloc.free(ptr);
-}
+```
+┌─────────────────────────────────────────────┐
+│     libsignal-protocol (Rust crate)         │  ← Pure Rust, statically linked
+├─────────────────────────────────────────────┤
+│       rust/src/api/*.rs (Rust wrappers)     │  ← FRB-annotated functions
+├─────────────────────────────────────────────┤
+│      lib/src/rust/*.dart (FRB generated)    │  ← Auto-generated Dart API
+├─────────────────────────────────────────────┤
+│           lib/src/stores/*.dart             │  ← Dart store interfaces
+└─────────────────────────────────────────────┘
 ```
 
-### Convert Uint8List to Pointer
+## Constructor-Style API Pattern
 
-```dart
-Pointer<Uint8> _uint8ListToPointer(Uint8List data) {
-  final ptr = calloc<Uint8>(data.length);
-  ptr.asTypedList(data.length).setAll(0, data);
-  return ptr;
-}
-```
+Use `impl` blocks for constructors so FRB generates idiomatic Dart:
 
-### Convert Pointer to Uint8List
-
-```dart
-Uint8List _pointerToUint8List(Pointer<Uint8> ptr, int length) {
-  return Uint8List.fromList(ptr.asTypedList(length));
-}
-```
-
-## Wrapper Class Pattern
-
-```dart
-// Finalizer for automatic cleanup
-final Finalizer<Pointer<signal.SignalKyberKeyPair>> _kyberKeyPairFinalizer =
-    Finalizer((ptr) => signal.signal_kyber_key_pair_destroy(ptr));
-
-class KyberKeyPair {
-  final Pointer<signal.SignalKyberKeyPair> _ptr;
-  bool _disposed = false;
-
-  KyberKeyPair._(this._ptr) {
-    _kyberKeyPairFinalizer.attach(this, _ptr, detach: this);
-  }
-
-  void _checkDisposed() {
-    if (_disposed) {
-      throw LibSignalException.disposed('KyberKeyPair');
+```rust
+// ✅ CORRECT - generates PrivateKey.generate() in Dart
+impl PrivateKey {
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn generate() -> Result<PrivateKey, String> {
+        let key = libsignal_protocol::PrivateKey::generate(&mut OsRng);
+        Ok(PrivateKey { native: key })
     }
-  }
 
-  // Factory constructor
-  static KyberKeyPair generate() {
-    final ptr = calloc<Pointer<signal.SignalKyberKeyPair>>();
-    try {
-      final result = signal.signal_kyber_key_pair_generate(ptr);
-      if (result != 0) {
-        throw LibSignalException.fromNative(result, 'generate kyber key pair');
-      }
-      return KyberKeyPair._(ptr.value);
-    } finally {
-      calloc.free(ptr);
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn deserialize(bytes: Vec<u8>) -> Result<PrivateKey, String> {
+        let key = libsignal_protocol::PrivateKey::deserialize(&bytes)
+            .map_err(|e| e.to_string())?;
+        Ok(PrivateKey { native: key })
     }
-  }
+}
 
-  void dispose() {
-    if (!_disposed) {
-      _disposed = true;
-      signal.signal_kyber_key_pair_destroy(_ptr);
-      _kyberKeyPairFinalizer.detach(this);
+// ❌ WRONG - generates privateKeyGenerate() in Dart
+pub fn private_key_generate() -> Result<PrivateKey, String> { ... }
+```
+
+**Dart usage:**
+```dart
+final key = PrivateKey.generate();      // Constructor-style
+final bytes = key.serialize();           // Method
+final restored = PrivateKey.deserialize(bytes: bytes);
+```
+
+## Opaque Type Pattern
+
+Wrap libsignal types in opaque structs:
+
+```rust
+#[frb(opaque)]
+pub struct PrivateKey {
+    pub(crate) native: libsignal_protocol::PrivateKey,
+}
+
+impl PrivateKey {
+    // Access native type internally
+    pub(crate) fn native(&self) -> &libsignal_protocol::PrivateKey {
+        &self.native
     }
-  }
 }
 ```
 
-## SecureBytes for Sensitive Data
+## DartFn Callbacks for Store Operations
 
-```dart
-import 'secure_bytes.dart';
+For operations requiring Dart store callbacks:
 
-// Wrap sensitive data
-final secureKey = SecureBytes(keyBytes);
-try {
-  // Use secureKey.bytes
-  final result = encrypt(secureKey.bytes);
-} finally {
-  secureKey.dispose(); // Zeros memory automatically
+```rust
+pub async fn process_prekey_bundle_with_callbacks(
+    remote_name: String,
+    remote_device_id: u32,
+    bundle_bytes: Vec<u8>,
+    // Store callbacks
+    load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
+    store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + 'static,
+    get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + 'static,
+    get_local_registration_id: impl Fn() -> DartFnFuture<u32> + 'static,
+    save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<bool> + 'static,
+    is_trusted_identity: impl Fn(String, u32, Vec<u8>, u8) -> DartFnFuture<bool> + 'static,
+) -> Result<(), String> {
+    // Implementation uses callbacks to access Dart stores
 }
 ```
 
-## ARM64 Known Issues
+### Adapter Pattern for libsignal Traits
 
-On ARM64, Dart FFI has issues passing 16-byte structs by value ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730)).
+Create adapter structs that implement libsignal traits using DartFn callbacks:
 
-### Problem: SignalUuid (16 bytes)
-
-```dart
-// This FAILS on ARM64:
-// signal.signal_group_session_encrypt(..., signalUuid, ...)
-```
-
-### Solution: Split into Two Int64
-
-```dart
-// ARM64 AAPCS64: 16-byte struct passed in two 64-bit registers (x2, x3)
-(int, int) _uuidToInt64Pair(Uint8List uuid) {
-  if (uuid.length != 16) {
-    throw ArgumentError('UUID must be exactly 16 bytes');
-  }
-
-  // Pack bytes into two 64-bit integers (little-endian)
-  final buffer = ByteData.view(uuid.buffer, uuid.offsetInBytes, 16);
-  final low = buffer.getInt64(0, Endian.little);   // bytes 0-7 -> x2
-  final high = buffer.getInt64(8, Endian.little);  // bytes 8-15 -> x3
-
-  return (low, high);
+```rust
+struct SessionStoreAdapter<L, S>
+where
+    L: Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
+    S: Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + 'static,
+{
+    load_session: L,
+    store_session: S,
 }
 
-// Usage
-final (uuidLow, uuidHigh) = _uuidToInt64Pair(distributionId);
-final result = signal.signal_group_session_encrypt_with_uuid_int64(
-  ...,
-  uuidLow,
-  uuidHigh,
-  ...
-);
+#[async_trait(?Send)]
+impl<L, S> SessionStore for SessionStoreAdapter<L, S>
+where
+    L: Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
+    S: Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + 'static,
+{
+    async fn load_session(&self, addr: &ProtocolAddress) -> Result<Option<SessionRecord>, SignalProtocolError> {
+        let result = (self.load_session)(addr.name().to_string(), addr.device_id().into()).await;
+        match result {
+            Some(bytes) => Ok(Some(SessionRecord::deserialize(&bytes)?)),
+            None => Ok(None),
+        }
+    }
+
+    async fn store_session(&mut self, addr: &ProtocolAddress, record: &SessionRecord) -> Result<(), SignalProtocolError> {
+        (self.store_session)(addr.name().to_string(), addr.device_id().into(), record.serialize()?).await;
+        Ok(())
+    }
+}
 ```
 
-### Problem: SignalBorrowedSliceOfConstPointerPublicKey
+## Sync vs Async Functions
 
-```dart
-// This FAILS on ARM64 - struct passed by value
-// signal_sender_certificate_validate(cert, time, &trustRoot)
+### Sync Functions (Simple Operations)
+
+```rust
+impl PrivateKey {
+    #[flutter_rust_bridge::frb(sync)]  // Mark as sync
+    pub fn serialize(&self) -> Vec<u8> {
+        self.native.serialize().to_vec()
+    }
+}
 ```
 
-### Solution: Pure Dart Verification
+### Async Functions (Store Operations)
 
-```dart
-// Implemented pure Dart signature verification in sender_certificate.dart
-// Uses existing PublicKey.verifySignature() which works correctly
-```
-
-### 8-Byte Wrapper Structs
-
-8-byte wrapper structs (like `SignalConstPointerProtocolAddress`) pass their inner pointer directly:
-
-```dart
-// Pass address._ptr directly instead of wrapping in struct
-final result = signal.some_function(address._ptr);
-```
-
-## String Handling
-
-```dart
-final namePtr = name.toNativeUtf8();
-try {
-  final result = signal.signal_some_function(namePtr.cast());
-  // ...
-} finally {
-  calloc.free(namePtr);
+```rust
+// No #[frb(sync)] - FRB generates Future<T> in Dart
+pub async fn encrypt_with_callbacks(
+    plaintext: Vec<u8>,
+    load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
+    // ...
+) -> Result<Vec<u8>, String> {
+    // async implementation
 }
 ```
 
 ## Error Handling
 
-```dart
-final result = signal.signal_native_function(args);
-if (result != 0) {
-  throw LibSignalException.fromNative(result, 'operation description');
+Convert libsignal errors to String for FRB:
+
+```rust
+pub fn deserialize(bytes: Vec<u8>) -> Result<Self, String> {
+    libsignal_protocol::PrivateKey::deserialize(&bytes)
+        .map(|native| PrivateKey { native })
+        .map_err(|e| e.to_string())
 }
 ```
 
-## Serialization Pattern
+FRB automatically converts `Result<T, String>` to Dart exceptions.
+
+## Memory Management
+
+**FRB handles cleanup automatically via Rust's ownership system.**
+
+- No manual `dispose()` needed in Dart
+- No finalizers to register
+- No double-free concerns
 
 ```dart
-Uint8List serialize() {
-  _checkDisposed();
+// Dart - no cleanup needed!
+final key = PrivateKey.generate();
+final signature = key.sign(message: data);
+// key is automatically cleaned up when no longer referenced
+```
 
-  final sizePtr = calloc<Size>();
-  try {
-    // Get size first
-    final sizeResult = signal.signal_type_serialized_len(_ptr, sizePtr);
-    if (sizeResult != 0) {
-      throw LibSignalException.fromNative(sizeResult, 'get serialized length');
-    }
+## Vec<u8> for Serialization
 
-    final size = sizePtr.value;
-    final buffer = calloc<Uint8>(size);
-    try {
-      final writeResult = signal.signal_type_serialize(_ptr, buffer, size);
-      if (writeResult != 0) {
-        throw LibSignalException.fromNative(writeResult, 'serialize');
-      }
-      return Uint8List.fromList(buffer.asTypedList(size));
-    } finally {
-      calloc.free(buffer);
-    }
-  } finally {
-    calloc.free(sizePtr);
-  }
+Use `Vec<u8>` for all serialized data crossing FFI boundary:
+
+```rust
+// Serialize returns Vec<u8>
+pub fn serialize(&self) -> Vec<u8> {
+    self.native.serialize().to_vec()
+}
+
+// Deserialize takes Vec<u8> (or List<int> in Dart)
+pub fn deserialize(bytes: Vec<u8>) -> Result<Self, String> {
+    // ...
 }
 ```
 
-## Deserialization Pattern
+## UUID Handling
 
-```dart
-static MyType deserialize(Uint8List data) {
-  SerializationValidator.validateMyType(data); // Validate size first!
+Convert UUIDs to/from strings for Dart compatibility:
 
-  final ptr = calloc<Pointer<signal.SignalMyType>>();
-  final dataPtr = calloc<Uint8>(data.length);
-  try {
-    dataPtr.asTypedList(data.length).setAll(0, data);
+```rust
+pub fn uuid_from_string(uuid_str: String) -> Result<Vec<u8>, String> {
+    let uuid = uuid::Uuid::parse_str(&uuid_str)
+        .map_err(|e| e.to_string())?;
+    Ok(uuid.as_bytes().to_vec())
+}
 
-    final result = signal.signal_my_type_deserialize(
-      ptr,
-      dataPtr,
-      data.length,
-    );
-    if (result != 0) {
-      throw LibSignalException.fromNative(result, 'deserialize');
-    }
-    return MyType._(ptr.value);
-  } finally {
-    LibSignalUtils.zeroBytes(dataPtr.asTypedList(data.length)); // Zero if sensitive!
-    calloc.free(dataPtr);
-    calloc.free(ptr);
-  }
+pub fn uuid_to_string(uuid_bytes: Vec<u8>) -> Result<String, String> {
+    let bytes: [u8; 16] = uuid_bytes.try_into()
+        .map_err(|_| "UUID must be 16 bytes")?;
+    Ok(uuid::Uuid::from_bytes(bytes).to_string())
 }
 ```
 
-## Utilities Reference
+## Regenerating Bindings
 
-| Utility | Use For |
-|---------|---------|
-| `calloc<T>(n)` | Allocate n elements of type T |
-| `calloc.free(ptr)` | Free allocated memory |
-| `LibSignalUtils.zeroBytes(list)` | Zero sensitive Uint8List |
-| `LibSignalUtils.constantTimeEquals(a, b)` | Compare secrets safely |
-| `SerializationValidator.validate*()` | Validate serialized data sizes |
-| `SecureBytes(data)` | Wrap sensitive data with auto-zeroing |
+After modifying Rust code in `rust/src/api/`:
+
+```bash
+make codegen
+```
+
+This runs `flutter_rust_bridge_codegen generate` using `flutter_rust_bridge.yaml` config.
 
 ## Files to Reference
 
 | Pattern | Reference File |
 |---------|----------------|
-| Key wrapper | `lib/src/keys/private_key.dart` |
-| Serialization | `lib/src/protocol/session_record.dart` |
-| ARM64 workaround | `lib/src/groups/group_session.dart` |
-| SecureBytes usage | `lib/src/secure_bytes.dart` |
-| Validation | `lib/src/serialization_validator.dart` |
+| Opaque types | `rust/src/api/keys.rs` |
+| DartFn callbacks | `rust/src/api/session_builder.rs` |
+| Adapter pattern | `rust/src/api/session_cipher.rs` |
+| UUID handling | `rust/src/api/group_session.rs` |
+| Store callbacks | `rust/src/api/group_session.rs` |
+
+## Common Issues
+
+### "method not found" after codegen
+
+- Check that the method is `pub`
+- Check that return types are supported by FRB
+- Run `make codegen` after any Rust changes
+
+### Callback lifetime issues
+
+Ensure callbacks have `'static` lifetime:
+
+```rust
+load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
+```
+
+### Type not transferable
+
+Use `Vec<u8>` for complex types instead of trying to pass libsignal types directly.
+
+## Web/WASM Considerations
+
+FRB automatically handles web platform differences, but keep in mind:
+
+### RNG on Web
+The `getrandom` crate uses Web Crypto API (`crypto.getRandomValues()`) on WASM.
+Configuration in `rust/.cargo/config.toml`:
+```toml
+[target.wasm32-unknown-unknown]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
+```
+
+### No threading on WASM
+- Avoid `parking_lot::Mutex` in hot paths on web
+- Use single-threaded alternatives when possible
+- FRB handles this automatically for most cases
+
+### Building WASM
+```bash
+make build-web  # Builds to rust/target/wasm32/
+```
+
+### WASM File Structure
+Web builds require these files in `web/pkg/`:
+- `libsignal_frb.js` - JavaScript glue code
+- `libsignal_frb_bg.wasm` - WebAssembly binary
+
+These are downloaded automatically by `hook/build.dart` during web builds.

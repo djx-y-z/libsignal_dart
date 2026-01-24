@@ -1,0 +1,73 @@
+[package]
+name = "libsignal_frb"
+version = "1.0.0"
+edition = "2024"
+rust-version = "1.88"
+description = "Flutter Rust Bridge bindings for libsignal"
+repository = "https://github.com/djx-y-z/libsignal_dart"
+license = "AGPL-3.0"
+publish = false  # Internal crate, not published to crates.io
+
+[lib]
+name = "libsignal_frb"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+flutter_rust_bridge = "=2.11.1"
+thiserror = "2.0"
+log = "0.4"
+rand = "0.9"
+
+# Official Signal Protocol libraries (AGPL-3.0)
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.14" }
+libsignal-core = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.14" }
+signal-crypto = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.14" }
+
+# Cryptographic primitives
+hkdf = "0.12"
+sha2 = "0.10"
+aes-gcm-siv = "0.11"
+
+# Secure memory zeroing
+zeroize = "1.7"
+
+# UUID support for group distribution IDs
+uuid = { version = "1", features = ["v4", "serde", "js"] }
+
+# Async trait support (required by libsignal-protocol store traits)
+async-trait = "0.1"
+
+# Async runtime for sync wrappers
+futures = "0.3"
+
+# Sync primitives (not used on WASM)
+once_cell = "1.19"
+parking_lot = "0.12"
+
+# WASM support - getrandom needs explicit features for browser randomness
+# Both versions needed due to diamond dependency in crypto crates
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# getrandom 0.2.x (used by curve25519-dalek, aes-gcm-siv)
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+# getrandom 0.3.x (used by libsignal-core, uuid)
+getrandom = { version = "0.3", features = ["wasm_js"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+
+# For WASM: Use js_sys for console/timing
+[target.'cfg(target_arch = "wasm32")'.dependencies.js-sys]
+version = "0.3"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
+version = "0.3"
+features = ["console", "Window", "Performance"]
+
+# Release profile optimizations
+[profile.release]
+lto = true        # Link-Time Optimization for smaller binaries
+opt-level = "z"   # Optimize for size (important for WASM)
+strip = true      # Strip debug symbols
+
+# Suppress FRB macro warnings (known issue with flutter_rust_bridge)
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }

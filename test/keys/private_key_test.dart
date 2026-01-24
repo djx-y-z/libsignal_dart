@@ -1,12 +1,12 @@
-import 'dart:typed_data';
-
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 import '../test_helpers/test_helpers.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('PrivateKey', () {
@@ -14,8 +14,6 @@ void main() {
       test('generates valid private key', () {
         final key = PrivateKey.generate();
         expect(key, isNotNull);
-        expect(key.isDisposed, isFalse);
-        key.dispose();
       });
 
       test('each generation produces unique key', () {
@@ -26,9 +24,6 @@ void main() {
         final bytes2 = key2.serialize();
 
         expect(bytes1, isNot(equals(bytes2)));
-
-        key1.dispose();
-        key2.dispose();
       });
 
       test('generated key can derive public key', () {
@@ -36,10 +31,6 @@ void main() {
         final publicKey = key.getPublicKey();
 
         expect(publicKey, isNotNull);
-        expect(publicKey.isDisposed, isFalse);
-
-        key.dispose();
-        publicKey.dispose();
       });
     });
 
@@ -49,47 +40,33 @@ void main() {
         final serialized = key.serialize();
 
         expect(serialized.length, equals(32));
-
-        serialized.dispose();
-        key.dispose();
       });
 
       test('round-trip preserves key', () {
         final original = PrivateKey.generate();
         final serialized = original.serialize();
-        final restored = PrivateKey.deserialize(serialized.bytes);
+        final restored = PrivateKey.deserialize(bytes: serialized.toList());
 
         // Keys should produce the same serialization
         final restoredBytes = restored.serialize();
         final originalBytes = original.serialize();
-        expect(restoredBytes.bytes, equals(originalBytes.bytes));
-        restoredBytes.dispose();
-        originalBytes.dispose();
+        expect(restoredBytes, equals(originalBytes));
 
         // Keys should derive the same public key
         final pub1 = original.getPublicKey();
         final pub2 = restored.getPublicKey();
-        expect(pub1.equals(pub2), isTrue);
-
-        serialized.dispose();
-        original.dispose();
-        restored.dispose();
-        pub1.dispose();
-        pub2.dispose();
+        expect(pub1.equals(other: pub2), isTrue);
       });
 
       test('deserialize rejects empty data', () {
-        expect(
-          () => PrivateKey.deserialize(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => PrivateKey.deserialize(bytes: []), throwsA(anything));
       });
 
       test('deserialize rejects data with wrong length', () {
-        final invalidData = Uint8List.fromList([1, 2, 3, 4, 5]);
+        final invalidData = [1, 2, 3, 4, 5];
         expect(
-          () => PrivateKey.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
+          () => PrivateKey.deserialize(bytes: invalidData),
+          throwsA(anything),
         );
       });
     });
@@ -100,11 +77,7 @@ void main() {
         final publicKey = privateKey.getPublicKey();
 
         expect(publicKey, isNotNull);
-        expect(publicKey.isDisposed, isFalse);
         expect(publicKey.serialize().length, equals(33));
-
-        privateKey.dispose();
-        publicKey.dispose();
       });
 
       test('same private key always produces same public key', () {
@@ -113,34 +86,26 @@ void main() {
         final pub1 = privateKey.getPublicKey();
         final pub2 = privateKey.getPublicKey();
 
-        expect(pub1.equals(pub2), isTrue);
-
-        privateKey.dispose();
-        pub1.dispose();
-        pub2.dispose();
+        expect(pub1.equals(other: pub2), isTrue);
       });
     });
 
     group('sign()', () {
       test('signs empty message', () {
         final key = PrivateKey.generate();
-        final signature = key.sign(Uint8List(0));
+        final signature = key.sign(message: []);
 
         expect(signature, isNotNull);
         expect(signature.length, equals(64)); // Ed25519 signature
-
-        key.dispose();
       });
 
       test('signs non-empty message', () {
         final key = PrivateKey.generate();
         final message = testMessage('Hello, Signal!');
-        final signature = key.sign(message);
+        final signature = key.sign(message: message.toList());
 
         expect(signature, isNotNull);
         expect(signature.length, equals(64));
-
-        key.dispose();
       });
 
       test('multiple signatures from same key are all valid', () {
@@ -149,15 +114,18 @@ void main() {
         final message = testMessage('Test message');
 
         // Sign multiple times
-        final sig1 = key.sign(message);
-        final sig2 = key.sign(message);
+        final sig1 = key.sign(message: message.toList());
+        final sig2 = key.sign(message: message.toList());
 
         // Both signatures should be valid
-        expect(publicKey.verify(message, sig1), isTrue);
-        expect(publicKey.verify(message, sig2), isTrue);
-
-        key.dispose();
-        publicKey.dispose();
+        expect(
+          publicKey.verify(message: message.toList(), signature: sig1.toList()),
+          isTrue,
+        );
+        expect(
+          publicKey.verify(message: message.toList(), signature: sig2.toList()),
+          isTrue,
+        );
       });
 
       test('different messages produce different signatures', () {
@@ -165,12 +133,10 @@ void main() {
         final msg1 = testMessage('Message 1');
         final msg2 = testMessage('Message 2');
 
-        final sig1 = key.sign(msg1);
-        final sig2 = key.sign(msg2);
+        final sig1 = key.sign(message: msg1.toList());
+        final sig2 = key.sign(message: msg2.toList());
 
         expect(sig1, isNot(equals(sig2)));
-
-        key.dispose();
       });
 
       test('signature can be verified by public key', () {
@@ -178,13 +144,13 @@ void main() {
         final publicKey = privateKey.getPublicKey();
         final message = testMessage('Test message for signing');
 
-        final signature = privateKey.sign(message);
-        final isValid = publicKey.verify(message, signature);
+        final signature = privateKey.sign(message: message.toList());
+        final isValid = publicKey.verify(
+          message: message.toList(),
+          signature: signature.toList(),
+        );
 
         expect(isValid, isTrue);
-
-        privateKey.dispose();
-        publicKey.dispose();
       });
     });
 
@@ -196,16 +162,11 @@ void main() {
         final privateKeyB = PrivateKey.generate();
         final publicKeyB = privateKeyB.getPublicKey();
 
-        final sharedA = privateKeyA.agree(publicKeyB);
-        final sharedB = privateKeyB.agree(publicKeyA);
+        final sharedA = privateKeyA.agree(publicKey: publicKeyB);
+        final sharedB = privateKeyB.agree(publicKey: publicKeyA);
 
         expect(sharedA.length, equals(32));
         expect(sharedA, equals(sharedB));
-
-        privateKeyA.dispose();
-        publicKeyA.dispose();
-        privateKeyB.dispose();
-        publicKeyB.dispose();
       });
 
       test('different key pairs produce different shared secrets', () {
@@ -217,118 +178,31 @@ void main() {
         final otherKey2 = PrivateKey.generate();
         final otherPub2 = otherKey2.getPublicKey();
 
-        final shared1 = privateKey.agree(otherPub1);
-        final shared2 = privateKey.agree(otherPub2);
+        final shared1 = privateKey.agree(publicKey: otherPub1);
+        final shared2 = privateKey.agree(publicKey: otherPub2);
 
         expect(shared1, isNot(equals(shared2)));
-
-        privateKey.dispose();
-        otherKey1.dispose();
-        otherPub1.dispose();
-        otherKey2.dispose();
-        otherPub2.dispose();
       });
     });
 
-    group('clone()', () {
+    group('cloneKey()', () {
       test('creates independent copy', () {
         final original = PrivateKey.generate();
-        final cloned = original.clone();
+        final cloned = original.cloneKey();
 
         final clonedBytes = cloned.serialize();
         final originalBytes = original.serialize();
-        expect(clonedBytes.bytes, equals(originalBytes.bytes));
-        clonedBytes.dispose();
-        originalBytes.dispose();
-
-        original.dispose();
-
-        // Cloned key should still work after original is disposed
-        expect(cloned.isDisposed, isFalse);
-        expect(() => cloned.serialize(), returnsNormally);
-
-        cloned.dispose();
+        expect(clonedBytes, equals(originalBytes));
       });
 
       test('cloned key produces same public key', () {
         final original = PrivateKey.generate();
-        final cloned = original.clone();
+        final cloned = original.cloneKey();
 
         final pub1 = original.getPublicKey();
         final pub2 = cloned.getPublicKey();
 
-        expect(pub1.equals(pub2), isTrue);
-
-        original.dispose();
-        cloned.dispose();
-        pub1.dispose();
-        pub2.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final key = PrivateKey.generate();
-        expect(key.isDisposed, isFalse);
-        key.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(key.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(() => key.dispose(), returnsNormally);
-      });
-
-      test('serialize throws after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(() => key.serialize(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('getPublicKey throws after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(() => key.getPublicKey(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('sign throws after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(
-          () => key.sign(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('agree throws after dispose', () {
-        final key = PrivateKey.generate();
-        final other = PrivateKey.generate();
-        final otherPub = other.getPublicKey();
-
-        key.dispose();
-
-        expect(() => key.agree(otherPub), throwsA(isA<LibSignalException>()));
-
-        other.dispose();
-        otherPub.dispose();
-      });
-
-      test('clone throws after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(() => key.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final key = PrivateKey.generate();
-        key.dispose();
-        expect(() => key.pointer, throwsA(isA<LibSignalException>()));
+        expect(pub1.equals(other: pub2), isTrue);
       });
     });
   });

@@ -6,16 +6,16 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-brightgreen.svg)](https://dart.dev)
 [![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.38.0-blue.svg)](https://flutter.dev)
-[![libsignal](https://img.shields.io/badge/libsignal-v0.86.12-orange.svg)](https://github.com/signalapp/libsignal)
+[![libsignal](https://img.shields.io/badge/libsignal-v0.86.13-orange.svg)](https://github.com/signalapp/libsignal)
 
-A Dart FFI wrapper for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+Dart bindings for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
 ## Platform Support
 
-|             | Android | iOS   | macOS  | Linux      | Windows |
-|-------------|---------|-------|--------|------------|---------|
-| **Support** | SDK 21+ | 12.0+ | 10.14+ | arm64, x64 | x64     |
-| **Arch**    | arm64, armv7, x64 | arm64 | arm64, x64 | arm64, x64 | x64 |
+|             | Android | iOS   | macOS  | Linux      | Windows | Web |
+|-------------|---------|-------|--------|------------|---------|-----|
+| **Support** | SDK 21+ | 12.0+ | 10.14+ | arm64, x64 | x64     | ✓   |
+| **Arch**    | arm64, armv7, x64 | arm64 | arm64, x64 | arm64, x64 | x64 | wasm32 |
 
 ## Features
 
@@ -23,9 +23,8 @@ A Dart FFI wrapper for [libsignal](https://github.com/signalapp/libsignal), prov
 - **Signal Protocol**: End-to-end encryption with perfect forward secrecy (Double Ratchet, X3DH)
 - **Sealed Sender**: Anonymous message sending (server won't know who sent the message)
 - **Group Messaging**: Efficient group encryption using SenderKey distribution
-- **Zero Configuration**: Pre-built native libraries included via Build Hooks
-- **High Performance**: Direct FFI bindings with minimal overhead
-- **Automated Updates**: Native libraries auto-rebuild when new libsignal versions are released
+- **Automatic Builds**: Native libraries downloaded automatically via build hooks
+- **High Performance**: Direct Rust integration via Flutter Rust Bridge
 
 ## Implementation Status
 
@@ -53,55 +52,52 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 
 ### Implemented Features
 
-#### Keys (`lib/src/keys/`)
+#### Keys
 
-| Class | Key Methods | Native Functions |
-|-------|-------------|------------------|
-| `PrivateKey` | generate, sign, agree, serialize | `signal_privatekey_*` |
-| `PublicKey` | verify, serialize, compare | `signal_publickey_*` |
-| `IdentityKeyPair` | generate, serialize, signAlternateIdentity | `signal_identitykeypair_*` |
-| `PreKeyPair` | generate, serialize | `signal_pre_key_record_*` |
-| `SignedPreKeyPair` | generate, serialize | `signal_signed_pre_key_record_*` |
-| `KyberPreKeyPair` | generate, serialize | `signal_kyber_*` |
+| Class | Key Methods |
+|-------|-------------|
+| `PrivateKey` | generate, sign, agree, serialize |
+| `PublicKey` | verify, serialize, compare |
+| `IdentityKeyPair` | generate, serialize, signAlternateIdentity |
 
-#### Protocol (`lib/src/protocol/`)
+#### Protocol
 
-| Class | Key Methods | Native Functions |
-|-------|-------------|------------------|
-| `SessionCipher` | encrypt, decryptSignalMessage, decryptPreKeySignalMessage | `signal_encrypt_message`, `signal_decrypt_*` |
-| `SessionBuilder` | processPreKeyBundle | `signal_process_prekey_bundle` |
-| `SessionRecord` | serialize, deserialize | `signal_session_record_*` |
-| `ProtocolAddress` | new, name, deviceId | `signal_address_*` |
-| `SignalMessage` | serialize, body, counter, verifyMac | `signal_message_*` |
-| `PreKeySignalMessage` | serialize, preKeyId, signedPreKeyId | `signal_pre_key_signal_message_*` |
+| Class | Key Methods |
+|-------|-------------|
+| `SessionCipher` | encrypt, decryptSignalMessage, decryptPreKeySignalMessage |
+| `SessionBuilder` | processPreKeyBundle |
+| `SessionRecord` | serialize, deserialize |
+| `ProtocolAddress` | new, name, deviceId |
+| `SignalMessage` | serialize, body, counter, verifyMac |
+| `PreKeySignalMessage` | serialize, preKeyId, signedPreKeyId |
 
-#### Groups (`lib/src/groups/`)
+#### Groups
 
-| Class | Key Methods | Native Functions |
-|-------|-------------|------------------|
-| `GroupSession` | createDistributionMessage, encrypt, decrypt | `signal_group_encrypt_message`, `signal_group_decrypt_message` |
-| `SenderKeyRecord` | serialize, deserialize | `signal_sender_key_record_*` |
-| `SenderKeyMessage` | serialize, getDistributionId | `signal_sender_key_message_*` |
-| `SenderKeyDistributionMessage` | create, serialize | `signal_sender_key_distribution_message_*` |
+| Class | Key Methods |
+|-------|-------------|
+| `GroupSession` | createDistributionMessage, encrypt, decrypt |
+| `SenderKeyRecord` | serialize, deserialize |
+| `SenderKeyMessage` | serialize, getDistributionId |
+| `SenderKeyDistributionMessage` | create, serialize |
 
-#### Sealed Sender (`lib/src/sealed_sender/`)
+#### Sealed Sender
 
-| Class | Key Methods | Native Functions |
-|-------|-------------|------------------|
-| `SealedSessionCipher` | encrypt, decrypt | `signal_sealed_session_cipher_*` |
-| `SenderCertificate` | create, validate, serialize | `signal_sender_certificate_*` |
-| `ServerCertificate` | create, serialize | `signal_server_certificate_*` |
-| `UnidentifiedSenderMessageContent` | create, serialize | `signal_unidentified_sender_message_content_*` |
+| Class | Key Methods |
+|-------|-------------|
+| `SealedSessionCipher` | encrypt, decrypt |
+| `SenderCertificate` | create, validate, serialize |
+| `ServerCertificate` | create, serialize |
+| `UnidentifiedSenderMessageContent` | create, serialize |
 
-#### Crypto (`lib/src/crypto/`)
+#### Crypto
 
-| Class | Key Methods | Native Functions |
-|-------|-------------|------------------|
-| `Hkdf` | deriveSecrets | `signal_hkdf_derive` |
-| `Aes256GcmSiv` | encrypt, decrypt | `signal_aes_gcm_siv_*` |
-| `Fingerprint` | displayString, scannableEncoding, compare | `signal_fingerprint_*` |
+| Class | Key Methods |
+|-------|-------------|
+| `Hkdf` | deriveSecrets |
+| `Aes256GcmSiv` | encrypt, decrypt |
+| `Fingerprint` | displayString, scannableEncoding, compare |
 
-#### Stores (`lib/src/stores/`)
+#### Stores
 
 | Interface | In-Memory Implementation | Purpose |
 |-----------|-------------------------|---------|
@@ -114,16 +110,16 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 
 ### Not Implemented
 
-| Category | Native Functions | Reason |
-|----------|------------------|--------|
-| zkgroup | `signal_group_secret_params_*`, `signal_profile_key_*` | Server-side verification, not needed for basic messaging |
-| Registration | `signal_registration_*` | Account registration service |
-| Backup | `signal_backup_*`, `signal_message_backup_*` | Message backup and restore |
-| SVR | `signal_svr_*` | Secure Value Recovery for PIN-based backup |
-| Call Links | `signal_call_link_*` | Call link credentials |
-| Connection Manager | `signal_connection_manager_*` | Network connection handling |
-| HSM Enclave | `signal_hsm_enclave_*` | Hardware security module communication |
-| CDSI | `signal_cdsi_*` | Contact Discovery Service |
+| Category | Reason |
+|----------|--------|
+| zkgroup | Server-side verification, not needed for basic messaging |
+| Registration | Account registration service |
+| Backup | Message backup and restore |
+| SVR | Secure Value Recovery for PIN-based backup |
+| Call Links | Call link credentials |
+| Connection Manager | Network connection handling |
+| HSM Enclave | Hardware security module communication |
+| CDSI | Contact Discovery Service |
 
 </details>
 
@@ -136,23 +132,36 @@ dependencies:
   libsignal: ^x.x.x
 ```
 
-Native libraries are downloaded automatically during the build process.
+Native libraries are downloaded automatically during build via Dart build hooks.
+
+**No Rust required** for end users - precompiled binaries are downloaded from GitHub Releases. Fallback to source build if Rust is installed.
+
+### Web Support
+
+For web builds, WASM files are automatically downloaded to `web/pkg/` during the build process.
+
+**Manual setup** (if automatic download fails):
+```bash
+# In the libsignal package directory
+make build-web
+```
+
+Then copy `rust/target/wasm32/` files to your app's `web/pkg/` directory.
 
 ## Quick Start
 
 ```dart
 import 'package:libsignal/libsignal.dart';
 
-void main() {
-  // Initialize the library (optional but recommended for performance)
-  LibSignal.init();
+void main() async {
+  // Initialize the library
+  await LibSignal.init();
 
   // Generate identity key pair
   final identity = IdentityKeyPair.generate();
-  print('Identity public key: ${identity.publicKey.serialize().length} bytes');
+  print('Identity public key: ${identity.publicKey.length} bytes');
 
   // Clean up when done
-  identity.dispose();
   LibSignal.cleanup();
 }
 ```
@@ -166,27 +175,41 @@ import 'package:libsignal/libsignal.dart';
 
 // Identity Key Pair (long-term identity)
 final identity = IdentityKeyPair.generate();
-print('Public key length: ${identity.publicKey.serialize().length}');
-print('Private key length: ${identity.privateKey.serialize().length}');
+print('Public key length: ${identity.publicKey.length}');
 
-// Pre-Keys (one-time keys for X3DH)
-final preKey = PreKeyPair.generate(preKeyId: 1);
-final signedPreKey = SignedPreKeyPair.generate(
-  signedPreKeyId: 1,
-  identityKeyPair: identity,
+// Pre-Key (one-time key for X3DH)
+final preKeyPrivate = PrivateKey.generate();
+final preKeyPublic = preKeyPrivate.getPublicKey();
+final preKey = PreKeyRecord(
+  id: 1,
+  publicKey: preKeyPublic,
+  privateKey: preKeyPrivate,
 );
 
-// Kyber Pre-Keys (post-quantum key exchange)
-final kyberPreKey = KyberPreKeyPair.generate(
-  kyberPreKeyId: 1,
-  identityKeyPair: identity,
+// Signed Pre-Key
+final signedPreKeyPrivate = PrivateKey.generate();
+final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
+final identityPrivate = PrivateKey.deserialize(bytes: identity.privateKey.toList());
+final signature = identityPrivate.sign(message: signedPreKeyPublic.serialize().toList());
+final signedPreKey = SignedPreKeyRecord(
+  id: 1,
+  timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+  publicKey: signedPreKeyPublic,
+  privateKey: signedPreKeyPrivate,
+  signature: signature.toList(),
 );
 
-// Clean up
-identity.dispose();
-preKey.dispose();
-signedPreKey.dispose();
-kyberPreKey.dispose();
+// Kyber Pre-Key (post-quantum key exchange)
+final kyberKeyPair = KyberKeyPair.generate();
+final kyberSignature = identityPrivate.sign(
+  message: kyberKeyPair.getPublicKey().serialize().toList(),
+);
+final kyberPreKey = KyberPreKeyRecord.create(
+  id: 1,
+  timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+  keyPair: kyberKeyPair,
+  signature: kyberSignature.toList(),
+);
 ```
 
 ### Session Encryption (Double Ratchet)
@@ -294,7 +317,7 @@ final plaintext = await groupSession.decrypt(
 ```dart
 final identity = IdentityKeyPair.generate();
 // Use identity...
-identity.dispose(); // Clean up when done
+// FRB handles cleanup automatically via finalizers
 ```
 
 ### Performance Optimization
@@ -302,8 +325,8 @@ identity.dispose(); // Clean up when done
 For better performance, initialize once at app start:
 
 ```dart
-void main() {
-  LibSignal.init(); // Recommended at app startup
+void main() async {
+  await LibSignal.init(); // Recommended at app startup
   runApp(MyApp());
 }
 ```
@@ -314,24 +337,12 @@ void main() {
 - **Signal Protocol** - Battle-tested encryption used by Signal, WhatsApp, and others
 - **Perfect Forward Secrecy** - Past messages stay secure even if keys are compromised
 - **Kyber Support** - Post-quantum key exchange for future-proof security
+- **Rust Implementation** - All cryptographic operations run in Rust (libsignal-protocol) with constant-time implementations
 
 **Best Practices:**
-- Always call `dispose()` on key pairs and sessions to free native resources
-- Call `clearSecrets()` on sensitive data when done for immediate memory zeroing
-- Secrets are also auto-zeroed via Finalizers on GC (defense-in-depth), but don't rely solely on this
-- Use `LibSignalUtils.constantTimeEquals()` for comparing secrets (prevents timing attacks)
 - Keep the library updated to the latest version
 - Use UTC timestamps for certificate validation to avoid timezone issues
-
-```dart
-// Secure usage example
-final identity = IdentityKeyPair.generate();
-// ... use identity for encryption ...
-
-// Clean up sensitive data
-identity.clearSecrets();
-identity.dispose();
-```
+- Let the library handle cryptographic comparisons — avoid comparing secrets in Dart code
 
 ## Stores
 
@@ -366,22 +377,22 @@ For production apps, implement the store interfaces with secure storage:
 | `KyberPreKeyStore` | Post-quantum pre-keys | High |
 | `SenderKeyStore` | Group messaging keys | High |
 
-**Recommended storage options:**
-- `flutter_secure_storage` - for identity keys and other critical secrets
-- `drift` / `sqflite` with SQLCipher - for session records
-- `hive` with encryption - lightweight alternative
-
 ## Building from Source
 
-### Prerequisites
+### For End Users
+
+**No setup required!** Precompiled native libraries are downloaded automatically from GitHub Releases during `flutter build`.
+
+### For Contributors / Source Builds
+
+If you want to build from source (or precompiled binaries are not available):
 
 - [Flutter](https://flutter.dev/) 3.38+
 - [FVM](https://fvm.app/) (optional, for version management)
-- **Rust toolchain** (for building native libraries):
-  - [rustup](https://rustup.rs/) - Rust toolchain installer and version manager
-  - `cargo` - Rust package manager (installed automatically with rustup)
-  - `cbindgen` - C header generator (installed automatically during build via `cargo install`)
-- **protoc** - Protocol Buffers compiler (required by libsignal's spqr dependency):
+- **Rust toolchain**:
+  - [rustup](https://rustup.rs/) - Rust toolchain installer
+  - `cargo` - Rust package manager (installed with rustup)
+- **protoc** - Protocol Buffers compiler:
   - macOS: `brew install protobuf`
   - Ubuntu/Debian: `apt-get install protobuf-compiler`
   - Windows: [Download from GitHub](https://github.com/protocolbuffers/protobuf/releases)
@@ -393,60 +404,57 @@ For production apps, implement the store interfaces with secure storage:
 git clone https://github.com/djx-y-z/libsignal_dart.git
 cd libsignal_dart
 
-# Full setup (FVM + Rust + protoc)
+# Install FVM and dependencies
 make setup
 
-# Or install components separately:
-make setup-fvm      # FVM, Flutter, dependencies, git hooks
-make setup-build    # Rust toolchain, protoc
-
-# Build native libraries for your platform
-make build ARGS="macos"  # or linux, windows, ios, android
+# Run tests
+make test
 ```
 
 ### Available Commands
 
 ```bash
 # Setup
-make setup          # Full setup (FVM + build dependencies)
-make setup-fvm      # Install FVM and Flutter only
-make setup-build    # Install native build dependencies (Rust, protoc)
-
-# Build
-make build ARGS="<platform>"  # Build native libraries (macos, ios, android, linux, windows)
+make setup              # Install all required tools (Rust check, FVM, protoc, cargo-audit)
+make setup-fvm          # Install FVM and project Flutter version only
+make setup-protoc       # Install protoc (Protocol Buffers compiler)
+make setup-rust-tools   # Install Rust tools (cargo-audit, flutter_rust_bridge_codegen)
+make setup-web          # Install wasm-pack for web builds (optional)
+make setup-android      # Install cargo-ndk for Android builds (optional)
 
 # Development
-make regen          # Regenerate FFI bindings from libsignal headers
-make check          # Check for libsignal updates
+make codegen            # Regenerate Flutter Rust Bridge bindings
+make build              # Build Rust library locally (native)
+make build-android      # Build for Android (requires cargo-ndk + NDK)
+make build-web          # Build WASM for web (requires wasm-pack)
 
 # Quality Assurance
-make test           # Run tests
-make coverage       # Run tests with coverage report
-make analyze        # Run static analysis
-make format         # Format Dart code
-make format-check   # Check Dart code formatting
-make doc            # Generate API documentation
+make test               # Run tests
+make coverage           # Run tests with coverage report
+make analyze            # Run static analysis
+make rust-audit         # Check Rust dependencies for vulnerabilities
+make rust-check         # Quick Rust type check (updates Cargo.lock)
+make format             # Format Dart code
+make format-check       # Check Dart code formatting
+make doc                # Generate API documentation
 
 # Utilities
-make get            # Get dependencies
-make clean          # Clean build artifacts
-make version        # Show current libsignal version
-make help           # Show all commands
+make get                # Get dependencies
+make clean              # Clean build artifacts
+make help               # Show all commands
 ```
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────┐
-│           libsignal (Rust)                  │  ← Core implementation
+│     libsignal-protocol (Rust crate)         │  ← Core implementation
 ├─────────────────────────────────────────────┤
-│           libsignal-ffi (Rust)              │  ← C FFI layer
+│       rust/src/api/*.rs (Rust wrappers)     │  ← FRB-annotated functions
 ├─────────────────────────────────────────────┤
-│          signal_ffi.h (C header)            │  ← cbindgen output
+│      lib/src/rust/*.dart (FRB generated)    │  ← Auto-generated Dart API
 ├─────────────────────────────────────────────┤
-│     libsignal_bindings.dart (Dart FFI)      │  ← ffigen output
-├─────────────────────────────────────────────┤
-│         libsignal (Dart API)                │  ← High-level API
+│           lib/src/stores/*.dart             │  ← Store interfaces
 └─────────────────────────────────────────────┘
 ```
 

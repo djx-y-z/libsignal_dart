@@ -1,27 +1,24 @@
+import 'dart:typed_data';
+
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('PreKeyBundle', () {
     late IdentityKeyPair identityKeyPair;
-    late PublicKey identityPublicKey;
+    late Uint8List identityPublicKeyBytes;
 
     setUp(() {
       identityKeyPair = IdentityKeyPair.generate();
-      identityPublicKey = identityKeyPair.publicKey.clone();
-    });
-
-    tearDown(() {
-      identityKeyPair.dispose();
-      identityPublicKey.dispose();
+      identityPublicKeyBytes = identityKeyPair.publicKey;
     });
 
     /// Helper to create a full pre-key bundle with all keys
-    /// Note: libsignal requires all Kyber pre-key arguments (id, key, signature)
-    /// to be either all present or all absent. Using a full bundle ensures consistency.
     PreKeyBundle createFullBundle({
       int registrationId = 12345,
       int deviceId = 1,
@@ -33,499 +30,276 @@ void main() {
 
       final signedPreKeyPriv = PrivateKey.generate();
       final signedPreKey = signedPreKeyPriv.getPublicKey();
-      final signedPreKeySignature = identityKeyPair.privateKey.sign(
-        signedPreKey.serialize(),
+      final identityPrivKey = PrivateKey.deserialize(
+        bytes: identityKeyPair.privateKey.toList(),
+      );
+      final signedPreKeySignature = identityPrivKey.sign(
+        message: signedPreKey.serialize().toList(),
       );
 
       final kyberKeyPair = KyberKeyPair.generate();
       final kyberPreKey = kyberKeyPair.getPublicKey();
-      final kyberPreKeySignature = identityKeyPair.privateKey.sign(
-        kyberPreKey.serialize(),
+      final kyberPreKeySignature = identityPrivKey.sign(
+        message: kyberPreKey.serialize().toList(),
       );
 
-      final bundle = PreKeyBundle.create(
+      final bundle = PreKeyBundle(
         registrationId: registrationId,
         deviceId: deviceId,
         preKeyId: preKeyId,
-        preKey: preKey,
+        preKeyPublic: preKey.serialize(),
         signedPreKeyId: 1,
-        signedPreKey: signedPreKey,
-        signedPreKeySignature: signedPreKeySignature,
-        identityKey: identityPublicKey,
+        signedPreKeyPublic: signedPreKey.serialize().toList(),
+        signedPreKeySignature: signedPreKeySignature.toList(),
+        identityKey: identityPublicKeyBytes.toList(),
         kyberPreKeyId: kyberPreKeyId,
-        kyberPreKey: kyberPreKey,
-        kyberPreKeySignature: kyberPreKeySignature,
+        kyberPreKeyPublic: kyberPreKey.serialize().toList(),
+        kyberPreKeySignature: kyberPreKeySignature.toList(),
       );
-
-      preKeyPriv.dispose();
-      preKey.dispose();
-      signedPreKeyPriv.dispose();
-      signedPreKey.dispose();
-      kyberKeyPair.dispose();
-      kyberPreKey.dispose();
 
       return bundle;
     }
 
-    // Note: libsignal v0.86+ requires ALL keys (pre-key, signed pre-key, Kyber)
-    // to be present. Creating bundles without these keys is not supported.
-    // The null-pointer checks in getPreKeyPublic/getKyberPreKeyPublic are
-    // defensive code that may not be reachable in this libsignal version.
-
-    group('create()', () {
+    group('constructor', () {
       test('creates full bundle with all keys', () {
         final bundle = createFullBundle();
 
         expect(bundle, isNotNull);
-        expect(bundle.isDisposed, isFalse);
-        expect(bundle.registrationId, equals(12345));
-        expect(bundle.deviceId, equals(1));
-        expect(bundle.preKeyId, equals(100));
-        expect(bundle.kyberPreKeyId, equals(200));
+        expect(bundle.registrationId(), equals(12345));
+        expect(bundle.deviceId(), equals(1));
+        expect(bundle.preKeyId(), equals(100));
+        expect(bundle.kyberPreKeyId(), equals(200));
 
-        final preKeyPub = bundle.getPreKeyPublic();
+        final preKeyPub = bundle.preKeyPublic();
         expect(preKeyPub, isNotNull);
-        expect(preKeyPub!.serialize().length, equals(33));
+        expect(preKeyPub!.length, equals(33));
 
-        final kyberPub = bundle.getKyberPreKeyPublic();
+        final kyberPub = bundle.kyberPreKeyPublic();
         expect(kyberPub, isNotNull);
-        expect(kyberPub!.serialize().length, greaterThan(1000));
-
-        bundle.dispose();
-        preKeyPub.dispose();
-        kyberPub.dispose();
+        expect(kyberPub.length, greaterThan(1000));
       });
 
       test('creates bundle with custom pre-key ID', () {
         final bundle = createFullBundle(preKeyId: 42);
 
-        expect(bundle.preKeyId, equals(42));
+        expect(bundle.preKeyId(), equals(42));
 
-        final preKeyPub = bundle.getPreKeyPublic();
+        final preKeyPub = bundle.preKeyPublic();
         expect(preKeyPub, isNotNull);
-        expect(preKeyPub!.serialize().length, equals(33));
-
-        bundle.dispose();
-        preKeyPub.dispose();
+        expect(preKeyPub!.length, equals(33));
       });
 
       test('creates bundle with custom Kyber pre-key ID', () {
         final bundle = createFullBundle(kyberPreKeyId: 99);
 
-        expect(bundle.kyberPreKeyId, equals(99));
+        expect(bundle.kyberPreKeyId(), equals(99));
 
-        final kyberPub = bundle.getKyberPreKeyPublic();
+        final kyberPub = bundle.kyberPreKeyPublic();
         expect(kyberPub, isNotNull);
-        expect(kyberPub!.serialize().length, greaterThan(1000));
-
-        bundle.dispose();
-        kyberPub.dispose();
+        expect(kyberPub.length, greaterThan(1000));
       });
 
       test('creates bundle with various registration IDs', () {
         for (final regId in [0, 1, 100, 0xFFFF, 0xFFFFFFFF]) {
           final bundle = createFullBundle(registrationId: regId);
-          expect(bundle.registrationId, equals(regId));
-          bundle.dispose();
+          expect(bundle.registrationId(), equals(regId));
         }
       });
 
       test('creates bundle with device ID 1', () {
-        // Note: device ID must be > 0 in libsignal v0.86+
         final bundle = createFullBundle(deviceId: 1);
-        expect(bundle.deviceId, equals(1));
-        bundle.dispose();
+        expect(bundle.deviceId(), equals(1));
       });
 
       test('creates bundle with device ID 100', () {
         final bundle = createFullBundle(deviceId: 100);
-        expect(bundle.deviceId, equals(100));
-        bundle.dispose();
+        expect(bundle.deviceId(), equals(100));
       });
     });
 
-    group('registrationId', () {
+    group('registrationId()', () {
       test('returns correct registration ID', () {
         final bundle = createFullBundle(registrationId: 999999);
-        expect(bundle.registrationId, equals(999999));
-        bundle.dispose();
+        expect(bundle.registrationId(), equals(999999));
       });
     });
 
-    group('deviceId', () {
+    group('deviceId()', () {
       test('returns correct device ID', () {
         final bundle = createFullBundle(deviceId: 42);
-        expect(bundle.deviceId, equals(42));
-        bundle.dispose();
+        expect(bundle.deviceId(), equals(42));
       });
     });
 
-    group('preKeyId', () {
+    group('preKeyId()', () {
       test('returns correct pre-key ID', () {
         final bundle = createFullBundle(preKeyId: 12345);
-        expect(bundle.preKeyId, equals(12345));
-        bundle.dispose();
+        expect(bundle.preKeyId(), equals(12345));
       });
 
       test('returns default pre-key ID', () {
         final bundle = createFullBundle();
-        expect(bundle.preKeyId, equals(100));
-        bundle.dispose();
+        expect(bundle.preKeyId(), equals(100));
       });
     });
 
-    group('getPreKeyPublic()', () {
-      test('returns valid public key', () {
+    group('preKeyPublic()', () {
+      test('returns valid public key bytes', () {
         final bundle = createFullBundle();
-        final preKeyPub = bundle.getPreKeyPublic();
+        final preKeyPub = bundle.preKeyPublic();
 
         expect(preKeyPub, isNotNull);
-        expect(preKeyPub!.isDisposed, isFalse);
-        expect(preKeyPub.serialize().length, equals(33));
-
-        bundle.dispose();
-        preKeyPub.dispose();
+        expect(preKeyPub!.length, equals(33));
       });
 
       test('multiple calls return equivalent keys', () {
         final bundle = createFullBundle();
-        final pub1 = bundle.getPreKeyPublic();
-        final pub2 = bundle.getPreKeyPublic();
+        final pub1 = bundle.preKeyPublic();
+        final pub2 = bundle.preKeyPublic();
 
-        expect(pub1!.equals(pub2!), isTrue);
-
-        bundle.dispose();
-        pub1.dispose();
-        pub2.dispose();
+        expect(pub1, equals(pub2));
       });
     });
 
-    group('signedPreKeyId', () {
+    group('signedPreKeyId()', () {
       test('returns correct signed pre-key ID', () {
-        // Create a bundle with custom signedPreKeyId
         final preKeyPriv = PrivateKey.generate();
         final preKey = preKeyPriv.getPublicKey();
 
         final signedPreKeyPriv = PrivateKey.generate();
         final signedPreKey = signedPreKeyPriv.getPublicKey();
-        final signedPreKeySignature = identityKeyPair.privateKey.sign(
-          signedPreKey.serialize(),
+        final identityPrivKey = PrivateKey.deserialize(
+          bytes: identityKeyPair.privateKey.toList(),
+        );
+        final signedPreKeySignature = identityPrivKey.sign(
+          message: signedPreKey.serialize().toList(),
         );
 
         final kyberKeyPair = KyberKeyPair.generate();
         final kyberPreKey = kyberKeyPair.getPublicKey();
-        final kyberPreKeySignature = identityKeyPair.privateKey.sign(
-          kyberPreKey.serialize(),
+        final kyberPreKeySignature = identityPrivKey.sign(
+          message: kyberPreKey.serialize().toList(),
         );
 
-        final bundle = PreKeyBundle.create(
+        final bundle = PreKeyBundle(
           registrationId: 1,
           deviceId: 1,
           preKeyId: 1,
-          preKey: preKey,
+          preKeyPublic: preKey.serialize(),
           signedPreKeyId: 42,
-          signedPreKey: signedPreKey,
-          signedPreKeySignature: signedPreKeySignature,
-          identityKey: identityPublicKey,
+          signedPreKeyPublic: signedPreKey.serialize().toList(),
+          signedPreKeySignature: signedPreKeySignature.toList(),
+          identityKey: identityPublicKeyBytes.toList(),
           kyberPreKeyId: 1,
-          kyberPreKey: kyberPreKey,
-          kyberPreKeySignature: kyberPreKeySignature,
+          kyberPreKeyPublic: kyberPreKey.serialize().toList(),
+          kyberPreKeySignature: kyberPreKeySignature.toList(),
         );
 
-        expect(bundle.signedPreKeyId, equals(42));
-
-        bundle.dispose();
-        preKeyPriv.dispose();
-        preKey.dispose();
-        signedPreKeyPriv.dispose();
-        signedPreKey.dispose();
-        kyberKeyPair.dispose();
-        kyberPreKey.dispose();
+        expect(bundle.signedPreKeyId(), equals(42));
       });
     });
 
-    group('getSignedPreKeyPublic()', () {
-      test('returns valid signed pre-key public key', () {
+    group('signedPreKeyPublic()', () {
+      test('returns valid signed pre-key public key bytes', () {
         final bundle = createFullBundle();
-        final signedPreKeyPub = bundle.getSignedPreKeyPublic();
+        final signedPreKeyPub = bundle.signedPreKeyPublic();
 
         expect(signedPreKeyPub, isNotNull);
-        expect(signedPreKeyPub.isDisposed, isFalse);
-        expect(signedPreKeyPub.serialize().length, equals(33));
-
-        bundle.dispose();
-        signedPreKeyPub.dispose();
+        expect(signedPreKeyPub.length, equals(33));
       });
     });
 
-    group('signedPreKeySignature', () {
+    group('signedPreKeySignature()', () {
       test('returns non-empty signature', () {
         final bundle = createFullBundle();
-        final sig = bundle.signedPreKeySignature;
+        final sig = bundle.signedPreKeySignature();
 
         expect(sig, isNotEmpty);
         expect(sig.length, equals(64)); // Ed25519 signature
-
-        bundle.dispose();
       });
 
       test('signature is verifiable by identity key', () {
         final bundle = createFullBundle();
 
-        final signedPreKeyPub = bundle.getSignedPreKeyPublic();
-        final sig = bundle.signedPreKeySignature;
-        final identityKey = bundle.getIdentityKey();
+        final signedPreKeyPub = bundle.signedPreKeyPublic();
+        final sig = bundle.signedPreKeySignature();
+        final identityKeyBytes = bundle.identityKey();
 
-        final isValid = identityKey.verify(signedPreKeyPub.serialize(), sig);
+        final identityKey = PublicKey.deserialize(
+          bytes: identityKeyBytes.toList(),
+        );
+        final isValid = identityKey.verify(
+          message: signedPreKeyPub.toList(),
+          signature: sig.toList(),
+        );
         expect(isValid, isTrue);
-
-        bundle.dispose();
-        signedPreKeyPub.dispose();
-        identityKey.dispose();
       });
     });
 
-    group('getIdentityKey()', () {
-      test('returns valid identity public key', () {
+    group('identityKey()', () {
+      test('returns valid identity public key bytes', () {
         final bundle = createFullBundle();
-        final identityKey = bundle.getIdentityKey();
+        final identityKey = bundle.identityKey();
 
         expect(identityKey, isNotNull);
-        expect(identityKey.isDisposed, isFalse);
-        expect(identityKey.equals(identityPublicKey), isTrue);
-
-        bundle.dispose();
-        identityKey.dispose();
+        expect(identityKey, equals(identityPublicKeyBytes));
       });
     });
 
-    group('kyberPreKeyId', () {
+    group('kyberPreKeyId()', () {
       test('returns correct Kyber pre-key ID', () {
         final bundle = createFullBundle(kyberPreKeyId: 555);
-        expect(bundle.kyberPreKeyId, equals(555));
-        bundle.dispose();
+        expect(bundle.kyberPreKeyId(), equals(555));
       });
 
       test('returns default Kyber pre-key ID', () {
         final bundle = createFullBundle();
-        expect(bundle.kyberPreKeyId, equals(200));
-        bundle.dispose();
+        expect(bundle.kyberPreKeyId(), equals(200));
       });
     });
 
-    group('getKyberPreKeyPublic()', () {
-      test('returns valid Kyber public key', () {
+    group('kyberPreKeyPublic()', () {
+      test('returns valid Kyber public key bytes', () {
         final bundle = createFullBundle();
-        final kyberPub = bundle.getKyberPreKeyPublic();
+        final kyberPub = bundle.kyberPreKeyPublic();
 
         expect(kyberPub, isNotNull);
-        expect(kyberPub!.isDisposed, isFalse);
-        expect(kyberPub.serialize().length, greaterThan(1000));
-
-        bundle.dispose();
-        kyberPub.dispose();
+        expect(kyberPub.length, greaterThan(1000));
       });
 
       test('multiple calls return equivalent keys', () {
         final bundle = createFullBundle();
-        final kyber1 = bundle.getKyberPreKeyPublic();
-        final kyber2 = bundle.getKyberPreKeyPublic();
+        final kyber1 = bundle.kyberPreKeyPublic();
+        final kyber2 = bundle.kyberPreKeyPublic();
 
-        expect(kyber1!.serialize(), equals(kyber2!.serialize()));
-
-        bundle.dispose();
-        kyber1.dispose();
-        kyber2.dispose();
+        expect(kyber1, equals(kyber2));
       });
     });
 
-    group('kyberPreKeySignature', () {
+    group('kyberPreKeySignature()', () {
       test('returns non-empty signature', () {
         final bundle = createFullBundle();
-        final sig = bundle.kyberPreKeySignature;
+        final sig = bundle.kyberPreKeySignature();
 
         expect(sig, isNotEmpty);
         expect(sig.length, equals(64)); // Ed25519 signature
-
-        bundle.dispose();
       });
 
       test('Kyber signature is verifiable by identity key', () {
         final bundle = createFullBundle();
 
-        final kyberPub = bundle.getKyberPreKeyPublic();
-        final sig = bundle.kyberPreKeySignature;
-        final identityKey = bundle.getIdentityKey();
+        final kyberPub = bundle.kyberPreKeyPublic();
+        final sig = bundle.kyberPreKeySignature();
+        final identityKeyBytes = bundle.identityKey();
 
-        final isValid = identityKey.verify(kyberPub!.serialize(), sig);
+        final identityKey = PublicKey.deserialize(
+          bytes: identityKeyBytes.toList(),
+        );
+        final isValid = identityKey.verify(
+          message: kyberPub.toList(),
+          signature: sig.toList(),
+        );
         expect(isValid, isTrue);
-
-        bundle.dispose();
-        kyberPub.dispose();
-        identityKey.dispose();
-      });
-    });
-
-    group('clone()', () {
-      test('creates independent copy', () {
-        final original = createFullBundle();
-        final cloned = original.clone();
-
-        expect(cloned.registrationId, equals(original.registrationId));
-        expect(cloned.deviceId, equals(original.deviceId));
-        expect(cloned.preKeyId, equals(original.preKeyId));
-        expect(cloned.signedPreKeyId, equals(original.signedPreKeyId));
-        expect(cloned.kyberPreKeyId, equals(original.kyberPreKeyId));
-
-        original.dispose();
-
-        // Cloned should still work
-        expect(cloned.isDisposed, isFalse);
-        expect(cloned.registrationId, equals(12345));
-
-        cloned.dispose();
-      });
-
-      test('cloned bundle has same keys', () {
-        final original = createFullBundle();
-        final cloned = original.clone();
-
-        final origPreKey = original.getPreKeyPublic();
-        final clonedPreKey = cloned.getPreKeyPublic();
-        expect(clonedPreKey!.equals(origPreKey!), isTrue);
-
-        final origKyber = original.getKyberPreKeyPublic();
-        final clonedKyber = cloned.getKyberPreKeyPublic();
-        expect(clonedKyber!.serialize(), equals(origKyber!.serialize()));
-
-        final origIdentity = original.getIdentityKey();
-        final clonedIdentity = cloned.getIdentityKey();
-        expect(clonedIdentity.equals(origIdentity), isTrue);
-
-        original.dispose();
-        cloned.dispose();
-        origPreKey.dispose();
-        clonedPreKey.dispose();
-        origKyber.dispose();
-        clonedKyber.dispose();
-        origIdentity.dispose();
-        clonedIdentity.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final bundle = createFullBundle();
-        expect(bundle.isDisposed, isFalse);
-        bundle.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(bundle.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.dispose(), returnsNormally);
-      });
-
-      test('registrationId throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.registrationId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('deviceId throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.deviceId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('preKeyId throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.preKeyId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('getPreKeyPublic throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.getPreKeyPublic(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('signedPreKeyId throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.signedPreKeyId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('getSignedPreKeyPublic throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.getSignedPreKeyPublic(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('signedPreKeySignature throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.signedPreKeySignature,
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('getIdentityKey throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.getIdentityKey(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('kyberPreKeyId throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.kyberPreKeyId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('getKyberPreKeyPublic throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.getKyberPreKeyPublic(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('kyberPreKeySignature throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(
-          () => bundle.kyberPreKeySignature,
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('clone throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final bundle = createFullBundle();
-        bundle.dispose();
-        expect(() => bundle.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

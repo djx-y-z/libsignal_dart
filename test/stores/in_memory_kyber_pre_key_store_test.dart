@@ -2,59 +2,54 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('InMemoryKyberPreKeyStore', () {
     late InMemoryKyberPreKeyStore store;
-    late IdentityKeyPair identityKeyPair;
+    late PrivateKey signingKey;
     late KyberPreKeyRecord record1;
     late KyberPreKeyRecord record2;
 
     /// Helper to create a Kyber pre-key record with valid signature
     KyberPreKeyRecord createKyberPreKey({
       required int id,
-      required int timestamp,
-      required IdentityKeyPair identityKeyPair,
+      required BigInt timestamp,
+      required PrivateKey signingKey,
     }) {
       final kyberKeyPair = KyberKeyPair.generate();
       final publicKey = kyberKeyPair.getPublicKey();
-      final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+      final signature = signingKey.sign(
+        message: publicKey.serialize().toList(),
+      );
 
-      final record = KyberPreKeyRecord.create(
+      return KyberPreKeyRecord.create(
         id: id,
         timestamp: timestamp,
         keyPair: kyberKeyPair,
-        signature: signature,
+        signature: signature.toList(),
       );
-
-      kyberKeyPair.dispose();
-      publicKey.dispose();
-
-      return record;
     }
 
     setUp(() {
       store = InMemoryKyberPreKeyStore();
-      identityKeyPair = IdentityKeyPair.generate();
+      signingKey = PrivateKey.generate();
 
-      final timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final timestamp = BigInt.from(
+        DateTime.now().toUtc().millisecondsSinceEpoch,
+      );
       record1 = createKyberPreKey(
         id: 1,
         timestamp: timestamp,
-        identityKeyPair: identityKeyPair,
+        signingKey: signingKey,
       );
       record2 = createKyberPreKey(
         id: 2,
         timestamp: timestamp,
-        identityKeyPair: identityKeyPair,
+        signingKey: signingKey,
       );
-    });
-
-    tearDown(() {
-      identityKeyPair.dispose();
-      record1.dispose();
-      record2.dispose();
     });
 
     group('initial state', () {
@@ -84,9 +79,7 @@ void main() {
 
         final loaded = await store.loadKyberPreKey(1);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(1));
-
-        loaded.dispose();
+        expect(loaded!.id(), equals(1));
       });
 
       test('stores multiple Kyber pre-keys', () async {
@@ -98,11 +91,8 @@ void main() {
 
         expect(loaded1, isNotNull);
         expect(loaded2, isNotNull);
-        expect(loaded1!.id, equals(1));
-        expect(loaded2!.id, equals(2));
-
-        loaded1.dispose();
-        loaded2.dispose();
+        expect(loaded1!.id(), equals(1));
+        expect(loaded2!.id(), equals(2));
       });
 
       test('overwrites existing Kyber pre-key', () async {
@@ -110,18 +100,15 @@ void main() {
 
         final newRecord = createKyberPreKey(
           id: 1,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
         await store.storeKyberPreKey(1, newRecord);
 
         final loaded = await store.loadKyberPreKey(1);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(1));
+        expect(loaded!.id(), equals(1));
         expect(loaded.serialize(), equals(newRecord.serialize()));
-
-        loaded.dispose();
-        newRecord.dispose();
       });
     });
 
@@ -190,9 +177,6 @@ void main() {
 
         expect(await store.loadKyberPreKey(1), isNull);
         expect(await store.loadKyberPreKey(2), isNotNull);
-
-        final loaded2 = await store.loadKyberPreKey(2);
-        loaded2?.dispose();
       });
     });
 
@@ -276,8 +260,8 @@ void main() {
       test('handles ID 0', () async {
         final record = createKyberPreKey(
           id: 0,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
 
         await store.storeKyberPreKey(0, record);
@@ -285,17 +269,14 @@ void main() {
 
         final loaded = await store.loadKyberPreKey(0);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(0));
-
-        loaded.dispose();
-        record.dispose();
+        expect(loaded!.id(), equals(0));
       });
 
       test('handles large IDs', () async {
         final record = createKyberPreKey(
           id: 0xFFFFFF,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
 
         await store.storeKyberPreKey(0xFFFFFF, record);
@@ -303,10 +284,7 @@ void main() {
 
         final loaded = await store.loadKyberPreKey(0xFFFFFF);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(0xFFFFFF));
-
-        loaded.dispose();
-        record.dispose();
+        expect(loaded!.id(), equals(0xFFFFFF));
       });
     });
   });

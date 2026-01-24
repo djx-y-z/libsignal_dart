@@ -1,516 +1,209 @@
 # Security
 
-## Security Audit Summary
+## Architecture Overview
 
-A comprehensive security audit was conducted covering the following categories:
+This library uses **Flutter Rust Bridge (FRB)** with the **libsignal-protocol** Rust crate.
 
-### Category A: FFI Memory Management
+**Key security properties:**
 
-**Problem:** Incorrect memory deallocation can lead to memory leaks or double-free vulnerabilities.
+- **Memory safety** is handled by Rust's ownership system
+- **Cryptographic operations** are implemented in libsignal-protocol (Signal's official Rust implementation)
+- **No manual memory management** in Dart - FRB handles all cleanup automatically
+- **No `dispose()` calls needed** - Rust drops resources when they go out of scope
 
-**Fixes:**
-- Ensured all FFI pointers are freed using appropriate functions (`signal_*_destroy`, `calloc.free`)
-- Implemented `dispose()` pattern with `_disposed` flag to prevent double-free
-- Added null-pointer checks before freeing memory
+## Security Considerations
 
-**Files affected:**
-- All files in `lib/src/` using FFI bindings
+### A: Memory Safety (Rust-handled)
 
-### Category B: Buffer Overflow Prevention
+With FRB, memory management is handled automatically:
 
-**Problem:** Passing incorrect sizes to FFI functions can cause buffer overflows.
-
-**Fixes:**
-- Added `SerializationValidator` class for validating serialized data sizes
-- Implemented minimum and maximum size checks for all serialized types
-- Added bounds checking before `sublistView()` operations
-
-**Key validation constants:**
 ```dart
-static const int publicKeyLength = 33;      // Exact
-static const int privateKeyLength = 32;     // Exact
-static const int sessionRecordMin = 50;     // Minimum
-static const int sessionRecordMax = 100000; // Maximum
-static const int senderKeyRecordMin = 20;   // Minimum
+// FRB Architecture - no cleanup needed
+final privateKey = PrivateKey.generate();
+final signature = privateKey.sign(message: data);
+// privateKey is automatically cleaned up when no longer referenced
 ```
 
-**Files affected:**
-- `lib/src/serialization_validator.dart`
-- `lib/src/keys/identity_key_pair.dart`
+Rust's ownership system ensures:
+- No use-after-free
+- No double-free
+- No memory leaks
+- Deterministic cleanup
 
-### Category C: Timing Attack Prevention
+### B: Timing Attack Prevention
 
-**Problem:** Variable-time comparison operations can leak secret information through timing analysis.
+All cryptographic operations and comparisons are handled by Rust's libsignal-protocol, which uses constant-time implementations internally.
 
-**Fixes:**
-- Implemented `LibSignalUtils.constantTimeEquals()` for cryptographic data comparison
-- Uses XOR accumulator pattern that processes all bytes regardless of match status
+**Best practice:** Avoid comparing cryptographic data in Dart code. Let the library handle it:
 
-**Implementation:**
 ```dart
-static bool constantTimeEquals(Uint8List a, Uint8List b) {
-  if (a.length != b.length) return false;
-  var result = 0;
-  for (var i = 0; i < a.length; i++) {
-    result |= a[i] ^ b[i];
-  }
-  return result == 0;
-}
+// CORRECT - let Rust handle cryptographic verification
+final isValid = publicKey.verifySignature(message: data, signature: sig);
+
+// CORRECT - compare public keys using library methods
+final keysMatch = key1.compare(other: key2) == 0;
+
+// AVOID - comparing serialized cryptographic data in Dart
+if (key1.serialize() == key2.serialize()) { ... }  // Not constant-time
 ```
 
-**Files affected:**
-- `lib/src/utils.dart`
+If you must compare bytes in Dart (e.g., for non-cryptographic purposes), use a constant-time implementation from a crypto package like `package:crypto`.
 
-### Category D: Disposed State Validation
+### C: DateTime UTC Consistency
 
-**Problem:** Using disposed objects can lead to use-after-free vulnerabilities or undefined behavior.
+Always use UTC for cryptographic timestamps:
 
-**Fixes:**
-- Added `checkNotDisposed()` method to key classes
-- Added validation in `create()` factory methods for all input objects
-- Consistent `StateError` thrown when accessing disposed objects
-
-**Protected classes:**
-- `KyberKeyPair`
-- `ServerCertificate`
-- `PreKeyRecord`
-- `SignedPreKeyRecord`
-- `KyberPreKeyRecord`
-- `SenderCertificate`
-
-**Files affected:**
-- `lib/src/kyber/kyber_key_pair.dart`
-- `lib/src/sealed_sender/server_certificate.dart`
-- `lib/src/prekeys/pre_key_record.dart`
-- `lib/src/prekeys/signed_pre_key_record.dart`
-- `lib/src/prekeys/kyber_pre_key_record.dart`
-- `lib/src/sealed_sender/sender_certificate.dart`
-
-### Category E: Input Validation
-
-**Problem:** Processing malformed input can cause crashes or security vulnerabilities.
-
-**Fixes:**
-- Added bounds checking before buffer operations in `IdentityKeyPair.deserialize()`
-- Validates that buffer contains enough bytes before extracting data
-
-**Example:**
 ```dart
-if (offset + _kPublicKeyLength > data.length) {
-  throw LibSignalException.invalidArgument(
-    'identityKeyPair',
-    'Buffer overrun: public key extends beyond data',
-  );
-}
+// Correct - UTC is timezone-independent
+final now = DateTime.now().toUtc();
+final expiration = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+
+// WRONG - local time varies by timezone, can cause certificate validation issues
+final now = DateTime.now();
 ```
 
-**Files affected:**
-- `lib/src/keys/identity_key_pair.dart`
+This affects:
+- Certificate validation (SenderCertificate, ServerCertificate)
+- Session timestamps
+- Key expiration checks
 
-### Category F: Information Disclosure Prevention
+### D: Store Security
 
-**Problem:** Logging or displaying sensitive data can lead to information leakage.
+Stores persist sensitive cryptographic state. For production:
 
-**Fixes:**
-- Modified `ProtocolAddress.toString()` to redact sensitive identifiers
-- Shows only first 4 characters + length instead of full name
-- Example: `"alice"` becomes `"alic...[5]"`
-
-**Files affected:**
-- `lib/src/protocol/protocol_address.dart`
-
-### Category G: Security Test Coverage
-
-**Problem:** Security-critical code must have comprehensive test coverage.
-
-**New test files:**
-- `test/utils_test.dart` - Tests for `constantTimeEquals()`
-- `test/secure_bytes_test.dart` - Tests for `SecureBytes` class
-- Updated `test/prekeys/pre_key_record_test.dart` - Tests for disposed key handling
-
-### Category H: DateTime UTC Consistency
-
-**Problem:** Using local time (`DateTime.now()`) for cryptographic timestamps causes:
-- Certificate validation results varying by timezone
-- Message timestamps inconsistent across devices
-- Potential replay attack vulnerabilities
-
-**Fixes:**
-- All timestamp operations use UTC via `DateTime.now().toUtc()`
-- `DateTime.fromMillisecondsSinceEpoch()` uses `isUtc: true`
-- Library API accepts any DateTime and converts internally to UTC
-
-**Files affected:**
-- `lib/src/sealed_sender/sender_certificate.dart` - expiration, validate(), create()
-- `lib/src/protocol/session_cipher.dart` - encryption timestamp
-- `lib/src/sealed_sender/sealed_session_cipher.dart` - sealed sender timestamp
-- `lib/src/protocol/session_builder.dart` - pre-key bundle timestamp
-- All test files updated to use `.toUtc()`
-
-### Category I: Secure Memory Zeroing
-
-**Problem:** Sensitive data (plaintext, ciphertext, session records) persists in memory after `calloc.free()`.
-
-**Fixes:**
-- Added centralized `LibSignalUtils.zeroBytes()` function
-- All sensitive buffers zeroed before `calloc.free()`
-- Consistent pattern across all FFI operations
-
-**Implementation:**
 ```dart
-// In lib/src/utils.dart
-static void zeroBytes(Uint8List? data) {
-  if (data == null || data.isEmpty) return;
-  for (var i = 0; i < data.length; i++) {
-    data[i] = 0;
-  }
-}
+// WRONG - testing only, data lost on restart
+final sessionStore = InMemorySessionStore();
 
-// Usage in FFI operations
-finally {
-  LibSignalUtils.zeroBytes(plaintextPtr.asTypedList(plaintext.length));
-  calloc.free(plaintextPtr);
-}
+// CORRECT - production stores persist securely
+final sessionStore = SecureSqliteSessionStore();  // Implement yourself
 ```
 
-**Files affected:**
-- `lib/src/utils.dart` - centralized function
-- `lib/src/protocol/session_cipher.dart` - encrypt/decrypt
-- `lib/src/sealed_sender/sealed_session_cipher.dart` - encrypt/decrypt
-- `lib/src/groups/group_session.dart` - encrypt/decrypt
-- `lib/src/keys/public_key.dart` - deserialize, verify
-- `lib/src/keys/private_key.dart` - deserialize
+**Store security requirements:**
 
-### Category J: Context Data Cleanup
+1. **SessionStore** - Persist session records (Double Ratchet state)
+2. **IdentityKeyStore** - Store identity keys in secure storage (e.g., flutter_secure_storage)
+3. **PreKeyStore** - One-time keys, consumed after use
+4. **SignedPreKeyStore** - Rotate periodically (e.g., weekly)
+5. **KyberPreKeyStore** - Post-quantum keys
+6. **SenderKeyStore** - Group session keys
 
-**Problem:** Encryption/decryption context classes store sensitive session data without cleanup.
+### E: Key Material Handling
 
-**Fixes:**
-- Added `clear()` method to `_EncryptionContext` and `_DecryptionContext`
-- Context data zeroed in `finally` blocks after use
-- Prevents session state leakage
+Never expose key material in logs or errors:
 
-**Implementation:**
 ```dart
-class _EncryptionContext {
-  Uint8List? sessionRecordBytes;
-  Uint8List? remoteIdentityBytes;
-  // ...
+// WRONG - exposes key material
+print('Generated key: ${privateKey.serialize()}');
+throw Exception('Failed with key: $keyBytes');
 
-  void clear() {
-    LibSignalUtils.zeroBytes(sessionRecordBytes);
-    LibSignalUtils.zeroBytes(remoteIdentityBytes);
-    // Clear all sensitive fields
-  }
-}
+// CORRECT - no key material in logs
+print('Generated new private key');
+throw Exception('Key operation failed');
 ```
 
-**Files affected:**
-- `lib/src/protocol/session_cipher.dart`
-- `lib/src/sealed_sender/sealed_session_cipher.dart`
+### F: Certificate Validation
 
-### Category K: SecureBytes Finalizer
+Always validate certificates before use:
 
-**Problem:** If user forgets to call `dispose()`, sensitive data may leak to garbage collector.
-
-**Fixes:**
-- Added `Finalizer<Uint8List>` as safety net
-- Automatically zeros data if object is garbage collected
-- Explicit `dispose()` still recommended for deterministic cleanup
-
-**Implementation:**
 ```dart
-final Finalizer<Uint8List> _secureBytesProtector = Finalizer(
-  LibSignalUtils.zeroBytes,
+final isValid = senderCert.validate(
+  trustRoot: serverTrustRoot,
+  timestamp: DateTime.now().toUtc(),
 );
-
-class SecureBytes {
-  SecureBytes(this._data) {
-    _secureBytesProtector.attach(this, _data, detach: this);
-  }
-
-  void dispose() {
-    if (!_disposed) {
-      _disposed = true;
-      _secureBytesProtector.detach(this);
-      LibSignalUtils.zeroBytes(_data);
-    }
-  }
+if (!isValid) {
+  throw SecurityException('Invalid sender certificate');
 }
 ```
 
-**Files affected:**
-- `lib/src/secure_bytes.dart`
+### G: Input Validation
 
-### Category L: Operation Counter Overflow Protection
+Device IDs and other inputs are validated in Rust, but Dart code should also validate:
 
-**Problem:** Group session operation counter could overflow after ~2^63 operations.
-
-**Fixes:**
-- Added overflow check with reset to 1
-- Prevents potential undefined behavior
-
-**Implementation:**
 ```dart
-int _nextOperationId() {
-  _operationCounter++;
-  if (_operationCounter > 0x7FFFFFFFFFFFFFF) {
-    _operationCounter = 1;
-  }
-  return _operationCounter;
+// FRB validates in Rust, but Dart code can also check
+if (deviceId < 1 || deviceId > 127) {
+  throw ArgumentError('Device ID must be 1-127');
 }
 ```
 
-**Files affected:**
-- `lib/src/groups/group_session.dart`
+### H: Concurrency Safety
 
-### Category M: PublicKey hashCode Secure Caching
+Store operations should be properly synchronized:
 
-**Problem:** `PublicKey.hashCode()` called `serialize()` on every invocation without zeroing the resulting bytes, causing key material to accumulate in memory.
-
-**Fixes:**
-- Added lazy caching of hash code on first access
-- Bytes are securely zeroed after computing hash
-- Cache is checked before serialization on subsequent calls
-
-**Implementation:**
 ```dart
-int? _cachedHashCode;
+import 'package:synchronized/synchronized.dart';
 
-@override
-int get hashCode {
-  if (_disposed) return 0;
-  if (_cachedHashCode != null) return _cachedHashCode!;
+class MySessionStore implements SessionStore {
+  final _lock = Lock();
+  final Database _db;
 
-  final bytes = serialize();
-  try {
-    _cachedHashCode = bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
-    return _cachedHashCode!;
-  } finally {
-    LibSignalUtils.zeroBytes(bytes);
+  @override
+  Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
+    await _lock.synchronized(() async {
+      await _db.insert('sessions', {
+        'address': '${address.name()}:${address.deviceId()}',
+        'record': record.serialize(),
+      });
+    });
   }
 }
 ```
 
-**Files affected:**
-- `lib/src/keys/public_key.dart`
+### I: Initialization
 
-### Category N: Unified Exception Types
+Always initialize the library before use:
 
-**Problem:** Disposed object checks threw `StateError` instead of `LibSignalException`, making error handling inconsistent.
-
-**Fixes:**
-- Added `LibSignalException.disposed()` factory method
-- All disposed checks now throw `LibSignalException` with context 'disposed'
-- Consistent exception type across entire library
-
-**Files affected:**
-- `lib/src/exception.dart` - new factory method
-- All files with disposed object checks (23 files)
-
-### Category O: Protocol Address Validation
-
-**Problem:** `ProtocolAddress` deviceId parameter was not validated, allowing negative values.
-
-**Fixes:**
-- Added validation: `deviceId >= 0`
-- Throws `LibSignalException.invalidArgument` for negative values
-
-**Files affected:**
-- `lib/src/protocol/protocol_address.dart`
-
-### Category P: Callback Pointer Zeroing
-
-**Problem:** FFI callback handlers freed pointers without zeroing them first.
-
-**Fixes:**
-- Added defensive zeroing of pointers before `calloc.free()`
-- Defense in depth against use-after-free
-
-**Files affected:**
-- `lib/src/protocol/session_cipher.dart`
-- `lib/src/sealed_sender/sealed_session_cipher.dart`
-
-### Category Q: Thread Safety Documentation
-
-**Problem:** Global mutable state in GroupSession was not documented as non-thread-safe.
-
-**Fixes:**
-- Added warning documentation about thread safety limitations
-- Clear guidance for multi-isolate scenarios
-
-**Files affected:**
-- `lib/src/groups/group_session.dart`
-
-### Category R: Sensitive Data Documentation
-
-**Problem:** `serialize()` methods returning sensitive data lacked security documentation.
-
-**Fixes:**
-- Added Security Note to `PreKeyRecord.serialize()`
-- Added Security Note to `SenderKeyRecord.serialize()`
-- Added Security Note to `IdentityKeyPair.deserialize()`
-- Clear guidance on zeroing returned/input data
-
-**Files affected:**
-- `lib/src/prekeys/pre_key_record.dart`
-- `lib/src/groups/sender_key_record.dart`
-- `lib/src/keys/identity_key_pair.dart`
-
-## Secure Development Guidelines
-
-### Memory Management
-
-1. **Always implement `dispose()` pattern:**
-   ```dart
-   bool _disposed = false;
-
-   void _checkDisposed() {
-     if (_disposed) {
-       throw LibSignalException.disposed('ObjectType');
-     }
-   }
-
-   void dispose() {
-     if (_disposed) return;
-     _disposed = true;
-     // Free resources
-   }
-   ```
-
-2. **Use `try-finally` for FFI operations with memory zeroing:**
-   ```dart
-   final ptr = calloc<Uint8>(dataLength);
-   try {
-     // Use ptr
-   } finally {
-     LibSignalUtils.zeroBytes(ptr.asTypedList(dataLength));
-     calloc.free(ptr);
-   }
-   ```
-
-3. **Use centralized `zeroBytes()` for sensitive data:**
-   ```dart
-   // Don't write inline loops - use the centralized function
-   LibSignalUtils.zeroBytes(sensitiveData);
-   ```
-
-4. **Use `SecureBytes` for sensitive data:
-   ```dart
-   final secureKey = SecureBytes(keyData);
-   try {
-     // Use secureKey.bytes
-   } finally {
-     secureKey.dispose(); // Zeroes memory
-   }
-   ```
-
-### Input Validation
-
-1. **Validate sizes before deserialization:**
-   ```dart
-   SerializationValidator.validatePublicKey(data);
-   ```
-
-2. **Check bounds before buffer operations:**
-   ```dart
-   if (offset + length > data.length) {
-     throw LibSignalException.invalidArgument(...);
-   }
-   ```
-
-3. **Validate object state before use:**
-   ```dart
-   inputObject.checkNotDisposed();
-   ```
-
-### DateTime Handling
-
-1. **Always use UTC for cryptographic timestamps:**
-   ```dart
-   // Wrong - local time varies by timezone
-   final now = DateTime.now();
-
-   // Correct - UTC is timezone-independent
-   final now = DateTime.now().toUtc();
-   ```
-
-2. **Convert timestamps to UTC internally:**
-   ```dart
-   // Accept any DateTime but convert to UTC
-   final utcTime = inputTime.toUtc();
-   final timestampMs = utcTime.millisecondsSinceEpoch;
-   ```
-
-3. **Parse timestamps as UTC:**
-   ```dart
-   // Wrong - returns local time
-   DateTime.fromMillisecondsSinceEpoch(value);
-
-   // Correct - returns UTC time
-   DateTime.fromMillisecondsSinceEpoch(value, isUtc: true);
-   ```
-
-### Cryptographic Operations
-
-1. **Use constant-time comparison for secrets:**
-   ```dart
-   if (LibSignalUtils.constantTimeEquals(expected, actual)) {
-     // Match
-   }
-   ```
-
-2. **Never log or display cryptographic material:**
-   ```dart
-   // Wrong
-   print('Key: $privateKey');
-
-   // Correct
-   print('Key: [REDACTED]');
-   ```
-
-3. **Zero sensitive data after use:**
-   ```dart
-   LibSignalUtils.zeroBytes(sensitiveBuffer);
-   secureBytes.dispose(); // Automatically zeros
-   ```
-
-4. **Clean up context objects:**
-   ```dart
-   final context = _EncryptionContext();
-   try {
-     // Use context
-   } finally {
-     context.clear(); // Zero all sensitive fields
-   }
-   ```
+```dart
+void main() async {
+  await LibSignal.init();  // Initialize FRB runtime
+  runApp(MyApp());
+}
+```
 
 ## Code Review Security Checklist
 
 When reviewing code changes, verify:
 
-- [ ] All FFI pointers are freed in `finally` blocks
-- [ ] Sensitive FFI buffers zeroed with `LibSignalUtils.zeroBytes()` before `calloc.free()`
-- [ ] `dispose()` methods check `_disposed` flag
-- [ ] `checkNotDisposed()` called on input objects in factory methods
-- [ ] Buffer bounds checked before `sublistView()` operations
-- [ ] Serialized data validated with `SerializationValidator`
-- [ ] Constant-time comparison used for cryptographic data
-- [ ] `toString()` methods don't expose sensitive data
-- [ ] `DateTime.now().toUtc()` used instead of `DateTime.now()`
+- [ ] No in-memory stores in production code
+- [ ] No key material in logs or error messages
+- [ ] `DateTime.now().toUtc()` used for timestamps
 - [ ] `DateTime.fromMillisecondsSinceEpoch()` uses `isUtc: true`
-- [ ] Context classes have `clear()` method for sensitive data
-- [ ] New security-critical code has test coverage
+- [ ] Cryptographic comparisons done via library methods (not raw byte comparison)
+- [ ] Certificates validated before use
+- [ ] Store operations properly synchronized
+- [ ] `LibSignal.init()` called before any operations
+
+## What's Handled by Rust/FRB
+
+These concerns from the old C FFI architecture are now handled automatically:
+
+| Old Concern | Now Handled By |
+|-------------|----------------|
+| FFI pointer management | Rust ownership |
+| `dispose()` pattern | Rust drop semantics |
+| Double-free prevention | Rust borrow checker |
+| Buffer overflow prevention | Rust bounds checking |
+| Use-after-free | Rust ownership |
+| Memory zeroing | Rust (zeroize crate in libsignal) |
 
 ## Known Limitations
 
-1. **Dart VM memory:** Memory zeroing in `SecureBytes` may not be effective if Dart GC has already copied the data. This is a platform limitation. The `Finalizer` added to `SecureBytes` provides a safety net but is not a guarantee.
+1. **Dart VM memory:** Dart's garbage collector may copy data before Rust can zero it. This is a platform limitation, but libsignal's Rust code uses the `zeroize` crate for sensitive data.
 
-2. **FFI struct by value (ARM64):** Some functions using 16-byte structs passed by value have ABI issues on ARM64. See `CLAUDE.md` for workarounds.
+2. **Timing side channels:** All cryptographic operations use constant-time implementations in libsignal-protocol (Rust). Avoid comparing cryptographic data directly in Dart.
 
-3. **Timing side channels:** While `constantTimeEquals` provides constant-time comparison, other operations may still have timing variations due to Dart runtime behavior.
+3. **Store persistence:** In-memory stores lose all state on app restart. Production apps must implement persistent stores.
 
-4. **Finalizer timing:** The `SecureBytes` finalizer runs at GC's discretion, not immediately when the object becomes unreachable. Always prefer explicit `dispose()` calls for deterministic cleanup.
+### Plaintext Handling After Decryption
+
+After decryption, plaintext is intentionally NOT zeroized because:
+
+1. **Plaintext is application data** - per NIST guidelines, zeroization applies to cryptographic keys and secret data, not application plaintext
+2. **Responsibility transfer** - once decrypted, data belongs to the application layer
+3. **Keys ARE zeroized** - identity key pairs and session keys are properly zeroized after use
+
+If your application requires plaintext zeroization, implement it at the Dart layer after processing.
 
 ## Reporting Security Issues
 

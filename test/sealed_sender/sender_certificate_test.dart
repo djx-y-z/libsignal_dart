@@ -1,670 +1,268 @@
-import 'dart:typed_data';
-
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
-  group('SenderCertificate', () {
+  group('Sender Certificate', () {
     late PrivateKey trustRootPrivate;
     late PublicKey trustRootPublic;
     late PrivateKey serverPrivate;
-    late PublicKey serverKey;
-    late ServerCertificate serverCert;
-    late PrivateKey senderPrivate;
-    late PublicKey senderKey;
+    late PublicKey serverPublic;
+    late List<int> serverCertificate;
+    late IdentityKeyPair senderIdentity;
 
     setUp(() {
+      // Generate trust root key pair
       trustRootPrivate = PrivateKey.generate();
       trustRootPublic = trustRootPrivate.getPublicKey();
 
+      // Generate server key pair
       serverPrivate = PrivateKey.generate();
-      serverKey = serverPrivate.getPublicKey();
+      serverPublic = serverPrivate.getPublicKey();
 
-      serverCert = ServerCertificate.create(
+      // Create server certificate
+      serverCertificate = createServerCertificate(
         keyId: 1,
-        serverKey: serverKey,
-        trustRoot: trustRootPrivate,
-      );
+        serverPublicKey: serverPublic.serialize().toList(),
+        trustRootPrivateKey: trustRootPrivate.serialize().toList(),
+      ).toList();
 
-      senderPrivate = PrivateKey.generate();
-      senderKey = senderPrivate.getPublicKey();
+      // Generate sender identity
+      senderIdentity = IdentityKeyPair.generate();
     });
 
-    tearDown(() {
-      trustRootPrivate.dispose();
-      trustRootPublic.dispose();
-      serverPrivate.dispose();
-      serverKey.dispose();
-      serverCert.dispose();
-      senderPrivate.dispose();
-      senderKey.dispose();
+    group('createSenderCertificate()', () {
+      test('creates valid sender certificate', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
+          expiration: expiration,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
+        );
+
+        expect(cert, isNotEmpty);
+        expect(cert.length, greaterThan(10));
+      });
+
+      test('certificate contains correct sender name', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
+          expiration: expiration,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
+        );
+
+        final name = senderCertificateGetSenderName(certificate: cert.toList());
+        expect(name, equals('alice-uuid'));
+      });
+
+      test('certificate contains correct device ID', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 42,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
+          expiration: expiration,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
+        );
+
+        final deviceId = senderCertificateGetSenderDeviceId(
+          certificate: cert.toList(),
+        );
+        expect(deviceId, equals(42));
+      });
+
+      test('certificate contains correct identity key', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
+          expiration: expiration,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
+        );
+
+        final key = senderCertificateGetKey(certificate: cert.toList());
+        expect(key, equals(senderIdentity.publicKey));
+      });
+
+      test('certificate contains correct expiration', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
+          expiration: expiration,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
+        );
+
+        final certExpiration = senderCertificateGetExpiration(
+          certificate: cert.toList(),
+        );
+        expect(certExpiration, equals(expiration));
+      });
     });
 
-    group('create()', () {
-      test('creates valid sender certificate with all fields', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: senderKey,
+    group('validateSenderCertificate()', () {
+      test('validates certificate with correct trust root', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+        final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
           expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
         );
 
-        expect(cert, isNotNull);
-        expect(cert.isDisposed, isFalse);
-        expect(cert.senderUuid, equals('test-uuid-1234'));
-        expect(cert.senderE164, equals('+1234567890'));
-        expect(cert.deviceId, equals(1));
+        final isValid = validateSenderCertificate(
+          certificate: cert.toList(),
+          trustRoot: trustRootPublic.serialize().toList(),
+          timestamp: timestamp,
+        );
 
-        cert.dispose();
+        expect(isValid, isTrue);
       });
 
-      test('creates certificate without E164', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          senderE164: null,
-          deviceId: 1,
-          senderKey: senderKey,
+      test('rejects certificate with wrong trust root', () {
+        final expiration = BigInt.from(
+          DateTime.now().add(const Duration(days: 1)).millisecondsSinceEpoch,
+        );
+        final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
           expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
         );
 
-        expect(cert.senderE164, isNull);
+        // Use a different trust root
+        final wrongTrustRoot = PrivateKey.generate().getPublicKey();
 
-        cert.dispose();
-      });
-
-      test('creates certificate with device ID 1', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        expect(cert.deviceId, equals(1));
-        cert.dispose();
-      });
-
-      test('creates certificate with device ID 100', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 100,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        expect(cert.deviceId, equals(100));
-        cert.dispose();
-      });
-
-      test('created certificate has valid signature', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final signature = cert.signature;
-        expect(signature, isNotEmpty);
-        expect(signature.length, equals(64)); // Ed25519 signature
-
-        cert.dispose();
-      });
-
-      test('created certificate has certificate data', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final certData = cert.certificate;
-        expect(certData, isNotEmpty);
-
-        cert.dispose();
-      });
-
-      test('expiration time is preserved', () {
-        // Round to seconds to avoid millisecond precision issues
-        final now = DateTime.now().toUtc();
-        final expiration = DateTime(
-          now.year,
-          now.month,
-          now.day + 30,
-          now.hour,
-          now.minute,
-          now.second,
-        );
-
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Compare milliseconds since epoch (allow 1 second tolerance)
         expect(
-          cert.expiration.millisecondsSinceEpoch,
-          closeTo(expiration.millisecondsSinceEpoch, 1000),
+          () => validateSenderCertificate(
+            certificate: cert.toList(),
+            trustRoot: wrongTrustRoot.serialize().toList(),
+            timestamp: timestamp,
+          ),
+          throwsA(anything),
         );
-
-        cert.dispose();
       });
-    });
 
-    group('serialize() / deserialize()', () {
-      test('round-trip preserves certificate', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final original = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          senderE164: '+1234567890',
-          deviceId: 42,
-          senderKey: senderKey,
+      test('rejects expired certificate', () {
+        // Certificate expired yesterday
+        final expiration = BigInt.from(
+          DateTime.now()
+              .subtract(const Duration(days: 1))
+              .millisecondsSinceEpoch,
+        );
+        final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
+
+        final cert = createSenderCertificate(
+          senderUuid: 'alice-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: senderIdentity.publicKey.toList(),
           expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivate.serialize().toList(),
         );
 
-        final serialized = original.serialize();
-        expect(serialized, isNotEmpty);
-
-        final restored = SenderCertificate.deserialize(serialized);
-
-        expect(restored.senderUuid, equals(original.senderUuid));
-        expect(restored.senderE164, equals(original.senderE164));
-        expect(restored.deviceId, equals(original.deviceId));
-        expect(restored.signature, equals(original.signature));
-        expect(restored.certificate, equals(original.certificate));
-
-        final origKey = original.getKey();
-        final restoredKey = restored.getKey();
-        expect(restoredKey.equals(origKey), isTrue);
-
-        original.dispose();
-        restored.dispose();
-        origKey.dispose();
-        restoredKey.dispose();
-      });
-
-      test('round-trip preserves certificate without E164', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final original = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          senderE164: null,
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final serialized = original.serialize();
-        final restored = SenderCertificate.deserialize(serialized);
-
-        expect(restored.senderE164, isNull);
-
-        original.dispose();
-        restored.dispose();
-      });
-
-      test('rejects empty data', () {
         expect(
-          () => SenderCertificate.deserialize(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
+          () => validateSenderCertificate(
+            certificate: cert.toList(),
+            trustRoot: trustRootPublic.serialize().toList(),
+            timestamp: timestamp,
+          ),
+          throwsA(anything),
+        );
+      });
+
+      test('rejects empty certificate', () {
+        expect(
+          () => validateSenderCertificate(
+            certificate: [],
+            trustRoot: [],
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          ),
+          throwsA(anything),
         );
       });
 
       test('rejects garbage data', () {
-        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
+        final garbage = [0x99, 0x88, 0x77, 0x66, 0x55];
         expect(
-          () => SenderCertificate.deserialize(garbage),
-          throwsA(isA<LibSignalException>()),
+          () => validateSenderCertificate(
+            certificate: garbage,
+            trustRoot: garbage,
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          ),
+          throwsA(anything),
         );
       });
     });
 
-    group('getKey()', () {
-      test('returns valid public key', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final key = cert.getKey();
-
-        expect(key, isNotNull);
-        expect(key.isDisposed, isFalse);
-        expect(key.serialize().length, equals(33));
-        expect(key.equals(senderKey), isTrue);
-
-        key.dispose();
-        cert.dispose();
-      });
-
-      test('multiple calls return equivalent keys', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final key1 = cert.getKey();
-        final key2 = cert.getKey();
-
-        expect(key1.equals(key2), isTrue);
-
-        key1.dispose();
-        key2.dispose();
-        cert.dispose();
-      });
-    });
-
-    group('getServerCertificate()', () {
-      test('returns server certificate', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final serverCertRetrieved = cert.getServerCertificate();
-
-        expect(serverCertRetrieved, isNotNull);
-        expect(serverCertRetrieved.isDisposed, isFalse);
-        expect(serverCertRetrieved.keyId, equals(serverCert.keyId));
-
-        serverCertRetrieved.dispose();
-        cert.dispose();
-      });
-    });
-
-    group('validate()', () {
-      test('valid certificate validates successfully', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final isValid = cert.validate(trustRootPublic);
-        expect(isValid, isTrue);
-
-        cert.dispose();
-      });
-
-      test('expired certificate fails validation', () {
-        // Create a certificate that expired in the past
-        final expiration = DateTime.now().toUtc().subtract(
-          const Duration(days: 1),
-        );
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final isValid = cert.validate(trustRootPublic);
-        expect(isValid, isFalse);
-
-        cert.dispose();
-      });
-
-      test('validation with custom time works', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Check with time before expiration
-        final isValidBefore = cert.validate(
-          trustRootPublic,
-          now: DateTime.now().toUtc().add(const Duration(days: 15)),
-        );
-        expect(isValidBefore, isTrue);
-
-        // Check with time after expiration
-        final isValidAfter = cert.validate(
-          trustRootPublic,
-          now: DateTime.now().toUtc().add(const Duration(days: 60)),
-        );
-        expect(isValidAfter, isFalse);
-
-        cert.dispose();
-      });
-
-      test('validation fails with wrong trust root', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final wrongTrustRoot = PrivateKey.generate().getPublicKey();
-        final isValid = cert.validate(wrongTrustRoot);
-        expect(isValid, isFalse);
-
-        wrongTrustRoot.dispose();
-        cert.dispose();
-      });
-    });
-
-    group('clone()', () {
-      test('creates independent copy', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final original = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          senderE164: '+1234567890',
-          deviceId: 42,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final cloned = original.clone();
-
-        expect(cloned.senderUuid, equals(original.senderUuid));
-        expect(cloned.senderE164, equals(original.senderE164));
-        expect(cloned.deviceId, equals(original.deviceId));
-        expect(cloned.serialize(), equals(original.serialize()));
-
-        original.dispose();
-
-        // Cloned should still work
-        expect(cloned.isDisposed, isFalse);
-        expect(cloned.senderUuid, equals('test-uuid-1234'));
-
-        cloned.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        expect(cert.isDisposed, isFalse);
-        cert.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(cert.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.dispose(), returnsNormally);
-      });
-
-      test('senderUuid throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.senderUuid, throwsA(isA<LibSignalException>()));
-      });
-
-      test('senderE164 throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.senderE164, throwsA(isA<LibSignalException>()));
-      });
-
-      test('deviceId throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.deviceId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('expiration throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.expiration, throwsA(isA<LibSignalException>()));
-      });
-
-      test('serialize throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.serialize(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('getKey throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.getKey(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('getServerCertificate throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
+    group('getter functions', () {
+      test('senderCertificateGetSenderName rejects empty certificate', () {
         expect(
-          () => cert.getServerCertificate(),
-          throwsA(isA<LibSignalException>()),
+          () => senderCertificateGetSenderName(certificate: []),
+          throwsA(anything),
         );
       });
 
-      test('validate throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
+      test('senderCertificateGetSenderDeviceId rejects empty certificate', () {
         expect(
-          () => cert.validate(trustRootPublic),
-          throwsA(isA<LibSignalException>()),
+          () => senderCertificateGetSenderDeviceId(certificate: []),
+          throwsA(anything),
         );
       });
 
-      test('certificate throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+      test('senderCertificateGetKey rejects empty certificate', () {
+        expect(
+          () => senderCertificateGetKey(certificate: []),
+          throwsA(anything),
         );
-
-        cert.dispose();
-        expect(() => cert.certificate, throwsA(isA<LibSignalException>()));
       });
 
-      test('signature throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+      test('senderCertificateGetExpiration rejects empty certificate', () {
+        expect(
+          () => senderCertificateGetExpiration(certificate: []),
+          throwsA(anything),
         );
-
-        cert.dispose();
-        expect(() => cert.signature, throwsA(isA<LibSignalException>()));
-      });
-
-      test('clone throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final expiration = DateTime.now().toUtc().add(const Duration(days: 30));
-        final cert = SenderCertificate.create(
-          senderUuid: 'test-uuid-1234',
-          deviceId: 1,
-          senderKey: senderKey,
-          expiration: expiration,
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

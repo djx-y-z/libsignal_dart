@@ -3,7 +3,7 @@ library;
 
 import 'dart:typed_data';
 
-import '../../prekeys/kyber_pre_key_record.dart';
+import '../../rust/api/kyber.dart';
 import '../kyber_pre_key_store.dart';
 
 /// In-memory implementation of [KyberPreKeyStore].
@@ -21,7 +21,7 @@ class InMemoryKyberPreKeyStore implements KyberPreKeyStore {
   Future<KyberPreKeyRecord?> loadKyberPreKey(int kyberPreKeyId) async {
     final data = _kyberPreKeys[kyberPreKeyId];
     if (data == null) return null;
-    return KyberPreKeyRecord.deserialize(data);
+    return KyberPreKeyRecord.deserialize(bytes: data.toList());
   }
 
   @override

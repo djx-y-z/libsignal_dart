@@ -1,8 +1,8 @@
 /// Session store interface for Signal Protocol.
 library;
 
-import '../protocol/protocol_address.dart';
-import '../protocol/session_record.dart';
+import '../rust/api/address.dart';
+import '../rust/api/session.dart';
 
 /// Abstract interface for storing and retrieving session records.
 ///

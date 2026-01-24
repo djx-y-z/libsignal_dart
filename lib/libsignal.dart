@@ -9,16 +9,13 @@
 /// ```dart
 /// import 'package:libsignal/libsignal.dart';
 ///
-/// void main() {
+/// void main() async {
 ///   // Initialize the library
-///   LibSignal.init();
+///   await LibSignal.init();
 ///
 ///   // Generate identity key pair
 ///   final identity = IdentityKeyPair.generate();
 ///   print('Public key: ${identity.publicKey}');
-///
-///   // Clean up when done
-///   identity.dispose();
 /// }
 /// ```
 ///
@@ -30,23 +27,24 @@
 ///   - Post-quantum Kyber keys ([KyberKeyPair])
 ///
 /// - **Signal Protocol**: End-to-end encryption with forward secrecy
+///   - Session establishment ([SessionBuilder])
+///   - Message encryption/decryption ([SessionCipher])
 ///   - Session management ([SessionRecord])
 ///   - Protocol addressing ([ProtocolAddress])
 ///   - Pre-keys ([PreKeyRecord], [SignedPreKeyRecord], [KyberPreKeyRecord])
 ///   - Pre-key bundles ([PreKeyBundle])
 ///
 /// - **Sealed Sender**: Anonymous message sending
-///   - Server certificates ([ServerCertificate])
+///   - Sealed sender encryption/decryption ([SealedSenderCipher])
 ///   - Sender certificates ([SenderCertificate])
 ///
 /// - **Group Messaging**: Efficient group message encryption
-///   - Sender keys ([SenderKeyRecord])
-///   - Group sessions ([GroupSession])
-///   - Distribution messages ([SenderKeyDistributionMessage])
+///   - Group encryption/decryption ([GroupCipher])
+///   - Sender key distribution ([SenderKeyDistributionMessage])
 ///
 /// - **Cryptographic Utilities**:
 ///   - AES-256-GCM-SIV ([Aes256GcmSiv])
-///   - HKDF key derivation ([Hkdf])
+///   - HKDF key derivation ([hkdfDerive])
 ///   - Identity verification fingerprints ([Fingerprint])
 ///
 /// - **Storage Interfaces**:
@@ -56,34 +54,35 @@
 ///   - Sender key store ([SenderKeyStore])
 ///   - In-memory implementations for testing
 ///
-/// See the [README](https://github.com/user/libsignal_dart) for more details.
+/// See the [README](https://github.com/djx-y-z/libsignal_dart) for more details.
 library;
 
-// Core
-export 'src/exception.dart';
+// Core initialization
 export 'src/libsignal.dart';
-export 'src/secure_bytes.dart';
 
-// Cryptographic utilities
-export 'src/crypto/crypto.dart';
+// FRB-generated API
+export 'src/rust/api/address.dart';
+export 'src/rust/api/bundle.dart';
+export 'src/rust/api/crypto.dart';
+export 'src/rust/api/group_session.dart';
+export 'src/rust/api/keys.dart';
+export 'src/rust/api/kyber.dart';
+export 'src/rust/api/message.dart';
+export 'src/rust/api/prekey.dart';
+export 'src/rust/api/sealed_sender.dart';
+export 'src/rust/api/session_builder.dart';
+export 'src/rust/api/session_cipher.dart';
+export 'src/rust/api/session.dart';
+export 'src/rust/api/signed_prekey.dart';
 
-// Groups
-export 'src/groups/groups.dart';
-
-// Keys
-export 'src/keys/keys.dart';
-
-// Kyber (post-quantum)
-export 'src/kyber/kyber.dart';
-
-// Pre-keys
-export 'src/prekeys/prekeys.dart';
-
-// Protocol
+// Protocol wrappers (high-level Dart API)
 export 'src/protocol/protocol.dart';
 
-// Sealed sender
-export 'src/sealed_sender/sealed_sender.dart';
+// Group messaging (high-level Dart API)
+export 'src/groups/group_cipher.dart';
 
-// Stores
+// Sealed sender (high-level Dart API)
+export 'src/sealed_sender/sealed_sender_cipher.dart';
+
+// Stores (Dart-side implementations)
 export 'src/stores/stores.dart';

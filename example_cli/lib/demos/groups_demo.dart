@@ -9,78 +9,122 @@ import '../utils.dart';
 Future<void> runGroupsDemo() async {
   printHeader('Groups Demo');
 
-  ProtocolAddress? aliceAddress;
-  ProtocolAddress? bobAddress;
-  SenderKeyDistributionMessage? distMessage;
+  // 1. Create protocol addresses
+  final aliceAddress = ProtocolAddress(name: 'alice', deviceId: 1);
+  final bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
+  printStep(1, 'Protocol addresses created', [
+    'Alice: ${aliceAddress.name()}:${aliceAddress.deviceId()}',
+    'Bob: ${bobAddress.name()}:${bobAddress.deviceId()}',
+  ]);
+  print('');
 
-  try {
-    // 1. Create protocol addresses
-    aliceAddress = ProtocolAddress('alice', 1);
-    bobAddress = ProtocolAddress('bob', 1);
-    printStep(1, 'Protocol addresses created', [
-      'Alice: ${aliceAddress.name}:${aliceAddress.deviceId}',
-      'Bob: ${bobAddress.name}:${bobAddress.deviceId}',
-    ]);
-    print('');
+  // 2. Distribution ID (UUID string)
+  const distributionId = '01234567-89ab-cdef-0123-456789abcdef';
+  printStep(2, 'Distribution ID (UUID)', ['UUID: $distributionId']);
+  print('');
 
-    // 2. Generate distribution ID (UUID)
-    final distributionId = GroupSession.uuidFromString(
-      '01234567-89ab-cdef-0123-456789abcdef',
-    );
-    final uuidString = GroupSession.uuidToString(distributionId);
-    printStep(2, 'Distribution ID (UUID)', [
-      'UUID: $uuidString',
-      'Size: ${distributionId.length} bytes',
-    ]);
-    print('');
+  // 3. Create stores
+  final aliceStore = InMemorySenderKeyStore();
+  final bobStore = InMemorySenderKeyStore();
+  final aliceIdentity = IdentityKeyPair.generate();
+  printStep(3, 'Stores created', [
+    'Alice store: InMemorySenderKeyStore',
+    'Bob store: InMemorySenderKeyStore',
+  ]);
+  print('');
 
-    // 3. Create stores and sessions
-    final aliceStore = InMemorySenderKeyStore();
-    final bobStore = InMemorySenderKeyStore();
-    final aliceSession = GroupSession(aliceAddress, distributionId, aliceStore);
-    final bobSession = GroupSession(bobAddress, distributionId, bobStore);
-    printStep(3, 'Group sessions created', [
-      'Alice store: InMemorySenderKeyStore',
-      'Bob store: InMemorySenderKeyStore',
-    ]);
-    print('');
+  // 4. Alice creates distribution message using callback API
+  final createResult = await createSenderKeyDistributionMessageWithCallbacks(
+    senderName: aliceAddress.name(),
+    senderDeviceId: aliceAddress.deviceId(),
+    distributionId: distributionId,
+    loadSenderKey: (name, deviceId, distId) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      return aliceStore.loadSenderKey(keyName);
+    },
+    storeSenderKey: (name, deviceId, distId, recordBytes) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      await aliceStore.storeSenderKey(keyName, recordBytes);
+    },
+    getIdentityKeyPair: () async => aliceIdentity.serialize(),
+  );
+  printStep(4, 'Alice created distribution message', [
+    'Message size: ${createResult.distributionMessage.length} bytes',
+  ]);
+  print('');
 
-    // 4. Alice creates distribution message
-    distMessage = await aliceSession.createDistributionMessage();
-    printStep(4, 'Alice created distribution message', [
-      'Distribution ID: ${GroupSession.uuidToString(distMessage.distributionId)}',
-      'Chain key size: ${distMessage.chainKey.length} bytes',
-      'Iteration: ${distMessage.iteration}',
-    ]);
-    print('');
+  // 5. Bob processes distribution message
+  await processSenderKeyDistributionMessageWithCallbacks(
+    senderName: aliceAddress.name(),
+    senderDeviceId: aliceAddress.deviceId(),
+    distributionId: distributionId,
+    distributionMessage: createResult.distributionMessage,
+    loadSenderKey: (name, deviceId, distId) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      return bobStore.loadSenderKey(keyName);
+    },
+    storeSenderKey: (name, deviceId, distId, recordBytes) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      await bobStore.storeSenderKey(keyName, recordBytes);
+    },
+  );
+  printStep(5, 'Bob processed distribution message', [
+    'Bob store entries: ${bobStore.length}',
+  ]);
+  print('');
 
-    // 5. Bob processes distribution message
-    await bobSession.processDistributionMessage(aliceAddress, distMessage);
-    printStep(5, 'Bob processed distribution message', [
-      'Bob store entries: ${bobStore.length}',
-    ]);
-    print('');
+  // 6. Alice encrypts message
+  const messageText = 'Hello, group!';
+  final plaintext = Uint8List.fromList(utf8.encode(messageText));
+  final encryptResult = await groupEncryptWithCallbacks(
+    senderName: aliceAddress.name(),
+    senderDeviceId: aliceAddress.deviceId(),
+    distributionId: distributionId,
+    plaintext: plaintext,
+    loadSenderKey: (name, deviceId, distId) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      return aliceStore.loadSenderKey(keyName);
+    },
+    storeSenderKey: (name, deviceId, distId, recordBytes) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      await aliceStore.storeSenderKey(keyName, recordBytes);
+    },
+    getIdentityKeyPair: () async => aliceIdentity.serialize(),
+  );
+  printStep(6, 'Alice encrypted message', [
+    'Message: "$messageText"',
+    'Ciphertext size: ${encryptResult.ciphertext.length} bytes',
+  ]);
+  print('');
 
-    // 6. Alice encrypts message
-    const messageText = 'Hello, group!';
-    final plaintext = Uint8List.fromList(utf8.encode(messageText));
-    final ciphertext = await aliceSession.encrypt(plaintext);
-    printStep(6, 'Alice encrypted message', [
-      'Message: "$messageText"',
-      'Ciphertext size: ${ciphertext.length} bytes',
-    ]);
-    print('');
+  // 7. Bob decrypts message
+  final decryptResult = await groupDecryptWithCallbacks(
+    senderName: aliceAddress.name(),
+    senderDeviceId: aliceAddress.deviceId(),
+    distributionId: distributionId,
+    ciphertext: encryptResult.ciphertext,
+    loadSenderKey: (name, deviceId, distId) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      return bobStore.loadSenderKey(keyName);
+    },
+    storeSenderKey: (name, deviceId, distId, recordBytes) async {
+      final addr = ProtocolAddress(name: name, deviceId: deviceId);
+      final keyName = SenderKeyName(addr, distId);
+      await bobStore.storeSenderKey(keyName, recordBytes);
+    },
+  );
+  final decryptedText = utf8.decode(decryptResult.plaintext);
+  printStep(7, 'Bob decrypted message', [
+    'Decrypted: "$decryptedText"',
+    'Match: ${decryptedText == messageText}',
+  ]);
 
-    // 7. Bob decrypts message
-    final decrypted = await bobSession.decrypt(aliceAddress, ciphertext);
-    final decryptedText = utf8.decode(decrypted);
-    printStep(7, 'Bob decrypted message', [
-      'Decrypted: "$decryptedText"',
-      'Match: ${decryptedText == messageText}',
-    ]);
-  } finally {
-    aliceAddress?.dispose();
-    bobAddress?.dispose();
-    distMessage?.dispose();
-  }
+  // No dispose() needed - FRB handles memory automatically
 }

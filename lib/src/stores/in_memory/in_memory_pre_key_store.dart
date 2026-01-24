@@ -3,7 +3,7 @@ library;
 
 import 'dart:typed_data';
 
-import '../../prekeys/pre_key_record.dart';
+import '../../rust/api/prekey.dart';
 import '../pre_key_store.dart';
 
 /// In-memory implementation of [PreKeyStore].
@@ -20,7 +20,7 @@ class InMemoryPreKeyStore implements PreKeyStore {
   Future<PreKeyRecord?> loadPreKey(int preKeyId) async {
     final data = _preKeys[preKeyId];
     if (data == null) return null;
-    return PreKeyRecord.deserialize(data);
+    return PreKeyRecord.deserialize(bytes: data.toList());
   }
 
   @override

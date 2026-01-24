@@ -3,7 +3,7 @@ library;
 
 import 'dart:typed_data';
 
-import '../../prekeys/signed_pre_key_record.dart';
+import '../../rust/api/signed_prekey.dart';
 import '../signed_pre_key_store.dart';
 
 /// In-memory implementation of [SignedPreKeyStore].
@@ -20,7 +20,7 @@ class InMemorySignedPreKeyStore implements SignedPreKeyStore {
   Future<SignedPreKeyRecord?> loadSignedPreKey(int signedPreKeyId) async {
     final data = _signedPreKeys[signedPreKeyId];
     if (data == null) return null;
-    return SignedPreKeyRecord.deserialize(data);
+    return SignedPreKeyRecord.deserialize(bytes: data.toList());
   }
 
   @override

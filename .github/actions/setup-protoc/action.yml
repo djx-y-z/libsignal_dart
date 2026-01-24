@@ -1,0 +1,25 @@
+name: Setup Protoc
+description: Install Protocol Buffers compiler (protoc) for the current platform
+
+runs:
+  using: composite
+  steps:
+    - name: Install Protobuf (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y protobuf-compiler
+        protoc --version
+      shell: bash
+
+    - name: Install Protobuf (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install protobuf
+        protoc --version
+      shell: bash
+
+    - name: Install Protobuf (Windows)
+      if: runner.os == 'Windows'
+      run: choco install protoc -y
+      shell: pwsh

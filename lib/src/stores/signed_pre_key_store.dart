@@ -1,7 +1,7 @@
 /// Signed pre-key store interface for Signal Protocol.
 library;
 
-import '../prekeys/signed_pre_key_record.dart';
+import '../rust/api/signed_prekey.dart';
 
 /// Abstract interface for storing signed pre-keys.
 ///

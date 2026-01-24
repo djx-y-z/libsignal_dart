@@ -2,60 +2,55 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('InMemorySignedPreKeyStore', () {
     late InMemorySignedPreKeyStore store;
-    late IdentityKeyPair identityKeyPair;
+    late PrivateKey signingKey;
     late SignedPreKeyRecord record1;
     late SignedPreKeyRecord record2;
 
     /// Helper to create a signed pre-key record with valid signature
     SignedPreKeyRecord createSignedPreKey({
       required int id,
-      required int timestamp,
-      required IdentityKeyPair identityKeyPair,
+      required BigInt timestamp,
+      required PrivateKey signingKey,
     }) {
       final privateKey = PrivateKey.generate();
       final publicKey = privateKey.getPublicKey();
-      final signature = identityKeyPair.privateKey.sign(publicKey.serialize());
+      final signature = signingKey.sign(
+        message: publicKey.serialize().toList(),
+      );
 
-      final signedPreKey = SignedPreKeyRecord.create(
+      return SignedPreKeyRecord(
         id: id,
         timestamp: timestamp,
         publicKey: publicKey,
         privateKey: privateKey,
-        signature: signature,
+        signature: signature.toList(),
       );
-
-      privateKey.dispose();
-      publicKey.dispose();
-
-      return signedPreKey;
     }
 
     setUp(() {
       store = InMemorySignedPreKeyStore();
-      identityKeyPair = IdentityKeyPair.generate();
+      signingKey = PrivateKey.generate();
 
-      final timestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
+      final timestamp = BigInt.from(
+        DateTime.now().toUtc().millisecondsSinceEpoch,
+      );
       record1 = createSignedPreKey(
         id: 1,
         timestamp: timestamp,
-        identityKeyPair: identityKeyPair,
+        signingKey: signingKey,
       );
       record2 = createSignedPreKey(
         id: 2,
         timestamp: timestamp,
-        identityKeyPair: identityKeyPair,
+        signingKey: signingKey,
       );
-    });
-
-    tearDown(() {
-      identityKeyPair.dispose();
-      record1.dispose();
-      record2.dispose();
     });
 
     group('initial state', () {
@@ -85,9 +80,7 @@ void main() {
 
         final loaded = await store.loadSignedPreKey(1);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(1));
-
-        loaded.dispose();
+        expect(loaded!.id(), equals(1));
       });
 
       test('stores multiple signed pre-keys', () async {
@@ -99,11 +92,8 @@ void main() {
 
         expect(loaded1, isNotNull);
         expect(loaded2, isNotNull);
-        expect(loaded1!.id, equals(1));
-        expect(loaded2!.id, equals(2));
-
-        loaded1.dispose();
-        loaded2.dispose();
+        expect(loaded1!.id(), equals(1));
+        expect(loaded2!.id(), equals(2));
       });
 
       test('overwrites existing signed pre-key', () async {
@@ -111,18 +101,15 @@ void main() {
 
         final newRecord = createSignedPreKey(
           id: 1,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
         await store.storeSignedPreKey(1, newRecord);
 
         final loaded = await store.loadSignedPreKey(1);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(1));
+        expect(loaded!.id(), equals(1));
         expect(loaded.serialize(), equals(newRecord.serialize()));
-
-        loaded.dispose();
-        newRecord.dispose();
       });
     });
 
@@ -164,9 +151,6 @@ void main() {
 
         expect(await store.loadSignedPreKey(1), isNull);
         expect(await store.loadSignedPreKey(2), isNotNull);
-
-        final loaded2 = await store.loadSignedPreKey(2);
-        loaded2?.dispose();
       });
     });
 
@@ -241,8 +225,8 @@ void main() {
       test('handles ID 0', () async {
         final record = createSignedPreKey(
           id: 0,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
 
         await store.storeSignedPreKey(0, record);
@@ -250,17 +234,14 @@ void main() {
 
         final loaded = await store.loadSignedPreKey(0);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(0));
-
-        loaded.dispose();
-        record.dispose();
+        expect(loaded!.id(), equals(0));
       });
 
       test('handles large IDs', () async {
         final record = createSignedPreKey(
           id: 0xFFFFFF,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          identityKeyPair: identityKeyPair,
+          timestamp: BigInt.from(DateTime.now().toUtc().millisecondsSinceEpoch),
+          signingKey: signingKey,
         );
 
         await store.storeSignedPreKey(0xFFFFFF, record);
@@ -268,10 +249,7 @@ void main() {
 
         final loaded = await store.loadSignedPreKey(0xFFFFFF);
         expect(loaded, isNotNull);
-        expect(loaded!.id, equals(0xFFFFFF));
-
-        loaded.dispose();
-        record.dispose();
+        expect(loaded!.id(), equals(0xFFFFFF));
       });
     });
   });

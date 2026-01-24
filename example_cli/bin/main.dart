@@ -3,6 +3,7 @@ import 'package:libsignal_example_cli/demos/crypto_demo.dart';
 import 'package:libsignal_example_cli/demos/fingerprint_demo.dart';
 import 'package:libsignal_example_cli/demos/groups_demo.dart';
 import 'package:libsignal_example_cli/demos/keys_demo.dart';
+import 'package:libsignal_example_cli/demos/session_demo.dart';
 
 void main() async {
   print('');
@@ -10,12 +11,13 @@ void main() async {
   print('║       libsignal CLI Example          ║');
   print('╚══════════════════════════════════════╝');
 
-  LibSignal.init();
+  await LibSignal.init();
 
   try {
     await runKeysDemo();
     await runCryptoDemo();
     await runGroupsDemo();
+    await runSessionDemo();
     await runFingerprintDemo();
 
     print('');
@@ -27,6 +29,7 @@ void main() async {
     print('Stack trace: $stackTrace');
     print('');
   } finally {
-    LibSignal.cleanup();
+    // dispose: true is required for CLI apps to allow the process to exit
+    LibSignal.cleanup(dispose: true);
   }
 }

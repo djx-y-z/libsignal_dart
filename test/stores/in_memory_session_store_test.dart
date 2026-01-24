@@ -2,23 +2,18 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('InMemorySessionStore', () {
     late InMemorySessionStore store;
     late ProtocolAddress aliceAddress;
-    late ProtocolAddress bobAddress;
 
     setUp(() {
       store = InMemorySessionStore();
-      aliceAddress = ProtocolAddress('alice', 1);
-      bobAddress = ProtocolAddress('bob', 1);
-    });
-
-    tearDown(() {
-      aliceAddress.dispose();
-      bobAddress.dispose();
+      aliceAddress = ProtocolAddress(name: 'alice', deviceId: 1);
     });
 
     group('initial state', () {
@@ -66,18 +61,5 @@ void main() {
     // Note: Full session store tests require valid SessionRecords,
     // which can only be created through actual protocol session
     // establishment. See integration tests for full coverage.
-    //
-    // The following tests are documented but skipped:
-    //
-    // group('storeSession() / loadSession()', () {
-    //   test('stores and loads session', () async { ... });
-    //   test('overwrites existing session', () async { ... });
-    // });
-    //
-    // group('multiple devices', () {
-    //   test('stores sessions for multiple devices', () async { ... });
-    //   test('getSubDeviceSessions returns all device IDs', () async { ... });
-    //   test('deleteAllSessions removes all devices', () async { ... });
-    // });
   });
 }

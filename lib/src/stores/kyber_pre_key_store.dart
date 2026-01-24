@@ -1,7 +1,7 @@
 /// Kyber pre-key store interface for Signal Protocol.
 library;
 
-import '../prekeys/kyber_pre_key_record.dart';
+import '../rust/api/kyber.dart';
 
 /// Abstract interface for storing Kyber (post-quantum) pre-keys.
 ///

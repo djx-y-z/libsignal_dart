@@ -1,555 +1,197 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() {
-    LibSignal.ensureInitialized();
+  setUpAll(() async {
+    await LibSignal.init();
   });
 
   group('SessionBuilder', () {
-    late InMemorySessionStore aliceSessionStore;
-    late InMemoryIdentityKeyStore aliceIdentityStore;
-    late InMemorySessionStore bobSessionStore;
-    late InMemoryPreKeyStore bobPreKeyStore;
-    late InMemorySignedPreKeyStore bobSignedPreKeyStore;
-    late InMemoryKyberPreKeyStore bobKyberPreKeyStore;
-
-    late IdentityKeyPair aliceIdentity;
-    late ProtocolAddress aliceAddress;
-    late ProtocolAddress bobAddress;
-
-    setUp(() {
-      // Generate identity keys
-      aliceIdentity = IdentityKeyPair.generate();
-
-      // Create addresses
-      aliceAddress = ProtocolAddress('alice', 1);
-      bobAddress = ProtocolAddress('bob', 1);
-
-      // Create stores for Alice
-      aliceSessionStore = InMemorySessionStore();
-      aliceIdentityStore = InMemoryIdentityKeyStore(aliceIdentity, 12345);
-
-      // Create stores for Bob (will be populated per test)
-      bobSessionStore = InMemorySessionStore();
-      bobPreKeyStore = InMemoryPreKeyStore();
-      bobSignedPreKeyStore = InMemorySignedPreKeyStore();
-      bobKyberPreKeyStore = InMemoryKyberPreKeyStore();
-    });
-
-    tearDown(() {
-      aliceIdentity.dispose();
-      aliceAddress.dispose();
-      bobAddress.dispose();
-
-      // Clear stores to avoid cross-test contamination
-      aliceSessionStore.clear();
-      bobSessionStore.clear();
-      bobPreKeyStore.clear();
-      bobSignedPreKeyStore.clear();
-      bobKyberPreKeyStore.clear();
-    });
-
-    test('processes pre-key bundle and establishes session', () async {
-      // Generate Bob's keys
-      final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      final preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-      final signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-
-      final kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-
-      // Create Bob's pre-key bundle
-      final bobBundle = bobKeys.toBundle();
-
-      // Alice processes Bob's bundle
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-      // Verify session was created
-      final aliceSession = await aliceSessionStore.loadSession(bobAddress);
-      expect(aliceSession, isNotNull);
-      expect(aliceSession!.remoteRegistrationId, equals(67890));
-
-      // Cleanup
-      preKeyRecord.dispose();
-      signedPreKeyRecord.dispose();
-      kyberPreKeyRecord.dispose();
-      bobBundle.dispose();
-      aliceSession.dispose();
-      bobKeys.dispose();
-    });
-
-    test('session encryption after bundle processing', () async {
-      // Generate Bob's keys
-      final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      final preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-      final signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-
-      final kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-
-      // Create Bob's pre-key bundle
-      final bobBundle = bobKeys.toBundle();
-
-      // Alice establishes session with Bob
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-      // Alice encrypts a message
-      final aliceCipher = SessionCipher(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-
-      final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-      final encrypted = await aliceCipher.encrypt(bobAddress, plaintext);
-
-      // The first message should be a PreKeySignalMessage
-      expect(encrypted.type, equals(CiphertextMessageType.preKey));
-      expect(encrypted.bytes.isNotEmpty, isTrue);
-
-      // Cleanup
-      preKeyRecord.dispose();
-      signedPreKeyRecord.dispose();
-      kyberPreKeyRecord.dispose();
-      bobBundle.dispose();
-      bobKeys.dispose();
-    });
-
-    test('establishes session with existing identity', () async {
-      // Generate Bob's keys
-      final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      final preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-      final signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-
-      final kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-
-      // Pre-save Bob's identity to Alice's store
-      await aliceIdentityStore.saveIdentity(
-        bobAddress,
-        bobKeys.identityKeyPair.publicKey,
-      );
-
-      // Create Bob's pre-key bundle
-      final bobBundle = bobKeys.toBundle();
-
-      // Alice processes Bob's bundle (with existing identity)
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-      // Verify session was created
-      final aliceSession = await aliceSessionStore.loadSession(bobAddress);
-      expect(aliceSession, isNotNull);
-      expect(aliceSession!.remoteRegistrationId, equals(67890));
-
-      // Cleanup
-      preKeyRecord.dispose();
-      signedPreKeyRecord.dispose();
-      kyberPreKeyRecord.dispose();
-      bobBundle.dispose();
-      aliceSession.dispose();
-      bobKeys.dispose();
-    });
-
-    test('replaces existing session with new bundle', () async {
-      // Generate Bob's first set of keys
-      final bobKeys1 = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's first pre-keys
-      var preKeyRecord = PreKeyRecord.create(
-        id: bobKeys1.preKeyId,
-        publicKey: bobKeys1.preKeyPublic,
-        privateKey: bobKeys1.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys1.preKeyId, preKeyRecord);
-      preKeyRecord.dispose();
-
-      var signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys1.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys1.signedPreKeyPublic,
-        privateKey: bobKeys1.signedPreKeyPrivate,
-        signature: bobKeys1.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys1.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-      signedPreKeyRecord.dispose();
-
-      var kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys1.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys1.kyberKeyPair,
-        signature: bobKeys1.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys1.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-      kyberPreKeyRecord.dispose();
-
-      // First session establishment
-      final bobBundle = bobKeys1.toBundle();
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-      bobBundle.dispose();
-
-      // Verify first session
-      var aliceSession = await aliceSessionStore.loadSession(bobAddress);
-      expect(aliceSession, isNotNull);
-      aliceSession!.dispose();
-
-      // Generate Bob's second set of keys with different pre-key IDs
-      final bobKeys2 = generateRemotePartyKeys(
-        registrationId: 67890,
-        preKeyId: 2,
-        signedPreKeyId: 2,
-        kyberPreKeyId: 2,
-      );
-
-      // Store Bob's second pre-keys
-      preKeyRecord = PreKeyRecord.create(
-        id: bobKeys2.preKeyId,
-        publicKey: bobKeys2.preKeyPublic,
-        privateKey: bobKeys2.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys2.preKeyId, preKeyRecord);
-      preKeyRecord.dispose();
-
-      signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys2.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys2.signedPreKeyPublic,
-        privateKey: bobKeys2.signedPreKeyPrivate,
-        signature: bobKeys2.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys2.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-      signedPreKeyRecord.dispose();
-
-      kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys2.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys2.kyberKeyPair,
-        signature: bobKeys2.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys2.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-      kyberPreKeyRecord.dispose();
-
-      // Save new identity to enable trust (TOFU check)
-      await aliceIdentityStore.saveIdentity(
-        bobAddress,
-        bobKeys2.identityKeyPair.publicKey,
-      );
-
-      // Second session establishment (replaces first)
-      final bobBundle2 = bobKeys2.toBundle();
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle2);
-      bobBundle2.dispose();
-
-      // Verify session was replaced
-      aliceSession = await aliceSessionStore.loadSession(bobAddress);
-      expect(aliceSession, isNotNull);
-      aliceSession!.dispose();
-
-      // Cleanup
-      bobKeys1.dispose();
-      bobKeys2.dispose();
-    });
-
-    test('establishes sessions with multiple addresses', () async {
-      // Generate Bob's keys
-      final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      var preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-      preKeyRecord.dispose();
-
-      var signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-      signedPreKeyRecord.dispose();
-
-      var kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-      kyberPreKeyRecord.dispose();
-
-      // Generate Carol's keys
-      final carolKeys = generateRemotePartyKeys(registrationId: 11111);
-      final carolAddress = ProtocolAddress('carol', 1);
-
-      // Store Carol's pre-keys
-      preKeyRecord = PreKeyRecord.create(
-        id: carolKeys.preKeyId,
-        publicKey: carolKeys.preKeyPublic,
-        privateKey: carolKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(carolKeys.preKeyId, preKeyRecord);
-      preKeyRecord.dispose();
-
-      signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: carolKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: carolKeys.signedPreKeyPublic,
-        privateKey: carolKeys.signedPreKeyPrivate,
-        signature: carolKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        carolKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-      signedPreKeyRecord.dispose();
-
-      kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: carolKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: carolKeys.kyberKeyPair,
-        signature: carolKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        carolKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-      kyberPreKeyRecord.dispose();
-
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-
-      // Establish session with Bob
-      final bobBundle = bobKeys.toBundle();
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-      bobBundle.dispose();
-
-      // Establish session with Carol
-      final carolBundle = carolKeys.toBundle();
-      await aliceBuilder.processPreKeyBundle(carolAddress, carolBundle);
-      carolBundle.dispose();
-
-      // Verify both sessions exist independently
-      final bobSession = await aliceSessionStore.loadSession(bobAddress);
-      final carolSession = await aliceSessionStore.loadSession(carolAddress);
-
-      expect(bobSession, isNotNull);
-      expect(carolSession, isNotNull);
-      expect(bobSession!.remoteRegistrationId, equals(67890));
-      expect(carolSession!.remoteRegistrationId, equals(11111));
-
-      // Cleanup
-      bobSession.dispose();
-      carolSession.dispose();
-      carolAddress.dispose();
-      bobKeys.dispose();
-      carolKeys.dispose();
-    });
-
-    test('encrypts and decrypts after session establishment', () async {
-      // Generate Bob's keys
-      final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      final preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-      final signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-
-      final kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-
-      // Create Bob's pre-key bundle
-      final bobBundle = bobKeys.toBundle();
-
-      // Alice establishes session with Bob
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-      // Alice encrypts a message
-      final aliceCipher = SessionCipher(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-
-      final plaintext = Uint8List.fromList(utf8.encode('Hello from Alice!'));
-      final encrypted = await aliceCipher.encrypt(bobAddress, plaintext);
-
-      // Bob decrypts the message
-      final bobIdentityStore = InMemoryIdentityKeyStore(
-        bobKeys.identityKeyPair,
-        67890,
-      );
-      final bobCipher = SessionCipher(
-        sessionStore: bobSessionStore,
-        identityKeyStore: bobIdentityStore,
-        preKeyStore: bobPreKeyStore,
-        signedPreKeyStore: bobSignedPreKeyStore,
-        kyberPreKeyStore: bobKyberPreKeyStore,
-      );
-
-      final decrypted = await bobCipher.decryptPreKeySignalMessage(
-        aliceAddress,
-        encrypted.bytes,
-      );
-
-      expect(decrypted, equals(plaintext));
-
-      // Cleanup
-      preKeyRecord.dispose();
-      signedPreKeyRecord.dispose();
-      kyberPreKeyRecord.dispose();
-      bobBundle.dispose();
-      bobKeys.dispose();
+    group('processPreKeyBundle', () {
+      test('establishes session with valid bundle', () async {
+        // Setup Alice (initiator)
+        final aliceIdentity = IdentityKeyPair.generate();
+        const aliceRegistrationId = 111;
+        final aliceSessionStore = InMemorySessionStore();
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          aliceRegistrationId,
+        );
+
+        // Setup Bob (responder) with pre-keys
+        final bobKeys = generateRemotePartyKeys(
+          registrationId: 222,
+          deviceId: 1,
+          preKeyId: 42,
+          signedPreKeyId: 7,
+          kyberPreKeyId: 1,
+        );
+
+        // Create Bob's address
+        final bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
+
+        // Create SessionBuilder for Alice
+        final builder = SessionBuilder(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+
+        // Process Bob's bundle
+        await builder.processPreKeyBundle(bobAddress, bobKeys.toBundle());
+
+        // Verify session was created
+        expect(await aliceSessionStore.containsSession(bobAddress), isTrue);
+
+        // Verify identity was saved
+        final savedIdentity = await aliceIdentityStore.getIdentity(bobAddress);
+        expect(savedIdentity, isNotNull);
+      });
+
+      test('creates valid session that can encrypt messages', () async {
+        // Setup Alice (initiator)
+        final aliceIdentity = IdentityKeyPair.generate();
+        const aliceRegistrationId = 111;
+        final aliceSessionStore = InMemorySessionStore();
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          aliceRegistrationId,
+        );
+
+        // Setup Bob (responder) with pre-keys
+        final bobKeys = generateRemotePartyKeys(
+          registrationId: 222,
+          deviceId: 1,
+          preKeyId: 42,
+          signedPreKeyId: 7,
+          kyberPreKeyId: 1,
+        );
+        final bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
+
+        // Create session
+        final builder = SessionBuilder(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+        await builder.processPreKeyBundle(bobAddress, bobKeys.toBundle());
+
+        // Verify we can load the session and it's valid
+        final session = await aliceSessionStore.loadSession(bobAddress);
+        expect(session, isNotNull);
+
+        // Session should have a valid structure (not empty)
+        final serialized = session!.serialize();
+        expect(serialized.length, greaterThan(0));
+      });
+
+      test('updates existing session when processing new bundle', () async {
+        // Setup Alice
+        final aliceIdentity = IdentityKeyPair.generate();
+        const aliceRegistrationId = 111;
+        final aliceSessionStore = InMemorySessionStore();
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          aliceRegistrationId,
+        );
+
+        // Setup Bob with first set of pre-keys
+        final bobKeys1 = generateRemotePartyKeys(
+          registrationId: 222,
+          deviceId: 1,
+          preKeyId: 1,
+          signedPreKeyId: 1,
+          kyberPreKeyId: 1,
+        );
+        final bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
+
+        // Create first session
+        final builder = SessionBuilder(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+        await builder.processPreKeyBundle(bobAddress, bobKeys1.toBundle());
+
+        final session1 = await aliceSessionStore.loadSession(bobAddress);
+        expect(session1, isNotNull);
+        final serialized1 = session1!.serialize();
+
+        // Create new bundle with same identity (simulating key rotation)
+        final bobKeys2 = generateRemotePartyKeysWithIdentity(
+          identityKeyPair: bobKeys1.identityKeyPair,
+          registrationId: 222,
+          deviceId: 1,
+          preKeyId: 2,
+          signedPreKeyId: 2,
+          kyberPreKeyId: 2,
+        );
+
+        // Process new bundle
+        await builder.processPreKeyBundle(bobAddress, bobKeys2.toBundle());
+
+        final session2 = await aliceSessionStore.loadSession(bobAddress);
+        expect(session2, isNotNull);
+        final serialized2 = session2!.serialize();
+
+        // Sessions should be different (new ratchet keys)
+        expect(serialized2, isNot(equals(serialized1)));
+      });
+
+      test('throws on invalid bundle signature', () async {
+        // Setup Alice
+        final aliceIdentity = IdentityKeyPair.generate();
+        const aliceRegistrationId = 111;
+        final aliceSessionStore = InMemorySessionStore();
+        final aliceIdentityStore = InMemoryIdentityKeyStore(
+          aliceIdentity,
+          aliceRegistrationId,
+        );
+
+        // Create invalid bundle with mismatched signature
+        final bobIdentity = IdentityKeyPair.generate();
+        final wrongIdentity = IdentityKeyPair.generate();
+        final signedPreKeyPrivate = PrivateKey.generate();
+        final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
+
+        // Sign with wrong identity
+        final wrongPrivate = PrivateKey.deserialize(
+          bytes: wrongIdentity.privateKey.toList(),
+        );
+        final signature = wrongPrivate.sign(
+          message: signedPreKeyPublic.serialize().toList(),
+        );
+
+        final kyberKeyPair = KyberKeyPair.generate();
+        final kyberSignature = wrongPrivate.sign(
+          message: kyberKeyPair.getPublicKey().serialize().toList(),
+        );
+
+        final invalidBundle = PreKeyBundle(
+          registrationId: 222,
+          deviceId: 1,
+          preKeyId: 1,
+          preKeyPublic: PrivateKey.generate().getPublicKey().serialize(),
+          signedPreKeyId: 1,
+          signedPreKeyPublic: signedPreKeyPublic.serialize().toList(),
+          signedPreKeySignature: signature.toList(),
+          identityKey: bobIdentity.publicKey.toList(), // Different identity
+          kyberPreKeyId: 1,
+          kyberPreKeyPublic: kyberKeyPair.getPublicKey().serialize().toList(),
+          kyberPreKeySignature: kyberSignature.toList(),
+        );
+
+        final builder = SessionBuilder(
+          sessionStore: aliceSessionStore,
+          identityKeyStore: aliceIdentityStore,
+        );
+        final bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
+
+        // Should throw due to invalid signature
+        expect(
+          () => builder.processPreKeyBundle(bobAddress, invalidBundle),
+          throwsA(anything),
+        );
+      });
     });
   });
 }

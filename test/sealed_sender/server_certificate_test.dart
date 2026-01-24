@@ -1,297 +1,121 @@
-import 'dart:typed_data';
-
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
-  group('ServerCertificate', () {
+  group('Server Certificate', () {
     late PrivateKey trustRootPrivate;
-    late PublicKey serverKey;
+    late PrivateKey serverPrivate;
+    late PublicKey serverPublic;
 
     setUp(() {
+      // Generate trust root key pair
       trustRootPrivate = PrivateKey.generate();
-      serverKey = PrivateKey.generate().getPublicKey();
+
+      // Generate server key pair
+      serverPrivate = PrivateKey.generate();
+      serverPublic = serverPrivate.getPublicKey();
     });
 
-    tearDown(() {
-      trustRootPrivate.dispose();
-      serverKey.dispose();
-    });
-
-    group('create()', () {
+    group('createServerCertificate()', () {
       test('creates valid server certificate', () {
-        final cert = ServerCertificate.create(
+        final cert = createServerCertificate(
           keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+          serverPublicKey: serverPublic.serialize().toList(),
+          trustRootPrivateKey: trustRootPrivate.serialize().toList(),
         );
 
-        expect(cert, isNotNull);
-        expect(cert.isDisposed, isFalse);
-        expect(cert.keyId, equals(1));
-
-        final key = cert.getKey();
-        expect(key.equals(serverKey), isTrue);
-
-        key.dispose();
-        cert.dispose();
+        expect(cert, isNotEmpty);
+        // Certificate should be a valid protobuf
+        expect(cert.length, greaterThan(10));
       });
 
-      test('creates certificate with various key IDs', () {
-        for (final keyId in [0, 1, 100, 0xFFFF, 0xFFFFFFFF]) {
-          final cert = ServerCertificate.create(
-            keyId: keyId,
-            serverKey: serverKey,
-            trustRoot: trustRootPrivate,
-          );
-
-          expect(cert.keyId, equals(keyId));
-          cert.dispose();
-        }
-      });
-
-      test('created certificate has valid signature', () {
-        final cert = ServerCertificate.create(
+      test('creates certificates with different key IDs', () {
+        final cert1 = createServerCertificate(
           keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+          serverPublicKey: serverPublic.serialize().toList(),
+          trustRootPrivateKey: trustRootPrivate.serialize().toList(),
         );
 
-        final signature = cert.signature;
-        expect(signature, isNotEmpty);
-        expect(signature.length, equals(64)); // Ed25519 signature
+        final cert2 = createServerCertificate(
+          keyId: 2,
+          serverPublicKey: serverPublic.serialize().toList(),
+          trustRootPrivateKey: trustRootPrivate.serialize().toList(),
+        );
 
-        cert.dispose();
+        // Different key IDs should produce different certificates
+        expect(cert1, isNot(equals(cert2)));
       });
 
-      test('created certificate has certificate data', () {
-        final cert = ServerCertificate.create(
+      test('creates certificates with different server keys', () {
+        final otherServerPrivate = PrivateKey.generate();
+        final otherServerPublic = otherServerPrivate.getPublicKey();
+
+        final cert1 = createServerCertificate(
           keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+          serverPublicKey: serverPublic.serialize().toList(),
+          trustRootPrivateKey: trustRootPrivate.serialize().toList(),
         );
 
-        final certData = cert.certificate;
-        expect(certData, isNotEmpty);
-
-        cert.dispose();
-      });
-    });
-
-    group('serialize() / deserialize()', () {
-      test('round-trip preserves certificate', () {
-        final original = ServerCertificate.create(
-          keyId: 42,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+        final cert2 = createServerCertificate(
+          keyId: 1,
+          serverPublicKey: otherServerPublic.serialize().toList(),
+          trustRootPrivateKey: trustRootPrivate.serialize().toList(),
         );
 
-        final serialized = original.serialize();
-        expect(serialized, isNotEmpty);
-
-        final restored = ServerCertificate.deserialize(serialized);
-
-        expect(restored.keyId, equals(original.keyId));
-        expect(restored.signature, equals(original.signature));
-        expect(restored.certificate, equals(original.certificate));
-
-        final origKey = original.getKey();
-        final restoredKey = restored.getKey();
-        expect(restoredKey.equals(origKey), isTrue);
-
-        original.dispose();
-        restored.dispose();
-        origKey.dispose();
-        restoredKey.dispose();
+        // Different server keys should produce different certificates
+        expect(cert1, isNot(equals(cert2)));
       });
 
-      test('rejects empty data', () {
+      test('rejects invalid server public key', () {
         expect(
-          () => ServerCertificate.deserialize(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
+          () => createServerCertificate(
+            keyId: 1,
+            serverPublicKey: [1, 2, 3], // Invalid key
+            trustRootPrivateKey: trustRootPrivate.serialize().toList(),
+          ),
+          throwsA(anything),
         );
       });
 
-      test('rejects garbage data', () {
-        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
+      test('rejects invalid trust root private key', () {
         expect(
-          () => ServerCertificate.deserialize(garbage),
-          throwsA(isA<LibSignalException>()),
+          () => createServerCertificate(
+            keyId: 1,
+            serverPublicKey: serverPublic.serialize().toList(),
+            trustRootPrivateKey: [1, 2, 3], // Invalid key
+          ),
+          throwsA(anything),
         );
       });
     });
 
-    group('getKey()', () {
-      test('returns valid public key', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+    group('certificate validation', () {
+      test('validateSenderCertificate rejects empty certificate', () {
+        expect(
+          () => validateSenderCertificate(
+            certificate: [],
+            trustRoot: [],
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          ),
+          throwsA(anything),
         );
-
-        final key = cert.getKey();
-
-        expect(key, isNotNull);
-        expect(key.isDisposed, isFalse);
-        expect(key.serialize().length, equals(33));
-
-        key.dispose();
-        cert.dispose();
       });
 
-      test('multiple calls return equivalent keys', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
+      test('validateSenderCertificate rejects garbage data', () {
+        final garbage = [0x99, 0x88, 0x77, 0x66, 0x55];
+        expect(
+          () => validateSenderCertificate(
+            certificate: garbage,
+            trustRoot: garbage,
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          ),
+          throwsA(anything),
         );
-
-        final key1 = cert.getKey();
-        final key2 = cert.getKey();
-
-        expect(key1.equals(key2), isTrue);
-
-        key1.dispose();
-        key2.dispose();
-        cert.dispose();
-      });
-    });
-
-    group('clone()', () {
-      test('creates independent copy', () {
-        final original = ServerCertificate.create(
-          keyId: 42,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        final cloned = original.clone();
-
-        expect(cloned.keyId, equals(original.keyId));
-        expect(cloned.serialize(), equals(original.serialize()));
-
-        original.dispose();
-
-        // Cloned should still work
-        expect(cloned.isDisposed, isFalse);
-        expect(cloned.keyId, equals(42));
-
-        cloned.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        expect(cert.isDisposed, isFalse);
-        cert.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(cert.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.dispose(), returnsNormally);
-      });
-
-      test('keyId throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.keyId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('serialize throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.serialize(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('getKey throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.getKey(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('certificate throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.certificate, throwsA(isA<LibSignalException>()));
-      });
-
-      test('signature throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.signature, throwsA(isA<LibSignalException>()));
-      });
-
-      test('clone throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final cert = ServerCertificate.create(
-          keyId: 1,
-          serverKey: serverKey,
-          trustRoot: trustRootPrivate,
-        );
-
-        cert.dispose();
-        expect(() => cert.pointer, throwsA(isA<LibSignalException>()));
       });
     });
   });

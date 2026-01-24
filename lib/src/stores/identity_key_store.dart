@@ -1,9 +1,8 @@
 /// Identity key store interface for Signal Protocol.
 library;
 
-import '../keys/identity_key_pair.dart';
-import '../keys/public_key.dart';
-import '../protocol/protocol_address.dart';
+import '../rust/api/address.dart';
+import '../rust/api/keys.dart';
 
 /// The trust decision for an identity key.
 enum IdentityTrustDecision {
@@ -71,14 +70,23 @@ abstract interface class IdentityKeyStore {
 
   /// Checks if the given identity key is trusted for the given address.
   ///
-  /// The [direction] parameter indicates whether we're sending to or
-  /// receiving from this identity.
+  /// The [direction] parameter indicates the context of the trust check:
+  /// - [Direction.sending]: Validating identity before encrypting a message
+  ///   TO this recipient. You may want stricter validation here (e.g.,
+  ///   require explicit user approval for changed keys).
+  /// - [Direction.receiving]: Validating identity when decrypting a message
+  ///   FROM this sender. You may want more lenient validation here (e.g.,
+  ///   trust-on-first-use for new contacts).
   ///
   /// Returns `true` if the identity should be trusted, `false` otherwise.
   /// An identity is typically trusted if:
-  /// - It's the first time seeing this identity (for receiving)
+  /// - It's the first time seeing this identity (TOFU policy)
   /// - It matches what we have stored
   /// - The user has explicitly verified/trusted this identity
+  ///
+  /// **Security Note**: Different applications may have different trust
+  /// policies. Some may always trust on first use, others may require
+  /// explicit verification for all new identities.
   Future<bool> isTrustedIdentity(
     ProtocolAddress address,
     PublicKey identityKey,

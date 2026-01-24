@@ -3,10 +3,13 @@
 # Triggers:
 # - Manual dispatch (workflow_dispatch)
 # - Push to main or develop branches (relevant files)
-# - Pull requests (relevant files) - skipped for bot PRs (e.g., libsignal updates)
-# - After successful build-libsignal workflow
+# - Pull requests (relevant files)
+# - After successful build-precompiled workflow (native binaries updated)
 #
 # Platforms: Linux x86_64, Linux ARM64, macOS ARM64, Windows x86_64
+#
+# Note: Native libraries are built automatically by Cargokit during Flutter build.
+# Precompiled binaries are downloaded from GitHub Releases if available.
 
 name: Test
 
@@ -17,6 +20,7 @@ on:
     paths:
       - 'lib/**'
       - 'test/**'
+      - 'rust/**'
       - 'pubspec.yaml'
       - '.github/workflows/test.yml'
       - '.github/workflows/test-reusable.yml'
@@ -24,20 +28,17 @@ on:
     paths:
       - 'lib/**'
       - 'test/**'
+      - 'rust/**'
       - 'pubspec.yaml'
   workflow_run:
-    workflows: ["Build libsignal Native Libraries"]
+    workflows: ["Build Precompiled Binaries"]
     types:
       - completed
 
 jobs:
   test:
-    # Skip tests for:
-    # - Failed workflow_run triggers
-    # - Bot PRs (automated libsignal updates) - native libraries not yet built
-    if: |
-      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
-      (github.event_name != 'pull_request' || github.event.pull_request.user.type != 'Bot')
+    # Skip tests for failed workflow_run triggers
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     uses: ./.github/workflows/test-reusable.yml
     with:
       run-coverage: true

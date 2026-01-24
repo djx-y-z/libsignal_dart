@@ -29,7 +29,7 @@ Please be respectful and considerate of others. We expect all contributors to:
 
 - [Dart SDK](https://dart.dev/get-dart) (3.10.0+)
 - Git
-- **For building native libraries:** Rust toolchain, cbindgen
+- **For running tests:** Rust toolchain, protoc
 
 ### Fork and Clone
 
@@ -41,7 +41,7 @@ Please be respectful and considerate of others. We expect all contributors to:
    ```
 3. Add upstream remote:
    ```bash
-   git remote add upstream https://github.com/xdass/libsignal_dart.git
+   git remote add upstream https://github.com/djx-y-z/libsignal_dart.git
    ```
 
 ## Development Setup
@@ -55,9 +55,11 @@ make setup
 ```
 
 This will:
-1. Install FVM (Flutter Version Management)
-2. Install the project's Flutter/Dart version (3.38.4)
-3. Get all dependencies
+1. Check that Rust toolchain is installed (shows instructions if not)
+2. Install FVM (Flutter Version Management) and project's Flutter version
+3. Install protoc (Protocol Buffers compiler) via brew/apt/dnf/pacman
+4. Install cargo-audit for Rust dependency vulnerability scanning
+5. Get all dependencies and configure git hooks
 
 ### Verify Setup
 
@@ -85,20 +87,14 @@ libsignal/
 ├── lib/                    # Main library code
 │   ├── libsignal.dart      # Public API exports
 │   └── src/
-│       ├── bindings/       # FFI bindings (auto-generated)
-│       ├── keys.dart       # Key types (PrivateKey, PublicKey, etc.)
-│       ├── protocol.dart   # Signal Protocol (sessions, encryption)
-│       ├── stores.dart     # Store abstractions
-│       ├── sealed_sender.dart # Sealed Sender (anonymous messaging)
-│       └── groups.dart     # Group messaging (SenderKey)
+│       ├── rust/           # Auto-generated FRB bindings
+│       └── stores/         # Store interfaces and implementations
+├── rust/                   # Rust source code
+│   ├── Cargo.toml          # Rust dependencies (libsignal version here)
+│   └── src/api/            # FRB API functions
+├── rust_builder/           # Flutter FFI plugin (Cargokit)
 ├── test/                   # Test files
 ├── example/                # Example application
-├── bin/                    # Pre-built native libraries (server/CLI)
-├── android/                # Android platform files
-├── ios/                    # iOS platform files
-├── macos/                  # macOS platform files
-├── linux/                  # Linux platform files
-├── windows/                # Windows platform files
 ├── scripts/                # Build scripts (use via Makefile!)
 └── Makefile                # Entry point for all commands
 ```
@@ -257,28 +253,34 @@ make analyze
 - Include examples in documentation where helpful
 - Keep comments up to date with code changes
 
-### FFI and Memory Safety
+### Memory Safety (FRB Architecture)
 
-When working with FFI code:
+This library uses Flutter Rust Bridge (FRB) with libsignal-protocol (pure Rust):
 
-- Always free allocated memory
-- Use `try/finally` to ensure cleanup
-- Zero out sensitive data before freeing
-- Test for memory leaks
-- **ARM64 limitation**: Dart FFI cannot pass 16-byte structs by value on ARM64 ([dart-lang/sdk#36730](https://github.com/dart-lang/sdk/issues/36730)). See `CLAUDE.md` for workaround details.
+- **Memory is managed automatically** by Rust's ownership system
+- **No manual cleanup needed** - FRB handles all resource deallocation
+- **No `dispose()` calls** - Rust drops resources when they go out of scope
 
-Example:
+When adding new Rust API functions:
 
-```dart
-final ptr = calloc<Uint8>(size);
-try {
-  // Use ptr...
-} finally {
-  // Zero sensitive data
-  for (var i = 0; i < size; i++) {
-    ptr[i] = 0;
-  }
-  calloc.free(ptr);
+- Use opaque types with `#[frb(opaque)]` for complex libsignal types
+- Return `Result<T, String>` for error handling (FRB converts to Dart exceptions)
+- Use `DartFnFuture<T>` for async callbacks to Dart stores
+
+Example Rust API:
+
+```rust
+#[frb(opaque)]
+pub struct PrivateKey {
+    native: libsignal_protocol::PrivateKey,
+}
+
+impl PrivateKey {
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn generate() -> Result<PrivateKey, String> {
+        let key = libsignal_protocol::PrivateKey::generate(&mut OsRng);
+        Ok(PrivateKey { native: key })
+    }
 }
 ```
 
@@ -290,76 +292,75 @@ All development tasks should be done via Makefile:
 
 | Command | Description |
 |---------|-------------|
-| `make setup` | Install FVM + Flutter + dependencies |
+| `make setup` | Install all required tools (Rust check, FVM, protoc, cargo-audit) |
+| `make setup-fvm` | Install FVM and project Flutter version only |
+| `make setup-protoc` | Install protoc (Protocol Buffers compiler) |
+| `make setup-rust-tools` | Install Rust tools (cargo-audit, flutter_rust_bridge_codegen) |
+| `make setup-web` | Install wasm-pack for web builds (optional) |
+| `make setup-android` | Install cargo-ndk for Android builds (optional) |
 | `make help` | Show all available commands |
 | `make test` | Run all tests |
 | `make analyze` | Run static analysis |
+| `make rust-audit` | Check Rust dependencies for vulnerabilities |
+| `make rust-check` | Quick Rust type check (updates Cargo.lock) |
 | `make format` | Format code |
 | `make format-check` | Check formatting |
-| `make build ARGS="<platform>"` | Build native libraries |
-| `make regen` | Regenerate FFI bindings |
-| `make check` | Check for libsignal updates |
+| `make codegen` | Regenerate FRB bindings |
+| `make check-new-libsignal-version` | Check for libsignal updates |
 | `make get` | Get dependencies |
 | `make clean` | Clean build artifacts |
-| `make version` | Show libsignal version |
 
-### Regenerating FFI Bindings
+### Regenerating FRB Bindings
 
-When the libsignal version changes, you may need to regenerate Dart FFI bindings:
+When modifying Rust API code in `rust/src/api/`:
 
 ```bash
-# Option 1: Automatic update (recommended)
-make check ARGS="--update"
-
-# Option 2: Manual update
-# Edit pubspec.yaml - update libsignal.native_version to new version
-
-# Regenerate bindings (downloads libsignal headers, runs ffigen)
-make regen
+# Regenerate Flutter Rust Bridge bindings
+make codegen
 
 # Test the new bindings
 make test
 ```
 
+When updating the libsignal version:
+
+```bash
+# Option 1: Automatic update (recommended)
+make check-new-libsignal-version ARGS="--update"
+
+# Option 2: Manual update
+# Edit rust/Cargo.toml - update libsignal-protocol tag to new version
+# Then run cargo update to update Cargo.lock
+cd rust && cargo update && cd ..
+
+# Test
+make test
+```
+
 **When to regenerate:**
-- After updating `libsignal.native_version` in pubspec.yaml
-- If libsignal adds new functions you want to use
-- If struct layouts change in a new version
+- After modifying Rust API code in `rust/src/api/`
+- After updating libsignal version (if API changed)
 
 ### Building Native Libraries
 
-Native libraries are normally built automatically by CI when `libsignal.native_version` in pubspec.yaml changes.
-However, you can build them locally for testing or development.
+Native libraries are built automatically by **Cargokit** during `flutter build`. You don't need to build them manually for most development work.
+
+For development, Cargokit builds from source when you run tests or the example app:
 
 ```bash
-# List available platforms
-make build ARGS="list"
-
-# Build for your current platform
-make build ARGS="macos"
-make build ARGS="linux"
-make build ARGS="windows"
-
-# Build with specific options
-make build ARGS="macos --arch arm64"
-make build ARGS="ios --target simulator"
-make build ARGS="android --abi arm64-v8a"
-
-# Build all available platforms
-make build ARGS="all"
+# Run tests (Cargokit builds the native library automatically)
+make test
 ```
 
-**Platform requirements:**
+**Build requirements (for source builds):**
 
 | Platform | Build OS | Requirements |
 |----------|----------|--------------|
-| Linux | Linux | Rust, cbindgen |
-| macOS | macOS | Rust, cbindgen, Xcode CLI |
-| iOS | macOS | Rust, cbindgen, Xcode |
-| Android | Linux/macOS | Rust, cbindgen, Android NDK |
-| Windows | Windows | Rust, Visual Studio |
-
-For more details, see `scripts/README.md`.
+| Linux | Linux | Rust, protoc |
+| macOS | macOS | Rust, protoc, Xcode CLI |
+| iOS | macOS | Rust, protoc, Xcode |
+| Android | Linux/macOS | Rust, protoc, Android NDK |
+| Windows | Windows | Rust, protoc, Visual Studio |
 
 ## Security Considerations
 
@@ -378,20 +379,22 @@ Instead, report security issues privately:
 For cryptographic code changes:
 
 - [ ] No hardcoded keys or secrets
-- [ ] Sensitive data is zeroed after use
-- [ ] Memory is properly freed
-- [ ] No timing side-channels introduced
-- [ ] Random number generation uses secure source
+- [ ] No key material in logs or error messages
+- [ ] Cryptographic comparisons done via library methods (avoid raw byte comparison in Dart)
+- [ ] `DateTime.now().toUtc()` used for timestamps
+- [ ] Store operations properly synchronized
 - [ ] Error handling doesn't leak sensitive information
+- [ ] In-memory stores used only for testing (not production)
 
 ### Upstream Changes
 
 This library wraps [libsignal](https://github.com/signalapp/libsignal). When updating libsignal:
 
 1. Review the libsignal changelog for security fixes
-2. Test all protocol operations after update
-3. Update `libsignal.native_version` in pubspec.yaml (or use `make check ARGS="--update"`)
-4. Regenerate FFI bindings with `make regen`
+2. Update libsignal version with `make check-new-libsignal-version ARGS="--update"` (or manually edit `rust/Cargo.toml`)
+3. Run `cd rust && cargo update && cd ..` to update Cargo.lock
+4. Regenerate FRB bindings with `make codegen` if API changed
+5. Test all protocol operations after update
 
 ## Questions?
 

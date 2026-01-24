@@ -9,19 +9,19 @@ void main() {
     });
 
     group('init()', () {
-      test('initializes successfully', () {
-        expect(() => LibSignal.init(), returnsNormally);
+      test('initializes successfully', () async {
+        await expectLater(LibSignal.init(), completes);
       });
 
-      test('sets isInitialized to true', () {
-        LibSignal.init();
+      test('sets isInitialized to true', () async {
+        await LibSignal.init();
         expect(LibSignal.isInitialized, isTrue);
       });
 
-      test('can be called multiple times without error', () {
-        LibSignal.init();
-        LibSignal.init();
-        LibSignal.init();
+      test('can be called multiple times without error', () async {
+        await LibSignal.init();
+        await LibSignal.init();
+        await LibSignal.init();
         expect(LibSignal.isInitialized, isTrue);
       });
     });
@@ -31,40 +31,39 @@ void main() {
         expect(LibSignal.isInitialized, isFalse);
       });
 
-      test('returns true after init', () {
-        LibSignal.init();
+      test('returns true after init', () async {
+        await LibSignal.init();
         expect(LibSignal.isInitialized, isTrue);
       });
 
-      test('returns false after cleanup', () {
-        LibSignal.init();
+      test('returns false after cleanup', () async {
+        await LibSignal.init();
         LibSignal.cleanup();
         expect(LibSignal.isInitialized, isFalse);
       });
     });
 
     group('ensureInitialized()', () {
-      test('initializes if not already initialized', () {
+      test('throws if not initialized', () {
         expect(LibSignal.isInitialized, isFalse);
-        LibSignal.ensureInitialized();
-        expect(LibSignal.isInitialized, isTrue);
+        expect(() => LibSignal.ensureInitialized(), throwsA(isA<StateError>()));
       });
 
-      test('is idempotent when already initialized', () {
-        LibSignal.init();
+      test('does not throw when already initialized', () async {
+        await LibSignal.init();
         expect(() => LibSignal.ensureInitialized(), returnsNormally);
         expect(LibSignal.isInitialized, isTrue);
       });
     });
 
     group('cleanup()', () {
-      test('cleans up successfully', () {
-        LibSignal.init();
+      test('cleans up successfully', () async {
+        await LibSignal.init();
         expect(() => LibSignal.cleanup(), returnsNormally);
       });
 
-      test('sets isInitialized to false', () {
-        LibSignal.init();
+      test('sets isInitialized to false', () async {
+        await LibSignal.init();
         LibSignal.cleanup();
         expect(LibSignal.isInitialized, isFalse);
       });
@@ -73,8 +72,8 @@ void main() {
         expect(() => LibSignal.cleanup(), returnsNormally);
       });
 
-      test('can be called multiple times', () {
-        LibSignal.init();
+      test('can be called multiple times', () async {
+        await LibSignal.init();
         LibSignal.cleanup();
         LibSignal.cleanup();
         expect(LibSignal.isInitialized, isFalse);
@@ -87,10 +86,15 @@ void main() {
       LibSignal.cleanup();
     });
 
-    test('ensureInit initializes library', () {
+    test('ensureInit throws if not initialized', () {
       expect(LibSignal.isInitialized, isFalse);
-      LibSignalBase.ensureInit();
+      expect(() => LibSignalBase.ensureInit(), throwsA(isA<StateError>()));
+    });
+
+    test('ensureInit does not throw when initialized', () async {
+      await LibSignal.init();
       expect(LibSignal.isInitialized, isTrue);
+      expect(() => LibSignalBase.ensureInit(), returnsNormally);
     });
   });
 }

@@ -7,6 +7,10 @@
 # Runs tests in parallel on: Linux x86_64, Linux ARM64, macOS ARM64, Windows x86_64
 # Coverage: Only collected on Linux x86_64
 # Badge: Updated only after ALL platform tests pass
+#
+# Note: Since we use `dart test` (not `flutter test`), we need to manually
+# build the Rust library before running tests. FRB loads the library from
+# rust/target/release/ directory automatically.
 
 name: Test (Reusable)
 
@@ -30,6 +34,21 @@ on:
         value: ${{ jobs.test.outputs.coverage }}
 
 jobs:
+  # ============================================
+  # Security Audit (Rust dependencies)
+  # ============================================
+  audit:
+    name: Security Audit (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust tools
+        run: make setup-rust-tools
+
+      - name: Run cargo audit
+        run: make rust-audit
+
   test:
     strategy:
       fail-fast: false
@@ -60,11 +79,24 @@ jobs:
         if: runner.os == 'Windows'
         run: choco install make -y
 
+      # Setup Rust toolchain for building native library
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+
+      # Install protobuf compiler (required by libsignal)
+      - name: Setup Protoc
+        uses: ./.github/actions/setup-protoc
+
       - name: Setup FVM and Flutter
         uses: ./.github/actions/setup-fvm
 
       - name: Get dependencies
         run: make get
+        shell: bash
+
+      # Build Rust library - FRB loads from rust/target/release/ automatically
+      - name: Build Rust library
+        run: make build
         shell: bash
 
       - name: Analyze

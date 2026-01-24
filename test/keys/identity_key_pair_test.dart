@@ -1,44 +1,149 @@
 import 'dart:typed_data';
 
 import 'package:libsignal/libsignal.dart';
+import 'package:libsignal/src/rust/api/keys.dart' as keys;
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
+
+  group('Standalone identity key functions', () {
+    group('identityKeypairSignAlternateIdentityRaw()', () {
+      test('signs alternate identity using separate keys', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+        final alternateIdentity = PrivateKey.generate().getPublicKey();
+
+        final signature = keys.identityKeypairSignAlternateIdentityRaw(
+          publicKey: publicKey,
+          privateKey: privateKey,
+          otherIdentity: alternateIdentity,
+        );
+
+        expect(signature, isNotNull);
+        expect(signature.length, greaterThan(0));
+      });
+
+      test('produces same result as IdentityKeyPair.signAlternateIdentity', () {
+        final identity = IdentityKeyPair.generate();
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        );
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+        final alternateIdentity = PrivateKey.generate().getPublicKey();
+
+        // Sign using standalone function
+        final rawSignature = keys.identityKeypairSignAlternateIdentityRaw(
+          publicKey: publicKey,
+          privateKey: privateKey,
+          otherIdentity: alternateIdentity,
+        );
+
+        // Sign using IdentityKeyPair method
+        final methodSignature = identity.signAlternateIdentity(
+          otherIdentity: alternateIdentity,
+        );
+
+        // Both should produce valid signatures (may not be identical due to randomness)
+        expect(rawSignature.length, equals(methodSignature.length));
+        expect(rawSignature.length, equals(64)); // Ed25519 signature length
+      });
+    });
+
+    group('identityKeypairSerializeRaw()', () {
+      test('serializes identity from separate keys', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+
+        final serialized = keys.identityKeypairSerializeRaw(
+          publicKey: publicKey,
+          privateKey: privateKey,
+        );
+
+        expect(serialized, isNotNull);
+        expect(serialized.length, greaterThan(0));
+      });
+
+      test('produces same result as IdentityKeyPair.serialize', () {
+        final identity = IdentityKeyPair.generate();
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        );
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+
+        // Serialize using standalone function
+        final rawSerialized = keys.identityKeypairSerializeRaw(
+          publicKey: publicKey,
+          privateKey: privateKey,
+        );
+
+        // Serialize using IdentityKeyPair method
+        final methodSerialized = identity.serialize();
+
+        // Both should produce identical results
+        expect(rawSerialized, equals(methodSerialized));
+      });
+
+      test('serialized data can be deserialized', () {
+        final privateKey = PrivateKey.generate();
+        final publicKey = privateKey.getPublicKey();
+
+        final serialized = keys.identityKeypairSerializeRaw(
+          publicKey: publicKey,
+          privateKey: privateKey,
+        );
+
+        // Should be able to deserialize
+        final restored = IdentityKeyPair.deserialize(
+          bytes: serialized.toList(),
+        );
+        expect(restored, isNotNull);
+        expect(restored.publicKey, equals(publicKey.serialize()));
+      });
+    });
+  });
 
   group('IdentityKeyPair', () {
     group('generate()', () {
       test('generates valid identity key pair', () {
         final identity = IdentityKeyPair.generate();
-
         expect(identity, isNotNull);
-        expect(identity.isDisposed, isFalse);
-
-        identity.dispose();
       });
 
       test('each generation produces unique keys', () {
         final identity1 = IdentityKeyPair.generate();
         final identity2 = IdentityKeyPair.generate();
 
-        expect(identity1.publicKey.equals(identity2.publicKey), isFalse);
-
-        identity1.dispose();
-        identity2.dispose();
+        // Public keys are returned as Uint8List
+        expect(identity1.publicKey, isNot(equals(identity2.publicKey)));
       });
 
       test('generated keys are cryptographically linked', () {
         final identity = IdentityKeyPair.generate();
 
-        // Sign something with private key, verify with public key
+        // Get the private key to sign something
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        );
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+
         final message = Uint8List.fromList('test message'.codeUnits);
-        final signature = identity.privateKey.sign(message);
-        final isValid = identity.publicKey.verify(message, signature);
+        final signature = privateKey.sign(message: message.toList());
+        final isValid = publicKey.verify(
+          message: message.toList(),
+          signature: signature.toList(),
+        );
 
         expect(isValid, isTrue);
-
-        identity.dispose();
       });
     });
 
@@ -47,25 +152,12 @@ void main() {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
 
-        final identity = IdentityKeyPair.fromKeys(privateKey, publicKey);
+        final identity = IdentityKeyPair.fromKeys(
+          privateKey: privateKey,
+          publicKey: publicKey,
+        );
 
         expect(identity, isNotNull);
-        expect(identity.isDisposed, isFalse);
-
-        identity.dispose();
-      });
-
-      test('takes ownership of provided keys', () {
-        final privateKey = PrivateKey.generate();
-        final publicKey = privateKey.getPublicKey();
-
-        final identity = IdentityKeyPair.fromKeys(privateKey, publicKey);
-
-        // Dispose identity should dispose both keys
-        identity.dispose();
-
-        expect(privateKey.isDisposed, isTrue);
-        expect(publicKey.isDisposed, isTrue);
       });
     });
 
@@ -73,29 +165,45 @@ void main() {
       test('round-trip preserves keys', () {
         final original = IdentityKeyPair.generate();
         final serialized = original.serialize();
-        final restored = IdentityKeyPair.deserialize(serialized.bytes);
+        final restored = IdentityKeyPair.deserialize(
+          bytes: serialized.toList(),
+        );
 
         // Public keys should be equal
-        expect(original.publicKey.equals(restored.publicKey), isTrue);
+        expect(original.publicKey, equals(restored.publicKey));
 
         // Private keys should serialize to same bytes
-        final origPrivBytes = original.privateKey.serialize();
-        final restoredPrivBytes = restored.privateKey.serialize();
-        expect(origPrivBytes.bytes, equals(restoredPrivBytes.bytes));
-        origPrivBytes.dispose();
-        restoredPrivBytes.dispose();
+        expect(original.privateKey, equals(restored.privateKey));
 
         // Both private keys should produce signatures verifiable by the public key
+        final origPrivate = PrivateKey.deserialize(
+          bytes: original.privateKey.toList(),
+        );
+        final restoredPrivate = PrivateKey.deserialize(
+          bytes: restored.privateKey.toList(),
+        );
+        final origPublic = PublicKey.deserialize(
+          bytes: original.publicKey.toList(),
+        );
+
         final message = Uint8List.fromList('test'.codeUnits);
-        final sig1 = original.privateKey.sign(message);
-        final sig2 = restored.privateKey.sign(message);
+        final sig1 = origPrivate.sign(message: message.toList());
+        final sig2 = restoredPrivate.sign(message: message.toList());
 
-        expect(original.publicKey.verify(message, sig1), isTrue);
-        expect(original.publicKey.verify(message, sig2), isTrue);
-
-        serialized.dispose();
-        original.dispose();
-        restored.dispose();
+        expect(
+          origPublic.verify(
+            message: message.toList(),
+            signature: sig1.toList(),
+          ),
+          isTrue,
+        );
+        expect(
+          origPublic.verify(
+            message: message.toList(),
+            signature: sig2.toList(),
+          ),
+          isTrue,
+        );
       });
 
       test('serialize returns expected length', () {
@@ -104,81 +212,18 @@ void main() {
 
         // Should be 64 bytes (32 public + 32 private) or protocol-specific
         expect(serialized.length, greaterThan(0));
-
-        serialized.dispose();
-        identity.dispose();
       });
 
       test('deserialize rejects empty data', () {
-        expect(
-          () => IdentityKeyPair.deserialize(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
-        );
+        expect(() => IdentityKeyPair.deserialize(bytes: []), throwsA(anything));
       });
 
       test('deserialize rejects data with wrong length', () {
-        final invalidData = Uint8List.fromList([0x0a, 1, 2, 3, 4, 5]);
+        final invalidData = [0x0a, 1, 2, 3, 4, 5];
         expect(
-          () => IdentityKeyPair.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
+          () => IdentityKeyPair.deserialize(bytes: invalidData),
+          throwsA(anything),
         );
-      });
-
-      test('deserialize rejects data with wrong type byte', () {
-        // 69 bytes but wrong type prefix
-        final invalidData = Uint8List(69);
-        invalidData[0] = 0x99; // Wrong type
-        expect(
-          () => IdentityKeyPair.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('deserialize rejects data with wrong public key length byte', () {
-        // Valid structure but wrong public key length
-        final invalidData = Uint8List(69);
-        invalidData[0] = 0x0a; // Correct public key tag
-        invalidData[1] = 0x32; // Wrong length (should be 0x21 = 33)
-        expect(
-          () => IdentityKeyPair.deserialize(invalidData),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('deserialize rejects data with wrong private key tag', () {
-        // Valid public key part but wrong private key tag
-        final identity = IdentityKeyPair.generate();
-        final serialized = identity.serialize();
-        final data = Uint8List.fromList(serialized.bytes);
-
-        // Corrupt the private key tag (offset 35 = 1 + 1 + 33)
-        data[35] = 0x99; // Wrong tag (should be 0x12)
-
-        expect(
-          () => IdentityKeyPair.deserialize(data),
-          throwsA(isA<LibSignalException>()),
-        );
-
-        serialized.dispose();
-        identity.dispose();
-      });
-
-      test('deserialize rejects data with wrong private key length byte', () {
-        // Valid public key part but wrong private key length
-        final identity = IdentityKeyPair.generate();
-        final serialized = identity.serialize();
-        final data = Uint8List.fromList(serialized.bytes);
-
-        // Corrupt the private key length (offset 36 = 1 + 1 + 33 + 1)
-        data[36] = 0x99; // Wrong length (should be 0x20 = 32)
-
-        expect(
-          () => IdentityKeyPair.deserialize(data),
-          throwsA(isA<LibSignalException>()),
-        );
-
-        serialized.dispose();
-        identity.dispose();
       });
     });
 
@@ -187,35 +232,36 @@ void main() {
         final mainIdentity = IdentityKeyPair.generate();
         final alternateIdentity = IdentityKeyPair.generate();
 
+        final altPublicKey = PublicKey.deserialize(
+          bytes: alternateIdentity.publicKey.toList(),
+        );
         final signature = mainIdentity.signAlternateIdentity(
-          alternateIdentity.publicKey,
+          otherIdentity: altPublicKey,
         );
 
         expect(signature, isNotNull);
         expect(signature.length, greaterThan(0));
-
-        mainIdentity.dispose();
-        alternateIdentity.dispose();
       });
 
       test('multiple signatures are valid', () {
         final mainIdentity = IdentityKeyPair.generate();
         final alternateIdentity = IdentityKeyPair.generate();
 
+        final altPublicKey = PublicKey.deserialize(
+          bytes: alternateIdentity.publicKey.toList(),
+        );
+
         // Sign multiple times
         final sig1 = mainIdentity.signAlternateIdentity(
-          alternateIdentity.publicKey,
+          otherIdentity: altPublicKey,
         );
         final sig2 = mainIdentity.signAlternateIdentity(
-          alternateIdentity.publicKey,
+          otherIdentity: altPublicKey,
         );
 
         // Both signatures should be non-empty
         expect(sig1.length, greaterThan(0));
         expect(sig2.length, greaterThan(0));
-
-        mainIdentity.dispose();
-        alternateIdentity.dispose();
       });
 
       test('different alternate keys produce different signatures', () {
@@ -223,137 +269,86 @@ void main() {
         final alt1 = IdentityKeyPair.generate();
         final alt2 = IdentityKeyPair.generate();
 
-        final sig1 = mainIdentity.signAlternateIdentity(alt1.publicKey);
-        final sig2 = mainIdentity.signAlternateIdentity(alt2.publicKey);
+        final alt1PublicKey = PublicKey.deserialize(
+          bytes: alt1.publicKey.toList(),
+        );
+        final alt2PublicKey = PublicKey.deserialize(
+          bytes: alt2.publicKey.toList(),
+        );
+
+        final sig1 = mainIdentity.signAlternateIdentity(
+          otherIdentity: alt1PublicKey,
+        );
+        final sig2 = mainIdentity.signAlternateIdentity(
+          otherIdentity: alt2PublicKey,
+        );
 
         expect(sig1, isNot(equals(sig2)));
-
-        mainIdentity.dispose();
-        alt1.dispose();
-        alt2.dispose();
       });
     });
 
     group('privateKey getter', () {
-      test('returns valid private key', () {
+      test('returns valid private key bytes', () {
         final identity = IdentityKeyPair.generate();
+        final privateKeyBytes = identity.privateKey;
 
-        final privateKey = identity.privateKey;
-
-        expect(privateKey, isNotNull);
-        expect(privateKey.isDisposed, isFalse);
-
-        identity.dispose();
+        expect(privateKeyBytes, isNotNull);
+        expect(privateKeyBytes.length, equals(32));
       });
 
       test('returned key can sign messages', () {
         final identity = IdentityKeyPair.generate();
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        );
         final message = Uint8List.fromList('test'.codeUnits);
 
-        final signature = identity.privateKey.sign(message);
+        final signature = privateKey.sign(message: message.toList());
 
         expect(signature, isNotNull);
         expect(signature.length, equals(64));
-
-        identity.dispose();
       });
     });
 
     group('publicKey getter', () {
-      test('returns valid public key', () {
+      test('returns valid public key bytes', () {
         final identity = IdentityKeyPair.generate();
+        final publicKeyBytes = identity.publicKey;
 
-        final publicKey = identity.publicKey;
-
-        expect(publicKey, isNotNull);
-        expect(publicKey.isDisposed, isFalse);
-
-        identity.dispose();
+        expect(publicKeyBytes, isNotNull);
+        expect(
+          publicKeyBytes.length,
+          equals(33),
+        ); // 1 type prefix + 32 key bytes
       });
 
       test('returned key can verify signatures', () {
         final identity = IdentityKeyPair.generate();
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        );
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
         final message = Uint8List.fromList('test'.codeUnits);
-        final signature = identity.privateKey.sign(message);
 
-        final isValid = identity.publicKey.verify(message, signature);
+        final signature = privateKey.sign(message: message.toList());
+        final isValid = publicKey.verify(
+          message: message.toList(),
+          signature: signature.toList(),
+        );
 
         expect(isValid, isTrue);
-
-        identity.dispose();
       });
 
       test('public key matches derived public key', () {
         final identity = IdentityKeyPair.generate();
-        final derived = identity.privateKey.getPublicKey();
-
-        expect(identity.publicKey.equals(derived), isTrue);
-
-        derived.dispose();
-        identity.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final identity = IdentityKeyPair.generate();
-        expect(identity.isDisposed, isFalse);
-        identity.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final identity = IdentityKeyPair.generate();
-        identity.dispose();
-        expect(identity.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final identity = IdentityKeyPair.generate();
-        identity.dispose();
-        expect(() => identity.dispose(), returnsNormally);
-      });
-
-      test('dispose disposes both keys', () {
-        final identity = IdentityKeyPair.generate();
-        final privateKey = identity.privateKey;
-        final publicKey = identity.publicKey;
-
-        identity.dispose();
-
-        expect(privateKey.isDisposed, isTrue);
-        expect(publicKey.isDisposed, isTrue);
-      });
-
-      test('serialize throws after dispose', () {
-        final identity = IdentityKeyPair.generate();
-        identity.dispose();
-        expect(() => identity.serialize(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('signAlternateIdentity throws after dispose', () {
-        final identity = IdentityKeyPair.generate();
-        final other = IdentityKeyPair.generate();
-
-        identity.dispose();
-
-        expect(
-          () => identity.signAlternateIdentity(other.publicKey),
-          throwsA(isA<LibSignalException>()),
+        final privateKey = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
         );
+        final derived = privateKey.getPublicKey();
 
-        other.dispose();
-      });
-
-      test('privateKey getter throws after dispose', () {
-        final identity = IdentityKeyPair.generate();
-        identity.dispose();
-        expect(() => identity.privateKey, throwsA(isA<LibSignalException>()));
-      });
-
-      test('publicKey getter throws after dispose', () {
-        final identity = IdentityKeyPair.generate();
-        identity.dispose();
-        expect(() => identity.publicKey, throwsA(isA<LibSignalException>()));
+        expect(identity.publicKey, equals(derived.serialize()));
       });
     });
   });

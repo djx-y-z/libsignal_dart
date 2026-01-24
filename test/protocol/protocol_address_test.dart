@@ -2,246 +2,66 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('ProtocolAddress', () {
     group('constructor', () {
       test('creates address with name and deviceId', () {
-        final address = ProtocolAddress('alice-uuid', 1);
+        final address = ProtocolAddress(name: 'alice-uuid', deviceId: 1);
 
         expect(address, isNotNull);
-        expect(address.isDisposed, isFalse);
-
-        address.dispose();
       });
 
       test('rejects device ID 0', () {
         // libsignal requires device ID > 0
         expect(
-          () => ProtocolAddress('user', 0),
-          throwsA(isA<LibSignalException>()),
+          () => ProtocolAddress(name: 'user', deviceId: 0),
+          throwsA(anything),
         );
       });
 
       test('accepts device ID 1 (minimum valid)', () {
-        final address = ProtocolAddress('user', 1);
+        final address = ProtocolAddress(name: 'user', deviceId: 1);
 
-        expect(address.deviceId, equals(1));
-
-        address.dispose();
+        expect(address.deviceId(), equals(1));
       });
 
       test('accepts device ID 100', () {
-        final address = ProtocolAddress('user', 100);
-        expect(address.deviceId, equals(100));
-        address.dispose();
+        final address = ProtocolAddress(name: 'user', deviceId: 100);
+        expect(address.deviceId(), equals(100));
       });
 
       test('accepts UUID-like names', () {
         const uuid = '550e8400-e29b-41d4-a716-446655440000';
-        final address = ProtocolAddress(uuid, 1);
+        final address = ProtocolAddress(name: uuid, deviceId: 1);
 
-        expect(address.name, equals(uuid));
-
-        address.dispose();
+        expect(address.name(), equals(uuid));
       });
 
       test('accepts names with special characters', () {
         const name = 'user@example.com';
-        final address = ProtocolAddress(name, 1);
+        final address = ProtocolAddress(name: name, deviceId: 1);
 
-        expect(address.name, equals(name));
-
-        address.dispose();
+        expect(address.name(), equals(name));
       });
     });
 
-    group('name getter', () {
+    group('name()', () {
       test('returns correct name', () {
-        final address = ProtocolAddress('test-user', 5);
+        final address = ProtocolAddress(name: 'test-user', deviceId: 5);
 
-        expect(address.name, equals('test-user'));
-
-        address.dispose();
+        expect(address.name(), equals('test-user'));
       });
     });
 
-    group('deviceId getter', () {
+    group('deviceId()', () {
       test('returns correct deviceId', () {
-        final address = ProtocolAddress('user', 42);
+        final address = ProtocolAddress(name: 'user', deviceId: 42);
 
-        expect(address.deviceId, equals(42));
-
-        address.dispose();
-      });
-    });
-
-    group('clone()', () {
-      test('creates independent copy', () {
-        final original = ProtocolAddress('user', 1);
-        final cloned = original.clone();
-
-        expect(cloned.name, equals(original.name));
-        expect(cloned.deviceId, equals(original.deviceId));
-
-        original.dispose();
-
-        // Cloned should still work
-        expect(cloned.isDisposed, isFalse);
-        expect(cloned.name, equals('user'));
-        expect(cloned.deviceId, equals(1));
-
-        cloned.dispose();
-      });
-    });
-
-    group('toString()', () {
-      test('formats with redacted name (name > 4 chars)', () {
-        final address = ProtocolAddress('alice', 3);
-
-        // Name is redacted to prevent sensitive data leaking to logs
-        expect(address.toString(), equals('ProtocolAddress(alic...[5]:3)'));
-
-        address.dispose();
-      });
-
-      test('formats with full name (name <= 4 chars)', () {
-        final address = ProtocolAddress('bob', 3);
-
-        // Short names are shown in full
-        expect(address.toString(), equals('ProtocolAddress(bob:3)'));
-
-        address.dispose();
-      });
-
-      test('shows disposed state', () {
-        final address = ProtocolAddress('alice', 3);
-        address.dispose();
-
-        expect(address.toString(), equals('ProtocolAddress(disposed)'));
-      });
-    });
-
-    group('== and hashCode', () {
-      test('equal addresses have same hashCode', () {
-        final addr1 = ProtocolAddress('user', 1);
-        final addr2 = ProtocolAddress('user', 1);
-
-        expect(addr1.hashCode, equals(addr2.hashCode));
-
-        addr1.dispose();
-        addr2.dispose();
-      });
-
-      test('operator == returns true for same name and deviceId', () {
-        final addr1 = ProtocolAddress('user', 1);
-        final addr2 = ProtocolAddress('user', 1);
-
-        expect(addr1 == addr2, isTrue);
-
-        addr1.dispose();
-        addr2.dispose();
-      });
-
-      test('operator == returns false for different name', () {
-        final addr1 = ProtocolAddress('alice', 1);
-        final addr2 = ProtocolAddress('bob', 1);
-
-        expect(addr1 == addr2, isFalse);
-
-        addr1.dispose();
-        addr2.dispose();
-      });
-
-      test('operator == returns false for different deviceId', () {
-        final addr1 = ProtocolAddress('user', 1);
-        final addr2 = ProtocolAddress('user', 2);
-
-        expect(addr1 == addr2, isFalse);
-
-        addr1.dispose();
-        addr2.dispose();
-      });
-
-      test('disposed addresses return hashCode 0', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(address.hashCode, equals(0));
-      });
-
-      test('disposed addresses are not equal', () {
-        final addr1 = ProtocolAddress('user', 1);
-        final addr2 = ProtocolAddress('user', 1);
-
-        addr1.dispose();
-
-        expect(addr1 == addr2, isFalse);
-        expect(addr2 == addr1, isFalse);
-
-        addr2.dispose();
-      });
-
-      test('address equals itself', () {
-        final address = ProtocolAddress('user', 1);
-
-        // ignore: unnecessary_statements
-        expect(address == address, isTrue);
-
-        address.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final address = ProtocolAddress('user', 1);
-
-        expect(address.isDisposed, isFalse);
-
-        address.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(address.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(() => address.dispose(), returnsNormally);
-      });
-
-      test('name throws after dispose', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(() => address.name, throwsA(isA<LibSignalException>()));
-      });
-
-      test('deviceId throws after dispose', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(() => address.deviceId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('clone throws after dispose', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(() => address.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final address = ProtocolAddress('user', 1);
-        address.dispose();
-
-        expect(() => address.pointer, throwsA(isA<LibSignalException>()));
+        expect(address.deviceId(), equals(42));
       });
     });
   });

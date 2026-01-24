@@ -2,7 +2,9 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('InMemoryIdentityKeyStore', () {
@@ -16,18 +18,10 @@ void main() {
     setUp(() {
       identityKeyPair = IdentityKeyPair.generate();
       store = InMemoryIdentityKeyStore(identityKeyPair, 12345);
-      aliceAddress = ProtocolAddress('alice', 1);
-      bobAddress = ProtocolAddress('bob', 1);
+      aliceAddress = ProtocolAddress(name: 'alice', deviceId: 1);
+      bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
       aliceIdentity = PrivateKey.generate().getPublicKey();
       bobIdentity = PrivateKey.generate().getPublicKey();
-    });
-
-    tearDown(() {
-      identityKeyPair.dispose();
-      aliceAddress.dispose();
-      bobAddress.dispose();
-      aliceIdentity.dispose();
-      bobIdentity.dispose();
     });
 
     group('getIdentityKeyPair()', () {
@@ -47,12 +41,10 @@ void main() {
         final keyPair = IdentityKeyPair.generate();
 
         for (final regId in [0, 1, 100, 0xFFFF, 0x3FFF]) {
-          final store = InMemoryIdentityKeyStore(keyPair, regId);
-          final result = await store.getLocalRegistrationId();
+          final testStore = InMemoryIdentityKeyStore(keyPair, regId);
+          final result = await testStore.getLocalRegistrationId();
           expect(result, equals(regId));
         }
-
-        keyPair.dispose();
       });
     });
 
@@ -62,7 +54,7 @@ void main() {
 
         final retrieved = await store.getIdentity(aliceAddress);
         expect(retrieved, isNotNull);
-        expect(retrieved, equals(aliceIdentity));
+        expect(retrieved!.equals(other: aliceIdentity), isTrue);
       });
 
       test('returns null for non-existent identity', () async {
@@ -77,8 +69,8 @@ void main() {
         final aliceRetrieved = await store.getIdentity(aliceAddress);
         final bobRetrieved = await store.getIdentity(bobAddress);
 
-        expect(aliceRetrieved, equals(aliceIdentity));
-        expect(bobRetrieved, equals(bobIdentity));
+        expect(aliceRetrieved!.equals(other: aliceIdentity), isTrue);
+        expect(bobRetrieved!.equals(other: bobIdentity), isTrue);
       });
 
       test('saveIdentity returns true for new identity', () async {
@@ -101,9 +93,7 @@ void main() {
         expect(result, isTrue);
 
         final retrieved = await store.getIdentity(aliceAddress);
-        expect(retrieved, equals(newIdentity));
-
-        newIdentity.dispose();
+        expect(retrieved!.equals(other: newIdentity), isTrue);
       });
 
       test('overwrites existing identity', () async {
@@ -113,9 +103,7 @@ void main() {
         await store.saveIdentity(aliceAddress, newIdentity);
 
         final retrieved = await store.getIdentity(aliceAddress);
-        expect(retrieved, equals(newIdentity));
-
-        newIdentity.dispose();
+        expect(retrieved!.equals(other: newIdentity), isTrue);
       });
     });
 
@@ -159,8 +147,6 @@ void main() {
           Direction.receiving,
         );
         expect(isTrusted, isFalse);
-
-        newIdentity.dispose();
       });
 
       test('does not trust changed identity for sending', () async {
@@ -173,8 +159,6 @@ void main() {
           Direction.sending,
         );
         expect(isTrusted, isFalse);
-
-        newIdentity.dispose();
       });
     });
 
@@ -224,8 +208,6 @@ void main() {
         final newIdentity = PrivateKey.generate().getPublicKey();
         await store.saveIdentity(aliceAddress, newIdentity);
         expect(store.length, equals(1));
-
-        newIdentity.dispose();
       });
     });
   });

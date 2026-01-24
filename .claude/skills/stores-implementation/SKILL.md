@@ -14,6 +14,22 @@ Signal Protocol uses the Double Ratchet algorithm:
 - State must be persisted for correct encryption/decryption
 - Without stores, repeated operations will fail or produce incorrect results
 
+## Architecture
+
+Stores are Dart interfaces that provide persistence for the Signal Protocol. The FRB layer uses DartFn callbacks to access stores during cryptographic operations.
+
+```
+┌─────────────────────────────────────────────┐
+│            Your Application                  │
+├─────────────────────────────────────────────┤
+│  Store Interfaces (SessionStore, etc.)       │  ← You implement these
+├─────────────────────────────────────────────┤
+│  FRB Callbacks (DartFn)                      │  ← Bridges Dart to Rust
+├─────────────────────────────────────────────┤
+│  libsignal-protocol (Rust)                   │  ← Cryptographic operations
+└─────────────────────────────────────────────┘
+```
+
 ## Store Types
 
 | Store | Purpose | Required For |
@@ -33,7 +49,7 @@ Signal Protocol uses the Double Ratchet algorithm:
 | Process PreKey message (new session) | Yes | Yes | Yes | Yes | Yes |
 | Group messaging | - | - | - | - | - |
 
-**Note:** Group messaging uses `SenderKeyStore` with built-in FFI callbacks.
+**Note:** Group messaging uses `SenderKeyStore`.
 
 ## Abstract Store Interfaces
 
@@ -126,13 +142,13 @@ abstract class SenderKeyStore {
   /// Load sender key for group session
   Future<SenderKeyRecord?> loadSenderKey(
     ProtocolAddress sender,
-    Uint8List distributionId,
+    String distributionId,
   );
 
   /// Store sender key for group session
   Future<void> storeSenderKey(
     ProtocolAddress sender,
-    Uint8List distributionId,
+    String distributionId,
     SenderKeyRecord record,
   );
 }
@@ -144,16 +160,16 @@ abstract class SenderKeyStore {
 
 | Backend | Pros | Cons |
 |---------|------|------|
-| SQLite (sqflite) | Fast, reliable, ACID | More complex setup |
+| SQLite (sqflite/drift) | Fast, reliable, ACID | More complex setup |
 | Hive | Simple, fast | No ACID guarantees |
 | flutter_secure_storage | Encrypted at rest | Slower, size limits |
 | SharedPreferences | Simple | Not for large data |
 
-**Recommendation:** SQLite for production, flutter_secure_storage for keys only.
+**Recommendation:** SQLite for session data, flutter_secure_storage for identity keys.
 
 ### 2. Implement Serialization
 
-All records can be serialized:
+All records can be serialized to `Uint8List`:
 
 ```dart
 // Serialize to store
@@ -163,7 +179,7 @@ await storage.put(key, bytes);
 // Deserialize when loading
 final bytes = await storage.get(key);
 if (bytes != null) {
-  return SessionRecord.deserialize(bytes);
+  return SessionRecord.deserialize(bytes: bytes);
 }
 return null;
 ```
@@ -171,13 +187,19 @@ return null;
 ### 3. Handle Concurrency
 
 ```dart
+import 'package:synchronized/synchronized.dart';
+
 class MySessionStore implements SessionStore {
-  final _lock = Lock(); // from synchronized package
+  final _lock = Lock();
+  final Database _db;
 
   @override
   Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
     await _lock.synchronized(() async {
-      // Store session atomically
+      await _db.insert('sessions', {
+        'address': '${address.name()}:${address.deviceId()}',
+        'record': record.serialize(),
+      });
     });
   }
 }
@@ -188,11 +210,16 @@ class MySessionStore implements SessionStore {
 Identity keys should use secure storage:
 
 ```dart
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 class SecureIdentityKeyStore implements IdentityKeyStore {
   final FlutterSecureStorage _secureStorage;
+  IdentityKeyPair? _cachedKeyPair;
 
   @override
   Future<IdentityKeyPair> getIdentityKeyPair() async {
+    if (_cachedKeyPair != null) return _cachedKeyPair!;
+
     final bytes = await _secureStorage.read(key: 'identity_key_pair');
     if (bytes == null) {
       // Generate new key pair
@@ -201,9 +228,11 @@ class SecureIdentityKeyStore implements IdentityKeyStore {
         key: 'identity_key_pair',
         value: base64Encode(keyPair.serialize()),
       );
+      _cachedKeyPair = keyPair;
       return keyPair;
     }
-    return IdentityKeyPair.deserialize(base64Decode(bytes));
+    _cachedKeyPair = IdentityKeyPair.deserialize(bytes: base64Decode(bytes));
+    return _cachedKeyPair!;
   }
 }
 ```
@@ -216,7 +245,7 @@ Pre-keys should be rotated after use:
 @override
 Future<void> removePreKey(int preKeyId) async {
   // Pre-keys are one-time use
-  await _database.delete('pre_keys', where: 'id = ?', whereArgs: [preKeyId]);
+  await _db.delete('pre_keys', where: 'id = ?', whereArgs: [preKeyId]);
 }
 ```
 
@@ -225,6 +254,9 @@ Signed pre-keys should be rotated periodically (e.g., weekly).
 ## Example: SQLite SessionStore
 
 ```dart
+import 'package:sqflite/sqflite.dart';
+import 'package:libsignal/libsignal.dart';
+
 class SqliteSessionStore implements SessionStore {
   final Database _db;
 
@@ -241,7 +273,7 @@ class SqliteSessionStore implements SessionStore {
   }
 
   String _addressKey(ProtocolAddress address) {
-    return '${address.name}:${address.deviceId}';
+    return '${address.name()}:${address.deviceId()}';
   }
 
   @override
@@ -256,7 +288,7 @@ class SqliteSessionStore implements SessionStore {
     if (rows.isEmpty) return null;
 
     final bytes = rows.first['record'] as Uint8List;
-    return SessionRecord.deserialize(bytes);
+    return SessionRecord.deserialize(bytes: bytes);
   }
 
   @override
@@ -277,6 +309,37 @@ class SqliteSessionStore implements SessionStore {
 }
 ```
 
+## Usage with SessionBuilder/SessionCipher
+
+```dart
+// Create stores
+final sessionStore = SqliteSessionStore(db);
+final identityStore = SecureIdentityKeyStore(secureStorage, registrationId);
+final preKeyStore = SqlitePreKeyStore(db);
+final signedPreKeyStore = SqliteSignedPreKeyStore(db);
+final kyberPreKeyStore = SqliteKyberPreKeyStore(db);
+
+// Build session from pre-key bundle
+final builder = SessionBuilder(
+  sessionStore: sessionStore,
+  identityKeyStore: identityStore,
+  preKeyStore: preKeyStore,
+  signedPreKeyStore: signedPreKeyStore,
+  kyberPreKeyStore: kyberPreKeyStore,
+);
+await builder.processPreKeyBundle(recipientAddress, preKeyBundle);
+
+// Encrypt/decrypt messages
+final cipher = SessionCipher(
+  sessionStore: sessionStore,
+  identityKeyStore: identityStore,
+  preKeyStore: preKeyStore,
+  signedPreKeyStore: signedPreKeyStore,
+  kyberPreKeyStore: kyberPreKeyStore,
+);
+final ciphertext = await cipher.encrypt(recipientAddress, plaintext);
+```
+
 ## Testing Your Implementation
 
 ```dart
@@ -289,8 +352,8 @@ void main() {
     });
 
     test('stores and loads session', () async {
-      final address = ProtocolAddress('alice', 1);
-      final session = SessionRecord.freshSession();
+      final address = ProtocolAddress(name: 'alice', deviceId: 1);
+      final session = SessionRecord.newFresh();
 
       await store.storeSession(address, session);
       final loaded = await store.loadSession(address);
@@ -300,7 +363,7 @@ void main() {
     });
 
     test('returns null for unknown address', () async {
-      final address = ProtocolAddress('unknown', 1);
+      final address = ProtocolAddress(name: 'unknown', deviceId: 1);
       final loaded = await store.loadSession(address);
 
       expect(loaded, isNull);
@@ -314,13 +377,17 @@ void main() {
 For testing, use the provided in-memory implementations:
 
 ```dart
-import 'package:libsignal/src/stores/in_memory/in_memory_stores.dart';
+import 'package:libsignal/libsignal.dart';
 
 final sessionStore = InMemorySessionStore();
 final identityStore = InMemoryIdentityKeyStore(
   identityKeyPair: IdentityKeyPair.generate(),
   registrationId: 12345,
 );
+final preKeyStore = InMemoryPreKeyStore();
+final signedPreKeyStore = InMemorySignedPreKeyStore();
+final kyberPreKeyStore = InMemoryKyberPreKeyStore();
+final senderKeyStore = InMemorySenderKeyStore();
 ```
 
 **WARNING:** In-memory stores are NOT for production use - data is lost on app restart!

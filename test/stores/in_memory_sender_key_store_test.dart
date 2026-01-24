@@ -6,7 +6,9 @@ import 'package:test/test.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('InMemorySenderKeyStore', () {
@@ -21,18 +23,13 @@ void main() {
 
     setUp(() {
       store = InMemorySenderKeyStore();
-      aliceAddress = ProtocolAddress('alice', 1);
-      bobAddress = ProtocolAddress('bob', 1);
+      aliceAddress = ProtocolAddress(name: 'alice', deviceId: 1);
+      bobAddress = ProtocolAddress(name: 'bob', deviceId: 1);
       aliceSenderKey1 = SenderKeyName(aliceAddress, 'group-1');
       aliceSenderKey2 = SenderKeyName(aliceAddress, 'group-2');
       bobSenderKey = SenderKeyName(bobAddress, 'group-1');
       record1 = randomBytes(100);
       record2 = randomBytes(100);
-    });
-
-    tearDown(() {
-      aliceAddress.dispose();
-      bobAddress.dispose();
     });
 
     group('initial state', () {
@@ -129,9 +126,9 @@ void main() {
 
     group('SenderKeyName', () {
       test('equals works correctly', () {
-        final addr1 = ProtocolAddress('alice', 1);
-        final addr2 = ProtocolAddress('alice', 1);
-        final addr3 = ProtocolAddress('bob', 1);
+        final addr1 = ProtocolAddress(name: 'alice', deviceId: 1);
+        final addr2 = ProtocolAddress(name: 'alice', deviceId: 1);
+        final addr3 = ProtocolAddress(name: 'bob', deviceId: 1);
 
         final name1 = SenderKeyName(addr1, 'group-1');
         final name2 = SenderKeyName(addr2, 'group-1');
@@ -141,42 +138,54 @@ void main() {
         expect(name1, equals(name2));
         expect(name1, isNot(equals(name3)));
         expect(name1, isNot(equals(name4)));
+      });
 
-        addr1.dispose();
-        addr2.dispose();
-        addr3.dispose();
+      test('equals returns false for non-SenderKeyName', () {
+        final addr = ProtocolAddress(name: 'alice', deviceId: 1);
+        final name = SenderKeyName(addr, 'group-1');
+
+        // ignore: unrelated_type_equality_checks
+        expect(name == 'not a SenderKeyName', isFalse);
+        // ignore: unrelated_type_equality_checks
+        expect(name == 42, isFalse);
+        // ignore: unrelated_type_equality_checks
+        expect(name == addr, isFalse);
+      });
+
+      test('equals uses identical check', () {
+        final addr = ProtocolAddress(name: 'alice', deviceId: 1);
+        final name = SenderKeyName(addr, 'group-1');
+
+        // Same instance should be equal (covers identical check)
+        expect(name, equals(name));
+        expect(identical(name, name), isTrue);
       });
 
       test('hashCode is consistent with equals', () {
-        final addr1 = ProtocolAddress('alice', 1);
-        final addr2 = ProtocolAddress('alice', 1);
+        final addr1 = ProtocolAddress(name: 'alice', deviceId: 1);
+        final addr2 = ProtocolAddress(name: 'alice', deviceId: 1);
 
         final name1 = SenderKeyName(addr1, 'group-1');
         final name2 = SenderKeyName(addr2, 'group-1');
 
         expect(name1.hashCode, equals(name2.hashCode));
-
-        addr1.dispose();
-        addr2.dispose();
       });
 
       test('toString returns readable representation', () {
-        final addr = ProtocolAddress('alice', 1);
+        final addr = ProtocolAddress(name: 'alice', deviceId: 1);
         final name = SenderKeyName(addr, 'group-1');
 
         final str = name.toString();
-        // ProtocolAddress now redacts names longer than 4 chars
-        expect(str, contains('alic')); // First 4 chars visible
+        // Format: SenderKeyName(name:deviceId, distributionId)
+        expect(str, contains('alice:1'));
         expect(str, contains('group-1'));
-
-        addr.dispose();
       });
     });
 
     group('different device IDs', () {
       test('treats different device IDs as separate keys', () async {
-        final alice1 = ProtocolAddress('alice', 1);
-        final alice2 = ProtocolAddress('alice', 2);
+        final alice1 = ProtocolAddress(name: 'alice', deviceId: 1);
+        final alice2 = ProtocolAddress(name: 'alice', deviceId: 2);
 
         final name1 = SenderKeyName(alice1, 'group-1');
         final name2 = SenderKeyName(alice2, 'group-1');
@@ -187,9 +196,6 @@ void main() {
         expect(await store.loadSenderKey(name1), equals(record1));
         expect(await store.loadSenderKey(name2), equals(record2));
         expect(store.length, equals(2));
-
-        alice1.dispose();
-        alice2.dispose();
       });
     });
 

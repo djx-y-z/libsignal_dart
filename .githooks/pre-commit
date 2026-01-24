@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 echo -e "${YELLOW}Running pre-commit checks...${NC}"
 
 # Check formatting
-echo -e "\n${YELLOW}[1/2] Checking code formatting...${NC}"
+echo -e "\n${YELLOW}[1/3] Checking code formatting...${NC}"
 if make format-check; then
     echo -e "${GREEN}Formatting check passed.${NC}"
 else
@@ -26,8 +26,18 @@ else
     exit 1
 fi
 
+# Check Rust code
+echo -e "\n${YELLOW}[2/3] Checking Rust code...${NC}"
+if make rust-check; then
+    echo -e "${GREEN}Rust check passed.${NC}"
+else
+    echo -e "${RED}Rust check failed.${NC}"
+    echo -e "${YELLOW}Fix the Rust errors above before committing.${NC}"
+    exit 1
+fi
+
 # Run static analysis
-echo -e "\n${YELLOW}[2/2] Running static analysis...${NC}"
+echo -e "\n${YELLOW}[3/3] Running static analysis...${NC}"
 if make analyze ARGS="--fatal-infos"; then
     echo -e "${GREEN}Static analysis passed.${NC}"
 else

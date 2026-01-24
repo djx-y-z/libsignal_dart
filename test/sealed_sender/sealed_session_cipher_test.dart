@@ -2,1258 +2,691 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:libsignal/libsignal.dart';
+import 'package:libsignal/src/rust/api/sealed_sender.dart' as ss;
 import 'package:test/test.dart';
 
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
-  group('SealedSessionCipher', () {
+  group('Sealed Sender', () {
+    // Trust root key pair (simulates server's root key)
+    late PrivateKey trustRootPrivateKey;
+    late PublicKey trustRootPublicKey;
+
+    // Server key pair (simulates server certificate key)
+    late PrivateKey serverPrivateKey;
+    late PublicKey serverPublicKey;
+
+    // Server certificate
+    late Uint8List serverCertificate;
+
+    // Alice's stores and identity
     late InMemorySessionStore aliceSessionStore;
     late InMemoryIdentityKeyStore aliceIdentityStore;
     late InMemoryPreKeyStore alicePreKeyStore;
     late InMemorySignedPreKeyStore aliceSignedPreKeyStore;
     late InMemoryKyberPreKeyStore aliceKyberPreKeyStore;
+    late IdentityKeyPair aliceIdentity;
+    late ProtocolAddress aliceAddress;
 
+    // Bob's stores and identity
     late InMemorySessionStore bobSessionStore;
+    late InMemoryIdentityKeyStore bobIdentityStore;
     late InMemoryPreKeyStore bobPreKeyStore;
     late InMemorySignedPreKeyStore bobSignedPreKeyStore;
     late InMemoryKyberPreKeyStore bobKyberPreKeyStore;
-
-    late IdentityKeyPair aliceIdentity;
-    late ProtocolAddress aliceAddress;
     late ProtocolAddress bobAddress;
+    late RemotePartyKeys bobKeys;
 
-    late PrivateKey trustRootPrivate;
-    late PublicKey trustRootPublic;
-    late PrivateKey serverPrivate;
-    late ServerCertificate serverCert;
+    // Pre-key IDs
+    const preKeyId = 31337;
+    const signedPreKeyId = 22;
+    const kyberPreKeyId = 1;
 
-    setUp(() {
-      // Generate identity keys
+    setUp(() async {
+      // Create trust root and server keys
+      trustRootPrivateKey = PrivateKey.generate();
+      trustRootPublicKey = trustRootPrivateKey.getPublicKey();
+
+      serverPrivateKey = PrivateKey.generate();
+      serverPublicKey = serverPrivateKey.getPublicKey();
+
+      // Create server certificate
+      serverCertificate = createServerCertificate(
+        keyId: 1,
+        serverPublicKey: serverPublicKey.serialize(),
+        trustRootPrivateKey: trustRootPrivateKey.serialize(),
+      );
+
+      // Setup Alice
       aliceIdentity = IdentityKeyPair.generate();
-
-      // Create addresses
-      aliceAddress = ProtocolAddress('alice', 1);
-      bobAddress = ProtocolAddress('bob', 1);
-
-      // Create stores for Alice
+      aliceAddress = ProtocolAddress(name: 'alice-uuid', deviceId: 1);
       aliceSessionStore = InMemorySessionStore();
-      aliceIdentityStore = InMemoryIdentityKeyStore(aliceIdentity, 12345);
+      aliceIdentityStore = InMemoryIdentityKeyStore(aliceIdentity, 11111);
       alicePreKeyStore = InMemoryPreKeyStore();
       aliceSignedPreKeyStore = InMemorySignedPreKeyStore();
       aliceKyberPreKeyStore = InMemoryKyberPreKeyStore();
 
-      // Create stores for Bob (will be populated per test)
+      // Setup Bob
+      bobAddress = ProtocolAddress(name: 'bob-uuid', deviceId: 1);
+      bobKeys = generateRemotePartyKeys(
+        registrationId: 22222,
+        deviceId: 1,
+        preKeyId: preKeyId,
+        signedPreKeyId: signedPreKeyId,
+        kyberPreKeyId: kyberPreKeyId,
+      );
       bobSessionStore = InMemorySessionStore();
+      bobIdentityStore = InMemoryIdentityKeyStore(
+        bobKeys.identityKeyPair,
+        22222,
+      );
       bobPreKeyStore = InMemoryPreKeyStore();
       bobSignedPreKeyStore = InMemorySignedPreKeyStore();
       bobKyberPreKeyStore = InMemoryKyberPreKeyStore();
 
-      // Create trust root and server certificate
-      trustRootPrivate = PrivateKey.generate();
-      trustRootPublic = trustRootPrivate.getPublicKey();
+      // Store Bob's pre-keys
+      final bobPreKey = PreKeyRecord(
+        id: preKeyId,
+        publicKey: bobKeys.preKeyPublic,
+        privateKey: bobKeys.preKeyPrivate,
+      );
+      await bobPreKeyStore.storePreKey(preKeyId, bobPreKey);
 
-      serverPrivate = PrivateKey.generate();
-      final serverKey = serverPrivate.getPublicKey();
-
-      serverCert = ServerCertificate.create(
-        keyId: 1,
-        serverKey: serverKey,
-        trustRoot: trustRootPrivate,
+      final bobSignedPreKey = SignedPreKeyRecord(
+        id: signedPreKeyId,
+        timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+        publicKey: bobKeys.signedPreKeyPublic,
+        privateKey: bobKeys.signedPreKeyPrivate,
+        signature: bobKeys.signedPreKeySignature,
+      );
+      await bobSignedPreKeyStore.storeSignedPreKey(
+        signedPreKeyId,
+        bobSignedPreKey,
       );
 
-      serverKey.dispose();
+      final bobKyberPreKey = KyberPreKeyRecord.create(
+        id: kyberPreKeyId,
+        timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+        keyPair: bobKeys.kyberKeyPair,
+        signature: bobKeys.kyberPreKeySignature,
+      );
+      await bobKyberPreKeyStore.storeKyberPreKey(kyberPreKeyId, bobKyberPreKey);
+
+      // Create Bob's pre-key bundle
+      final bobBundle = bobKeys.toBundle();
+
+      // Alice establishes session with Bob
+      final aliceBuilder = SessionBuilder(
+        sessionStore: aliceSessionStore,
+        identityKeyStore: aliceIdentityStore,
+      );
+      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
     });
 
-    tearDown(() {
-      aliceIdentity.dispose();
-      aliceAddress.dispose();
-      bobAddress.dispose();
-      trustRootPrivate.dispose();
-      trustRootPublic.dispose();
-      serverPrivate.dispose();
-      serverCert.dispose();
+    group('SealedSenderCipher', () {
+      test('encrypts and decrypts message using SealedSenderCipher', () async {
+        // Create valid sender certificate for Alice
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final aliceSenderCertificate = createSenderCertificate(
+          senderUuid: aliceAddress.name(),
+          senderDeviceId: aliceAddress.deviceId(),
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
 
-      // Clear stores
-      aliceSessionStore.clear();
-      bobSessionStore.clear();
-      alicePreKeyStore.clear();
-      bobPreKeyStore.clear();
-      aliceSignedPreKeyStore.clear();
-      bobSignedPreKeyStore.clear();
-      aliceKyberPreKeyStore.clear();
-      bobKyberPreKeyStore.clear();
-    });
-
-    group('constructor', () {
-      test('creates cipher with all stores', () {
-        final cipher = SealedSessionCipher(
+        // Create cipher for Alice
+        final aliceCipher = SealedSenderCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
+          preKeyStore: alicePreKeyStore,
+          signedPreKeyStore: aliceSignedPreKeyStore,
+          kyberPreKeyStore: aliceKyberPreKeyStore,
         );
 
-        expect(cipher, isNotNull);
-      });
-
-      test('creates cipher with required stores only', () {
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
+        // Alice encrypts message to Bob
+        const message = 'Hello Bob, this is a sealed sender message!';
+        final ciphertext = await aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode(message)),
+          senderCertificate: aliceSenderCertificate,
         );
 
-        expect(cipher, isNotNull);
-      });
-    });
+        expect(ciphertext, isNotEmpty);
+        expect(ciphertext.length, greaterThan(message.length));
 
-    group('encrypt()', () {
-      test('throws when sender certificate is disposed', () async {
-        // Generate Bob's keys and establish session
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate and dispose it
-        final localServerPrivate = PrivateKey.generate();
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: localServerPrivate,
-        );
-        senderCert.dispose(); // Dispose before use
-
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        final plaintext = Uint8List.fromList(utf8.encode('Hello!'));
-
-        await expectLater(
-          () => cipher.encrypt(bobAddress, plaintext, senderCert),
-          throwsA(isA<LibSignalException>()),
-        );
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        localServerPrivate.dispose();
-        bobKeys.dispose();
-      });
-
-      test('throws when no session exists', () async {
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        // Create sender certificate
-        final serverPrivate = PrivateKey.generate();
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final plaintext = Uint8List.fromList(utf8.encode('Hello!'));
-
-        await expectLater(
-          () => cipher.encrypt(bobAddress, plaintext, senderCert),
-          throwsA(isA<LibSignalException>()),
-        );
-
-        serverPrivate.dispose();
-        senderCert.dispose();
-      });
-
-      test('encrypts message when session exists', () async {
-        // Generate Bob's keys and establish session
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate for Alice
-        final serverPrivate = PrivateKey.generate();
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Create sealed session cipher
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        // Encrypt
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await cipher.encrypt(bobAddress, plaintext, senderCert);
-
-        expect(sealed, isNotEmpty);
-        // Sealed sender messages are larger than regular encrypted messages
-        expect(sealed.length, greaterThan(plaintext.length));
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        serverPrivate.dispose();
-        senderCert.dispose();
-        bobKeys.dispose();
-      });
-
-      test('encrypts message with group ID', () async {
-        // Generate Bob's keys and establish session
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate
-        final serverPrivate = PrivateKey.generate();
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        // Encrypt with group ID
-        final groupId = Uint8List.fromList(utf8.encode('group-123'));
-        final plaintext = Uint8List.fromList(utf8.encode('Hello group!'));
-        final sealed = await cipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
-          groupId: groupId,
-        );
-
-        expect(sealed, isNotEmpty);
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        serverPrivate.dispose();
-        senderCert.dispose();
-        bobKeys.dispose();
-      });
-
-      test('encrypts message with different content hints', () async {
-        // Generate Bob's keys and establish session
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate
-        final serverPrivate = PrivateKey.generate();
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        final plaintext = Uint8List.fromList(utf8.encode('Test message'));
-
-        // Test with different content hints
-        for (final hint in [
-          ContentHint.none,
-          ContentHint.resendable,
-          ContentHint.implicit,
-        ]) {
-          final sealed = await cipher.encrypt(
-            bobAddress,
-            plaintext,
-            senderCert,
-            contentHint: hint,
-          );
-
-          expect(sealed, isNotEmpty);
-        }
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        serverPrivate.dispose();
-        senderCert.dispose();
-        bobKeys.dispose();
-      });
-    });
-
-    group('decryptToUsmc()', () {
-      test('throws for empty data', () async {
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        await expectLater(
-          () => cipher.decryptToUsmc(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('throws for garbage data', () async {
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        final garbage = Uint8List.fromList([0x12, 0x34, 0x56, 0x78, 0x9A]);
-
-        await expectLater(
-          () => cipher.decryptToUsmc(garbage),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('throws for truncated data', () async {
-        final cipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-
-        // Some random bytes that look like truncated sealed sender message
-        final truncated = Uint8List.fromList([
-          0x01,
-          0x02,
-          0x03,
-          0x04,
-          0x05,
-          0x06,
-          0x07,
-          0x08,
-          0x09,
-          0x0A,
-          0x0B,
-          0x0C,
-          0x0D,
-          0x0E,
-          0x0F,
-          0x10,
-        ]);
-
-        await expectLater(
-          () => cipher.decryptToUsmc(truncated),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-    });
-
-    // Round-trip tests use a two-step decryption approach because
-    // libsignal C FFI (v0.67.3) doesn't pass Kyber pre-key store to
-    // signal_sealed_session_cipher_decrypt. We use:
-    // 1. decryptToUsmc() to unwrap sealed sender layer
-    // 2. SessionCipher.decryptPreKeySignalMessage() to decrypt the inner message
-    group('round-trip encrypt/decrypt', () {
-      test('encrypts and decrypts message successfully', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
-        );
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate for Alice
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Alice encrypts with sealed sender
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
-        );
-
-        // Bob decrypts using two-step approach:
-        // 1. Unwrap sealed sender to get USMC
-        final bobCipher = SealedSessionCipher(
+        // Create cipher for Bob
+        final bobCipher = SealedSenderCipher(
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
+          preKeyStore: bobPreKeyStore,
+          signedPreKeyStore: bobSignedPreKeyStore,
+          kyberPreKeyStore: bobKyberPreKeyStore,
         );
-        final usmc = await bobCipher.decryptToUsmc(sealed);
 
-        // Verify the sender certificate (trust root validation)
-        final usmcSenderCert = usmc.getSenderCertificate();
+        // Bob decrypts using SealedSenderCipher.decrypt()
+        final result = await bobCipher.decrypt(
+          ciphertext: ciphertext,
+          trustRoot: trustRootPublicKey.serialize(),
+          timestamp: DateTime.now().millisecondsSinceEpoch,
+        );
+
+        // Verify decrypted content
+        expect(utf8.decode(result.plaintext), equals(message));
+        expect(result.senderAddress.name(), equals(aliceAddress.name()));
         expect(
-          usmcSenderCert.validate(trustRootPublic, now: DateTime.now().toUtc()),
-          isTrue,
+          result.senderAddress.deviceId(),
+          equals(aliceAddress.deviceId()),
         );
-
-        // 2. Decrypt the inner message using SessionCipher
-        final encryptedContent = usmc.contents;
-        final senderAddress = ProtocolAddress(
-          usmcSenderCert.senderUuid,
-          usmcSenderCert.deviceId,
+        // Compare serialized bytes since aliceIdentity.publicKey returns Uint8List
+        final expectedKey = PublicKey.deserialize(
+          bytes: aliceIdentity.publicKey.toList(),
         );
+        expect(result.senderIdentityKey.equals(other: expectedKey), isTrue);
 
-        final bobSessionCipher = SessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-          preKeyStore: bobPreKeyStore,
-          signedPreKeyStore: bobSignedPreKeyStore,
-          kyberPreKeyStore: bobKyberPreKeyStore,
-        );
-
-        final decryptedPlaintext = await bobSessionCipher
-            .decryptPreKeySignalMessage(senderAddress, encryptedContent);
-
-        // Verify plaintext
-        expect(decryptedPlaintext, equals(plaintext));
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        senderAddress.dispose();
-        bobKeys.dispose();
+        // Verify pre-key was removed after first message (session establishment)
+        expect(await bobPreKeyStore.loadPreKey(preKeyId), isNull);
       });
 
-      test('decrypted message contains correct sender info', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
+      test('encrypts and decrypts using raw callbacks', () async {
+        // Create valid sender certificate for Alice
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final aliceSenderCertificate = createSenderCertificate(
+          senderUuid: aliceAddress.name(),
+          senderDeviceId: aliceAddress.deviceId(),
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
         );
 
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
+        // Create cipher for Alice
+        final aliceCipher = SealedSenderCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate for Alice
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          preKeyStore: alicePreKeyStore,
+          signedPreKeyStore: aliceSignedPreKeyStore,
+          kyberPreKeyStore: aliceKyberPreKeyStore,
         );
 
-        // Alice encrypts with sealed sender
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
+        // Alice encrypts message to Bob
+        const message = 'Hello Bob, this is a sealed sender message!';
+        final ciphertext = await aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode(message)),
+          senderCertificate: aliceSenderCertificate,
         );
 
-        // Bob decrypts using two-step approach
-        final bobCipher = SealedSessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
+        expect(ciphertext, isNotEmpty);
+        expect(ciphertext.length, greaterThan(message.length));
+
+        // Bob decrypts using sealed sender with callbacks
+        final rawResult = await ss.sealedSenderDecryptWithCallbacks(
+          ciphertext: ciphertext.toList(),
+          trustRoot: trustRootPublicKey.serialize().toList(),
+          timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          loadSession: (name, deviceId) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final session = await bobSessionStore.loadSession(addr);
+            return session?.serialize();
+          },
+          storeSession: (name, deviceId, bytes) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final record = SessionRecord.deserialize(bytes: bytes);
+            await bobSessionStore.storeSession(addr, record);
+          },
+          getIdentityKeyPair: () async {
+            final pair = await bobIdentityStore.getIdentityKeyPair();
+            return pair.serialize();
+          },
+          getLocalRegistrationId: () async {
+            return await bobIdentityStore.getLocalRegistrationId();
+          },
+          saveIdentity: (name, deviceId, identityBytes) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final identityKey = PublicKey.deserialize(bytes: identityBytes);
+            await bobIdentityStore.saveIdentity(addr, identityKey);
+          },
+          loadSignedPreKey: (id) async {
+            final preKey = await bobSignedPreKeyStore.loadSignedPreKey(id);
+            if (preKey == null) {
+              throw StateError('Signed pre-key $id not found');
+            }
+            return preKey.serialize();
+          },
+          loadPreKey: (id) async {
+            final preKey = await bobPreKeyStore.loadPreKey(id);
+            return preKey?.serialize();
+          },
+          loadKyberPreKey: (id) async {
+            final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
+            return preKey?.serialize();
+          },
         );
-        final usmc = await bobCipher.decryptToUsmc(sealed);
 
-        // Get sender info from USMC's sender certificate
-        final usmcSenderCert = usmc.getSenderCertificate();
-
-        // Verify sender info
-        expect(usmcSenderCert.senderUuid, equals('alice-uuid'));
-        expect(usmcSenderCert.deviceId, equals(1));
-        expect(usmcSenderCert.senderE164, equals('+1234567890'));
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        bobKeys.dispose();
+        // Verify decrypted content
+        expect(utf8.decode(rawResult.plaintext), equals(message));
+        expect(rawResult.senderName, equals(aliceAddress.name()));
+        expect(rawResult.senderDeviceId, equals(aliceAddress.deviceId()));
       });
 
-      test('works without senderE164', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
+      test('decryption reveals sender information', () async {
+        // Create valid sender certificate for Alice
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final aliceSenderCertificate = createSenderCertificate(
+          senderUuid: aliceAddress.name(),
+          senderDeviceId: aliceAddress.deviceId(),
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
         );
 
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
+        // Create cipher for Alice
+        final aliceCipher = SealedSenderCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate WITHOUT e164
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: null,
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          preKeyStore: alicePreKeyStore,
+          signedPreKeyStore: aliceSignedPreKeyStore,
+          kyberPreKeyStore: aliceKyberPreKeyStore,
         );
 
-        // Alice encrypts
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
+        // Alice encrypts message to Bob
+        final ciphertext = await aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode('Secret message')),
+          senderCertificate: aliceSenderCertificate,
         );
 
-        // Bob decrypts using two-step approach
-        final bobCipher = SealedSessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-        );
-        final usmc = await bobCipher.decryptToUsmc(sealed);
-        final usmcSenderCert = usmc.getSenderCertificate();
-
-        // Verify e164 is null but other sender info is correct
-        expect(usmcSenderCert.senderE164, isNull);
-        expect(usmcSenderCert.senderUuid, equals('alice-uuid'));
-
-        // Decrypt the inner message
-        final senderAddress = ProtocolAddress(
-          usmcSenderCert.senderUuid,
-          usmcSenderCert.deviceId,
-        );
-        final bobSessionCipher = SessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-          preKeyStore: bobPreKeyStore,
-          signedPreKeyStore: bobSignedPreKeyStore,
-          kyberPreKeyStore: bobKyberPreKeyStore,
-        );
-        final decryptedPlaintext = await bobSessionCipher
-            .decryptPreKeySignalMessage(senderAddress, usmc.contents);
-        expect(decryptedPlaintext, equals(plaintext));
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        senderAddress.dispose();
-        bobKeys.dispose();
-      });
-
-      test('works with group ID', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
+        // Bob decrypts and verifies sender info
+        final rawResult = await ss.sealedSenderDecryptWithCallbacks(
+          ciphertext: ciphertext.toList(),
+          trustRoot: trustRootPublicKey.serialize().toList(),
+          timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          loadSession: (name, deviceId) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final session = await bobSessionStore.loadSession(addr);
+            return session?.serialize();
+          },
+          storeSession: (name, deviceId, bytes) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final record = SessionRecord.deserialize(bytes: bytes);
+            await bobSessionStore.storeSession(addr, record);
+          },
+          getIdentityKeyPair: () async {
+            final pair = await bobIdentityStore.getIdentityKeyPair();
+            return pair.serialize();
+          },
+          getLocalRegistrationId: () async {
+            return await bobIdentityStore.getLocalRegistrationId();
+          },
+          saveIdentity: (name, deviceId, identityBytes) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final identityKey = PublicKey.deserialize(bytes: identityBytes);
+            await bobIdentityStore.saveIdentity(addr, identityKey);
+          },
+          loadSignedPreKey: (id) async {
+            final preKey = await bobSignedPreKeyStore.loadSignedPreKey(id);
+            if (preKey == null) {
+              throw StateError('Signed pre-key $id not found');
+            }
+            return preKey.serialize();
+          },
+          loadPreKey: (id) async {
+            final preKey = await bobPreKeyStore.loadPreKey(id);
+            return preKey?.serialize();
+          },
+          loadKyberPreKey: (id) async {
+            final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
+            return preKey?.serialize();
+          },
         );
 
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Alice encrypts with group ID
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final groupId = Uint8List.fromList(utf8.encode('group-123'));
-        final plaintext = Uint8List.fromList(utf8.encode('Hello group!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
-          groupId: groupId,
-        );
-
-        // Bob decrypts using two-step approach
-        final bobCipher = SealedSessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-        );
-        final usmc = await bobCipher.decryptToUsmc(sealed);
-
-        // Verify group ID is present
-        expect(usmc.groupId, equals(groupId));
-
-        // Decrypt the inner message
-        final usmcSenderCert = usmc.getSenderCertificate();
-        final senderAddress = ProtocolAddress(
-          usmcSenderCert.senderUuid,
-          usmcSenderCert.deviceId,
-        );
-        final bobSessionCipher = SessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-          preKeyStore: bobPreKeyStore,
-          signedPreKeyStore: bobSignedPreKeyStore,
-          kyberPreKeyStore: bobKyberPreKeyStore,
-        );
-        final decryptedPlaintext = await bobSessionCipher
-            .decryptPreKeySignalMessage(senderAddress, usmc.contents);
-
-        // Verify plaintext
-        expect(decryptedPlaintext, equals(plaintext));
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        senderAddress.dispose();
-        bobKeys.dispose();
-      });
-
-      test('fails with wrong trust root', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
-        );
-
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
-        );
-
-        // Alice encrypts
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
-        );
-
-        // Bob decrypts to USMC and validates with WRONG trust root
-        final wrongTrustRootPrivate = PrivateKey.generate();
-        final wrongTrustRoot = wrongTrustRootPrivate.getPublicKey();
-
-        final bobCipher = SealedSessionCipher(
-          sessionStore: bobSessionStore,
-          identityKeyStore: bobIdentityStore,
-        );
-
-        // decryptToUsmc succeeds (no trust root validation in unwrap)
-        final usmc = await bobCipher.decryptToUsmc(sealed);
-        final usmcSenderCert = usmc.getSenderCertificate();
-
-        // But validation with wrong trust root should fail
-        expect(
-          usmcSenderCert.validate(wrongTrustRoot, now: DateTime.now().toUtc()),
-          isFalse,
-        );
-
-        // Cleanup
-        wrongTrustRootPrivate.dispose();
-        wrongTrustRoot.dispose();
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        bobKeys.dispose();
+        // Verify sender information is revealed after decryption
+        expect(rawResult.senderName, equals(aliceAddress.name()));
+        expect(rawResult.senderDeviceId, equals(aliceAddress.deviceId()));
+        expect(rawResult.senderIdentityKey.length, equals(33));
       });
 
       test('fails with expired certificate', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
+        // Create expired certificate (1 hour in the past)
+        final expiration = DateTime.now()
+            .subtract(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final expiredCertificate = createSenderCertificate(
+          senderUuid: aliceAddress.name(),
+          senderDeviceId: aliceAddress.deviceId(),
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
         );
 
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
+        final aliceCipher = SealedSenderCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create EXPIRED sender certificate
-        final expiredCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().subtract(const Duration(days: 1)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          preKeyStore: alicePreKeyStore,
+          signedPreKeyStore: aliceSignedPreKeyStore,
+          kyberPreKeyStore: aliceKyberPreKeyStore,
         );
 
-        // Alice encrypts with expired cert
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          expiredCert,
+        final ciphertext = await aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode('Test')),
+          senderCertificate: expiredCertificate,
         );
 
-        // Bob decrypts to USMC and validates the expired cert
-        final bobCipher = SealedSessionCipher(
+        final bobCipher = SealedSenderCipher(
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
+          preKeyStore: bobPreKeyStore,
+          signedPreKeyStore: bobSignedPreKeyStore,
+          kyberPreKeyStore: bobKyberPreKeyStore,
         );
 
-        // decryptToUsmc succeeds (expiration not checked in unwrap)
-        final usmc = await bobCipher.decryptToUsmc(sealed);
-        final usmcSenderCert = usmc.getSenderCertificate();
-
-        // But validation should fail due to expiration
         expect(
-          usmcSenderCert.validate(trustRootPublic, now: DateTime.now().toUtc()),
-          isFalse,
+          () => bobCipher.decrypt(
+            ciphertext: ciphertext,
+            trustRoot: trustRootPublicKey.serialize(),
+            timestamp: DateTime.now().millisecondsSinceEpoch,
+          ),
+          throwsA(anything),
         );
-
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        expiredCert.dispose();
-        usmc.dispose();
-        usmcSenderCert.dispose();
-        bobKeys.dispose();
       });
 
-      test('fails with tampered message', () async {
-        // Setup Bob's keys and stores (with Kyber)
-        final bobKeys = generateRemotePartyKeys(registrationId: 67890);
-        final bobIdentityStore = InMemoryIdentityKeyStore(
-          bobKeys.identityKeyPair,
-          67890,
+      test('fails with wrong trust root', () async {
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final aliceSenderCertificate = createSenderCertificate(
+          senderUuid: aliceAddress.name(),
+          senderDeviceId: aliceAddress.deviceId(),
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
         );
 
-        // Store Bob's pre-keys
-        final preKeyRecord = PreKeyRecord.create(
-          id: bobKeys.preKeyId,
-          publicKey: bobKeys.preKeyPublic,
-          privateKey: bobKeys.preKeyPrivate,
-        );
-        await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-        final signedPreKeyRecord = SignedPreKeyRecord.create(
-          id: bobKeys.signedPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          publicKey: bobKeys.signedPreKeyPublic,
-          privateKey: bobKeys.signedPreKeyPrivate,
-          signature: bobKeys.signedPreKeySignature,
-        );
-        await bobSignedPreKeyStore.storeSignedPreKey(
-          bobKeys.signedPreKeyId,
-          signedPreKeyRecord,
-        );
-
-        final kyberPreKeyRecord = KyberPreKeyRecord.create(
-          id: bobKeys.kyberPreKeyId,
-          timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-          keyPair: bobKeys.kyberKeyPair,
-          signature: bobKeys.kyberPreKeySignature,
-        );
-        await bobKyberPreKeyStore.storeKyberPreKey(
-          bobKeys.kyberPreKeyId,
-          kyberPreKeyRecord,
-        );
-
-        // Alice establishes session with Bob
-        final bobBundle = bobKeys.toBundle();
-        final aliceBuilder = SessionBuilder(
+        final aliceCipher = SealedSenderCipher(
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-        // Create sender certificate
-        final senderCert = SenderCertificate.create(
-          senderUuid: 'alice-uuid',
-          senderE164: '+1234567890',
-          deviceId: 1,
-          senderKey: aliceIdentity.publicKey,
-          expiration: DateTime.now().toUtc().add(const Duration(days: 30)),
-          signerCertificate: serverCert,
-          signerKey: serverPrivate,
+          preKeyStore: alicePreKeyStore,
+          signedPreKeyStore: aliceSignedPreKeyStore,
+          kyberPreKeyStore: aliceKyberPreKeyStore,
         );
 
-        // Alice encrypts
-        final aliceCipher = SealedSessionCipher(
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        final plaintext = Uint8List.fromList(utf8.encode('Hello, Bob!'));
-        final sealed = await aliceCipher.encrypt(
-          bobAddress,
-          plaintext,
-          senderCert,
+        final ciphertext = await aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode('Test')),
+          senderCertificate: aliceSenderCertificate,
         );
 
-        // Tamper with the message
-        final tampered = Uint8List.fromList(sealed);
-        tampered[tampered.length ~/ 2] ^= 0xFF;
+        // Use wrong trust root
+        final wrongTrustRoot = PrivateKey.generate().getPublicKey();
 
-        // Bob tries to decrypt tampered message - decryptToUsmc should fail
-        final bobCipher = SealedSessionCipher(
+        final bobCipher = SealedSenderCipher(
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
+          preKeyStore: bobPreKeyStore,
+          signedPreKeyStore: bobSignedPreKeyStore,
+          kyberPreKeyStore: bobKyberPreKeyStore,
         );
 
-        await expectLater(
-          () => bobCipher.decryptToUsmc(tampered),
-          throwsA(isA<LibSignalException>()),
+        expect(
+          () => bobCipher.decrypt(
+            ciphertext: ciphertext,
+            trustRoot: wrongTrustRoot.serialize(),
+            timestamp: DateTime.now().millisecondsSinceEpoch,
+          ),
+          throwsA(anything),
+        );
+      });
+
+      test('fails with garbage ciphertext', () async {
+        final bobCipher = SealedSenderCipher(
+          sessionStore: bobSessionStore,
+          identityKeyStore: bobIdentityStore,
+          preKeyStore: bobPreKeyStore,
+          signedPreKeyStore: bobSignedPreKeyStore,
+          kyberPreKeyStore: bobKyberPreKeyStore,
         );
 
-        // Cleanup
-        preKeyRecord.dispose();
-        signedPreKeyRecord.dispose();
-        kyberPreKeyRecord.dispose();
-        bobBundle.dispose();
-        senderCert.dispose();
-        bobKeys.dispose();
+        expect(
+          () => bobCipher.decrypt(
+            ciphertext: Uint8List.fromList([0x12, 0x34, 0x56, 0x78]),
+            trustRoot: trustRootPublicKey.serialize(),
+            timestamp: DateTime.now().millisecondsSinceEpoch,
+          ),
+          throwsA(anything),
+        );
+      });
+    });
+
+    group('Certificate functions', () {
+      test('validateSenderCertificate returns true for valid certificate', () {
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final cert = createSenderCertificate(
+          senderUuid: 'test-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        final isValid = validateSenderCertificate(
+          certificate: cert,
+          trustRoot: trustRootPublicKey.serialize(),
+          timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+        );
+
+        expect(isValid, isTrue);
+      });
+
+      test('validateSenderCertificate throws for expired certificate', () {
+        final expiration = DateTime.now()
+            .subtract(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final cert = createSenderCertificate(
+          senderUuid: 'test-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        expect(
+          () => validateSenderCertificate(
+            certificate: cert,
+            trustRoot: trustRootPublicKey.serialize(),
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          ),
+          throwsA(anything),
+        );
+      });
+
+      test('senderCertificateGetSenderName returns correct name', () {
+        final cert = createSenderCertificate(
+          senderUuid: 'my-uuid-123',
+          senderDeviceId: 1,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(
+            DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
+          ),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        final name = senderCertificateGetSenderName(certificate: cert);
+        expect(name, equals('my-uuid-123'));
+      });
+
+      test('senderCertificateGetSenderDeviceId returns correct device ID', () {
+        final cert = createSenderCertificate(
+          senderUuid: 'test-uuid',
+          senderDeviceId: 42,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(
+            DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
+          ),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        final deviceId = senderCertificateGetSenderDeviceId(certificate: cert);
+        expect(deviceId, equals(42));
+      });
+
+      test('senderCertificateGetExpiration returns correct expiration', () {
+        final expiration = DateTime.now()
+            .add(const Duration(hours: 1))
+            .millisecondsSinceEpoch;
+        final cert = createSenderCertificate(
+          senderUuid: 'test-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(expiration),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        final gotExpiration = senderCertificateGetExpiration(certificate: cert);
+        expect(gotExpiration.toInt(), equals(expiration));
+      });
+
+      test('senderCertificateGetKey returns correct identity key', () {
+        final cert = createSenderCertificate(
+          senderUuid: 'test-uuid',
+          senderDeviceId: 1,
+          senderIdentityKey: aliceIdentity.publicKey,
+          expiration: BigInt.from(
+            DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
+          ),
+          serverCertificate: serverCertificate,
+          serverPrivateKey: serverPrivateKey.serialize(),
+        );
+
+        final key = senderCertificateGetKey(certificate: cert);
+        expect(key, equals(aliceIdentity.publicKey));
+      });
+    });
+
+    group('result class equality', () {
+      test('SealedSenderDecryptResult equality', () {
+        final plaintext = Uint8List.fromList([1, 2, 3]);
+        final identityKey = Uint8List.fromList([4, 5, 6]);
+        final sessionRecord = Uint8List.fromList([7, 8, 9]);
+
+        final result1 = ss.SealedSenderDecryptResult(
+          plaintext: plaintext,
+          senderName: 'alice',
+          senderDeviceId: 1,
+          senderIdentityKey: identityKey,
+          sessionRecord: sessionRecord,
+          preKeyToRemove: 42,
+        );
+        final result2 = ss.SealedSenderDecryptResult(
+          plaintext: plaintext,
+          senderName: 'alice',
+          senderDeviceId: 1,
+          senderIdentityKey: identityKey,
+          sessionRecord: sessionRecord,
+          preKeyToRemove: 42,
+        );
+
+        expect(result1, equals(result2));
+        expect(result1.hashCode, equals(result2.hashCode));
+
+        // Test inequality with different sender name
+        final result3 = ss.SealedSenderDecryptResult(
+          plaintext: plaintext,
+          senderName: 'bob',
+          senderDeviceId: 1,
+          senderIdentityKey: identityKey,
+          sessionRecord: sessionRecord,
+          preKeyToRemove: 42,
+        );
+        expect(result1, isNot(equals(result3)));
+
+        // Test self-equality
+        expect(result1, equals(result1));
+
+        // Test with null preKeyToRemove
+        final result4 = ss.SealedSenderDecryptResult(
+          plaintext: plaintext,
+          senderName: 'alice',
+          senderDeviceId: 1,
+          senderIdentityKey: identityKey,
+          sessionRecord: sessionRecord,
+        );
+        expect(result4.preKeyToRemove, isNull);
+        expect(result4.hashCode, isA<int>());
+      });
+
+      test('SealedSenderEncryptResult equality', () {
+        final ciphertext = Uint8List.fromList([1, 2, 3]);
+        final sessionRecord = Uint8List.fromList([4, 5, 6]);
+
+        final result1 = ss.SealedSenderEncryptResult(
+          ciphertext: ciphertext,
+          sessionRecord: sessionRecord,
+        );
+        final result2 = ss.SealedSenderEncryptResult(
+          ciphertext: ciphertext,
+          sessionRecord: sessionRecord,
+        );
+
+        expect(result1, equals(result2));
+        expect(result1.hashCode, equals(result2.hashCode));
+
+        // Test inequality with different ciphertext
+        final result3 = ss.SealedSenderEncryptResult(
+          ciphertext: Uint8List.fromList([7, 8, 9]),
+          sessionRecord: sessionRecord,
+        );
+        expect(result1, isNot(equals(result3)));
+
+        // Test self-equality
+        expect(result1, equals(result1));
+      });
+
+      test('equality returns false for wrong types', () {
+        final result1 = ss.SealedSenderDecryptResult(
+          plaintext: Uint8List.fromList([1, 2, 3]),
+          senderName: 'alice',
+          senderDeviceId: 1,
+          senderIdentityKey: Uint8List.fromList([4, 5, 6]),
+          sessionRecord: Uint8List.fromList([7, 8, 9]),
+        );
+        // ignore: unrelated_type_equality_checks
+        expect(result1 == 'not a result', isFalse);
+        // ignore: unrelated_type_equality_checks
+        expect(result1 == 42, isFalse);
+
+        final result2 = ss.SealedSenderEncryptResult(
+          ciphertext: Uint8List.fromList([1, 2, 3]),
+          sessionRecord: Uint8List.fromList([4, 5, 6]),
+        );
+        // ignore: unrelated_type_equality_checks
+        expect(result2 == 'not a result', isFalse);
+        // ignore: unrelated_type_equality_checks
+        expect(result2 == 42, isFalse);
       });
     });
   });

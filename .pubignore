@@ -1,5 +1,7 @@
-# Development files
+# TODO
 TODO.md
+
+# Development files
 Makefile
 .fvmrc
 .skip_libsignal_hook
@@ -7,9 +9,8 @@ Makefile
 # CI/CD
 .github/
 
-# Build scripts and headers (only needed for development/ffigen)
+# Build scripts (only needed for development)
 scripts/
-headers/
 
 # IDE and editor files
 .vscode/
@@ -48,6 +49,3 @@ example_cli/
 
 # FVM
 .fvm/
-
-# Hook build cache
-hook/.dart_tool/

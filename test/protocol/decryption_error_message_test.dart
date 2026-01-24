@@ -4,432 +4,253 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
-import '../test_helpers/test_helpers.dart';
+import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('DecryptionErrorMessage', () {
-    late InMemorySessionStore aliceSessionStore;
-    late InMemoryIdentityKeyStore aliceIdentityStore;
-    late InMemoryPreKeyStore bobPreKeyStore;
-    late InMemorySignedPreKeyStore bobSignedPreKeyStore;
-    late InMemoryKyberPreKeyStore bobKyberPreKeyStore;
-    late IdentityKeyPair aliceIdentity;
-    late ProtocolAddress bobAddress;
-    late RemotePartyKeys bobKeys;
-
-    // We need to create valid encrypted messages to test DecryptionErrorMessage
-    late Uint8List validEncryptedMessage;
-    late int validTimestamp;
-
-    setUp(() async {
-      aliceIdentity = IdentityKeyPair.generate();
-      bobAddress = ProtocolAddress('bob', 1);
-
-      aliceSessionStore = InMemorySessionStore();
-      aliceIdentityStore = InMemoryIdentityKeyStore(aliceIdentity, 12345);
-      bobPreKeyStore = InMemoryPreKeyStore();
-      bobSignedPreKeyStore = InMemorySignedPreKeyStore();
-      bobKyberPreKeyStore = InMemoryKyberPreKeyStore();
-
-      // Generate Bob's keys
-      bobKeys = generateRemotePartyKeys(registrationId: 67890);
-
-      // Store Bob's pre-keys
-      final preKeyRecord = PreKeyRecord.create(
-        id: bobKeys.preKeyId,
-        publicKey: bobKeys.preKeyPublic,
-        privateKey: bobKeys.preKeyPrivate,
-      );
-      await bobPreKeyStore.storePreKey(bobKeys.preKeyId, preKeyRecord);
-
-      final signedPreKeyRecord = SignedPreKeyRecord.create(
-        id: bobKeys.signedPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        publicKey: bobKeys.signedPreKeyPublic,
-        privateKey: bobKeys.signedPreKeyPrivate,
-        signature: bobKeys.signedPreKeySignature,
-      );
-      await bobSignedPreKeyStore.storeSignedPreKey(
-        bobKeys.signedPreKeyId,
-        signedPreKeyRecord,
-      );
-
-      final kyberPreKeyRecord = KyberPreKeyRecord.create(
-        id: bobKeys.kyberPreKeyId,
-        timestamp: DateTime.now().toUtc().millisecondsSinceEpoch,
-        keyPair: bobKeys.kyberKeyPair,
-        signature: bobKeys.kyberPreKeySignature,
-      );
-      await bobKyberPreKeyStore.storeKyberPreKey(
-        bobKeys.kyberPreKeyId,
-        kyberPreKeyRecord,
-      );
-
-      // Alice establishes session with Bob
-      final bobBundle = bobKeys.toBundle();
-      final aliceBuilder = SessionBuilder(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-      await aliceBuilder.processPreKeyBundle(bobAddress, bobBundle);
-
-      // Alice encrypts a message to get valid encrypted bytes
-      final aliceCipher = SessionCipher(
-        sessionStore: aliceSessionStore,
-        identityKeyStore: aliceIdentityStore,
-      );
-      final plaintext = Uint8List.fromList(utf8.encode('Test message'));
-      final encrypted = await aliceCipher.encrypt(bobAddress, plaintext);
-      validEncryptedMessage = encrypted.bytes;
-      validTimestamp = DateTime.now().toUtc().millisecondsSinceEpoch;
-
-      preKeyRecord.dispose();
-      signedPreKeyRecord.dispose();
-      kyberPreKeyRecord.dispose();
-      bobBundle.dispose();
-    });
-
-    tearDown(() {
-      aliceIdentity.dispose();
-      bobAddress.dispose();
-      bobKeys.dispose();
-      aliceSessionStore.clear();
-      bobPreKeyStore.clear();
-      bobSignedPreKeyStore.clear();
-      bobKyberPreKeyStore.clear();
-    });
-
-    group('forOriginalMessage()', () {
-      test('creates valid error message with valid encrypted message', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 42,
-        );
-
-        expect(errorMsg, isNotNull);
-        expect(errorMsg.isDisposed, isFalse);
-        expect(errorMsg.deviceId, equals(42));
-        expect(errorMsg.timestamp, equals(validTimestamp));
-
-        errorMsg.dispose();
-      });
-
-      test('creates error message with various device IDs', () {
-        for (final deviceId in [1, 2, 100, 0xFFFF]) {
-          final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-            originalBytes: validEncryptedMessage,
-            messageType: CiphertextMessageType.preKey.value,
-            timestamp: validTimestamp,
-            originalSenderDeviceId: deviceId,
-          );
-
-          expect(errorMsg.deviceId, equals(deviceId));
-          errorMsg.dispose();
-        }
-      });
-
-      test('creates error message with zero timestamp', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: 0,
-          originalSenderDeviceId: 1,
-        );
-
-        expect(errorMsg.timestamp, equals(0));
-        errorMsg.dispose();
-      });
-
-      test('creates error message with large timestamp', () {
-        const largeTimestamp = 9999999999999;
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: largeTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        expect(errorMsg.timestamp, equals(largeTimestamp));
-        errorMsg.dispose();
-      });
-
-      test('rejects empty original bytes', () {
-        expect(
-          () => DecryptionErrorMessage.forOriginalMessage(
-            originalBytes: Uint8List(0),
-            messageType: 2,
-            timestamp: 12345,
-            originalSenderDeviceId: 1,
-          ),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-    });
-
-    group('fromPointer()', () {
-      test('creates message from existing pointer via clone', () {
-        final original = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 42,
-        );
-
-        // Use clone to get a new pointer, then verify it works
-        final cloned = original.clone();
-
-        expect(cloned.deviceId, equals(original.deviceId));
-        expect(cloned.timestamp, equals(original.timestamp));
-
-        original.dispose();
-        cloned.dispose();
-      });
-    });
-
     group('extractFromSerializedContent()', () {
       test('rejects empty data', () {
         expect(
-          () =>
-              DecryptionErrorMessage.extractFromSerializedContent(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
+          () => DecryptionErrorMessage.extractFromSerializedContent(bytes: []),
+          throwsA(anything),
         );
       });
 
       test('rejects garbage data', () {
-        final garbage = Uint8List.fromList([0x12, 0x34, 0x56, 0x78]);
+        final garbage = [0x12, 0x34, 0x56, 0x78];
         expect(
-          () => DecryptionErrorMessage.extractFromSerializedContent(garbage),
-          throwsA(isA<LibSignalException>()),
+          () => DecryptionErrorMessage.extractFromSerializedContent(
+            bytes: garbage,
+          ),
+          throwsA(anything),
         );
       });
     });
 
-    group('serialize() / deserialize()', () {
-      test('round-trip preserves message', () {
-        final original = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 42,
-        );
-
-        final serialized = original.serialize();
-        expect(serialized, isNotEmpty);
-
-        final restored = DecryptionErrorMessage.deserialize(serialized);
-
-        expect(restored.deviceId, equals(original.deviceId));
-        expect(restored.timestamp, equals(original.timestamp));
-        expect(restored.serialize(), equals(serialized));
-
-        original.dispose();
-        restored.dispose();
-      });
-
-      test('deserialize rejects empty data', () {
+    group('deserialize()', () {
+      test('rejects empty data', () {
         expect(
-          () => DecryptionErrorMessage.deserialize(Uint8List(0)),
-          throwsA(isA<LibSignalException>()),
+          () => DecryptionErrorMessage.deserialize(bytes: []),
+          throwsA(anything),
         );
       });
 
       test('rejects garbage data', () {
-        final garbage = Uint8List.fromList([0x99, 0x88, 0x77, 0x66, 0x55]);
+        final garbage = [0x99, 0x88, 0x77, 0x66, 0x55];
         expect(
-          () => DecryptionErrorMessage.deserialize(garbage),
-          throwsA(isA<LibSignalException>()),
+          () => DecryptionErrorMessage.deserialize(bytes: garbage),
+          throwsA(anything),
         );
       });
     });
 
-    group('getters', () {
-      test('timestamp returns correct value', () {
-        const timestamp = 1700000000000;
+    group('forOriginalMessage()', () {
+      test('creates error message from encrypted bytes', () async {
+        // Setup Alice and Bob
+        final aliceIdentity = IdentityKeyPair.generate();
+        final aliceSessionStorage = <String, Uint8List>{};
+        final aliceIdentityStorage = <String, Uint8List>{};
+
+        final bobKeys = generateRemotePartyKeys(
+          registrationId: 222,
+          deviceId: 1,
+        );
+        final bobBundle = bobKeys.toBundle();
+
+        // Alice processes Bob's bundle
+        await processPrekeyBundleWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          bundle: bobBundle,
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
+        );
+
+        // Alice encrypts a message
+        const message = 'Hello Bob!';
+        final encrypted = await messageEncryptWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          plaintext: utf8.encode(message),
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+        );
+
+        // Create a DecryptionErrorMessage from the encrypted bytes
+        final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
         final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
+          originalBytes: encrypted.ciphertext.toList(),
+          messageType: encrypted.messageType,
           timestamp: timestamp,
           originalSenderDeviceId: 1,
         );
 
-        expect(errorMsg.timestamp, equals(timestamp));
-        errorMsg.dispose();
-      });
-
-      test('deviceId returns correct value', () {
-        const deviceId = 123;
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: deviceId,
-        );
-
-        expect(errorMsg.deviceId, equals(deviceId));
-        errorMsg.dispose();
-      });
-
-      test('getRatchetKey returns key for valid message', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        final ratchetKey = errorMsg.getRatchetKey();
-
-        // PreKey messages should have a ratchet key
-        if (ratchetKey != null) {
-          expect(ratchetKey.isDisposed, isFalse);
-          expect(ratchetKey.serialize().length, equals(33));
-          ratchetKey.dispose();
-        }
-
-        errorMsg.dispose();
+        expect(errorMsg, isNotNull);
+        expect(errorMsg.timestamp(), equals(timestamp));
+        expect(errorMsg.deviceId(), equals(1));
       });
     });
 
-    group('clone()', () {
-      test('creates independent copy', () {
+    group('serialize() / deserialize() round-trip', () {
+      test('preserves error message', () async {
+        // Setup and encrypt
+        final aliceIdentity = IdentityKeyPair.generate();
+        final aliceSessionStorage = <String, Uint8List>{};
+        final aliceIdentityStorage = <String, Uint8List>{};
+
+        final bobKeys = generateRemotePartyKeys();
+        final bobBundle = bobKeys.toBundle();
+
+        await processPrekeyBundleWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          bundle: bobBundle,
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
+        );
+
+        final encrypted = await messageEncryptWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          plaintext: utf8.encode('Test message'),
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+        );
+
+        final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
         final original = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
+          originalBytes: encrypted.ciphertext.toList(),
+          messageType: encrypted.messageType,
+          timestamp: timestamp,
           originalSenderDeviceId: 42,
         );
 
-        final cloned = original.clone();
+        // Serialize and deserialize
+        final serialized = original.serialize();
+        final restored = DecryptionErrorMessage.deserialize(
+          bytes: serialized.toList(),
+        );
 
-        expect(cloned.deviceId, equals(original.deviceId));
-        expect(cloned.timestamp, equals(original.timestamp));
-        expect(cloned.serialize(), equals(original.serialize()));
-
-        original.dispose();
-
-        // Cloned should still work
-        expect(cloned.isDisposed, isFalse);
-        expect(cloned.deviceId, equals(42));
-
-        cloned.dispose();
+        // Verify fields are preserved
+        expect(restored.timestamp(), equals(original.timestamp()));
+        expect(restored.deviceId(), equals(original.deviceId()));
+        expect(restored.serialize(), equals(serialized));
       });
     });
 
-    group('disposal', () {
-      test('isDisposed is false initially', () {
+    group('getters', () {
+      test('timestamp returns correct value', () async {
+        final aliceIdentity = IdentityKeyPair.generate();
+        final aliceSessionStorage = <String, Uint8List>{};
+        final aliceIdentityStorage = <String, Uint8List>{};
+
+        final bobKeys = generateRemotePartyKeys();
+        final bobBundle = bobKeys.toBundle();
+
+        await processPrekeyBundleWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          bundle: bobBundle,
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
+        );
+
+        final encrypted = await messageEncryptWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          plaintext: utf8.encode('Test'),
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+        );
+
+        final timestamp = BigInt.from(1234567890000);
         final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
+          originalBytes: encrypted.ciphertext.toList(),
+          messageType: encrypted.messageType,
+          timestamp: timestamp,
           originalSenderDeviceId: 1,
         );
 
-        expect(errorMsg.isDisposed, isFalse);
-        errorMsg.dispose();
+        expect(errorMsg.timestamp(), equals(timestamp));
       });
 
-      test('isDisposed is true after dispose', () {
+      test('deviceId returns correct value', () async {
+        final aliceIdentity = IdentityKeyPair.generate();
+        final aliceSessionStorage = <String, Uint8List>{};
+        final aliceIdentityStorage = <String, Uint8List>{};
+
+        final bobKeys = generateRemotePartyKeys();
+        final bobBundle = bobKeys.toBundle();
+
+        await processPrekeyBundleWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          bundle: bobBundle,
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
+        );
+
+        final encrypted = await messageEncryptWithCallbacks(
+          remoteName: 'bob',
+          remoteDeviceId: 1,
+          plaintext: utf8.encode('Test'),
+          loadSession: (name, deviceId) =>
+              aliceSessionStorage['$name:$deviceId'],
+          storeSession: (name, deviceId, data) =>
+              aliceSessionStorage['$name:$deviceId'] = data,
+          getIdentityKeyPair: () => aliceIdentity.serialize(),
+          getLocalRegistrationId: () => 111,
+        );
+
         final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
+          originalBytes: encrypted.ciphertext.toList(),
+          messageType: encrypted.messageType,
+          timestamp: BigInt.from(0),
+          originalSenderDeviceId: 99,
         );
 
-        errorMsg.dispose();
-        expect(errorMsg.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.dispose(), returnsNormally);
-      });
-
-      test('timestamp throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.timestamp, throwsA(isA<LibSignalException>()));
-      });
-
-      test('deviceId throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.deviceId, throwsA(isA<LibSignalException>()));
-      });
-
-      test('serialize throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.serialize(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('getRatchetKey throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(
-          () => errorMsg.getRatchetKey(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('clone throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final errorMsg = DecryptionErrorMessage.forOriginalMessage(
-          originalBytes: validEncryptedMessage,
-          messageType: CiphertextMessageType.preKey.value,
-          timestamp: validTimestamp,
-          originalSenderDeviceId: 1,
-        );
-
-        errorMsg.dispose();
-        expect(() => errorMsg.pointer, throwsA(isA<LibSignalException>()));
+        expect(errorMsg.deviceId(), equals(99));
       });
     });
   });

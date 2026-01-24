@@ -3,7 +3,7 @@ library;
 
 import 'dart:typed_data';
 
-import '../protocol/protocol_address.dart';
+import '../rust/api/address.dart';
 
 /// Unique identifier for a sender key, combining sender address and distribution ID.
 ///
@@ -24,14 +24,19 @@ final class SenderKeyName {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! SenderKeyName) return false;
-    return sender == other.sender && distributionId == other.distributionId;
+    // Compare addresses by value since FRB-generated types use identity equality
+    return sender.name() == other.sender.name() &&
+        sender.deviceId() == other.sender.deviceId() &&
+        distributionId == other.distributionId;
   }
 
   @override
-  int get hashCode => Object.hash(sender, distributionId);
+  int get hashCode =>
+      Object.hash(sender.name(), sender.deviceId(), distributionId);
 
   @override
-  String toString() => 'SenderKeyName($sender, $distributionId)';
+  String toString() =>
+      'SenderKeyName(${sender.name()}:${sender.deviceId()}, $distributionId)';
 }
 
 /// Abstract interface for storing sender keys for group messaging.

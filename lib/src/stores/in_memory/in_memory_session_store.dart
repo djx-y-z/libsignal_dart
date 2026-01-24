@@ -3,8 +3,8 @@ library;
 
 import 'dart:typed_data';
 
-import '../../protocol/protocol_address.dart';
-import '../../protocol/session_record.dart';
+import '../../rust/api/address.dart';
+import '../../rust/api/session.dart';
 import '../session_store.dart';
 
 /// In-memory implementation of [SessionStore].
@@ -17,13 +17,14 @@ import '../session_store.dart';
 class InMemorySessionStore implements SessionStore {
   final Map<String, Uint8List> _sessions = {};
 
-  String _key(ProtocolAddress address) => '${address.name}:${address.deviceId}';
+  String _key(ProtocolAddress address) =>
+      '${address.name()}:${address.deviceId()}';
 
   @override
   Future<SessionRecord?> loadSession(ProtocolAddress address) async {
     final data = _sessions[_key(address)];
     if (data == null) return null;
-    return SessionRecord.deserialize(data);
+    return SessionRecord.deserialize(bytes: data.toList());
   }
 
   @override

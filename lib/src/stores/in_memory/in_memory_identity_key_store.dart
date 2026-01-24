@@ -1,9 +1,8 @@
 /// In-memory identity key store implementation.
 library;
 
-import '../../keys/identity_key_pair.dart';
-import '../../keys/public_key.dart';
-import '../../protocol/protocol_address.dart';
+import '../../rust/api/address.dart';
+import '../../rust/api/keys.dart';
 import '../identity_key_store.dart';
 
 /// In-memory implementation of [IdentityKeyStore].
@@ -11,6 +10,15 @@ import '../identity_key_store.dart';
 /// This implementation stores identity keys in memory and is suitable for
 /// testing and prototyping. For production use, implement a persistent
 /// store backed by secure storage.
+///
+/// **Warning**: This implementation uses a simple Trust-On-First-Use (TOFU)
+/// policy in [isTrustedIdentity]: it trusts any new identity automatically
+/// and only rejects identities that differ from a previously stored one.
+/// This may not be appropriate for all security contexts. Production
+/// implementations should consider:
+/// - Notifying users when a contact's identity key changes
+/// - Requiring explicit user verification for new contacts
+/// - Implementing key verification UI (e.g., safety numbers)
 ///
 /// Note: This implementation does NOT persist data across app restarts.
 class InMemoryIdentityKeyStore implements IdentityKeyStore {
@@ -24,7 +32,7 @@ class InMemoryIdentityKeyStore implements IdentityKeyStore {
   /// - `localRegistrationId`: Our registration ID.
   InMemoryIdentityKeyStore(this._identityKeyPair, this._localRegistrationId);
 
-  String _key(ProtocolAddress address) => address.name;
+  String _key(ProtocolAddress address) => address.name();
 
   @override
   Future<IdentityKeyPair> getIdentityKeyPair() async => _identityKeyPair;

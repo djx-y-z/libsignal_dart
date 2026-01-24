@@ -2,7 +2,9 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('KyberKeyPair', () {
@@ -11,9 +13,6 @@ void main() {
         final keyPair = KyberKeyPair.generate();
 
         expect(keyPair, isNotNull);
-        expect(keyPair.isDisposed, isFalse);
-
-        keyPair.dispose();
       });
 
       test('generates unique key pairs', () {
@@ -24,11 +23,6 @@ void main() {
         final pub2 = keyPair2.getPublicKey();
 
         expect(pub1.serialize(), isNot(equals(pub2.serialize())));
-
-        keyPair1.dispose();
-        keyPair2.dispose();
-        pub1.dispose();
-        pub2.dispose();
       });
     });
 
@@ -38,12 +32,8 @@ void main() {
         final publicKey = keyPair.getPublicKey();
 
         expect(publicKey, isNotNull);
-        expect(publicKey.isDisposed, isFalse);
-        // Kyber1024 public key is 1568 bytes
+        // Kyber1024 public key is 1568 bytes (+ 1 format byte)
         expect(publicKey.serialize().length, greaterThan(1000));
-
-        publicKey.dispose();
-        keyPair.dispose();
       });
 
       test('multiple calls return equivalent public keys', () {
@@ -52,12 +42,8 @@ void main() {
         final pub1 = keyPair.getPublicKey();
         final pub2 = keyPair.getPublicKey();
 
-        expect(pub1.equals(pub2), isTrue);
+        expect(pub1.equals(other: pub2), isTrue);
         expect(pub1.serialize(), equals(pub2.serialize()));
-
-        pub1.dispose();
-        pub2.dispose();
-        keyPair.dispose();
       });
     });
 
@@ -67,12 +53,8 @@ void main() {
         final secretKey = keyPair.getSecretKey();
 
         expect(secretKey, isNotNull);
-        expect(secretKey.isDisposed, isFalse);
-        // Kyber1024 secret key is 3168 bytes
+        // Kyber1024 secret key is 3168 bytes (+ 1 format byte)
         expect(secretKey.serialize().length, greaterThan(3000));
-
-        secretKey.dispose();
-        keyPair.dispose();
       });
 
       test('multiple calls return equivalent secret keys', () {
@@ -81,109 +63,33 @@ void main() {
         final secret1 = keyPair.getSecretKey();
         final secret2 = keyPair.getSecretKey();
 
-        final secret1Bytes = secret1.serialize();
-        final secret2Bytes = secret2.serialize();
-        expect(secret1Bytes.bytes, equals(secret2Bytes.bytes));
-        secret1Bytes.dispose();
-        secret2Bytes.dispose();
-
-        secret1.dispose();
-        secret2.dispose();
-        keyPair.dispose();
+        expect(secret1.serialize(), equals(secret2.serialize()));
       });
     });
 
-    group('clone()', () {
+    group('cloneKey()', () {
       test('creates independent copy', () {
         final original = KyberKeyPair.generate();
-        final cloned = original.clone();
+        final cloned = original.cloneKey();
 
         expect(cloned, isNotNull);
-        expect(cloned.isDisposed, isFalse);
 
-        original.dispose();
-
-        // Cloned should still work after original is disposed
-        expect(cloned.isDisposed, isFalse);
+        // Cloned should still work
         final pub = cloned.getPublicKey();
         expect(pub, isNotNull);
-
-        pub.dispose();
-        cloned.dispose();
       });
 
       test('cloned key pair has same keys', () {
         final original = KyberKeyPair.generate();
-        final cloned = original.clone();
+        final cloned = original.cloneKey();
 
         final origPub = original.getPublicKey();
         final clonedPub = cloned.getPublicKey();
-        expect(clonedPub.equals(origPub), isTrue);
+        expect(clonedPub.equals(other: origPub), isTrue);
 
         final origSecret = original.getSecretKey();
         final clonedSecret = cloned.getSecretKey();
-        final origSecretBytes = origSecret.serialize();
-        final clonedSecretBytes = clonedSecret.serialize();
-        expect(clonedSecretBytes.bytes, equals(origSecretBytes.bytes));
-        origSecretBytes.dispose();
-        clonedSecretBytes.dispose();
-
-        original.dispose();
-        cloned.dispose();
-        origPub.dispose();
-        clonedPub.dispose();
-        origSecret.dispose();
-        clonedSecret.dispose();
-      });
-    });
-
-    group('disposal', () {
-      test('isDisposed is false initially', () {
-        final keyPair = KyberKeyPair.generate();
-        expect(keyPair.isDisposed, isFalse);
-        keyPair.dispose();
-      });
-
-      test('isDisposed is true after dispose', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(keyPair.isDisposed, isTrue);
-      });
-
-      test('double dispose is safe', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(() => keyPair.dispose(), returnsNormally);
-      });
-
-      test('getPublicKey throws after dispose', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(
-          () => keyPair.getPublicKey(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('getSecretKey throws after dispose', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(
-          () => keyPair.getSecretKey(),
-          throwsA(isA<LibSignalException>()),
-        );
-      });
-
-      test('clone throws after dispose', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(() => keyPair.clone(), throwsA(isA<LibSignalException>()));
-      });
-
-      test('pointer throws after dispose', () {
-        final keyPair = KyberKeyPair.generate();
-        keyPair.dispose();
-        expect(() => keyPair.pointer, throwsA(isA<LibSignalException>()));
+        expect(clonedSecret.serialize(), equals(origSecret.serialize()));
       });
     });
   });

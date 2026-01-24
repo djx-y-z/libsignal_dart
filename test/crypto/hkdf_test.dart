@@ -6,7 +6,9 @@ import 'package:test/test.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
-  setUpAll(() => LibSignal.init());
+  setUpAll(() async {
+    await LibSignal.init();
+  });
   tearDownAll(() => LibSignal.cleanup());
 
   group('Hkdf', () {
@@ -18,11 +20,12 @@ void main() {
       info = testMessage('context info');
     });
 
-    group('deriveSecrets()', () {
+    group('hkdfDerive()', () {
       test('derives key with specified length', () {
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final derived = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
@@ -31,9 +34,10 @@ void main() {
 
       test('derives different lengths correctly', () {
         for (final length in [16, 32, 48, 64, 128]) {
-          final derived = Hkdf.deriveSecrets(
-            inputKeyMaterial: inputKeyMaterial,
-            info: info,
+          final derived = hkdfDerive(
+            inputKeyMaterial: inputKeyMaterial.toList(),
+            salt: [],
+            info: info.toList(),
             outputLength: length,
           );
 
@@ -42,15 +46,17 @@ void main() {
       });
 
       test('is deterministic - same inputs produce same output', () {
-        final derived1 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final derived1 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
-        final derived2 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final derived2 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
@@ -58,15 +64,17 @@ void main() {
       });
 
       test('different IKM produces different output', () {
-        final derived1 = Hkdf.deriveSecrets(
-          inputKeyMaterial: randomBytes(32),
-          info: info,
+        final derived1 = hkdfDerive(
+          inputKeyMaterial: randomBytes(32).toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
-        final derived2 = Hkdf.deriveSecrets(
-          inputKeyMaterial: randomBytes(32),
-          info: info,
+        final derived2 = hkdfDerive(
+          inputKeyMaterial: randomBytes(32).toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
@@ -74,15 +82,17 @@ void main() {
       });
 
       test('different info produces different output', () {
-        final derived1 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: testMessage('info 1'),
+        final derived1 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: testMessage('info 1').toList(),
           outputLength: 32,
         );
 
-        final derived2 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: testMessage('info 2'),
+        final derived2 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: testMessage('info 2').toList(),
           outputLength: 32,
         );
 
@@ -90,15 +100,17 @@ void main() {
       });
 
       test('longer outputs include shorter outputs as prefix', () {
-        final short = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final short = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
-        final long = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final long = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 64,
         );
 
@@ -109,10 +121,10 @@ void main() {
     group('with salt', () {
       test('derives key with salt', () {
         final salt = randomBytes(16);
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: salt,
+        final derived = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          info: info.toList(),
+          salt: salt.toList(),
           outputLength: 32,
         );
 
@@ -120,17 +132,17 @@ void main() {
       });
 
       test('different salt produces different output', () {
-        final derived1 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: randomBytes(16),
+        final derived1 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          info: info.toList(),
+          salt: randomBytes(16).toList(),
           outputLength: 32,
         );
 
-        final derived2 = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: randomBytes(16),
+        final derived2 = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          info: info.toList(),
+          salt: randomBytes(16).toList(),
           outputLength: 32,
         );
 
@@ -138,63 +150,30 @@ void main() {
       });
 
       test('with salt differs from without salt', () {
-        final derivedWithSalt = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: randomBytes(16),
+        final derivedWithSalt = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: randomBytes(16).toList(),
+          info: info.toList(),
           outputLength: 32,
         );
 
-        final derivedWithoutSalt = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final derivedWithoutSalt = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
         expect(derivedWithSalt, isNot(equals(derivedWithoutSalt)));
       });
-
-      test('null salt is same as no salt', () {
-        final derivedNull = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: null,
-          outputLength: 32,
-        );
-
-        final derivedNone = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          outputLength: 32,
-        );
-
-        expect(derivedNull, equals(derivedNone));
-      });
-
-      test('empty salt is same as null salt', () {
-        final derivedEmpty = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: Uint8List(0),
-          outputLength: 32,
-        );
-
-        final derivedNull = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
-          salt: null,
-          outputLength: 32,
-        );
-
-        expect(derivedEmpty, equals(derivedNull));
-      });
     });
 
     group('edge cases', () {
       test('works with empty info', () {
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: Uint8List(0),
+        final derived = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: [],
           outputLength: 32,
         );
 
@@ -202,9 +181,10 @@ void main() {
       });
 
       test('works with small IKM', () {
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: randomBytes(8),
-          info: info,
+        final derived = hkdfDerive(
+          inputKeyMaterial: randomBytes(8).toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
@@ -212,9 +192,10 @@ void main() {
       });
 
       test('works with large IKM', () {
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: randomBytes(1024),
-          info: info,
+        final derived = hkdfDerive(
+          inputKeyMaterial: randomBytes(1024).toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 32,
         );
 
@@ -222,9 +203,10 @@ void main() {
       });
 
       test('works with single byte output', () {
-        final derived = Hkdf.deriveSecrets(
-          inputKeyMaterial: inputKeyMaterial,
-          info: info,
+        final derived = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
           outputLength: 1,
         );
 
@@ -232,27 +214,17 @@ void main() {
       });
     });
 
-    group('error handling', () {
-      test('throws for zero output length', () {
-        expect(
-          () => Hkdf.deriveSecrets(
-            inputKeyMaterial: inputKeyMaterial,
-            info: info,
-            outputLength: 0,
-          ),
-          throwsA(isA<ArgumentError>()),
+    group('edge cases with zero output', () {
+      test('zero output length returns empty', () {
+        // Rust implementation returns empty array for zero length
+        final derived = hkdfDerive(
+          inputKeyMaterial: inputKeyMaterial.toList(),
+          salt: [],
+          info: info.toList(),
+          outputLength: 0,
         );
-      });
 
-      test('throws for negative output length', () {
-        expect(
-          () => Hkdf.deriveSecrets(
-            inputKeyMaterial: inputKeyMaterial,
-            info: info,
-            outputLength: -1,
-          ),
-          throwsA(isA<ArgumentError>()),
-        );
+        expect(derived, isEmpty);
       });
     });
   });

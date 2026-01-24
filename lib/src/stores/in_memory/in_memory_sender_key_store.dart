@@ -16,7 +16,7 @@ class InMemorySenderKeyStore implements SenderKeyStore {
   final Map<String, Uint8List> _senderKeys = {};
 
   String _key(SenderKeyName name) =>
-      '${name.sender.name}:${name.sender.deviceId}:${name.distributionId}';
+      '${name.sender.name()}:${name.sender.deviceId()}:${name.distributionId}';
 
   @override
   Future<Uint8List?> loadSenderKey(SenderKeyName senderKeyName) async {

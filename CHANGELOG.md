@@ -1,11 +1,74 @@
-# Changelog
+## [2.0.0] - 2026-01-24
 
-All notable changes to this project will be documented in this file.
+### For Users
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+#### ⚠️ Breaking Changes
 
-## [Unreleased]
+- **Architecture**: Migrated from C FFI to Flutter Rust Bridge (FRB)
+  - No more `dispose()` calls needed — memory managed automatically by Rust
+  - Store operations now use DartFn callbacks for async Dart-to-Rust communication
+
+- **API Changes**:
+  - `ProtocolAddress('name', 1)` → `ProtocolAddress(name: 'name', deviceId: 1)`
+  - `privateKey.serialize().bytes` → `privateKey.serialize()` (returns `Uint8List` directly)
+  - `publicKey.verify(message, signature)` → `publicKey.verify(message: message, signature: signature)`
+  - `Fingerprint.create(...)` → `Fingerprint(iterations: ..., version: ..., ...)`
+  - `Aes256GcmSiv(key)` → `Aes256GcmSiv(key: key)`
+  - `cipher.encrypt/decrypt` now requires `associatedData` parameter
+  - `GroupSession` class replaced with callback-based functions
+
+#### ✨ Highlights
+
+- **Web platform support (WASM)** — run Signal Protocol in browsers
+- **Flutter Rust Bridge architecture** — cleaner API, automatic memory management
+- **libsignal v0.86.14** — latest upstream Signal Protocol library
+
+#### Security
+
+- Add low-order point validation for public keys in `PreKeyBundle` and `Fingerprint`
+  - Reject non-canonical Curve25519 points that could be used in small subgroup attacks
+
+#### Added
+
+- **Web platform support (WASM)** — first-class browser support via wasm-pack
+- Native assets build hooks (`hook/build.dart`) for automatic library download
+- Precompiled binaries via GitHub Releases — no Rust required for end users
+- SHA256 checksum verification for precompiled binaries
+
+#### Changed
+
+- Update libsignal native library to v0.86.14 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.14))
+  - MSRV bumped to Rust 1.88
+- Improve error message for unexpected ciphertext message types (now shows actual type)
+
+#### Removed
+
+- `SecureBytes`, `SerializationValidator`, `LibSignalException` classes
+- Manual Dart wrapper classes (replaced by FRB-generated code)
+
+### For Contributors
+
+#### Added
+
+- `make rust-audit` — Rust dependency vulnerability scanning
+- `make setup-rust-tools` — installs cargo-audit, flutter_rust_bridge_codegen
+- `make setup-protoc` — cross-platform protoc installation
+- `make setup-web` — installs wasm-pack for web builds
+- `make setup-android` — installs cargo-ndk for Android builds
+- Rust security audit job in CI (runs `cargo-audit` on every test run)
+- Plaintext handling documentation in SECURITY.md
+- CI workflow for building precompiled binaries (`build-libsignal-frb.yml`)
+
+#### Changed
+
+- Update `.claude/skills/` documentation for FRB architecture
+- Restructure `make setup` to install all required tools
+
+#### Removed
+
+- Old C FFI code (`lib/src/bindings/`, `rust/src/ffi/`)
+- Pre-built native libraries (`bin/`, `macos/Libraries/`, `ios/Libraries/`, etc.)
+- `headers/signal_ffi.h`
 
 ## [1.1.2] - 2026-01-19
 
@@ -145,7 +208,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.1...HEAD
+[2.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.2...v2.0.0
+[1.1.2]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.0.0...v1.0.1

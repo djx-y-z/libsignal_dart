@@ -11,109 +11,91 @@ Guide for updating the libsignal native library version in this project.
 
 ```bash
 # Check for updates
-make check
+make check-new-libsignal-version
 
 # Check and apply updates automatically
-make check ARGS="--update"
+make check-new-libsignal-version ARGS="--update"
 ```
 
 This will:
 1. Check GitHub for latest libsignal release
-2. Update `pubspec.yaml` with new `libsignal.native_version`
-3. Update CHANGELOG.md with new entry
+2. Update `rust/Cargo.toml` with new libsignal dependency tags
+3. Show next steps for completing the update
 
 ## Manual Update Process
 
 ### Step 1: Check Current Version
 
-```bash
-make version
-```
-
-Or check `pubspec.yaml`:
-```yaml
-libsignal:
-  native_version: "0.86.10"  # Current version
+Check `rust/Cargo.toml`:
+```toml
+[dependencies]
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.13" }
 ```
 
 ### Step 2: Update Version
 
-Edit `pubspec.yaml`:
-```yaml
-libsignal:
-  native_version: "0.87.0"  # New version
-```
+Edit `rust/Cargo.toml` and update the tag for all three libsignal crates:
+- `libsignal-protocol`
+- `libsignal-core`
+- `signal-crypto`
 
-### Step 3: Regenerate FFI Bindings
+### Step 3: Update Cargo.lock
 
 ```bash
-make regen
+cd rust && cargo update && cd ..
 ```
 
-This downloads the new libsignal headers and regenerates `lib/src/bindings/libsignal_bindings.dart`.
+### Step 4: Regenerate FRB Bindings (if API changed)
 
-### Step 4: Run Tests
+```bash
+make codegen
+```
+
+### Step 5: Run Tests
 
 ```bash
 make test
 ```
 
-### Step 5: Commit Changes
+### Step 6: Commit Changes
 
 ```bash
-git add pubspec.yaml lib/src/bindings/ CHANGELOG.md
-git commit -m "Update libsignal to 0.87.0"
+git add rust/Cargo.toml rust/Cargo.lock
+git commit -m "chore(deps): update libsignal to v0.87.0"
 git push
 ```
-
-CI will automatically build native libraries for all platforms.
 
 ## Check Options
 
 ```bash
 # Just check (no changes)
-make check
+make check-new-libsignal-version
 
 # Check and update
-make check ARGS="--update"
+make check-new-libsignal-version ARGS="--update"
 
 # Update to specific version
-make check ARGS="--update --version 0.87.0"
+make check-new-libsignal-version ARGS="--update --version v0.87.0"
 
-# Force version bump type
-make check ARGS="--update --bump major"
-make check ARGS="--update --bump minor"
-make check ARGS="--update --bump patch"
-
-# Skip changelog (CI uses this)
-make check ARGS="--update --no-changelog"
+# Force update even if versions match
+make check-new-libsignal-version ARGS="--update --force"
 
 # JSON output for CI
-make check ARGS="--json"
+make check-new-libsignal-version ARGS="--json"
 ```
 
 ## Version Locations
 
 | File | Field | Description |
 |------|-------|-------------|
-| `pubspec.yaml` | `libsignal.native_version` | Native library version |
+| `rust/Cargo.toml` | libsignal-protocol tag | Native library version |
 | `pubspec.yaml` | `version` | Dart package version |
 | `CHANGELOG.md` | Latest entry | What changed |
-
-## After CI Builds
-
-When CI completes after pushing:
-
-1. Native libraries are built for all platforms
-2. Artifacts are combined
-3. FFI bindings are regenerated (if API changed)
-4. SHA256 checksums created for verification
-5. GitHub Release created with assets
 
 ## Breaking Changes to Watch For
 
 ### API Changes
-- New functions in `signal_ffi.h`
+- New functions in libsignal-protocol crate
 - Removed functions
 - Changed function signatures
 - New struct fields
@@ -121,12 +103,17 @@ When CI completes after pushing:
 ### Behavior Changes
 - Protocol version updates
 - New cryptographic algorithms (e.g., Kyber/ML-KEM)
-- Changed error codes
+- Changed error types
 
 ### Binding Regeneration
 
-After `make regen`, check for:
-- Compilation errors in `lib/src/bindings/libsignal_bindings.dart`
+After updating, if API changed, run:
+```bash
+make codegen
+```
+
+Then check for:
+- Compilation errors in `rust/src/api/` files
 - Missing functions that your code depends on
 - Changed function signatures
 
@@ -136,18 +123,15 @@ After `make regen`, check for:
 - You're already on the latest version
 - Check https://github.com/signalapp/libsignal/releases
 
-### "Binding generation failed"
+### "Cargo build failed"
 - New libsignal version may have breaking API changes
 - Check libsignal release notes
-- May need to update wrapper code in `lib/src/`
+- May need to update Rust wrapper code in `rust/src/api/`
 
 ### Tests fail after update
 - API may have changed
 - Protocol version may have changed
 - Review libsignal changelog for breaking changes
-
-### ARM64 Issues
-Some functions may have ABI issues on ARM64. Check `CLAUDE.md` for workarounds.
 
 ## Upstream Resources
 

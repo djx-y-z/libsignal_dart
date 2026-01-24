@@ -25,7 +25,7 @@ class RemotePartyKeys {
   final int kyberPreKeyId;
   final Uint8List kyberPreKeySignature;
 
-  RemotePartyKeys._({
+  RemotePartyKeys({
     required this.identityKeyPair,
     required this.registrationId,
     required this.deviceId,
@@ -44,30 +44,19 @@ class RemotePartyKeys {
 
   /// Creates a PreKeyBundle from these keys.
   PreKeyBundle toBundle() {
-    return PreKeyBundle.create(
+    return PreKeyBundle(
       registrationId: registrationId,
       deviceId: deviceId,
       preKeyId: preKeyId,
-      preKey: preKeyPublic,
+      preKeyPublic: preKeyPublic.serialize(),
       signedPreKeyId: signedPreKeyId,
-      signedPreKey: signedPreKeyPublic,
-      signedPreKeySignature: signedPreKeySignature,
-      identityKey: identityKeyPair.publicKey,
+      signedPreKeyPublic: signedPreKeyPublic.serialize().toList(),
+      signedPreKeySignature: signedPreKeySignature.toList(),
+      identityKey: identityKeyPair.publicKey.toList(),
       kyberPreKeyId: kyberPreKeyId,
-      kyberPreKey: kyberPreKey,
-      kyberPreKeySignature: kyberPreKeySignature,
+      kyberPreKeyPublic: kyberPreKey.serialize().toList(),
+      kyberPreKeySignature: kyberPreKeySignature.toList(),
     );
-  }
-
-  /// Disposes all keys.
-  void dispose() {
-    identityKeyPair.dispose();
-    preKeyPrivate.dispose();
-    preKeyPublic.dispose();
-    signedPreKeyPrivate.dispose();
-    signedPreKeyPublic.dispose();
-    kyberKeyPair.dispose();
-    kyberPreKey.dispose();
   }
 }
 
@@ -102,19 +91,22 @@ RemotePartyKeys generateRemotePartyKeys({
   final signedPreKeyPrivate = PrivateKey.generate();
   final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
 
-  // Sign the signed pre-key with the identity key
-  final signedPreKeySignature = identityKeyPair.privateKey.sign(
-    signedPreKeyPublic.serialize(),
+  // Sign the signed pre-key with the identity key - need to use PrivateKey from identity
+  final identityPrivate = PrivateKey.deserialize(
+    bytes: identityKeyPair.privateKey.toList(),
+  );
+  final signedPreKeySignature = identityPrivate.sign(
+    message: signedPreKeyPublic.serialize().toList(),
   );
 
   // Generate Kyber pre-key (required by libsignal)
   final kyberKeyPair = KyberKeyPair.generate();
   final kyberPreKey = kyberKeyPair.getPublicKey();
-  final kyberPreKeySignature = identityKeyPair.privateKey.sign(
-    kyberPreKey.serialize(),
+  final kyberPreKeySignature = identityPrivate.sign(
+    message: kyberPreKey.serialize().toList(),
   );
 
-  return RemotePartyKeys._(
+  return RemotePartyKeys(
     identityKeyPair: identityKeyPair,
     registrationId: registrationId,
     deviceId: deviceId,
@@ -136,9 +128,6 @@ RemotePartyKeys generateRemotePartyKeys({
 ///
 /// This is a convenience function that generates all necessary keys
 /// and returns a ready-to-use PreKeyBundle.
-///
-/// **Warning**: This function creates keys that are not automatically disposed.
-/// Use [generateRemotePartyKeys] for proper resource management.
 PreKeyBundle createTestPreKeyBundle({
   int registrationId = 12345,
   int deviceId = 1,
@@ -154,12 +143,7 @@ PreKeyBundle createTestPreKeyBundle({
     kyberPreKeyId: kyberPreKeyId,
   );
 
-  final bundle = keys.toBundle();
-
-  // Dispose the keys since we only need the bundle
-  keys.dispose();
-
-  return bundle;
+  return keys.toBundle();
 }
 
 /// Creates a ProtocolAddress for testing.
@@ -167,5 +151,58 @@ ProtocolAddress createTestAddress({
   String name = 'test-user',
   int deviceId = 1,
 }) {
-  return ProtocolAddress(name, deviceId);
+  return ProtocolAddress(name: name, deviceId: deviceId);
+}
+
+/// Generates remote party keys using an existing identity key pair.
+///
+/// This is useful for testing key rotation scenarios where the identity
+/// remains the same but pre-keys change.
+RemotePartyKeys generateRemotePartyKeysWithIdentity({
+  required IdentityKeyPair identityKeyPair,
+  int registrationId = 12345,
+  int deviceId = 1,
+  int preKeyId = 1,
+  int signedPreKeyId = 1,
+  int kyberPreKeyId = 1,
+}) {
+  // Generate one-time pre-key
+  final preKeyPrivate = PrivateKey.generate();
+  final preKeyPublic = preKeyPrivate.getPublicKey();
+
+  // Generate signed pre-key
+  final signedPreKeyPrivate = PrivateKey.generate();
+  final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
+
+  // Sign the signed pre-key with the identity key
+  final identityPrivate = PrivateKey.deserialize(
+    bytes: identityKeyPair.privateKey.toList(),
+  );
+  final signedPreKeySignature = identityPrivate.sign(
+    message: signedPreKeyPublic.serialize().toList(),
+  );
+
+  // Generate Kyber pre-key (required by libsignal)
+  final kyberKeyPair = KyberKeyPair.generate();
+  final kyberPreKey = kyberKeyPair.getPublicKey();
+  final kyberPreKeySignature = identityPrivate.sign(
+    message: kyberPreKey.serialize().toList(),
+  );
+
+  return RemotePartyKeys(
+    identityKeyPair: identityKeyPair,
+    registrationId: registrationId,
+    deviceId: deviceId,
+    preKeyPrivate: preKeyPrivate,
+    preKeyPublic: preKeyPublic,
+    preKeyId: preKeyId,
+    signedPreKeyPrivate: signedPreKeyPrivate,
+    signedPreKeyPublic: signedPreKeyPublic,
+    signedPreKeyId: signedPreKeyId,
+    signedPreKeySignature: signedPreKeySignature,
+    kyberKeyPair: kyberKeyPair,
+    kyberPreKey: kyberPreKey,
+    kyberPreKeyId: kyberPreKeyId,
+    kyberPreKeySignature: kyberPreKeySignature,
+  );
 }

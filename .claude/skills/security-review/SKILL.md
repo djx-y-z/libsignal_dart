@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Review libsignal Dart FFI code for security issues. Use when reviewing code changes, checking for memory leaks, verifying secure memory handling, or auditing cryptographic code.
+description: Review libsignal Dart code for security issues. Use when reviewing code changes, checking for proper API usage, verifying secure patterns, or auditing cryptographic code.
 allowed-tools:
   - Read
   - Grep
@@ -9,176 +9,223 @@ allowed-tools:
 
 # Security Review for libsignal_dart
 
-Review code for security issues specific to this Signal Protocol FFI library.
+Review code for security issues specific to this Signal Protocol library.
 
-## Security Categories (A-R)
+## Architecture Context
 
-This project has established 18 security categories. See `SECURITY.md` for full details.
+This library uses Flutter Rust Bridge (FRB) with libsignal-protocol (pure Rust):
+- **Memory safety** is handled by Rust (no manual FFI memory management)
+- **Cryptographic operations** are implemented in libsignal-protocol
+- **Store callbacks** use DartFn to bridge Dart stores to Rust
 
-## Quick Checklist
+## Security Categories
 
-### A: FFI Memory Management
+### A: API Usage Correctness
 
-- [ ] All FFI pointers freed using `signal_*_destroy()` or `calloc.free()`
-- [ ] `dispose()` pattern with `_disposed` flag to prevent double-free
-- [ ] Null-pointer checks before freeing
+- [ ] Correct constructor patterns used (`PrivateKey.generate()` not manual FFI)
+- [ ] Proper async/await for store operations
+- [ ] Store callbacks return correct data types
 
-### B: Buffer Overflow Prevention
+### B: Store Security
 
-- [ ] Use `SerializationValidator` for validating serialized data
-- [ ] Bounds checking before `sublistView()` operations
+- [ ] Production stores use secure storage (not in-memory)
+- [ ] Session records persisted correctly (Double Ratchet state)
+- [ ] Identity keys stored in secure storage (e.g., flutter_secure_storage)
 
 ```dart
-SerializationValidator.validatePublicKey(data);
-SerializationValidator.validateSessionRecord(data);
+// ❌ WRONG - in-memory stores lose state on restart
+final sessionStore = InMemorySessionStore();
+
+// ✅ CORRECT - production stores persist securely
+final sessionStore = SecureSqliteSessionStore();
 ```
 
 ### C: Timing Attack Prevention
 
-- [ ] Use `LibSignalUtils.constantTimeEquals()` for cryptographic data
-- [ ] NEVER use `==` or loop comparison for secrets
+All cryptographic operations are handled by Rust's libsignal-protocol with constant-time implementations.
+
+- [ ] Let library handle cryptographic comparisons
+- [ ] Avoid comparing serialized cryptographic data directly in Dart
 
 ```dart
-// CORRECT
-if (LibSignalUtils.constantTimeEquals(expected, actual)) { ... }
+// ✅ CORRECT - let Rust handle cryptographic verification
+final isValid = publicKey.verifySignature(message: data, signature: sig);
 
-// WRONG - vulnerable to timing attacks!
-if (expected == actual) { ... }
+// ✅ CORRECT - compare public keys using library methods
+final keysMatch = key1.compare(other: key2) == 0;
+
+// ❌ AVOID - comparing serialized cryptographic data in Dart
+if (key1.serialize() == key2.serialize()) { ... }  // Not constant-time
 ```
 
-### D: Disposed State Validation
+### D: DateTime UTC Consistency
 
-- [ ] `_checkDisposed()` called at start of public methods
-- [ ] Factory methods validate input objects: `inputObject.checkNotDisposed()`
+- [ ] Use `DateTime.now().toUtc()` (not `DateTime.now()`)
+- [ ] Use `DateTime.fromMillisecondsSinceEpoch(value, isUtc: true)`
+- [ ] Certificate validation uses UTC timestamps
 
 ```dart
-void _checkDisposed() {
-  if (_disposed) {
-    throw LibSignalException.disposed('ClassName');
+// ✅ CORRECT
+final now = DateTime.now().toUtc();
+final expiration = DateTime.fromMillisecondsSinceEpoch(ms, isUtc: true);
+
+// ❌ WRONG - local time can cause certificate validation issues
+final now = DateTime.now();
+```
+
+### E: Key Material Handling
+
+- [ ] Private keys not logged or printed
+- [ ] Serialized keys not stored in plain text
+- [ ] Keys not included in error messages
+
+```dart
+// ❌ WRONG - exposes key material
+print('Generated key: ${privateKey.serialize()}');
+throw Exception('Failed with key: $keyBytes');
+
+// ✅ CORRECT - no key material in logs
+print('Generated new private key');
+throw Exception('Key operation failed');
+```
+
+### F: Certificate Validation
+
+- [ ] Trust roots properly configured
+- [ ] Certificate expiration checked
+- [ ] Server certificates validated before use
+
+```dart
+// ✅ CORRECT - validate before use
+final isValid = senderCert.validate(
+  trustRoot: serverTrustRoot,
+  timestamp: DateTime.now().toUtc(),
+);
+if (!isValid) {
+  throw SecurityException('Invalid sender certificate');
+}
+```
+
+### G: Error Handling
+
+- [ ] Cryptographic failures don't leak information
+- [ ] Proper exception types used
+- [ ] Errors logged without sensitive data
+
+```dart
+// ✅ CORRECT
+try {
+  final plaintext = await cipher.decrypt(ciphertext);
+} catch (e) {
+  // Log operation failure, not the ciphertext
+  log.warning('Decryption failed for message from ${sender.name}');
+  rethrow;
+}
+```
+
+### H: Concurrency Safety
+
+- [ ] Store operations properly synchronized
+- [ ] No race conditions in session updates
+
+```dart
+// ✅ CORRECT - synchronized store access
+class MySessionStore implements SessionStore {
+  final _lock = Lock();
+
+  @override
+  Future<void> storeSession(ProtocolAddress addr, SessionRecord record) async {
+    await _lock.synchronized(() async {
+      await _db.insert('sessions', record.serialize());
+    });
   }
 }
 ```
 
-### E: Input Validation
+### I: Input Validation
 
-- [ ] Bounds checking before buffer operations
+- [ ] Device IDs validated (1-127 range)
+- [ ] UUIDs properly formatted
+- [ ] Serialized data length checked
 
 ```dart
-if (offset + length > data.length) {
-  throw LibSignalException.invalidArgument(
-    'paramName',
-    'Buffer overrun: data extends beyond buffer',
-  );
+// ✅ FRB validates in Rust - but Dart code should also check
+if (deviceId < 1 || deviceId > 127) {
+  throw ArgumentError('Device ID must be 1-127');
 }
 ```
 
-### F: Information Disclosure
+### J: Initialization
 
-- [ ] `toString()` methods redact sensitive data
-- [ ] No logging of keys, secrets, or plaintext
-
-### G: Test Coverage
-
-- [ ] Security-critical code has test coverage
-- [ ] Tests verify disposed state behavior
-
-### H: DateTime UTC Consistency
-
-- [ ] Use `DateTime.now().toUtc()` (not `DateTime.now()`)
-- [ ] Use `DateTime.fromMillisecondsSinceEpoch(value, isUtc: true)`
-
-### I: Secure Memory Zeroing
-
-- [ ] Sensitive buffers zeroed with `LibSignalUtils.zeroBytes()` before `calloc.free()`
+- [ ] `LibSignal.init()` called before use
+- [ ] Proper cleanup on app termination (optional)
 
 ```dart
-finally {
-  LibSignalUtils.zeroBytes(plaintextPtr.asTypedList(plaintext.length));
-  calloc.free(plaintextPtr);
+void main() async {
+  await LibSignal.init();  // Initialize FRB
+  runApp(MyApp());
 }
 ```
 
-### J: Context Data Cleanup
+## Quick Checklist
 
-- [ ] Encryption/decryption context classes have `clear()` method
-- [ ] Context cleared in `finally` blocks
-
-### K: SecureBytes Usage
-
-- [ ] Sensitive data wrapped in `SecureBytes`
-- [ ] `dispose()` called explicitly (don't rely only on finalizer)
-
-```dart
-final secureKey = SecureBytes(keyData);
-try {
-  // Use secureKey.bytes
-} finally {
-  secureKey.dispose();
-}
 ```
-
-### L: Counter Overflow
-
-- [ ] Operation counters have overflow protection
-
-### M: hashCode Secure Caching
-
-- [ ] `hashCode` implementations zero temporary buffers
-
-### N: Unified Exceptions
-
-- [ ] All disposed checks throw `LibSignalException.disposed()`
-- [ ] NOT `StateError`
-
-### O: Parameter Validation
-
-- [ ] Validate numeric parameters (e.g., `deviceId >= 0`)
-
-### P: Callback Pointer Zeroing
-
-- [ ] FFI callback handlers zero pointers before `calloc.free()`
-
-### Q: Thread Safety Documentation
-
-- [ ] Global mutable state documented as non-thread-safe
-
-### R: Sensitive Data Documentation
-
-- [ ] Methods returning sensitive data have `/// **Security Note:**` docs
+[ ] No in-memory stores in production code
+[ ] No key material in logs/errors
+[ ] UTC timestamps for certificates
+[ ] Cryptographic comparisons via library methods (not raw bytes)
+[ ] Proper async/await for store operations
+[ ] LibSignal.init() called at startup
+[ ] Store operations synchronized
+```
 
 ## Red Flags
 
-- `calloc.free()` without prior `zeroBytes()` for sensitive data
-- Missing `_checkDisposed()` in public methods
-- `==` used for key/secret comparison
+- `InMemorySessionStore` in production code
+- `print()` or logging with key bytes
 - `DateTime.now()` without `.toUtc()`
-- `StateError` instead of `LibSignalException.disposed()`
-- Logging or printing cryptographic material
+- Comparing serialized cryptographic data with `==` in Dart
+- Missing `await` on store operations
+- Certificate validation without timestamp check
 
 ## Example Review Output
 
 ```
-## Security Review: lib/src/new_feature.dart
+## Security Review: lib/src/my_feature.dart
 
 ### Issues Found
 
-1. **Line 45**: Missing `zeroBytes()` before `calloc.free()`
-   - Category: I
+1. **Line 45**: Using in-memory store in production
+   - Category: B
    - Severity: HIGH
-   - Fix: Add `LibSignalUtils.zeroBytes(ptr.asTypedList(length))` before free
+   - Fix: Implement persistent secure storage
 
-2. **Line 78**: Using `==` for signature comparison
-   - Category: C
-   - Severity: HIGH
-   - Fix: Use `LibSignalUtils.constantTimeEquals(a, b)`
-
-3. **Line 102**: `DateTime.now()` without `.toUtc()`
-   - Category: H
+2. **Line 78**: DateTime.now() without UTC
+   - Category: D
    - Severity: MEDIUM
    - Fix: Change to `DateTime.now().toUtc()`
 
+3. **Line 102**: Key bytes logged
+   - Category: E
+   - Severity: HIGH
+   - Fix: Remove key material from log statement
+
 ### Recommendations
 
-- Add `clear()` method to context class on line 30
-- Add security warning to `exportKey()` docstring
+- Add lock synchronization to store operations
+- Validate device IDs before creating addresses
 ```
+
+## Files to Review
+
+| Area | Files |
+|------|-------|
+| Store implementations | `lib/src/stores/**/*.dart` |
+| Session operations | `lib/src/protocol/*.dart` |
+| Certificate handling | `lib/src/sealed_sender/*.dart` |
+| Group messaging | `lib/src/groups/*.dart` |
+
+## Reference
+
+- See `SECURITY.md` for full security guidelines
+- See `.claude/skills/stores-implementation/SKILL.md` for production store patterns
