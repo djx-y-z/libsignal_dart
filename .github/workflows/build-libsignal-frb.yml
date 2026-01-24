@@ -45,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.check.outputs.version }}
+      libsignal_version: ${{ steps.check.outputs.libsignal_version }}
       skip: ${{ steps.check.outputs.skip }}
     steps:
       - uses: actions/checkout@v4
@@ -335,6 +336,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.check-release.outputs.version }}
+      LIBSIGNAL_VERSION: ${{ needs.check-release.outputs.libsignal_version }}
     permissions:
       contents: write
     steps:
@@ -419,6 +421,8 @@ jobs:
 
           Pre-built Flutter Rust Bridge native libraries for all supported platforms.
           **These archives are downloaded automatically by \`hook/build.dart\` during Dart/Flutter builds.**
+
+          **Based on [libsignal ${LIBSIGNAL_VERSION}](https://github.com/signalapp/libsignal/releases/tag/${LIBSIGNAL_VERSION})**
 
           ### Platforms
 

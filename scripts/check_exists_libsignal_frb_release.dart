@@ -30,6 +30,9 @@ Future<void> main(List<String> args) async {
     final version = getFrbVersion();
     final tagName = 'libsignal_frb-$version';
 
+    // Get libsignal-protocol version for release notes
+    final libsignalVersion = getLibsignalVersion();
+
     // Get repository from environment or use default
     final repository =
         Platform.environment['GITHUB_REPOSITORY'] ?? 'djx-y-z/libsignal_dart';
@@ -40,6 +43,7 @@ Future<void> main(List<String> args) async {
     // Output results
     final outputs = {
       'version': version,
+      'libsignal_version': libsignalVersion,
       'tag': tagName,
       'exists': exists.toString(),
       'skip': exists.toString(),
@@ -108,8 +112,9 @@ void _printResults(Map<String, String> outputs, bool exists) {
   print('  Release Check Results');
   print('========================================');
   print('');
-  print('  FRB Version: ${outputs['version']}');
-  print('  Tag:         ${outputs['tag']}');
+  print('  FRB Version:       ${outputs['version']}');
+  print('  libsignal Version: ${outputs['libsignal_version']}');
+  print('  Tag:               ${outputs['tag']}');
   print('');
   if (exists) {
     print('  ${Colors.colorize('✓ Release exists', Colors.green)}');
