@@ -47,6 +47,11 @@ void main() {
 
         expect(address.name(), equals(name));
       });
+
+      test('accepts device ID 127 (maximum valid)', () {
+        final address = ProtocolAddress(name: 'user', deviceId: 127);
+        expect(address.deviceId(), equals(127));
+      });
     });
 
     group('name()', () {
