@@ -219,7 +219,7 @@ build:
 
 build-android:
 	@echo "Building Rust library for Android..."
-	@cargo ndk --manifest-path rust/Cargo.toml --platform 21 build --release $(ARGS)
+	@cd rust && cargo ndk --platform 21 build --release $(ARGS)
 	@echo ""
 	@echo "Build complete! Library at: rust/target/<arch>/release/"
 

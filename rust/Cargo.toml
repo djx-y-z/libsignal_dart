@@ -68,6 +68,15 @@ lto = true        # Link-Time Optimization for smaller binaries
 opt-level = "z"   # Optimize for size (important for WASM)
 strip = true      # Strip debug symbols
 
+# WASM-pack configuration for wasm-opt
+# Enable WASM features that Rust compiler generates by default:
+# - bulk-memory: memory.copy, memory.fill (standard since 2020)
+# - nontrapping-float-to-int: saturating float conversions (standard since 2020)
+# Required because older wasm-opt versions don't enable them by default
+# All features are standard and supported by all modern browsers
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O4", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
 # Suppress FRB macro warnings (known issue with flutter_rust_bridge)
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }
