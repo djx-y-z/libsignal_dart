@@ -1,6 +1,7 @@
 //! PreKey record API using libsignal-protocol.
 
 use libsignal_protocol::{KeyPair, PreKeyId, PreKeyRecord as NativePreKeyRecord};
+use zeroize::Zeroize;
 
 use super::keys::{PrivateKey, PublicKey};
 
@@ -39,13 +40,22 @@ impl PreKeyRecord {
     }
 
     /// Deserialize a pre-key record from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<PreKeyRecord, String> {
-        let native = NativePreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string())?;
-        Ok(PreKeyRecord { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<PreKeyRecord, String> {
+        let result = NativePreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(PreKeyRecord { inner: result? })
     }
 
     /// Serialize this pre-key record to bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive key material (including the private key).
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         self.inner.serialize().map_err(|e| e.to_string())
@@ -66,6 +76,11 @@ impl PreKeyRecord {
     }
 
     /// Get the private key.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive private key material.
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn private_key(&self) -> Result<Vec<u8>, String> {
         let key = self.inner.private_key().map_err(|e| e.to_string())?;

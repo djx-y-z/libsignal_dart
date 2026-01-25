@@ -161,6 +161,42 @@ void main() async {
 }
 ```
 
+### J: Zeroing Sensitive Data
+
+The library provides utilities for zeroing sensitive data in Dart.
+
+#### SecureBytes wrapper (automatic zeroing)
+
+```dart
+// Wrap takes ownership - no extra copy
+final secureData = SecureBytes.wrap(sensitiveBytes);
+try {
+  // ... use secureData.bytes ...
+} finally {
+  secureData.dispose(); // Immediate zeroing (recommended)
+}
+
+// Copy constructor - original NOT zeroed (caller responsible)
+final secureCopy = SecureBytes(sensitiveBytes);
+sensitiveBytes.zeroize(); // Zero the original yourself
+```
+
+#### Manual zeroing extension
+
+```dart
+final sensitiveList = Uint8List.fromList([...]);
+try {
+  // ... use sensitiveList ...
+} finally {
+  sensitiveList.zeroize(); // Zero all bytes
+}
+```
+
+**Limitations:**
+- Dart's garbage collector may copy data before zeroing
+- These utilities provide defence-in-depth, not absolute security guarantees
+- For critical secrets, prefer keeping them in Rust (opaque types)
+
 ## Code Review Security Checklist
 
 When reviewing code changes, verify:
@@ -173,6 +209,7 @@ When reviewing code changes, verify:
 - [ ] Certificates validated before use
 - [ ] Store operations properly synchronized
 - [ ] `LibSignal.init()` called before any operations
+- [ ] Sensitive data in Dart uses `SecureBytes` or `zeroize()` extension
 
 ## What's Handled by Rust/FRB
 

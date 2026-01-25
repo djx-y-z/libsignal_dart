@@ -5,6 +5,7 @@ use libsignal_protocol::{
     kem::{KeyType, KeyPair as NativeKeyPair, PublicKey as NativePublicKey, SecretKey as NativeSecretKey},
 };
 use rand::{TryRngCore as _, rngs::OsRng};
+use zeroize::Zeroize;
 
 /// A Kyber public key for post-quantum key encapsulation.
 pub struct KyberPublicKey {
@@ -67,13 +68,22 @@ impl KyberSecretKey {
     }
 
     /// Deserialize a Kyber secret key from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<KyberSecretKey, String> {
-        let native = NativeSecretKey::deserialize(&bytes).map_err(|e| e.to_string())?;
-        Ok(KyberSecretKey { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberSecretKey, String> {
+        let result = NativeSecretKey::deserialize(&bytes).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(KyberSecretKey { inner: result? })
     }
 
     /// Serialize this Kyber secret key to bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive secret key material.
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         Ok(self.inner.serialize().into_vec())
@@ -121,6 +131,11 @@ impl KyberKeyPair {
     }
 
     /// Get the secret key from this key pair.
+    ///
+    /// # Security
+    /// The returned key contains sensitive secret key material. When serialized,
+    /// the caller is responsible for securely zeroing those bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
     #[flutter_rust_bridge::frb(sync)]
     pub fn get_secret_key(&self) -> Result<KyberSecretKey, String> {
         Ok(KyberSecretKey {
@@ -169,14 +184,23 @@ impl KyberPreKeyRecord {
     }
 
     /// Deserialize a Kyber pre-key record from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<KyberPreKeyRecord, String> {
-        let native =
-            NativeKyberPreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string())?;
-        Ok(KyberPreKeyRecord { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberPreKeyRecord, String> {
+        let result =
+            NativeKyberPreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(KyberPreKeyRecord { inner: result? })
     }
 
     /// Serialize this Kyber pre-key record to bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive key material (including the secret key).
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         self.inner.serialize().map_err(|e| e.to_string())
@@ -210,6 +234,11 @@ impl KyberPreKeyRecord {
     }
 
     /// Get the secret key from this Kyber pre-key record.
+    ///
+    /// # Security
+    /// The returned key contains sensitive secret key material. When serialized,
+    /// the caller is responsible for securely zeroing those bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
     #[flutter_rust_bridge::frb(sync)]
     pub fn get_secret_key(&self) -> Result<KyberSecretKey, String> {
         let native = self.inner.secret_key().map_err(|e| e.to_string())?;

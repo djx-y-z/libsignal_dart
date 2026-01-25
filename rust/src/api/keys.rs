@@ -5,6 +5,7 @@ use libsignal_protocol::{
     PrivateKey as NativePrivateKey, PublicKey as NativePublicKey,
 };
 use rand::{TryRngCore as _, rngs::OsRng};
+use zeroize::Zeroize;
 
 /// A private key for X25519/Ed25519 operations.
 pub struct PrivateKey {
@@ -32,13 +33,22 @@ impl PrivateKey {
     }
 
     /// Deserialize a private key from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<PrivateKey, String> {
-        let native = NativePrivateKey::deserialize(&bytes).map_err(|e| e.to_string())?;
-        Ok(PrivateKey { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<PrivateKey, String> {
+        let result = NativePrivateKey::deserialize(&bytes).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(PrivateKey { inner: result? })
     }
 
     /// Serialize this private key to bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive key material. The caller is responsible
+    /// for securely zeroing these bytes when done. Consider using `SecureBytes.wrap()`
+    /// on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         Ok(self.inner.serialize())
@@ -62,6 +72,11 @@ impl PrivateKey {
     }
 
     /// Perform X25519 key agreement with a public key.
+    ///
+    /// # Security
+    /// The returned shared secret is highly sensitive cryptographic material.
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn agree(&self, public_key: &PublicKey) -> Result<Vec<u8>, String> {
         let shared = self
@@ -183,13 +198,22 @@ impl IdentityKeyPair {
     }
 
     /// Deserialize an identity key pair from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<IdentityKeyPair, String> {
-        let native = NativeIdentityKeyPair::try_from(&bytes[..]).map_err(|e| e.to_string())?;
-        Ok(IdentityKeyPair { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<IdentityKeyPair, String> {
+        let result = NativeIdentityKeyPair::try_from(&bytes[..]).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(IdentityKeyPair { inner: result? })
     }
 
     /// Serialize this identity key pair.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive key material (including the private key).
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         Ok(self.inner.serialize().into_vec())
@@ -202,6 +226,11 @@ impl IdentityKeyPair {
     }
 
     /// Get the private key as serialized bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive private key material.
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync, getter)]
     pub fn private_key(&self) -> Result<Vec<u8>, String> {
         Ok(self.inner.private_key().serialize())

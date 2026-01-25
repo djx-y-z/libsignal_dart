@@ -86,3 +86,7 @@ export 'src/sealed_sender/sealed_sender_cipher.dart';
 
 // Stores (Dart-side implementations)
 export 'src/stores/stores.dart';
+
+// Security utilities
+export 'src/security/secure_bytes.dart';
+export 'src/security/secure_uint8list.dart';

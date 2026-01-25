@@ -343,6 +343,7 @@ void main() async {
 - Keep the library updated to the latest version
 - Use UTC timestamps for certificate validation to avoid timezone issues
 - Let the library handle cryptographic comparisons — avoid comparing secrets in Dart code
+- Use `SecureBytes.wrap()` or `zeroize()` for sensitive data (serialized keys, shared secrets) — see [SECURITY.md](SECURITY.md)
 
 ## Stores
 

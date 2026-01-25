@@ -1,5 +1,18 @@
 ## [Unreleased]
 
+### For Users
+
+#### Added
+
+- `SecureBytes` class for wrapping sensitive byte data with automatic zeroing on disposal
+- `SecureUint8List` extension with `zeroize()` method for manual zeroing of `Uint8List`
+
+#### Security
+
+- Rust-side zeroing of sensitive input bytes in all `deserialize()` methods (keys, prekeys, sessions)
+- Added security documentation comments to methods returning sensitive data (serialize, agree, decrypt)
+- Added zeroing best practices to SECURITY.md (Section J)
+
 ### For Contributors
 
 #### Fixed

@@ -2,6 +2,7 @@
 
 use libsignal_protocol::{SessionRecord as NativeSessionRecord, SessionUsabilityRequirements};
 use std::time::{Duration, UNIX_EPOCH};
+use zeroize::Zeroize;
 
 use super::keys::PublicKey;
 
@@ -27,13 +28,22 @@ impl SessionRecord {
     }
 
     /// Deserialize a session record from bytes.
+    ///
+    /// # Security
+    /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<SessionRecord, String> {
-        let native = NativeSessionRecord::deserialize(&bytes).map_err(|e| e.to_string())?;
-        Ok(SessionRecord { inner: native })
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<SessionRecord, String> {
+        let result = NativeSessionRecord::deserialize(&bytes).map_err(|e| e.to_string());
+        bytes.zeroize(); // SECURITY: Zeroize input bytes
+        Ok(SessionRecord { inner: result? })
     }
 
     /// Serialize this session record to bytes.
+    ///
+    /// # Security
+    /// The returned bytes contain sensitive session state (including ratchet keys).
+    /// The caller is responsible for securely zeroing these bytes when done.
+    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
     pub fn serialize(&self) -> Result<Vec<u8>, String> {
         self.inner.serialize().map_err(|e| e.to_string())

@@ -7,6 +7,7 @@ use libsignal_protocol::{
     Fingerprint as NativeFingerprint, IdentityKey, PublicKey as NativePublicKey,
 };
 use sha2::Sha256;
+use zeroize::Zeroize;
 
 /// Derive keys using HKDF (HMAC-based Key Derivation Function).
 ///
@@ -18,18 +19,33 @@ use sha2::Sha256;
 ///
 /// # Returns
 /// The derived key material of the specified length
+///
+/// # Security
+/// Input key material and salt are securely zeroized after use, even on error.
+/// The `info` parameter is not zeroized as it's application context (RFC 5869), not a secret.
+///
+/// Note: The HKDF implementation may create internal copies of key material that cannot
+/// be zeroized by this function. However, these copies are stack-allocated and short-lived,
+/// being cleared when the `Hkdf` instance goes out of scope.
 #[flutter_rust_bridge::frb(sync)]
 pub fn hkdf_derive(
     output_length: u32,
-    input_key_material: Vec<u8>,
-    salt: Vec<u8>,
+    mut input_key_material: Vec<u8>,
+    mut salt: Vec<u8>,
     info: Vec<u8>,
 ) -> Result<Vec<u8>, String> {
     let salt_ref = if salt.is_empty() { None } else { Some(&salt[..]) };
     let hk = Hkdf::<Sha256>::new(salt_ref, &input_key_material);
     let mut output = vec![0u8; output_length as usize];
-    hk.expand(&info, &mut output)
-        .map_err(|e| format!("HKDF expansion failed: {}", e))?;
+
+    let result = hk.expand(&info, &mut output)
+        .map_err(|e| format!("HKDF expansion failed: {}", e));
+
+    // SECURITY: Always zeroize regardless of success/failure
+    input_key_material.zeroize();
+    salt.zeroize();
+
+    result?;
     Ok(output)
 }
 
@@ -43,17 +59,28 @@ impl Aes256GcmSiv {
     ///
     /// # Arguments
     /// * `key` - The 32-byte encryption key
+    ///
+    /// # Security
+    /// The key is securely zeroized after cipher creation, even on error.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn new(key: Vec<u8>) -> Result<Aes256GcmSiv, String> {
+    pub fn new(mut key: Vec<u8>) -> Result<Aes256GcmSiv, String> {
         if key.len() != 32 {
+            key.zeroize(); // SECURITY: Zeroize even on error
             return Err(format!("Key must be 32 bytes, got {} bytes", key.len()));
         }
 
-        let key_arr: &[u8; 32] = key
-            .as_slice()
-            .try_into()
-            .map_err(|_| "Failed to convert key")?;
+        let key_arr: &[u8; 32] = match key.as_slice().try_into() {
+            Ok(arr) => arr,
+            Err(_) => {
+                key.zeroize(); // SECURITY: Zeroize on conversion error
+                return Err("Failed to convert key".to_string());
+            }
+        };
         let cipher = CipherAes256GcmSiv::new(key_arr.into());
+
+        // SECURITY: Zeroize key after cipher creation
+        key.zeroize();
+
         Ok(Aes256GcmSiv { cipher })
     }
 
@@ -93,6 +120,12 @@ impl Aes256GcmSiv {
     /// * `ciphertext` - The data to decrypt
     /// * `nonce` - 12-byte nonce (same as used for encryption)
     /// * `associated_data` - Additional authenticated data (same as used for encryption)
+    ///
+    /// # Security
+    /// The returned plaintext may contain sensitive data. The caller is responsible
+    /// for securely handling and zeroing the plaintext when done. This is intentional:
+    /// the application knows the sensitivity of its data better than this library.
+    /// Consider using `SecureBytes.wrap()` on the Dart side if the plaintext is sensitive.
     #[flutter_rust_bridge::frb(sync)]
     pub fn decrypt(
         &self,
