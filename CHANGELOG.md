@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Fixed
+
+- Fix Windows CI: download `make` and `protoc` from GitHub Releases instead of Chocolatey (CDN unreliable)
+
 ## [2.0.0] - 2026-01-24
 
 ### For Users
@@ -210,6 +218,7 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.0.0...HEAD
 [2.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.2...v2.0.0
 [1.1.2]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.0...v1.1.1

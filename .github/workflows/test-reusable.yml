@@ -75,9 +75,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install make (Windows)
+      # Install make (Windows only, pre-installed on Linux/macOS)
+      - name: Setup Make
         if: runner.os == 'Windows'
-        run: choco install make -y
+        uses: ./.github/actions/setup-make
 
       # Setup Rust toolchain for building native library
       - name: Setup Rust
