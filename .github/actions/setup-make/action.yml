@@ -8,23 +8,19 @@ runs:
       if: runner.os == 'Windows'
       run: |
         # Download make directly from GitHub releases (more reliable than Chocolatey)
-        # Source: https://github.com/mbuilov/gnumake-windows
+        # Source: https://github.com/dcvdh/make-for-windows
         $makeVersion = "4.4.1"
-        $makeZip = "gnumake-$makeVersion-win64.zip"
-        $makeUrl = "https://github.com/mbuilov/gnumake-windows/releases/download/$makeVersion/$makeZip"
+        # Use gnumake.exe (unpatched official version, not the busybox-patched make.exe)
+        $makeUrl = "https://github.com/dcvdh/make-for-windows/releases/download/$makeVersion/gnumake.exe"
         $makeDir = "$env:RUNNER_TEMP\make"
 
         Write-Output "Downloading GNU Make $makeVersion from GitHub..."
-        Invoke-WebRequest -Uri $makeUrl -OutFile "$env:RUNNER_TEMP\$makeZip"
+        New-Item -ItemType Directory -Path $makeDir -Force | Out-Null
+        # Download as make.exe so the 'make' command works
+        Invoke-WebRequest -Uri $makeUrl -OutFile "$makeDir\make.exe"
 
-        Write-Output "Extracting to $makeDir..."
-        Expand-Archive -Path "$env:RUNNER_TEMP\$makeZip" -DestinationPath $makeDir -Force
+        Write-Output "$makeDir" >> $env:GITHUB_PATH
 
-        # The archive contains gnumake-4.4.1-win64/make.exe
-        $makeBin = "$makeDir\gnumake-$makeVersion-win64"
-
-        Write-Output "$makeBin" >> $env:GITHUB_PATH
-
-        Write-Output "Make path: $makeBin\make.exe"
-        & "$makeBin\make.exe" --version
+        Write-Output "Make path: $makeDir\make.exe"
+        & "$makeDir\make.exe" --version
       shell: pwsh
