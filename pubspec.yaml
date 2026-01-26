@@ -1,5 +1,5 @@
 name: libsignal
-description: Dart FFI bindings for libsignal — Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+description: Dart wrapper for libsignal. Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
 version: 2.0.0
 license: AGPL-3.0
@@ -35,8 +35,16 @@ platforms:
   web:
 
 topics:
+  - rust
+  - flutter-rust-bridge
+  - security
+  - cryptography
+  - privacy
   - encryption
+  - messaging
+  - libsignal
   - signal-protocol
   - e2e-encryption
-  - cryptography
-  - messaging
+  - x3dh
+  - double-ratchet
+  - sealed-sender
