@@ -29,6 +29,13 @@
 
 ### For Contributors
 
+#### Changed
+
+- Remove unused `source_files` from iOS podspec
+  - Native assets packages don't need CocoaPods to compile Swift code
+  - Libraries are loaded via `hook/build.dart`, not CocoaPods
+  - See [Flutter docs](https://docs.flutter.dev/platform-integration/bind-native-code)
+
 #### Fixed
 
 - Fix Windows CI: download `make` and `protoc` from GitHub Releases instead of Chocolatey (CDN unreliable)
