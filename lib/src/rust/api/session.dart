@@ -21,6 +21,9 @@ abstract class SessionRecord implements RustOpaqueInterface {
   bool currentRatchetKeyMatches({required PublicKey key});
 
   /// Deserialize a session record from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static SessionRecord deserialize({required List<int> bytes}) => RustLib
       .instance
       .api
@@ -36,5 +39,10 @@ abstract class SessionRecord implements RustOpaqueInterface {
   int remoteRegistrationId();
 
   /// Serialize this session record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive session state (including ratchet keys).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 }

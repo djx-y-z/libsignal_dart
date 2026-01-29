@@ -16,6 +16,14 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 ///
 /// # Returns
 /// The derived key material of the specified length
+///
+/// # Security
+/// Input key material and salt are securely zeroized after use, even on error.
+/// The `info` parameter is not zeroized as it's application context (RFC 5869), not a secret.
+///
+/// Note: The HKDF implementation may create internal copies of key material that cannot
+/// be zeroized by this function. However, these copies are stack-allocated and short-lived,
+/// being cleared when the `Hkdf` instance goes out of scope.
 Uint8List hkdfDerive({
   required int outputLength,
   required List<int> inputKeyMaterial,
@@ -52,6 +60,12 @@ abstract class Aes256GcmSiv implements RustOpaqueInterface {
   /// * `ciphertext` - The data to decrypt
   /// * `nonce` - 12-byte nonce (same as used for encryption)
   /// * `associated_data` - Additional authenticated data (same as used for encryption)
+  ///
+  /// # Security
+  /// The returned plaintext may contain sensitive data. The caller is responsible
+  /// for securely handling and zeroing the plaintext when done. This is intentional:
+  /// the application knows the sensitivity of its data better than this library.
+  /// Consider using `SecureBytes.wrap()` on the Dart side if the plaintext is sensitive.
   Uint8List decrypt({
     required List<int> ciphertext,
     required List<int> nonce,
@@ -74,6 +88,9 @@ abstract class Aes256GcmSiv implements RustOpaqueInterface {
   ///
   /// # Arguments
   /// * `key` - The 32-byte encryption key
+  ///
+  /// # Security
+  /// The key is securely zeroized after cipher creation, even on error.
   factory Aes256GcmSiv({required List<int> key}) =>
       RustLib.instance.api.crateApiCryptoAes256GcmSivNew(key: key);
 }

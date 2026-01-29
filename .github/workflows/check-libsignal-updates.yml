@@ -96,7 +96,7 @@ jobs:
           body: |
             ## Automated libsignal Update
 
-            This PR updates the libsignal dependency version in `rust/Cargo.toml`.
+            This PR updates the libsignal dependency version.
 
             ### Version Change
 
@@ -105,6 +105,13 @@ jobs:
             | libsignal | ${{ steps.check.outputs.current_version }} | ${{ steps.check.outputs.latest_version }} |
 
             ${{ steps.check.outputs.is_prerelease == 'true' && '> **Pre-release**: This is a release candidate. Consider waiting for stable release unless you need specific features.' || '' }}
+
+            ### Files Updated Automatically
+
+            - `rust/Cargo.toml` — libsignal dependency tags
+            - `README.md` — version badge
+            - `CLAUDE.md` — example in documentation
+            - `.claude/skills/update-libsignal/SKILL.md` — example in skill
 
             ### Release Notes
 
@@ -122,12 +129,12 @@ jobs:
                make codegen
                ```
 
-            3. **Update README.md badge** (line 9):
-               ```markdown
-               [![libsignal](https://img.shields.io/badge/libsignal-${{ steps.check.outputs.latest_version }}-orange.svg)](https://github.com/signalapp/libsignal)
-               ```
+            3. **Update CHANGELOG.md** with appropriate version entry
 
-            4. **Update CHANGELOG.md** with appropriate version entry
+            4. **Bump `rust/Cargo.toml` version**:
+               ```toml
+               version = "X.Y.Z"  # e.g., 1.0.0 → 1.0.1
+               ```
 
             5. **Run tests to verify:**
                ```bash
@@ -137,7 +144,7 @@ jobs:
             6. **Commit and push all changes:**
                ```bash
                git add .
-               git commit -m "chore: update to libsignal ${{ steps.check.outputs.latest_version }}"
+               git commit -m "chore: complete libsignal ${{ steps.check.outputs.latest_version }} update"
                git push
                ```
 
