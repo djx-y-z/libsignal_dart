@@ -37,14 +37,6 @@ platforms:
 topics:
   - rust
   - flutter-rust-bridge
-  - security
+  - signal
   - cryptography
-  - privacy
   - encryption
-  - messaging
-  - libsignal
-  - signal-protocol
-  - e2e-encryption
-  - x3dh
-  - double-ratchet
-  - sealed-sender
