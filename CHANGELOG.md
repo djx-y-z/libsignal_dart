@@ -2,16 +2,30 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.86.15** — latest upstream Signal Protocol library
+
 #### Added
 
 - `SecureBytes` class for wrapping sensitive byte data with automatic zeroing on disposal
 - `SecureUint8List` extension with `zeroize()` method for manual zeroing of `Uint8List`
+
+#### Changed
+
+- Update libsignal native library to v0.86.15 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.15))
+  - SVR2: Updated production enclave
+  - SVRB: Added new production enclave to `current` set
+  - New `accountExists()` typed API
+  - Backup: Support for key transparency fields
+  - Note: These changes are server-side infrastructure updates, no API changes affect this library
 
 #### Security
 
 - Rust-side zeroing of sensitive input bytes in all `deserialize()` methods (keys, prekeys, sessions)
 - Added security documentation comments to methods returning sensitive data (serialize, agree, decrypt)
 - Added zeroing best practices to SECURITY.md (Section J)
+- Regenerated FRB bindings to include security documentation in Dart API
 
 ### For Contributors
 

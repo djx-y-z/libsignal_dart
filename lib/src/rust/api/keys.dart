@@ -35,6 +35,9 @@ Uint8List identityKeypairSerializeRaw({
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<IdentityKeyPair>>
 abstract class IdentityKeyPair implements RustOpaqueInterface {
   /// Deserialize an identity key pair from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static IdentityKeyPair deserialize({required List<int> bytes}) =>
       RustLib.instance.api.crateApiKeysIdentityKeyPairDeserialize(bytes: bytes);
 
@@ -52,12 +55,22 @@ abstract class IdentityKeyPair implements RustOpaqueInterface {
       RustLib.instance.api.crateApiKeysIdentityKeyPairGenerate();
 
   /// Get the private key as serialized bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive private key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List get privateKey;
 
   /// Get the public key as serialized bytes.
   Uint8List get publicKey;
 
   /// Serialize this identity key pair.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the private key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 
   /// Sign an alternate identity key.
@@ -69,12 +82,20 @@ abstract class IdentityKeyPair implements RustOpaqueInterface {
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PrivateKey>>
 abstract class PrivateKey implements RustOpaqueInterface {
   /// Perform X25519 key agreement with a public key.
+  ///
+  /// # Security
+  /// The returned shared secret is highly sensitive cryptographic material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List agree({required PublicKey publicKey});
 
   /// Create a copy of this private key.
   PrivateKey cloneKey();
 
   /// Deserialize a private key from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static PrivateKey deserialize({required List<int> bytes}) =>
       RustLib.instance.api.crateApiKeysPrivateKeyDeserialize(bytes: bytes);
 
@@ -86,6 +107,11 @@ abstract class PrivateKey implements RustOpaqueInterface {
   PublicKey getPublicKey();
 
   /// Serialize this private key to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material. The caller is responsible
+  /// for securely zeroing these bytes when done. Consider using `SecureBytes.wrap()`
+  /// on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 
   /// Sign a message with this private key.

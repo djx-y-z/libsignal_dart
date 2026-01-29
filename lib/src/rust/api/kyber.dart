@@ -21,6 +21,11 @@ abstract class KyberKeyPair implements RustOpaqueInterface {
   KyberPublicKey getPublicKey();
 
   /// Get the secret key from this key pair.
+  ///
+  /// # Security
+  /// The returned key contains sensitive secret key material. When serialized,
+  /// the caller is responsible for securely zeroing those bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
   KyberSecretKey getSecretKey();
 }
 
@@ -43,6 +48,9 @@ abstract class KyberPreKeyRecord implements RustOpaqueInterface {
   );
 
   /// Deserialize a Kyber pre-key record from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static KyberPreKeyRecord deserialize({required List<int> bytes}) => RustLib
       .instance
       .api
@@ -55,12 +63,22 @@ abstract class KyberPreKeyRecord implements RustOpaqueInterface {
   KyberPublicKey getPublicKey();
 
   /// Get the secret key from this Kyber pre-key record.
+  ///
+  /// # Security
+  /// The returned key contains sensitive secret key material. When serialized,
+  /// the caller is responsible for securely zeroing those bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
   KyberSecretKey getSecretKey();
 
   /// Get the ID of this Kyber pre-key record.
   int id();
 
   /// Serialize this Kyber pre-key record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the secret key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 
   /// Get the signature of this Kyber pre-key record.
@@ -92,9 +110,17 @@ abstract class KyberSecretKey implements RustOpaqueInterface {
   KyberSecretKey cloneKey();
 
   /// Deserialize a Kyber secret key from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static KyberSecretKey deserialize({required List<int> bytes}) =>
       RustLib.instance.api.crateApiKyberKyberSecretKeyDeserialize(bytes: bytes);
 
   /// Serialize this Kyber secret key to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive secret key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 }

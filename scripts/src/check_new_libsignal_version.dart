@@ -152,18 +152,21 @@ bool _compareVersions(String v1, String v2) {
   return false;
 }
 
-/// Update libsignal dependency tags in rust/Cargo.toml
+/// Update libsignal version in all relevant files
 ///
-/// Updates all three libsignal crates:
-/// - libsignal-protocol
-/// - libsignal-core
-/// - signal-crypto
+/// Updates:
+/// - rust/Cargo.toml (libsignal dependency tags)
+/// - README.md (badge)
+/// - CLAUDE.md (example)
+/// - .claude/skills/update-libsignal/SKILL.md (example)
 Future<void> updateVersionFiles({
   required String newLibsignalVersion,
+  required String oldLibsignalVersion,
   bool silent = false,
 }) async {
   final packageDir = getPackageDir();
 
+  // 1. Update rust/Cargo.toml
   if (!silent) logStep('Updating rust/Cargo.toml...');
   final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
   var cargoContent = cargoFile.readAsStringSync();
@@ -185,6 +188,51 @@ Future<void> updateVersionFiles({
     logInfo('  - libsignal-protocol');
     logInfo('  - libsignal-core');
     logInfo('  - signal-crypto');
+  }
+
+  // 2. Update README.md badge
+  if (!silent) logStep('Updating README.md badge...');
+  final readmeFile = File('${packageDir.path}/README.md');
+  if (readmeFile.existsSync()) {
+    var readmeContent = readmeFile.readAsStringSync();
+    // Match: [![libsignal](https://img.shields.io/badge/libsignal-vX.Y.Z-orange.svg)]
+    final badgePattern = RegExp(
+      r'(\[!\[libsignal\]\(https://img\.shields\.io/badge/libsignal-)v[0-9]+\.[0-9]+\.[0-9]+(-orange\.svg\)\])',
+    );
+    readmeContent = readmeContent.replaceAllMapped(
+      badgePattern,
+      (match) => '${match.group(1)}$newLibsignalVersion${match.group(2)}',
+    );
+    await readmeFile.writeAsString(readmeContent);
+    if (!silent) logInfo('Updated README.md badge');
+  }
+
+  // 3. Update CLAUDE.md example
+  if (!silent) logStep('Updating CLAUDE.md...');
+  final claudeMdFile = File('${packageDir.path}/CLAUDE.md');
+  if (claudeMdFile.existsSync()) {
+    var claudeMdContent = claudeMdFile.readAsStringSync();
+    claudeMdContent = claudeMdContent.replaceAll(
+      'tag = "$oldLibsignalVersion"',
+      'tag = "$newLibsignalVersion"',
+    );
+    await claudeMdFile.writeAsString(claudeMdContent);
+    if (!silent) logInfo('Updated CLAUDE.md example');
+  }
+
+  // 4. Update skill documentation
+  if (!silent) logStep('Updating .claude/skills/update-libsignal/SKILL.md...');
+  final skillFile = File(
+    '${packageDir.path}/.claude/skills/update-libsignal/SKILL.md',
+  );
+  if (skillFile.existsSync()) {
+    var skillContent = skillFile.readAsStringSync();
+    skillContent = skillContent.replaceAll(
+      'tag = "$oldLibsignalVersion"',
+      'tag = "$newLibsignalVersion"',
+    );
+    await skillFile.writeAsString(skillContent);
+    if (!silent) logInfo('Updated SKILL.md example');
   }
 }
 
@@ -209,16 +257,18 @@ void printUpdateSummary({
 
   print('');
   if (updated) {
-    print('File updated:');
+    print('Files updated:');
     print('  - rust/Cargo.toml (libsignal dependency tags)');
+    print('  - README.md (badge)');
+    print('  - CLAUDE.md (example)');
+    print('  - .claude/skills/update-libsignal/SKILL.md (example)');
     print('');
     print('Next steps:');
-    print('  1. Run: cargo update (to update Cargo.lock)');
-    print('  2. Run: make codegen (to regenerate FRB bindings if needed)');
-    print('  3. Update README.md badge');
-    print('  4. Update CHANGELOG.md');
-    print('  5. Run tests: make test');
-    print('  6. Commit and push');
+    print('  1. Run: cd rust && cargo update (to update Cargo.lock)');
+    print('  2. Run: make codegen (if API changed)');
+    print('  3. Update CHANGELOG.md');
+    print('  4. Run tests: make test');
+    print('  5. Commit and push');
   } else if (checkResult.needsUpdate) {
     print('To update, run:');
     print('  make check-new-libsignal-version ARGS="--update"');
@@ -264,6 +314,7 @@ Future<({UpdateCheckResult checkResult, bool updated})> performUpdateCheck({
   if (doUpdate && (checkResult.needsUpdate || force)) {
     await updateVersionFiles(
       newLibsignalVersion: checkResult.latestVersion,
+      oldLibsignalVersion: checkResult.currentVersion,
       silent: silent,
     );
   }

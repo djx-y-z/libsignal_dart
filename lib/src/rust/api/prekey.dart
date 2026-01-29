@@ -12,6 +12,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PreKeyRecord>>
 abstract class PreKeyRecord implements RustOpaqueInterface {
   /// Deserialize a pre-key record from bytes.
+  ///
+  /// # Security
+  /// The input bytes are securely zeroized after deserialization.
   static PreKeyRecord deserialize({required List<int> bytes}) =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordDeserialize(bytes: bytes);
 
@@ -35,11 +38,21 @@ abstract class PreKeyRecord implements RustOpaqueInterface {
   );
 
   /// Get the private key.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive private key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List privateKey();
 
   /// Get the public key.
   Uint8List publicKey();
 
   /// Serialize this pre-key record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the private key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize();
 }

@@ -29,7 +29,7 @@ This will:
 Check `rust/Cargo.toml`:
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.14" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.86.15" }
 ```
 
 ### Step 2: Update Version
@@ -86,11 +86,22 @@ make check-new-libsignal-version ARGS="--json"
 
 ## Version Locations
 
-| File | Field | Description |
-|------|-------|-------------|
-| `rust/Cargo.toml` | libsignal-protocol tag | Native library version |
-| `pubspec.yaml` | `version` | Dart package version |
-| `CHANGELOG.md` | Latest entry | What changed |
+Files automatically updated by `make check-new-libsignal-version ARGS="--update"`:
+
+| File | What | Description |
+|------|------|-------------|
+| `rust/Cargo.toml` | libsignal-* tags | Native library dependency version |
+| `README.md` | Badge | Version badge in header |
+| `CLAUDE.md` | Example | Code example in documentation |
+| `.claude/skills/update-libsignal/SKILL.md` | Example | Code example in skill |
+
+Files that need manual update:
+
+| File | What | Description |
+|------|------|-------------|
+| `rust/Cargo.toml` | `version` | Rust crate version (bump patch for deps update) |
+| `rust/Cargo.lock` | Dependencies | Run `cargo update` after changing Cargo.toml |
+| `CHANGELOG.md` | Entry | Document the libsignal version change |
 
 ## Breaking Changes to Watch For
 

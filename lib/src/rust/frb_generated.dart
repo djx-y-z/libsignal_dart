@@ -9049,6 +9049,12 @@ class Aes256GcmSivImpl extends RustOpaque implements Aes256GcmSiv {
   /// * `ciphertext` - The data to decrypt
   /// * `nonce` - 12-byte nonce (same as used for encryption)
   /// * `associated_data` - Additional authenticated data (same as used for encryption)
+  ///
+  /// # Security
+  /// The returned plaintext may contain sensitive data. The caller is responsible
+  /// for securely handling and zeroing the plaintext when done. This is intentional:
+  /// the application knows the sensitivity of its data better than this library.
+  /// Consider using `SecureBytes.wrap()` on the Dart side if the plaintext is sensitive.
   Uint8List decrypt({
     required List<int> ciphertext,
     required List<int> nonce,
@@ -9185,6 +9191,11 @@ class IdentityKeyPairImpl extends RustOpaque implements IdentityKeyPair {
   );
 
   /// Get the private key as serialized bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive private key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List get privateKey =>
       RustLib.instance.api.crateApiKeysIdentityKeyPairPrivateKey(that: this);
 
@@ -9193,6 +9204,11 @@ class IdentityKeyPairImpl extends RustOpaque implements IdentityKeyPair {
       RustLib.instance.api.crateApiKeysIdentityKeyPairPublicKey(that: this);
 
   /// Serialize this identity key pair.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the private key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiKeysIdentityKeyPairSerialize(that: this);
 
@@ -9234,6 +9250,11 @@ class KyberKeyPairImpl extends RustOpaque implements KyberKeyPair {
       RustLib.instance.api.crateApiKyberKyberKeyPairGetPublicKey(that: this);
 
   /// Get the secret key from this key pair.
+  ///
+  /// # Security
+  /// The returned key contains sensitive secret key material. When serialized,
+  /// the caller is responsible for securely zeroing those bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
   KyberSecretKey getSecretKey() =>
       RustLib.instance.api.crateApiKyberKyberKeyPairGetSecretKey(that: this);
 }
@@ -9274,6 +9295,11 @@ class KyberPreKeyRecordImpl extends RustOpaque implements KyberPreKeyRecord {
       .crateApiKyberKyberPreKeyRecordGetPublicKey(that: this);
 
   /// Get the secret key from this Kyber pre-key record.
+  ///
+  /// # Security
+  /// The returned key contains sensitive secret key material. When serialized,
+  /// the caller is responsible for securely zeroing those bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
   KyberSecretKey getSecretKey() => RustLib.instance.api
       .crateApiKyberKyberPreKeyRecordGetSecretKey(that: this);
 
@@ -9281,6 +9307,11 @@ class KyberPreKeyRecordImpl extends RustOpaque implements KyberPreKeyRecord {
   int id() => RustLib.instance.api.crateApiKyberKyberPreKeyRecordId(that: this);
 
   /// Serialize this Kyber pre-key record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the secret key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiKyberKyberPreKeyRecordSerialize(that: this);
 
@@ -9349,6 +9380,11 @@ class KyberSecretKeyImpl extends RustOpaque implements KyberSecretKey {
       RustLib.instance.api.crateApiKyberKyberSecretKeyCloneKey(that: this);
 
   /// Serialize this Kyber secret key to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive secret key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiKyberKyberSecretKeySerialize(that: this);
 }
@@ -9440,6 +9476,11 @@ class PreKeyRecordImpl extends RustOpaque implements PreKeyRecord {
   int id() => RustLib.instance.api.crateApiPrekeyPreKeyRecordId(that: this);
 
   /// Get the private key.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive private key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List privateKey() =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordPrivateKey(that: this);
 
@@ -9448,6 +9489,11 @@ class PreKeyRecordImpl extends RustOpaque implements PreKeyRecord {
       RustLib.instance.api.crateApiPrekeyPreKeyRecordPublicKey(that: this);
 
   /// Serialize this pre-key record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the private key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordSerialize(that: this);
 }
@@ -9472,6 +9518,11 @@ class PrivateKeyImpl extends RustOpaque implements PrivateKey {
   );
 
   /// Perform X25519 key agreement with a public key.
+  ///
+  /// # Security
+  /// The returned shared secret is highly sensitive cryptographic material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List agree({required PublicKey publicKey}) => RustLib.instance.api
       .crateApiKeysPrivateKeyAgree(that: this, publicKey: publicKey);
 
@@ -9484,6 +9535,11 @@ class PrivateKeyImpl extends RustOpaque implements PrivateKey {
       RustLib.instance.api.crateApiKeysPrivateKeyGetPublicKey(that: this);
 
   /// Serialize this private key to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material. The caller is responsible
+  /// for securely zeroing these bytes when done. Consider using `SecureBytes.wrap()`
+  /// on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiKeysPrivateKeySerialize(that: this);
 
@@ -9618,6 +9674,11 @@ class SessionRecordImpl extends RustOpaque implements SessionRecord {
       .crateApiSessionSessionRecordRemoteRegistrationId(that: this);
 
   /// Serialize this session record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive session state (including ratchet keys).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiSessionSessionRecordSerialize(that: this);
 }
@@ -9712,6 +9773,11 @@ class SignedPreKeyRecordImpl extends RustOpaque implements SignedPreKeyRecord {
       RustLib.instance.api.crateApiSignedPrekeySignedPreKeyRecordId(that: this);
 
   /// Get the private key.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive private key material.
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List privateKey() => RustLib.instance.api
       .crateApiSignedPrekeySignedPreKeyRecordPrivateKey(that: this);
 
@@ -9720,6 +9786,11 @@ class SignedPreKeyRecordImpl extends RustOpaque implements SignedPreKeyRecord {
       .crateApiSignedPrekeySignedPreKeyRecordPublicKey(that: this);
 
   /// Serialize this signed pre-key record to bytes.
+  ///
+  /// # Security
+  /// The returned bytes contain sensitive key material (including the private key).
+  /// The caller is responsible for securely zeroing these bytes when done.
+  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() => RustLib.instance.api
       .crateApiSignedPrekeySignedPreKeyRecordSerialize(that: this);
 
