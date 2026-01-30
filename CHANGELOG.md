@@ -1,3 +1,14 @@
+## [2.1.1] - 2026-01-30
+
+### For Users
+
+#### Changed
+
+- Update libsignal native library to v0.86.16 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.16))
+  - chat: Make gRPC failures directly convertible to RequestError
+  - Make E164Info and AciInfo constructors public
+  - Note: These changes do not affect this library's API
+
 ## [2.1.0] - 2026-01-29
 
 ### For Users
@@ -252,7 +263,8 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.1...HEAD
+[2.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.2...v2.0.0
 [1.1.2]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.1...v1.1.2
