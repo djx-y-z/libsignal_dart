@@ -7,7 +7,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make test ARGS="test/keys/" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-protoc setup-rust-tools setup-web setup-android codegen build build-android build-web check-new-libsignal-version test coverage analyze format format-check get clean check-exists-libsignal-frb-release doc publish publish-dry-run rust-audit rust-check
+.PHONY: help setup setup-fvm setup-protoc setup-rust-tools setup-web setup-android codegen build build-android build-web check-new-libsignal-version update update-changelog test coverage analyze format format-check get clean check-exists-libsignal-frb-release doc publish publish-dry-run rust-audit rust-check
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -48,6 +48,9 @@ help:
 	@echo "    make check-new-libsignal-version  - Check for new upstream libsignal version"
 	@echo "                                        Example: make check-new-libsignal-version ARGS=\"--update\""
 	@echo "    make check-exists-libsignal-frb-release - Check if FRB release exists on GitHub"
+	@echo "    make update                       - Update rust/Cargo.lock (cargo update)"
+	@echo "    make update-changelog             - Update CHANGELOG.md with AI (requires GITHUB_TOKEN)"
+	@echo "                                        Example: make update-changelog ARGS=\"--version v0.87.0\""
 	@echo ""
 	@echo "  QUALITY ASSURANCE"
 	@echo "    make test                         - Run tests"
@@ -233,6 +236,16 @@ build-web:
 check-new-libsignal-version:
 	@touch .skip_libsignal_hook
 	@$(FVM) dart run scripts/check_new_libsignal_version.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+
+update:
+	@echo "Updating Cargo.lock..."
+	@cd rust && cargo update
+	@echo ""
+	@echo "Cargo.lock updated!"
+
+update-changelog:
+	@touch .skip_libsignal_hook
+	@$(FVM) dart run scripts/update_changelog.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
 # =============================================================================
 # Quality Assurance

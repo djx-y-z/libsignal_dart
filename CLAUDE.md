@@ -39,6 +39,8 @@ make test test/keys/  # make interprets test/keys/ as target!
 | Build for Android | `make build-android` |
 | Build WASM for web | `make build-web` |
 | Check for updates | `make check-new-libsignal-version` |
+| Update Cargo.lock | `make update` |
+| Update CHANGELOG (AI) | `make update-changelog` |
 | Get dependencies | `make get` |
 
 ## Project Overview
@@ -121,6 +123,9 @@ To check/update the version:
 ```bash
 make check-new-libsignal-version              # Check for updates
 make check-new-libsignal-version ARGS="--update"  # Update rust/Cargo.toml
+make update                                   # Update Cargo.lock
+make codegen                                  # Regenerate FRB bindings
+make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG (requires GITHUB_TOKEN)
 ```
 
 ## Supported Platforms

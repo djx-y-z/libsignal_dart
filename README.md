@@ -429,6 +429,11 @@ make build              # Build Rust library locally (native)
 make build-android      # Build for Android (requires cargo-ndk + NDK)
 make build-web          # Build WASM for web (requires wasm-pack)
 
+# CI / Version Management
+make check-new-libsignal-version  # Check for new upstream libsignal version
+make update             # Update rust/Cargo.lock (cargo update)
+make update-changelog   # Update CHANGELOG.md with AI (requires GITHUB_TOKEN)
+
 # Quality Assurance
 make test               # Run tests
 make coverage           # Run tests with coverage report

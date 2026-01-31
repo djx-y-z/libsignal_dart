@@ -1,3 +1,27 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Added
+
+- `make update` command to update `rust/Cargo.lock` via `cargo update`
+- `make update-changelog` command to update CHANGELOG.md using GitHub Models AI
+- AI-powered changelog generation script (`scripts/update_changelog.dart`)
+  - Fetches libsignal release notes from GitHub API
+  - Uses GitHub Models (gpt-4o-mini) to generate appropriate changelog entry
+  - Includes real examples from project's CHANGELOG in AI prompt for consistent formatting
+  - Automatically inserts entry in correct CHANGELOG.md location
+
+#### Changed
+
+- Fully automated libsignal update workflow (`check-libsignal-updates.yml`)
+  - Now automatically runs `cargo update` to update Cargo.lock
+  - Now automatically regenerates FRB bindings via `make codegen`
+  - Now automatically updates CHANGELOG.md using AI (requires `AI_MODELS_TOKEN` secret with `models:read` permission)
+  - All steps are non-blocking: PR is created even if some steps fail
+  - PR description shows status of each step (success/failure)
+  - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
+
 ## [2.1.1] - 2026-01-30
 
 ### For Users

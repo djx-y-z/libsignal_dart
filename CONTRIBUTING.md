@@ -307,6 +307,8 @@ All development tasks should be done via Makefile:
 | `make format-check` | Check formatting |
 | `make codegen` | Regenerate FRB bindings |
 | `make check-new-libsignal-version` | Check for libsignal updates |
+| `make update` | Update rust/Cargo.lock |
+| `make update-changelog` | Update CHANGELOG.md with AI (requires GITHUB_TOKEN) |
 | `make get` | Get dependencies |
 | `make clean` | Clean build artifacts |
 
@@ -390,11 +392,31 @@ For cryptographic code changes:
 
 This library wraps [libsignal](https://github.com/signalapp/libsignal). When updating libsignal:
 
+**Automatic (CI):** A daily workflow checks for new libsignal releases and creates a PR with all updates automatically.
+
+**Manual update:**
+
 1. Review the libsignal changelog for security fixes
-2. Update libsignal version with `make check-new-libsignal-version ARGS="--update"` (or manually edit `rust/Cargo.toml`)
-3. Run `cd rust && cargo update && cd ..` to update Cargo.lock
-4. Regenerate FRB bindings with `make codegen` if API changed
-5. Test all protocol operations after update
+2. Update libsignal version:
+   ```bash
+   make check-new-libsignal-version ARGS="--update"
+   ```
+3. Update Cargo.lock:
+   ```bash
+   make update
+   ```
+4. Regenerate FRB bindings (if API changed):
+   ```bash
+   make codegen
+   ```
+5. Update CHANGELOG.md (requires `GITHUB_TOKEN` with `models:read` permission):
+   ```bash
+   GITHUB_TOKEN=your_token make update-changelog ARGS="--version vX.Y.Z"
+   ```
+6. Test all protocol operations:
+   ```bash
+   make test
+   ```
 
 ## Questions?
 
