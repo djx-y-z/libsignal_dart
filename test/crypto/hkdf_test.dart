@@ -6,10 +6,8 @@ import 'package:test/test.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('Hkdf', () {
     late Uint8List inputKeyMaterial;

@@ -1,3 +1,4 @@
+// ignore_for_file: unreachable_from_main, sort_constructors_first, avoid_redundant_argument_values, cascade_invocations
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -191,9 +192,7 @@ class PartyState {
 }
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
+  setUpAll(LibSignal.init);
 
   group('Process PreKey Bundle with Callbacks', () {
     test('processPrekeyBundleWithCallbacks creates session', () async {

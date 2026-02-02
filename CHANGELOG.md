@@ -2,6 +2,24 @@
 
 ### For Contributors
 
+#### Changed
+
+- Adopt copier template (`copier-dart-frb-wrapper`) for project structure
+  - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
+  - Unified common utilities in `scripts/src/common.dart`
+  - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
+- Improved CI workflows with better step status tracking
+  - Each step now reports `success=true/false` for clearer PR status
+  - PR body shows inline status for each updated file
+
+#### Removed
+
+- Removed legacy scripts with project-specific naming
+  - `scripts/check_new_libsignal_version.dart` → `scripts/check_new_upstream_version.dart`
+  - `scripts/check_exists_libsignal_frb_release.dart` → `scripts/check_exists_frb_release.dart`
+  - `scripts/src/check_new_libsignal_version.dart` → `scripts/src/check_updates.dart`
+- Removed unused `scripts/combine_artifacts.dart`
+
 #### Added
 
 - `make update` command to update `rust/Cargo.lock` via `cargo update`

@@ -4,10 +4,8 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   // Note: Distribution message operations are now handled via GroupCipher class:
   // - GroupCipher.createDistributionMessage() creates a distribution message

@@ -357,15 +357,15 @@ Future<String> _readVersion(Uri packageRoot) async {
 
 /// Information about a native asset.
 class _AssetInfo {
-  final String downloadUrl;
-  final String archiveFileName;
-  final String fileName;
-
   const _AssetInfo({
     required this.downloadUrl,
     required this.archiveFileName,
     required this.fileName,
   });
+
+  final String downloadUrl;
+  final String archiveFileName;
+  final String fileName;
 }
 
 /// Resolves asset information for the target platform.
@@ -501,7 +501,7 @@ Future<void> _downloadWithRetry(
       } catch (e) {
         lastError = e is Exception ? e : Exception(e.toString());
         if (attempt < maxRetries) {
-          await Future.delayed(Duration(seconds: attempt * 2));
+          await Future<void>.delayed(Duration(seconds: attempt * 2));
         }
       }
     }
@@ -599,8 +599,10 @@ Future<void> _verifyChecksum(File file, String expected, String name) async {
 }
 
 class HookException implements Exception {
-  final String message;
   HookException(this.message);
+
+  final String message;
+
   @override
   String toString() => 'HookException: $message';
 }

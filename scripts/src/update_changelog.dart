@@ -2,6 +2,7 @@
 ///
 /// Uses GitHub Models API (OpenAI-compatible) to analyze release notes
 /// and generate appropriate changelog entries.
+library;
 
 import 'dart:convert';
 import 'dart:io';
@@ -87,7 +88,7 @@ Future<String> _generateChangelogEntry({
 
   final prompt =
       '''
-You are updating CHANGELOG.md for a Dart library that wraps libsignal (Signal Protocol).
+You are updating CHANGELOG.md for a Dart library that wraps libsignal.
 
 The library just updated its libsignal native dependency to $version.
 
@@ -119,23 +120,23 @@ Generate a JSON object with TWO fields:
 ## Example output format:
 ```json
 {
-  "highlights": "**libsignal v0.86.15** — latest upstream Signal Protocol library",
-  "changed": "- Update libsignal native library to v0.86.15 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.15))\n  - SVR2: Updated production enclave\n  - SVRB: Added new production enclave to `current` set\n  - Note: These changes are server-side infrastructure updates, no API changes affect this library"
+  "highlights": "**libsignal v1.0.0** — latest upstream native library",
+  "changed": "- Update libsignal native library to v1.0.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v1.0.0))\\n  - Feature X: Description of feature\\n  - Feature Y: Another feature\\n  - Note: These changes improve performance and stability"
 }
 ```
 
 ## Rules for "highlights":
 1. Format: "**libsignal $version** — [brief 3-7 word description]"
 2. Keep it very short and scannable
-3. Examples: "latest upstream Signal Protocol library", "security fixes and enclave updates", "new backup API support"
+3. Examples: "latest upstream native library", "security fixes and improvements", "new API support"
 
 ## Rules for "changed":
 1. Start with "- Update libsignal native library to $version ([release notes](...))
 2. Add 2-5 bullet points summarizing key changes from release notes
-3. Focus on changes relevant to library users (crypto, protocol, API changes)
-4. For internal/server-side changes, add "Note: These changes do not affect this library's API"
+3. Focus on changes relevant to library users (API changes, new features, bug fixes)
+4. For internal changes, add "Note: These changes do not affect this library's API"
 5. Use technical but concise language
-6. Mention specific components changed (e.g., "chat:", "SVR2:", "Backup:")
+6. Mention specific components or modules changed
 
 Return ONLY valid JSON, no markdown code blocks.
 ''';
@@ -178,7 +179,8 @@ Return ONLY valid JSON, no markdown code blocks.
     throw Exception('No response from AI');
   }
 
-  final message = choices[0]['message'] as Map<String, dynamic>;
+  final firstChoice = choices[0] as Map<String, dynamic>;
+  final message = firstChoice['message'] as Map<String, dynamic>;
   final content = (message['content'] as String).trim();
 
   // Parse JSON response
@@ -304,9 +306,10 @@ String _insertIntoUnreleased(
 
     // Check for #### ✨ Highlights in For Users
     if (inForUsers && line.contains('Highlights')) {
-      result.add(line);
-      result.add('');
-      result.add('- $highlights');
+      result
+        ..add(line)
+        ..add('')
+        ..add('- $highlights');
       insertedHighlights = true;
       // Skip the next empty line if present
       if (i + 1 < lines.length && lines[i + 1].trim().isEmpty) {
@@ -322,9 +325,10 @@ String _insertIntoUnreleased(
         result.addAll(['', '#### ✨ Highlights', '', '- $highlights', '']);
         insertedHighlights = true;
       }
-      result.add(line);
-      result.add('');
-      result.add(changed);
+      result
+        ..add(line)
+        ..add('')
+        ..add(changed);
       insertedChanged = true;
       // Skip the next empty line if present
       if (i + 1 < lines.length && lines[i + 1].trim().isEmpty) {
@@ -356,27 +360,25 @@ String _createUnreleasedSection(
     }
   }
 
-  // Add lines before first version
-  result.addAll(lines.sublist(0, insertIndex));
-
-  // Add Unreleased section with Highlights and Changed
-  result.addAll([
-    '## [Unreleased]',
-    '',
-    '### For Users',
-    '',
-    '#### ✨ Highlights',
-    '',
-    '- $highlights',
-    '',
-    '#### Changed',
-    '',
-    changed,
-    '',
-  ]);
-
-  // Add remaining lines
-  result.addAll(lines.sublist(insertIndex));
+  // Add lines before first version and Unreleased section with Highlights and Changed
+  result
+    ..addAll(lines.sublist(0, insertIndex))
+    ..addAll([
+      '## [Unreleased]',
+      '',
+      '### For Users',
+      '',
+      '#### ✨ Highlights',
+      '',
+      '- $highlights',
+      '',
+      '#### Changed',
+      '',
+      changed,
+      '',
+    ])
+    // Add remaining lines
+    ..addAll(lines.sublist(insertIndex));
 
   return result.join('\n');
 }

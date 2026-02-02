@@ -1,14 +1,14 @@
-/// Common utilities for development scripts
-///
-/// This file provides utilities for version management, logging,
-/// and process execution used by check_updates and check_release scripts.
+/// Common utilities for build scripts.
+// ignore_for_file: avoid_classes_with_only_static_members
+library;
 
 import 'dart:io';
 
-// ============================================
+// =============================================================================
 // ANSI Colors for terminal output
-// ============================================
+// =============================================================================
 
+/// ANSI color utilities for terminal output.
 class Colors {
   static const reset = '\x1B[0m';
   static const red = '\x1B[31m';
@@ -16,10 +16,11 @@ class Colors {
   static const yellow = '\x1B[33m';
   static const blue = '\x1B[34m';
   static const cyan = '\x1B[36m';
+  static const bold = '\x1B[1m';
 
-  static bool get supportsAnsi {
-    return stdout.supportsAnsiEscapes;
-  }
+  static bool get supportsAnsi =>
+      stdout.supportsAnsiEscapes &&
+      !Platform.environment.containsKey('NO_COLOR');
 
   static String colorize(String text, String color) {
     if (!supportsAnsi) return text;
@@ -27,73 +28,149 @@ class Colors {
   }
 }
 
-// ============================================
-// Logging utilities
-// ============================================
+// Private aliases for backward compatibility
+const _red = Colors.red;
+const _green = Colors.green;
+const _yellow = Colors.yellow;
+const _blue = Colors.blue;
+const _cyan = Colors.cyan;
+const _bold = Colors.bold;
 
-void logInfo(String message) {
-  print(Colors.colorize('[INFO]', Colors.green) + ' $message');
-}
+String _colorize(String text, String color) => Colors.colorize(text, color);
 
-void logWarn(String message) {
-  print(Colors.colorize('[WARN]', Colors.yellow) + ' $message');
-}
+void logInfo(String message) => print(_colorize('[INFO] $message', _blue));
+void logStep(String message) => print(_colorize('[STEP] $message', _cyan));
+void logWarn(String message) => print(_colorize('[WARN] $message', _yellow));
+void logWarning(String message) => logWarn(message); // Alias for compatibility
+void logError(String message) => print(_colorize('[ERROR] $message', _red));
+void logSuccess(String message) =>
+    print(_colorize('[SUCCESS] $message', _green));
 
-/// Alias for logWarn
-void logWarning(String message) => logWarn(message);
+void logPlatform(String platform, String message) =>
+    print(_colorize('[$platform] $message', _cyan));
 
-void logError(String message) {
-  print(Colors.colorize('[ERROR]', Colors.red) + ' $message');
-}
-
-void logStep(String message) {
-  print(Colors.colorize('[STEP]', Colors.blue) + ' $message');
-}
-
-void logPlatform(String platform, String message) {
-  print(Colors.colorize('[$platform]', Colors.cyan) + ' $message');
-}
-
-/// Print a build header for a platform
 void printBuildHeader(String platform) {
+  final separator = '=' * 60;
   print('');
-  print('========================================');
-  print('  libsignal Build: $platform');
-  print('========================================');
+  print(_colorize(separator, _bold));
+  print(_colorize('  Building libsignal for $platform', _bold));
+  print(_colorize(separator, _bold));
   print('');
 }
 
-// ============================================
-// Path utilities
-// ============================================
+void printBuildSummary(String platform, String outputDir) {
+  print('');
+  logSuccess('Build complete for $platform!');
+  logInfo('Output: $outputDir');
+  print('');
+}
 
-/// Get the package root directory (where pubspec.yaml is located)
+// =============================================================================
+// Directory utilities
+// =============================================================================
+
+/// Gets the package root directory.
 Directory getPackageDir() {
-  // scripts/src/common.dart -> scripts/src -> scripts -> package root
-  var dir = File(Platform.script.toFilePath()).parent.parent.parent;
-
-  // Verify we found the right directory
-  if (!File('${dir.path}/pubspec.yaml').existsSync()) {
-    // Try resolving from current directory
-    dir = Directory.current;
-    while (!File('${dir.path}/pubspec.yaml').existsSync()) {
-      final parent = dir.parent;
-      if (parent.path == dir.path) {
-        throw Exception('Could not find package root (pubspec.yaml)');
-      }
-      dir = parent;
+  // Find package root by looking for pubspec.yaml
+  final startDir = Directory.current;
+  var dir = startDir;
+  while (!File('${dir.path}/pubspec.yaml').existsSync()) {
+    final parent = dir.parent;
+    if (parent.path == dir.path) {
+      throw Exception(
+        'Could not find package root (pubspec.yaml not found)\n'
+        'Started search from: ${startDir.path}\n'
+        'Searched up to filesystem root.',
+      );
     }
+    dir = parent;
   }
-
   return dir;
 }
 
-/// Get the libsignal-protocol version from rust/Cargo.toml
-///
-/// Parses the tag from: libsignal-protocol = { git = "...", tag = "v0.86.13" }
-String getLibsignalVersion() {
+/// Gets a temporary build directory.
+String getTempBuildDir() {
   final packageDir = getPackageDir();
-  final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
+  return '${packageDir.path}/temp';
+}
+
+/// Ensures a directory exists.
+Future<void> ensureDir(String path) async {
+  final dir = Directory(path);
+  if (!dir.existsSync()) {
+    await dir.create(recursive: true);
+  }
+}
+
+/// Removes a directory if it exists.
+Future<void> removeDir(String path) async {
+  final dir = Directory(path);
+  if (dir.existsSync()) {
+    await dir.delete(recursive: true);
+  }
+}
+
+/// Copies a file.
+Future<void> copyFile(String source, String destination) async {
+  final sourceFile = File(source);
+  if (!sourceFile.existsSync()) {
+    throw Exception('Source file not found: $source');
+  }
+
+  final destDir = Directory(File(destination).parent.path);
+  if (!destDir.existsSync()) {
+    await destDir.create(recursive: true);
+  }
+
+  await sourceFile.copy(destination);
+}
+
+// =============================================================================
+// Version utilities
+// =============================================================================
+
+/// Gets the crate version from rust/Cargo.toml [package] section.
+///
+/// This is the version of the libsignal_frb crate, used for native library releases.
+String getCrateVersion() {
+  final packageDir = getPackageDir();
+  final cargoPath = '${packageDir.path}/rust/Cargo.toml';
+  final cargoFile = File(cargoPath);
+
+  if (!cargoFile.existsSync()) {
+    throw Exception(
+      'rust/Cargo.toml not found at: $cargoPath\n'
+      'Package root: ${packageDir.path}\n'
+      'Make sure you are running this from the correct directory.',
+    );
+  }
+
+  final content = cargoFile.readAsStringSync();
+
+  final versionMatch = RegExp(
+    r'^version\s*=\s*"([^"]+)"',
+    multiLine: true,
+  ).firstMatch(content);
+
+  if (versionMatch == null) {
+    throw Exception(
+      'version field not found in rust/Cargo.toml\n'
+      'File: $cargoPath\n'
+      'Expected format: version = "X.Y.Z"',
+    );
+  }
+
+  return versionMatch.group(1)!.trim();
+}
+
+/// Gets the upstream version (git tag) from rust/Cargo.toml.
+///
+/// Supports multiple upstream crates from the same git repo.
+/// Parses the tag from the first crate: libsignal-protocol = { git = "...", tag = "vX.Y.Z" }
+String getUpstreamVersion() {
+  final packageDir = getPackageDir();
+  final cargoPath = '${packageDir.path}/rust/Cargo.toml';
+  final cargoFile = File(cargoPath);
 
   if (!cargoFile.existsSync()) {
     throw Exception('rust/Cargo.toml not found');
@@ -101,8 +178,8 @@ String getLibsignalVersion() {
 
   final content = cargoFile.readAsStringSync();
 
-  // Extract the tag from libsignal-protocol dependency
-  // Matches: libsignal-protocol = { git = "...", tag = "v0.86.13" }
+  // Extract the tag from first upstream dependency
+  // Matches: libsignal-protocol = { git = "...", tag = "vX.Y.Z" }
   final versionMatch = RegExp(
     r'libsignal-protocol\s*=\s*\{[^}]*tag\s*=\s*"([^"]+)"',
   ).firstMatch(content);
@@ -117,110 +194,177 @@ String getLibsignalVersion() {
   return versionMatch.group(1)!.trim();
 }
 
-/// Get the FRB crate version from rust/Cargo.toml [package] section.
+/// Compares two semantic versions.
 ///
-/// This is the version of the libsignal_frb crate, used for native library releases.
-String getFrbVersion() {
-  final packageDir = getPackageDir();
-  final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
+/// Returns:
+/// - negative if [a] < [b]
+/// - zero if [a] == [b]
+/// - positive if [a] > [b]
+///
+/// Handles versions with or without 'v' prefix.
+/// Supports prereleases (e.g., "1.0.0-alpha" < "1.0.0").
+int compareVersions(String a, String b) {
+  final aNorm = _normalizeVersion(a);
+  final bNorm = _normalizeVersion(b);
 
-  if (!cargoFile.existsSync()) {
-    throw Exception('rust/Cargo.toml not found');
+  // Split into main version and prerelease
+  final aParts = _parseVersionParts(aNorm);
+  final bParts = _parseVersionParts(bNorm);
+
+  // Compare main version parts
+  final maxLen = aParts.mainParts.length > bParts.mainParts.length
+      ? aParts.mainParts.length
+      : bParts.mainParts.length;
+
+  for (var i = 0; i < maxLen; i++) {
+    final aNum = i < aParts.mainParts.length ? aParts.mainParts[i] : 0;
+    final bNum = i < bParts.mainParts.length ? bParts.mainParts[i] : 0;
+    if (aNum != bNum) {
+      return aNum - bNum;
+    }
   }
 
-  final content = cargoFile.readAsStringSync();
+  // If main versions are equal, compare prereleases
+  // A prerelease version is less than a release version
+  if (aParts.prerelease != null && bParts.prerelease == null) {
+    return -1; // a is prerelease, b is release
+  }
+  if (aParts.prerelease == null && bParts.prerelease != null) {
+    return 1; // a is release, b is prerelease
+  }
+  if (aParts.prerelease != null && bParts.prerelease != null) {
+    return aParts.prerelease!.compareTo(bParts.prerelease!);
+  }
 
-  // Extract version from [package] section
-  // Matches: version = "0.1.0"
-  final versionMatch = RegExp(
-    r'^version\s*=\s*"([^"]+)"',
-    multiLine: true,
-  ).firstMatch(content);
+  return 0;
+}
 
-  if (versionMatch == null) {
+/// Normalizes a version string by removing 'v' prefix.
+String _normalizeVersion(String version) {
+  if (version.startsWith('v') || version.startsWith('V')) {
+    return version.substring(1);
+  }
+  return version;
+}
+
+/// Parsed version with main parts and optional prerelease.
+class _VersionParts {
+  _VersionParts(this.mainParts, this.prerelease);
+  final List<int> mainParts;
+  final String? prerelease;
+}
+
+/// Parses a version string into components.
+_VersionParts _parseVersionParts(String version) {
+  // Split by hyphen to separate prerelease
+  final dashIndex = version.indexOf('-');
+  String mainVersion;
+  String? prerelease;
+
+  if (dashIndex != -1) {
+    mainVersion = version.substring(0, dashIndex);
+    prerelease = version.substring(dashIndex + 1);
+  } else {
+    mainVersion = version;
+  }
+
+  // Parse main version numbers
+  final parts = mainVersion.split('.').map((p) {
+    final num = int.tryParse(p);
+    return num ?? 0;
+  }).toList();
+
+  return _VersionParts(parts, prerelease);
+}
+
+// =============================================================================
+// Command execution
+// =============================================================================
+
+/// Checks if a command exists in PATH.
+Future<bool> commandExists(String command) async {
+  final result = await Process.run(Platform.isWindows ? 'where' : 'which', [
+    command,
+  ]);
+  return result.exitCode == 0;
+}
+
+/// Checks if a command is available, throws if not.
+Future<void> requireCommand(String command) async {
+  if (!await commandExists(command)) {
+    final pathEnv = Platform.environment['PATH'] ?? 'not set';
     throw Exception(
-      'version not found in rust/Cargo.toml [package] section. '
-      'Expected format: version = "X.Y.Z"',
+      'Required command not found: $command\n'
+      'Make sure $command is installed and available in your PATH.\n'
+      'Current PATH: $pathEnv',
     );
   }
-
-  return versionMatch.group(1)!.trim();
 }
 
-// ============================================
-// Process execution utilities
-// ============================================
-
-/// Run a command and return the result
+/// Runs a command and returns the result.
 Future<ProcessResult> runCommand(
-  String executable,
-  List<String> arguments, {
+  String command,
+  List<String> args, {
   String? workingDirectory,
   Map<String, String>? environment,
-  bool printOutput = true,
 }) async {
-  if (printOutput) {
-    logInfo('Running: $executable ${arguments.join(' ')}');
-  }
-
-  final result = await Process.run(
-    executable,
-    arguments,
+  logInfo('Running: $command ${args.join(' ')}');
+  return Process.run(
+    command,
+    args,
     workingDirectory: workingDirectory,
     environment: environment,
-    runInShell: Platform.isWindows,
   );
-
-  if (printOutput && result.stdout.toString().isNotEmpty) {
-    stdout.write(result.stdout);
-  }
-
-  if (result.stderr.toString().isNotEmpty) {
-    stderr.write(result.stderr);
-  }
-
-  return result;
 }
 
-/// Run a command and throw if it fails
+/// Runs a command and throws if it fails.
 Future<void> runCommandOrFail(
-  String executable,
-  List<String> arguments, {
+  String command,
+  List<String> args, {
   String? workingDirectory,
   Map<String, String>? environment,
-  bool printOutput = true,
 }) async {
   final result = await runCommand(
-    executable,
-    arguments,
+    command,
+    args,
     workingDirectory: workingDirectory,
     environment: environment,
-    printOutput: printOutput,
   );
 
   if (result.exitCode != 0) {
+    final stdout = result.stdout.toString().trim();
+    final stderr = result.stderr.toString().trim();
+    final fullCommand = '$command ${args.join(' ')}';
+    final cwd = workingDirectory ?? Directory.current.path;
+
     throw Exception(
-      'Command failed with exit code ${result.exitCode}: '
-      '$executable ${arguments.join(' ')}',
+      'Command failed with exit code ${result.exitCode}\n'
+      'Command: $fullCommand\n'
+      'Working directory: $cwd\n'
+      '${stdout.isNotEmpty ? 'stdout:\n$stdout\n' : ''}'
+      '${stderr.isNotEmpty ? 'stderr:\n$stderr' : ''}',
     );
   }
 }
 
-/// Check if a command exists
-Future<bool> commandExists(String command) async {
-  try {
-    final result = await Process.run(Platform.isWindows ? 'where' : 'which', [
-      command,
-    ], runInShell: true);
-    return result.exitCode == 0;
-  } catch (_) {
-    return false;
-  }
-}
+// =============================================================================
+// Git utilities
+// =============================================================================
 
-/// Require a command to exist, or throw
-Future<void> requireCommand(String command) async {
-  if (!await commandExists(command)) {
-    throw Exception('Required command not found: $command');
+/// Clones a git repository.
+Future<void> gitClone({
+  required String url,
+  required String targetDir,
+  String? branch,
+  int depth = 1,
+}) async {
+  final args = ['clone', '--depth', depth.toString()];
+
+  if (branch != null) {
+    args.addAll(['--branch', branch]);
   }
+
+  args.addAll([url, targetDir]);
+
+  await runCommandOrFail('git', args);
 }

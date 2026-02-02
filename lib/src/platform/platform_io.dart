@@ -105,13 +105,15 @@ String? findPackageRoot() {
   if (!configFile.existsSync()) return null;
 
   try {
-    final content = jsonDecode(configFile.readAsStringSync());
-    final packages = content['packages'] as List?;
+    final content =
+        jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
+    final packages = content['packages'] as List<dynamic>?;
     if (packages == null) return null;
 
     for (final pkg in packages) {
-      if (pkg['name'] == 'libsignal') {
-        final rootUri = pkg['rootUri'] as String?;
+      final pkgMap = pkg as Map<String, dynamic>;
+      if (pkgMap['name'] == 'libsignal') {
+        final rootUri = pkgMap['rootUri'] as String?;
         if (rootUri == null) continue;
 
         if (rootUri.startsWith('file://')) {

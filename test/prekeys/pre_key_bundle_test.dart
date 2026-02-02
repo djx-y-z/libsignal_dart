@@ -1,13 +1,12 @@
+// ignore_for_file: avoid_redundant_argument_values
 import 'dart:typed_data';
 
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('PreKeyBundle', () {
     late IdentityKeyPair identityKeyPair;

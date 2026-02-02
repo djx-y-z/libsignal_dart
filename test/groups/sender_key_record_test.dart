@@ -4,10 +4,8 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   // Note: The FRB API manages sender key records as raw byte arrays
   // through the SenderKeyStore interface. The SenderKeyRecord class

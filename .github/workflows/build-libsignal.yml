@@ -28,7 +28,7 @@ on:
     branches: [main]
     paths:
       - 'rust/**'
-      - '.github/workflows/build-libsignal-frb.yml'
+      - '.github/workflows/build-libsignal.yml'
 
 concurrency:
   group: build-frb-${{ github.ref }}

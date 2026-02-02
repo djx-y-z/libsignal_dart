@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_redundant_argument_values, unnecessary_lambdas
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -7,10 +8,8 @@ import 'package:test/test.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('DecryptionErrorMessage', () {
     group('extractFromSerializedContent()', () {

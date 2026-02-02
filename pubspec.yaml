@@ -13,11 +13,11 @@ environment:
 
 dependencies:
   flutter_rust_bridge: ^2.11.1
-  # Build hook dependencies (required for hook/build.dart)
-  # These must be in dependencies, not dev_dependencies, for hooks to work
-  code_assets: ^1.0.0
+  # SHA256 verification for native library downloads
+  crypto: ^3.0.7
+  # Build hooks for automatic native library download
   hooks: ^1.0.0
-  crypto: ^3.0.6
+  code_assets: ^1.0.0
 
 dev_dependencies:
   lints: ^6.0.0

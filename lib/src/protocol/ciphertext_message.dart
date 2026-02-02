@@ -23,10 +23,10 @@ enum CiphertextMessageType {
   /// A plaintext content message (not encrypted).
   plaintextContent(8);
 
+  const CiphertextMessageType(this.value);
+
   /// The numeric value of this message type.
   final int value;
-
-  const CiphertextMessageType(this.value);
 
   /// Creates a [CiphertextMessageType] from its numeric value.
   ///
@@ -56,12 +56,6 @@ enum CiphertextMessageType {
 /// encryption operations. The message type indicates whether this is
 /// a regular Signal message or a pre-key message (for session establishment).
 class CiphertextMessage {
-  /// The type of this message.
-  final CiphertextMessageType type;
-
-  /// The encrypted message bytes.
-  final Uint8List ciphertext;
-
   /// Creates a new CiphertextMessage.
   const CiphertextMessage({required this.type, required this.ciphertext});
 
@@ -75,6 +69,12 @@ class CiphertextMessage {
       ciphertext: ciphertext,
     );
   }
+
+  /// The type of this message.
+  final CiphertextMessageType type;
+
+  /// The encrypted message bytes.
+  final Uint8List ciphertext;
 
   /// Whether this is a pre-key message (for session establishment).
   bool get isPreKeyMessage => type == CiphertextMessageType.preKey;

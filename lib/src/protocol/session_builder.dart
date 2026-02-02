@@ -33,12 +33,6 @@ import '../stores/session_store.dart';
 /// // Now we can encrypt messages to Bob using SessionCipher
 /// ```
 class SessionBuilder {
-  /// The session store for persisting session state.
-  final SessionStore _sessionStore;
-
-  /// The identity key store for our identity and remote identities.
-  final IdentityKeyStore _identityKeyStore;
-
   /// Creates a new SessionBuilder with the given stores.
   ///
   /// The stores are used to persist session state and identity information.
@@ -47,6 +41,12 @@ class SessionBuilder {
     required IdentityKeyStore identityKeyStore,
   }) : _sessionStore = sessionStore,
        _identityKeyStore = identityKeyStore;
+
+  /// The session store for persisting session state.
+  final SessionStore _sessionStore;
+
+  /// The identity key store for our identity and remote identities.
+  final IdentityKeyStore _identityKeyStore;
 
   /// Processes a pre-key bundle to establish a session with a remote user.
   ///
@@ -85,7 +85,7 @@ class SessionBuilder {
         return Uint8List.fromList(keyPair.serialize());
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
       saveIdentity: (name, deviceId, identityKeyBytes) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);

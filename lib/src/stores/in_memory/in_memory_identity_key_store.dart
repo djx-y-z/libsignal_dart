@@ -22,15 +22,15 @@ import '../identity_key_store.dart';
 ///
 /// Note: This implementation does NOT persist data across app restarts.
 class InMemoryIdentityKeyStore implements IdentityKeyStore {
-  final IdentityKeyPair _identityKeyPair;
-  final int _localRegistrationId;
-  final Map<String, PublicKey> _identities = {};
-
   /// Creates an in-memory identity key store.
   ///
   /// - `identityKeyPair`: Our own [IdentityKeyPair].
   /// - `localRegistrationId`: Our registration ID.
   InMemoryIdentityKeyStore(this._identityKeyPair, this._localRegistrationId);
+
+  final IdentityKeyPair _identityKeyPair;
+  final int _localRegistrationId;
+  final Map<String, PublicKey> _identities = {};
 
   String _key(ProtocolAddress address) => address.name();
 

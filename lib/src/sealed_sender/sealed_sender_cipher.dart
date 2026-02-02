@@ -15,6 +15,13 @@ import '../stores/signed_pre_key_store.dart';
 
 /// Result of sealed sender decryption containing plaintext and sender info.
 class SealedSenderDecryptionResult {
+  /// Creates a decryption result.
+  SealedSenderDecryptionResult({
+    required this.plaintext,
+    required this.senderAddress,
+    required this.senderIdentityKey,
+  });
+
   /// The decrypted plaintext message.
   final Uint8List plaintext;
 
@@ -23,13 +30,6 @@ class SealedSenderDecryptionResult {
 
   /// The sender's identity key for verification.
   final PublicKey senderIdentityKey;
-
-  /// Creates a decryption result.
-  SealedSenderDecryptionResult({
-    required this.plaintext,
-    required this.senderAddress,
-    required this.senderIdentityKey,
-  });
 }
 
 /// Encrypts and decrypts messages using Sealed Sender protocol.
@@ -63,21 +63,6 @@ class SealedSenderDecryptionResult {
 /// );
 /// ```
 class SealedSenderCipher {
-  /// The session store for persisting session state.
-  final SessionStore _sessionStore;
-
-  /// The identity key store for our identity and remote identities.
-  final IdentityKeyStore _identityKeyStore;
-
-  /// The pre-key store for one-time pre-keys.
-  final PreKeyStore _preKeyStore;
-
-  /// The signed pre-key store for medium-term pre-keys.
-  final SignedPreKeyStore _signedPreKeyStore;
-
-  /// The Kyber pre-key store for post-quantum pre-keys.
-  final KyberPreKeyStore _kyberPreKeyStore;
-
   /// Creates a new SealedSenderCipher with the given stores.
   ///
   /// All stores are required for full functionality:
@@ -97,6 +82,21 @@ class SealedSenderCipher {
        _preKeyStore = preKeyStore,
        _signedPreKeyStore = signedPreKeyStore,
        _kyberPreKeyStore = kyberPreKeyStore;
+
+  /// The session store for persisting session state.
+  final SessionStore _sessionStore;
+
+  /// The identity key store for our identity and remote identities.
+  final IdentityKeyStore _identityKeyStore;
+
+  /// The pre-key store for one-time pre-keys.
+  final PreKeyStore _preKeyStore;
+
+  /// The signed pre-key store for medium-term pre-keys.
+  final SignedPreKeyStore _signedPreKeyStore;
+
+  /// The Kyber pre-key store for post-quantum pre-keys.
+  final KyberPreKeyStore _kyberPreKeyStore;
 
   /// Encrypts a message using Sealed Sender (anonymous delivery).
   ///
@@ -132,7 +132,7 @@ class SealedSenderCipher {
         return pair.serialize();
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
     );
 
@@ -177,7 +177,7 @@ class SealedSenderCipher {
         return pair.serialize();
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
       saveIdentity: (name, deviceId, identityBytes) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);

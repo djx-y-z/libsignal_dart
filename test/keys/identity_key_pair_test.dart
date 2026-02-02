@@ -5,10 +5,8 @@ import 'package:libsignal/src/rust/api/keys.dart' as keys;
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('Standalone identity key functions', () {
     group('identityKeypairSignAlternateIdentityRaw()', () {
