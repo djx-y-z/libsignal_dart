@@ -17,6 +17,10 @@
 - Update `libsignal_frb` (Rust crate) to v1.0.2
   - Adapted `PublicKey.compare()` to use byte comparison after upstream Ord removal
 
+#### Security
+
+- Updated `bytes` dependency to v1.11.1 to fix integer overflow vulnerability ([RUSTSEC-2026-0007](https://rustsec.org/advisories/RUSTSEC-2026-0007))
+
 ### For Contributors
 
 #### Added
