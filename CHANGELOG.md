@@ -17,6 +17,13 @@
 - Update `libsignal_frb` (Rust crate) to v1.0.2
   - Adapted `PublicKey.compare()` to use byte comparison after upstream Ord removal
 
+#### Fixed
+
+- Fix native library loading for pure Dart CLI applications using `dart run`
+  - `DynamicLibrary.open()` doesn't resolve native asset IDs in JIT mode
+  - Now reads `.dart_tool/native_assets.yaml` to get the actual library path
+  - Enables `example_cli` and other CLI apps to work with published package
+
 #### Security
 
 - Updated `bytes` dependency to v1.11.1 to fix integer overflow vulnerability ([RUSTSEC-2026-0007](https://rustsec.org/advisories/RUSTSEC-2026-0007))
