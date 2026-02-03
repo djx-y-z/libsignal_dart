@@ -9600,6 +9600,8 @@ class PublicKeyImpl extends RustOpaque implements PublicKey {
       RustLib.instance.api.crateApiKeysPublicKeyCloneKey(that: this);
 
   /// Compare this public key with another.
+  ///
+  /// Comparison is performed lexicographically on the serialized bytes.
   int compare({required PublicKey other}) => RustLib.instance.api
       .crateApiKeysPublicKeyCompare(that: this, other: other);
 

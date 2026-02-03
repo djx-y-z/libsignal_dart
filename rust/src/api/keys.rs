@@ -136,10 +136,14 @@ impl PublicKey {
     }
 
     /// Compare this public key with another.
+    ///
+    /// Comparison is performed lexicographically on the serialized bytes.
     #[flutter_rust_bridge::frb(sync)]
     pub fn compare(&self, other: &PublicKey) -> Result<i32, String> {
         use std::cmp::Ordering;
-        Ok(match self.inner.cmp(&other.inner) {
+        let self_bytes = self.inner.serialize();
+        let other_bytes = other.inner.serialize();
+        Ok(match self_bytes.cmp(&other_bytes) {
             Ordering::Less => -1,
             Ordering::Equal => 0,
             Ordering::Greater => 1,
