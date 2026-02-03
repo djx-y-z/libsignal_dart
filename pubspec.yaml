@@ -1,7 +1,7 @@
 name: libsignal
 description: Dart wrapper for libsignal. Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
-version: 2.1.1
+version: 2.2.0
 license: AGPL-3.0
 repository: https://github.com/djx-y-z/libsignal_dart
 homepage: https://github.com/djx-y-z/libsignal_dart
