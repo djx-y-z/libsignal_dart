@@ -22,6 +22,21 @@
   - PR description shows status of each step (success/failure)
   - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
 
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.0** — latest upstream Signal Protocol library
+
+#### Changed
+
+- Update libsignal native library to v0.87.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.0))
+  - chat: Improved handling of message delivery failures
+  - SVR2: Enhanced production enclave security features
+  - Backup: Added support for new key transparency mechanisms
+  - Note: These changes do not affect this library's API
+
 ## [2.1.1] - 2026-01-30
 
 ### For Users
