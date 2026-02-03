@@ -124,6 +124,8 @@ abstract class PublicKey implements RustOpaqueInterface {
   PublicKey cloneKey();
 
   /// Compare this public key with another.
+  ///
+  /// Comparison is performed lexicographically on the serialized bytes.
   int compare({required PublicKey other});
 
   /// Deserialize a public key from bytes.

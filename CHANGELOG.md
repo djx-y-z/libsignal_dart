@@ -1,5 +1,26 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.0** — latest upstream Signal Protocol library
+- **libsignal_frb v1.0.2** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.87.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.0))
+  - **Breaking change in upstream**: `PublicKey` ordered comparison (Ord trait) has been removed
+  - New: `accountExists()` API exposed to client libraries
+  - New: gRPC support for username hash lookup
+  - Note: Our `PublicKey.compare()` method continues to work — now compares by serialized bytes
+- Update `libsignal_frb` (Rust crate) to v1.0.2
+  - Adapted `PublicKey.compare()` to use byte comparison after upstream Ord removal
+
+#### Security
+
+- Updated `bytes` dependency to v1.11.1 to fix integer overflow vulnerability ([RUSTSEC-2026-0007](https://rustsec.org/advisories/RUSTSEC-2026-0007))
+
 ### For Contributors
 
 #### Added
@@ -21,6 +42,9 @@
   - All steps are non-blocking: PR is created even if some steps fail
   - PR description shows status of each step (success/failure)
   - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
+  - Added checklist items for `rust/Cargo.toml` version bump and `make rust-check`
+- Updated `update_changelog.dart` script to generate two Highlights entries (libsignal + libsignal_frb)
+- Updated Claude skill `.claude/skills/update-libsignal/SKILL.md` with "Review Automated PR" section
 
 ## [2.1.1] - 2026-01-30
 
