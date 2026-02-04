@@ -368,7 +368,7 @@ void printUpdateSummary({
     }
     print('');
     print('  ${Colors.colorize('Next steps:', Colors.cyan)}');
-    print('    1. Run: make update (to update Cargo.lock)');
+    print('    1. Run: make rust-update (to update Cargo.lock)');
     print('    2. Run: make codegen (if API changed)');
     print('    3. Update CHANGELOG.md');
     print('    4. Run: make test');

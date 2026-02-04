@@ -47,6 +47,9 @@ const _assetId = 'libsignal';
 /// GitHub repository for downloading releases.
 const _githubRepo = 'djx-y-z/libsignal_dart';
 
+/// Rust crate name (used for library filenames and release tags).
+const _crateName = 'libsignal_frb';
+
 /// Entry point for the build hook.
 void main(List<String> args) async {
   await build(args, (input, output) async {
@@ -83,6 +86,8 @@ void main(List<String> args) async {
           file: localLib,
         ),
       );
+      // Add dependency for cache invalidation when local build changes
+      output.dependencies.add(packageRoot.resolve('rust/Cargo.toml'));
       return;
     }
 
@@ -98,7 +103,7 @@ void main(List<String> args) async {
     // Download if not cached
     if (!libFile.existsSync()) {
       final baseUrl =
-          'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
+          'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
       Map<String, String>? checksums;
       String? expectedChecksum;
 
@@ -157,7 +162,7 @@ void main(List<String> args) async {
 // =============================================================================
 
 /// WASM files required for web builds.
-const _wasmFiles = ['libsignal_frb.js', 'libsignal_frb_bg.wasm'];
+final _wasmFiles = ['$_crateName.js', '${_crateName}_bg.wasm'];
 
 /// Handles web builds by downloading WASM files to the app's web/pkg directory.
 Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
@@ -193,6 +198,11 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
 }
 
 /// Finds the app's root directory from the shared output path.
+///
+/// Uses the shared output directory as starting point and looks for a pubspec.yaml
+/// with a web/ directory, indicating this is a Flutter web application.
+/// Additionally verifies the pubspec.yaml depends on this package to avoid
+/// finding unrelated projects.
 Uri? _findAppRoot(Uri sharedOutputDir) {
   // sharedOutputDir: <app_root>/.dart_tool/hooks_runner/shared/<package>/build/
   // We need to go up to find <app_root>
@@ -209,11 +219,35 @@ Uri? _findAppRoot(Uri sharedOutputDir) {
       // Verify this is a Flutter project with web support
       final webDir = Directory('${dir.path}/web');
       if (webDir.existsSync()) {
-        return dir.uri;
+        // Verify this pubspec depends on our package
+        if (_pubspecDependsOnPackage(pubspec)) {
+          return dir.uri;
+        }
       }
     }
   }
   return null;
+}
+
+/// Checks if a pubspec.yaml file depends on this package.
+///
+/// Returns true if the pubspec has this package as a dependency (regular, dev, or path).
+bool _pubspecDependsOnPackage(File pubspec) {
+  try {
+    final content = pubspec.readAsStringSync();
+
+    // Look for package name in dependencies section
+    // Handles: package_name:, "package_name":, 'package_name':
+    final packagePattern = RegExp(
+      '^\\s*["\']?$_packageName["\']?\\s*:',
+      multiLine: true,
+    );
+
+    return packagePattern.hasMatch(content);
+  } catch (e) {
+    // If we can't read the file, assume it doesn't depend on us
+    return false;
+  }
 }
 
 /// Checks if all required WASM files exist.
@@ -239,17 +273,26 @@ Directory? _findLocalWasmBuild(Uri packageRoot) {
 }
 
 /// Copies WASM files from source to destination directory.
+///
+/// Only copies if source is newer than destination or destination doesn't exist.
 Future<void> _copyWasmFiles(Directory source, Directory dest) async {
   await dest.create(recursive: true);
 
   for (final fileName in _wasmFiles) {
     final srcFile = File('${source.path}/$fileName');
     final dstFile = File('${dest.path}/$fileName');
-    await srcFile.copy(dstFile.path);
+
+    if (srcFile.existsSync()) {
+      // Only copy if source is newer or dest doesn't exist
+      if (!dstFile.existsSync() ||
+          srcFile.lastModifiedSync().isAfter(dstFile.lastModifiedSync())) {
+        await srcFile.copy(dstFile.path);
+      }
+    }
   }
 
   // ignore: avoid_print
-  print('Copied WASM files to ${dest.path}');
+  print('Using local WASM build from ${source.path}');
 }
 
 /// Downloads WASM files from GitHub Releases.
@@ -257,8 +300,8 @@ Future<void> _downloadWasmFiles(String version, Directory webPkgDir) async {
   await webPkgDir.create(recursive: true);
 
   final baseUrl =
-      'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
-  final archiveFileName = 'libsignal_frb-$version-wasm32.tar.gz';
+      'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
+  final archiveFileName = '$_crateName-$version-wasm32.tar.gz';
   final archiveUrl = '$baseUrl/$archiveFileName';
   final archiveFile = File('${webPkgDir.path}/$archiveFileName');
 
@@ -322,12 +365,12 @@ String _getLibraryFileName(OS targetOS) {
   switch (targetOS) {
     case OS.macOS:
     case OS.iOS:
-      return 'liblibsignal_frb.dylib';
+      return 'lib$_crateName.dylib';
     case OS.linux:
     case OS.android:
-      return 'liblibsignal_frb.so';
+      return 'lib$_crateName.so';
     case OS.windows:
-      return 'libsignal_frb.dll';
+      return '$_crateName.dll';
     default:
       throw HookException('Unsupported OS: $targetOS');
   }
@@ -371,13 +414,13 @@ class _AssetInfo {
 /// Resolves asset information for the target platform.
 _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String version) {
   final baseUrl =
-      'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
+      'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
   final targetOS = codeConfig.targetOS;
 
   final fileName = _getLibraryFileName(targetOS);
   final platformArch = _getPlatformArchName(codeConfig);
 
-  final archiveFileName = 'libsignal_frb-$version-$platformArch.tar.gz';
+  final archiveFileName = '$_crateName-$version-$platformArch.tar.gz';
 
   return _AssetInfo(
     downloadUrl: '$baseUrl/$archiveFileName',
@@ -553,7 +596,7 @@ Future<Map<String, String>> _downloadChecksums(
   String baseUrl,
   String version,
 ) async {
-  final url = '$baseUrl/libsignal_frb-$version-checksums.sha256';
+  final url = '$baseUrl/$_crateName-$version-checksums.sha256';
   final client = HttpClient();
 
   try {

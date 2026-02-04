@@ -110,7 +110,7 @@ jobs:
         id: cargo-lock
         if: steps.check.outputs.needs_update == 'true'
         run: |
-          if make update; then
+          if make rust-update; then
             echo "success=true" >> $GITHUB_OUTPUT
           else
             echo "success=false" >> $GITHUB_OUTPUT
@@ -165,7 +165,7 @@ jobs:
 
             ${{ steps.cargo-toml.outputs.success == 'false' && '> **Critical**: Failed to update rust/Cargo.toml. Manual update required.' || '' }}
 
-            ${{ steps.cargo-lock.outputs.success == 'false' && '> **Warning**: Failed to update Cargo.lock. Run `make update` manually.' || '' }}
+            ${{ steps.cargo-lock.outputs.success == 'false' && '> **Warning**: Failed to update Cargo.lock. Run `make rust-update` manually.' || '' }}
 
             ${{ steps.codegen.outputs.success == 'false' && '> **Error**: FRB codegen failed. libsignal API may have changed. Manual intervention required.' || '' }}
 
@@ -188,7 +188,7 @@ jobs:
             ### Before Merge
 
             ${{ steps.cargo-toml.outputs.success == 'false' && '1. **UPDATE rust/Cargo.toml** — automatic update failed, update manually' || '' }}
-            ${{ steps.cargo-lock.outputs.success == 'false' && '1. **RUN `make update`** — Cargo.lock update failed' || '' }}
+            ${{ steps.cargo-lock.outputs.success == 'false' && '1. **RUN `make rust-update`** — Cargo.lock update failed' || '' }}
             1. ${{ steps.codegen.outputs.success == 'false' && '**FIX FRB BINDINGS** — codegen failed, check libsignal API changes' || 'Review FRB bindings — check if API changes require Dart code updates' }}
             2. **Review CHANGELOG.md** — ${{ steps.changelog.outputs.success == 'true' && 'verify AI-generated entry is accurate' || '**ADD CHANGELOG ENTRY MANUALLY**' }}
 
@@ -239,7 +239,7 @@ jobs:
             fi
             if [ "${{ steps.cargo-lock.outputs.success }}" = "false" ]; then
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "> **Warning**: Failed to update Cargo.lock. Run \`make update\` manually." >> $GITHUB_STEP_SUMMARY
+              echo "> **Warning**: Failed to update Cargo.lock. Run \`make rust-update\` manually." >> $GITHUB_STEP_SUMMARY
             fi
             if [ "${{ steps.codegen.outputs.success }}" = "false" ]; then
               echo "" >> $GITHUB_STEP_SUMMARY
