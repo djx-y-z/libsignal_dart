@@ -97,6 +97,11 @@ class LibSignal {
   }
 
   /// Load the native library from the best available location.
+  ///
+  /// Loading order:
+  /// 1. Custom path (if provided via [libraryPath] parameter)
+  /// 2. Build hook locations (JIT: .dart_tool/lib/, AOT: ../lib/)
+  /// 3. FRB default (Flutter with Cargokit)
   static Future<ExternalLibrary> _loadLibrary(String? customPath) async {
     // coverage:ignore-start
     // On web, always use the default WASM loading
@@ -112,22 +117,16 @@ class LibSignal {
       return platform.openLibraryFromPath(customPath); // coverage:ignore-line
     }
 
-    // 2. Try native assets (Dart 3.10+ with build hook)
+    // 2. Try build hook locations (Dart 3.10+ with build hook)
+    // JIT mode: .dart_tool/lib/
+    // AOT mode: ../lib/ relative to executable
     final nativeAssetLib = platform.tryLoadNativeAsset(_nativeAssetId);
     if (nativeAssetLib != null) {
       return nativeAssetLib;
     }
 
-    // 3. Try to find the library in known locations
-    final libraryName = platform.getLibraryName();
-    final packageRoot = platform.findPackageRoot();
-    final filePath = platform.findLibraryPath(libraryName, packageRoot);
-    if (filePath != null) {
-      return platform.openLibraryFromPath(filePath);
-    }
-
     // coverage:ignore-start
-    // 4. Fall back to FRB's default loading (Flutter with Cargokit)
+    // 3. Fall back to FRB's default loading (Flutter with Cargokit)
     return await loadExternalLibrary(
       RustLib.kDefaultExternalLibraryLoaderConfig,
     );

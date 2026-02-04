@@ -1,3 +1,21 @@
+## [Unreleased]
+
+### For Users
+
+#### Fixed
+
+- Fix native library loading for pure Dart CLI applications
+  - **JIT mode** (`dart run`): loads from `.dart_tool/lib/`
+  - **AOT mode** (`dart build cli`): loads from `bundle/lib/` relative to executable
+  - Enables standalone executables to be distributed and run from any location
+
+#### Security
+
+- Remove CWD-based library search to prevent library hijacking attacks
+  - Previously searched `rust/target/release/` in current working directory
+  - Attacker could place malicious library in CWD to hijack application
+  - Now only searches trusted paths: build hook locations and executable-relative paths
+
 ## [2.2.0] - 2026-02-03
 
 ### For Users
