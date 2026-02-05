@@ -307,6 +307,7 @@ All development tasks should be done via Makefile:
 | `make format-check` | Check formatting |
 | `make codegen` | Regenerate FRB bindings |
 | `make check-new-libsignal-version` | Check for libsignal updates |
+| `make check-template-updates` | Check for copier template updates |
 | `make rust-update` | Update rust/Cargo.lock |
 | `make update-changelog` | Update CHANGELOG.md with AI (requires GITHUB_TOKEN) |
 | `make get` | Get dependencies |

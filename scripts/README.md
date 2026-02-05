@@ -11,6 +11,7 @@ Development scripts for managing the libsignal Dart package.
 |--------|-------------|------------------|
 | `check_new_libsignal_version.dart` | Check for new upstream libsignal version | `make check-new-libsignal-version` |
 | `check_exists_libsignal_frb_release.dart` | Check if FRB release exists on GitHub | `make check-exists-libsignal-frb-release` |
+| `check_template_updates.dart` | Check for new copier template version | `make check-template-updates` |
 
 ## Checking for Upstream Updates
 
@@ -34,6 +35,26 @@ make check-new-libsignal-version ARGS="--json"
 ```
 
 This script is used by both local development and the `check-libsignal-updates.yml` workflow.
+
+## Checking for Template Updates
+
+Check for new versions of the copier template:
+
+```bash
+# Just check for updates
+make check-template-updates
+
+# Check against specific version
+make check-template-updates ARGS="--version v1.7.0"
+
+# Output JSON for scripting
+make check-template-updates ARGS="--json"
+
+# CI mode (write outputs to file)
+make check-template-updates ARGS="--ci-output /path/to/output"
+```
+
+This script is used by the `check-template-updates.yml` workflow, which creates notification PRs with changelog and update instructions.
 
 ## Regenerating FRB Bindings
 
@@ -99,3 +120,8 @@ The `check-libsignal-updates.yml` workflow:
 2. Compares with current version in `rust/Cargo.toml`
 3. Creates a PR if update available
 4. After merge, tests run automatically
+
+The `check-template-updates.yml` workflow:
+1. Runs daily to check for new copier template versions
+2. Compares with current version in `.copier-answers.yml`
+3. Creates a notification PR with changelog and update instructions

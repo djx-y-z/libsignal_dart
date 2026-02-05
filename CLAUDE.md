@@ -39,6 +39,7 @@ make test test/keys/  # make interprets test/keys/ as target!
 | Build for Android | `make build-android` |
 | Build WASM for web | `make build-web` |
 | Check for updates | `make check-new-libsignal-version` |
+| Check template updates | `make check-template-updates` |
 | Update Cargo.lock | `make rust-update` |
 | Update CHANGELOG (AI) | `make update-changelog` |
 | Get dependencies | `make get` |

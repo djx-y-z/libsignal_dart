@@ -4,10 +4,25 @@
 
 #### Changed
 
-- Adopt copier template (`copier-dart-frb-wrapper`) for project structure
+- Adopt copier template (`copier-dart-frb-wrapper`) v1.6.0 for project structure
   - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
   - Unified common utilities in `scripts/src/common.dart`
   - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
+- Renamed `make update` → `make rust-update` to avoid ambiguity
+- Refactored build hook (`hook/build.dart`)
+  - Added SHA256 checksum verification for WASM downloads (supply chain security)
+  - Smarter app root detection: verifies pubspec depends on this package before copying WASM files
+  - WASM file caching with shared output directory (avoids redundant downloads)
+  - Incremental file copy: only copies if source is newer than destination
+  - Added `_crateName` constant to eliminate hardcoded `libsignal_frb` strings
+  - Added `rust/Cargo.toml` as dependency for cache invalidation on local builds
+  - Improved error messages with actionable guidance throughout
+- Replaced copier template placeholders with dynamic values from helper scripts
+  - `{{ android_min_sdk }}` → reads from `android/build.gradle` at build time
+  - `{{ crate_name }}` → uses `_crateName` constant
+  - `fvm install` → `fvm use` with version from `.fvmrc`
+- Updated example app platform configs to use template-standard naming
+  - Renamed `libsignal_example` → `example` in web, Windows, macOS, Linux, iOS configs
 - Improved CI workflows with better step status tracking
   - Each step now reports `success=true/false` for clearer PR status
   - PR body shows inline status for each updated file
@@ -22,16 +37,24 @@
 
 #### Added
 
-- `make update` command to update `rust/Cargo.lock` via `cargo update`
+- `make check-template-updates` command to check for new copier template versions
+- `check-template-updates.yml` workflow — daily CI check for template updates with automated notification PR
+- `update-template` Claude skill — step-by-step guide for applying template updates
+- `make rust-update` command to update `rust/Cargo.lock` via `cargo update`
 - `make update-changelog` command to update CHANGELOG.md using GitHub Models AI
 - AI-powered changelog generation script (`scripts/update_changelog.dart`)
   - Fetches libsignal release notes from GitHub API
   - Uses GitHub Models (gpt-4o-mini) to generate appropriate changelog entry
   - Includes real examples from project's CHANGELOG in AI prompt for consistent formatting
   - Automatically inserts entry in correct CHANGELOG.md location
+- Helper scripts for dynamic build configuration
+  - `scripts/get_android_min_sdk.dart` — reads `minSdk` from `android/build.gradle`
+  - `scripts/get_flutter_version.dart` — reads Flutter version from `.fvmrc`
+- Analyzer exclusions for `hook/**` and `scripts/**` (build scripts are not part of public API)
 
 #### Changed
 
+- Removed unused `GITHUB_TOKEN` from `check_updates.dart` (not needed for public GitHub API)
 - Fully automated libsignal update workflow (`check-libsignal-updates.yml`)
   - Now automatically runs `cargo update` to update Cargo.lock
   - Now automatically regenerates FRB bindings via `make codegen`

@@ -431,6 +431,7 @@ make build-web          # Build WASM for web (requires wasm-pack)
 
 # CI / Version Management
 make check-new-libsignal-version  # Check for new upstream libsignal version
+make check-template-updates       # Check for new copier template version
 make rust-update        # Update rust/Cargo.lock (cargo update)
 make update-changelog   # Update CHANGELOG.md with AI (requires GITHUB_TOKEN)
 

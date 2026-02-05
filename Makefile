@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release rust-audit rust-check doc publish publish-dry-run rust-update update-changelog
+.PHONY: help setup setup-fvm setup-rust-tools setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates rust-audit rust-check doc publish publish-dry-run rust-update update-changelog
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -49,6 +49,7 @@ help:
 	@echo "    make check-new-libsignal-version  - Check for new upstream libsignal version"
 	@echo "                                        Example: make check-new-libsignal-version ARGS=\"--update\""
 	@echo "    make check-exists-libsignal-frb-release - Check if FRB release exists on GitHub"
+	@echo "    make check-template-updates       - Check for new copier template version"
 	@echo "    make rust-update                  - Update Cargo.lock (cargo update)"
 	@echo "    make update-changelog             - Update CHANGELOG.md with AI"
 	@echo "                                        Example: make update-changelog ARGS=\"--version v1.0.0\""
@@ -244,6 +245,10 @@ check-new-libsignal-version:
 check-exists-libsignal-frb-release:
 	@touch .skip_libsignal_hook
 	@$(FVM) dart run scripts/check_exists_frb_release.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+
+check-template-updates:
+	@touch .skip_libsignal_hook
+	@$(FVM) dart run scripts/check_template_updates.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
 rust-update:
 	@echo "Updating Cargo.lock..."

@@ -139,18 +139,12 @@ bool _isPrerelease(String version) {
 
 /// Fetch the latest release from GitHub API.
 Future<Map<String, dynamic>> _fetchLatestRelease() async {
-  final token =
-      Platform.environment['GITHUB_TOKEN'] ?? Platform.environment['GH_TOKEN'];
-
   final client = HttpClient();
   try {
     final url = Uri.parse(
       'https://api.github.com/repos/$_upstreamRepo/releases/latest',
     );
     final request = await client.getUrl(url);
-    if (token != null && token.isNotEmpty) {
-      request.headers.set('Authorization', 'token $token');
-    }
     request.headers.set('Accept', 'application/vnd.github.v3+json');
     request.headers.set('User-Agent', 'libsignal-update-checker');
 
