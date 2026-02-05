@@ -36,7 +36,6 @@ help:
 	@echo "    make setup-protoc                 - Install protoc (Protocol Buffers compiler)"
 	@echo "    make setup-android                - Install Android build tools (cargo-ndk)"
 	@echo "    make setup-web                    - Install web build tools (wasm-pack)"
-
 	@echo ""
 	@echo "  BUILD & CODEGEN"
 	@echo "    make codegen                      - Generate Dart bindings from Rust code"
@@ -45,7 +44,6 @@ help:
 	@echo "    make build-android                - Build for Android (all ABIs)"
 	@echo "                                        Example: make build-android ARGS=\"--target arm64-v8a\""
 	@echo "    make build-web                    - Build WASM for web platform"
-
 	@echo ""
 	@echo "  CI / VERSION CHECKS"
 	@echo "    make check-new-libsignal-version  - Check for new upstream libsignal version"
@@ -90,9 +88,7 @@ setup:
 		exit 1; \
 	fi
 	@$(MAKE) setup-fvm
-
 	@$(MAKE) setup-protoc
-
 	@$(MAKE) setup-rust-tools
 	@echo ""
 	@echo "Full setup complete! You can now use 'make help' to see available commands."
@@ -102,7 +98,7 @@ setup-fvm:
 	dart pub global activate fvm
 	@echo ""
 	@echo "Installing project Flutter version..."
-	$(FVM) install
+	$(FVM) use $$(dart scripts/get_flutter_version.dart) --force
 	@echo ""
 	@echo "Getting dependencies..."
 	@touch .skip_libsignal_hook
@@ -216,18 +212,17 @@ build:
 
 build-android:
 	@echo "Building Rust library for Android..."
-	cd rust && cargo ndk --platform {{ android_min_sdk }} build --release $(ARGS)
+	@PLATFORM=$$(dart scripts/get_android_min_sdk.dart) && \
+		cd rust && cargo ndk --platform $$PLATFORM build --release $(ARGS)
 	@echo ""
 	@echo "Build complete! Library at: rust/target/<arch>/release/"
-
 build-web:
 	@echo "Building WASM for web..."
 	cd rust && wasm-pack build --target no-modules --release \
-		--out-dir target/wasm32 --out-name {{ crate_name }} --no-typescript
+		--out-dir target/wasm32 --out-name libsignal_frb --no-typescript
 	@rm -f rust/target/wasm32/.gitignore rust/target/wasm32/package.json
 	@echo ""
 	@echo "Build complete! WASM files at: rust/target/wasm32/"
-
 # =============================================================================
 # Rust Quality
 # =============================================================================

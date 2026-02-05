@@ -28,33 +28,27 @@ class Colors {
   }
 }
 
-// Private aliases for backward compatibility
-const _red = Colors.red;
-const _green = Colors.green;
-const _yellow = Colors.yellow;
-const _blue = Colors.blue;
-const _cyan = Colors.cyan;
-const _bold = Colors.bold;
-
-String _colorize(String text, String color) => Colors.colorize(text, color);
-
-void logInfo(String message) => print(_colorize('[INFO] $message', _blue));
-void logStep(String message) => print(_colorize('[STEP] $message', _cyan));
-void logWarn(String message) => print(_colorize('[WARN] $message', _yellow));
+void logInfo(String message) =>
+    print(Colors.colorize('[INFO] $message', Colors.blue));
+void logStep(String message) =>
+    print(Colors.colorize('[STEP] $message', Colors.cyan));
+void logWarn(String message) =>
+    print(Colors.colorize('[WARN] $message', Colors.yellow));
 void logWarning(String message) => logWarn(message); // Alias for compatibility
-void logError(String message) => print(_colorize('[ERROR] $message', _red));
+void logError(String message) =>
+    print(Colors.colorize('[ERROR] $message', Colors.red));
 void logSuccess(String message) =>
-    print(_colorize('[SUCCESS] $message', _green));
+    print(Colors.colorize('[SUCCESS] $message', Colors.green));
 
 void logPlatform(String platform, String message) =>
-    print(_colorize('[$platform] $message', _cyan));
+    print(Colors.colorize('[$platform] $message', Colors.cyan));
 
 void printBuildHeader(String platform) {
   final separator = '=' * 60;
   print('');
-  print(_colorize(separator, _bold));
-  print(_colorize('  Building libsignal for $platform', _bold));
-  print(_colorize(separator, _bold));
+  print(Colors.colorize(separator, Colors.bold));
+  print(Colors.colorize('  Building libsignal for $platform', Colors.bold));
+  print(Colors.colorize(separator, Colors.bold));
   print('');
 }
 
@@ -250,6 +244,7 @@ String _normalizeVersion(String version) {
 /// Parsed version with main parts and optional prerelease.
 class _VersionParts {
   _VersionParts(this.mainParts, this.prerelease);
+
   final List<int> mainParts;
   final String? prerelease;
 }

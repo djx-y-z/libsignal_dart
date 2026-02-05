@@ -7,6 +7,105 @@ description: Update libsignal native library version. Use when checking for upda
 
 Guide for updating the libsignal native library version in this project.
 
+## Review Automated PR (Most Common)
+
+When the CI creates an automated PR for libsignal update, follow these steps:
+
+### Step 1: Analyze Release Notes
+
+```bash
+# Fetch and read release notes
+gh api repos/signalapp/libsignal/releases/tags/vX.Y.Z --jq '.body'
+```
+
+Look for:
+- **Breaking changes** (API removals, signature changes)
+- **New features** (new APIs exposed)
+- **Security fixes**
+
+### Step 2: Check Why Codegen Failed (if applicable)
+
+```bash
+# Check if Rust code compiles
+make rust-check
+```
+
+Common issues:
+- **Removed traits** (e.g., `Ord` for `PublicKey` in v0.87.0)
+- **Changed function signatures**
+- **Renamed types**
+
+### Step 3: Fix Rust Code (if needed)
+
+If `make rust-check` fails, fix the errors in `rust/src/api/`:
+- Update code to match new libsignal API
+- Add workarounds for removed functionality
+
+### Step 4: Regenerate FRB Bindings
+
+```bash
+make codegen
+```
+
+### Step 5: Run Tests
+
+```bash
+make test
+```
+
+### Step 6: Run Analysis
+
+```bash
+make analyze
+```
+
+### Step 7: Update CHANGELOG.md
+
+Verify AI-generated entry is accurate. Update if needed:
+- Fix incorrect descriptions
+- Add details about breaking changes and workarounds
+- Ensure `libsignal_frb` version is mentioned in Highlights
+
+### Step 8: Bump libsignal_frb Version
+
+Edit `rust/Cargo.toml`:
+```toml
+version = "X.Y.Z"  # Bump patch for deps, minor for new features
+```
+
+Update CHANGELOG.md Highlights:
+```markdown
+- **libsignal vX.Y.Z** — description
+- **libsignal_frb vX.Y.Z** — Rust FFI bindings
+```
+
+### Step 9: Sync Cargo.lock
+
+```bash
+make rust-check
+```
+
+### Step 10: Commit Changes
+
+```bash
+git add rust/Cargo.toml rust/Cargo.lock rust/src/api/ lib/src/rust/ CHANGELOG.md
+git commit -m "fix(keys): adapt for libsignal vX.Y.Z breaking changes"
+```
+
+### Checklist Summary
+
+- [ ] Read release notes for breaking changes
+- [ ] Fix Rust compilation errors (if any)
+- [ ] `make codegen` — regenerate FRB bindings
+- [ ] `make test` — all tests pass
+- [ ] `make analyze` — no issues
+- [ ] CHANGELOG.md — accurate description
+- [ ] `rust/Cargo.toml` — bump `libsignal_frb` version
+- [ ] `make rust-check` — sync Cargo.lock
+- [ ] Commit all changes
+
+---
+
 ## Quick Update (Automatic)
 
 ```bash
@@ -42,7 +141,7 @@ Edit `rust/Cargo.toml` and update the tag for all three libsignal crates:
 ### Step 3: Update Cargo.lock
 
 ```bash
-cd rust && cargo update && cd ..
+make rust-update
 ```
 
 ### Step 4: Regenerate FRB Bindings (if API changed)
@@ -61,7 +160,7 @@ make test
 
 ```bash
 git add rust/Cargo.toml rust/Cargo.lock
-git commit -m "chore(deps): update libsignal to v0.87.0"
+git commit -m "chore(deps): update libsignal to vX.Y.Z"
 git push
 ```
 
@@ -93,14 +192,13 @@ Files automatically updated by `make check-new-libsignal-version ARGS="--update"
 | `rust/Cargo.toml` | libsignal-* tags | Native library dependency version |
 | `README.md` | Badge | Version badge in header |
 | `CLAUDE.md` | Example | Code example in documentation |
-| `.claude/skills/update-libsignal/SKILL.md` | Example | Code example in skill |
 
 Files that need manual update:
 
 | File | What | Description |
 |------|------|-------------|
 | `rust/Cargo.toml` | `version` | Rust crate version (bump patch for deps update) |
-| `rust/Cargo.lock` | Dependencies | Run `cargo update` after changing Cargo.toml |
+| `rust/Cargo.lock` | Dependencies | Run `make rust-update` after changing Cargo.toml |
 | `CHANGELOG.md` | Entry | Document the libsignal version change |
 
 ## Breaking Changes to Watch For

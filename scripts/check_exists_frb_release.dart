@@ -51,7 +51,7 @@ void main(List<String> args) async {
         ..writeln('version=$version')
         ..writeln('libsignal_version=$upstreamVersion')
         ..writeln('skip=${releaseExists ? 'true' : 'false'}');
-      await file.writeAsString(buffer.toString(), mode: FileMode.append);
+      file.writeAsStringSync(buffer.toString(), mode: FileMode.append);
     }
 
     if (releaseExists) {

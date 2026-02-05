@@ -10,7 +10,7 @@
 ///
 /// Options:
 ///   - `--update`          Update rust/Cargo.toml if new version available
-///   - `--version <ver>`   Check/update to specific version
+///   - `--version [ver]`   Check/update to specific version
 ///   - `--force`           Force update even if versions match
 ///   - `--json`            Output results as JSON
 ///   - `--ci`              CI mode: write to GITHUB_OUTPUT

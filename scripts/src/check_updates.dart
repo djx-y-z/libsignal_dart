@@ -75,7 +75,6 @@ Future<UpdateCheckResult> checkForUpdates({
   bool silent = false,
 }) async {
   // Read current version from rust/Cargo.toml
-
   final currentVersion = getUpstreamVersion();
 
   if (!silent) {
@@ -171,12 +170,9 @@ Future<Map<String, dynamic>> _fetchLatestRelease() async {
 /// Update upstream version in all relevant files.
 ///
 /// Updates:
-
 /// - rust/Cargo.toml (upstream dependency tag)
-
 /// - README.md (badge) - if exists
 /// - CLAUDE.md (example) - if exists (enable_claude=true)
-/// - SKILL.md (example) - if exists (enable_claude=true)
 ///
 /// Returns list of updated file names.
 Future<List<String>> updateVersionFiles({
@@ -186,7 +182,6 @@ Future<List<String>> updateVersionFiles({
 }) async {
   final packageDir = getPackageDir();
   final updatedFiles = <String>[];
-
   // 1. Update rust/Cargo.toml (all upstream dependency tags)
   if (!silent) logStep('Updating rust/Cargo.toml...');
   final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
@@ -257,20 +252,6 @@ Future<List<String>> updateVersionFiles({
     if (!silent) logInfo('Updated CLAUDE.md example');
   }
 
-  // 4. Update SKILL.md example (if exists - enable_claude=true)
-  final skillFile = File(
-    '${packageDir.path}/.claude/skills/update-libsignal/SKILL.md',
-  );
-  if (skillFile.existsSync()) {
-    if (!silent) logStep('Updating SKILL.md...');
-    var content = skillFile.readAsStringSync();
-    // Replace version in example: tag = "vX.Y.Z"
-    content = content.replaceAll('tag = "$oldVersion"', 'tag = "$newVersion"');
-    await skillFile.writeAsString(content);
-    updatedFiles.add('.claude/skills/update-libsignal/SKILL.md');
-    if (!silent) logInfo('Updated SKILL.md example');
-  }
-
   return updatedFiles;
 }
 
@@ -287,13 +268,14 @@ Future<PerformUpdateResult> performUpdateCheck({
   );
 
   var updated = false;
-  var updatedFiles = <String>[];
-  if (doUpdate && (checkResult.needsUpdate || force)) {
-    updatedFiles = await updateVersionFiles(
-      newVersion: checkResult.latestVersion,
-      oldVersion: checkResult.currentVersion,
-      silent: silent,
-    );
+  final updatedFiles = doUpdate && (checkResult.needsUpdate || force)
+      ? await updateVersionFiles(
+          newVersion: checkResult.latestVersion,
+          oldVersion: checkResult.currentVersion,
+          silent: silent,
+        )
+      : <String>[];
+  if (updatedFiles.isNotEmpty) {
     updated = true;
   }
 
@@ -321,7 +303,7 @@ Future<void> writeGitHubOutputs({
     ..writeln('release_url=${checkResult.releaseUrl}')
     ..writeln('updated=$updated');
 
-  await file.writeAsString(buffer.toString(), mode: FileMode.append);
+  file.writeAsStringSync(buffer.toString(), mode: FileMode.append);
 }
 
 /// Print results as JSON.

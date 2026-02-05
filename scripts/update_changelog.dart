@@ -9,7 +9,7 @@
 ///   fvm dart run scripts/update_changelog.dart [options]
 ///
 /// Options:
-///   - `--version <ver>`   libsignal version (e.g., v1.0.0)
+///   - `--version [ver]`   libsignal version (e.g., v1.0.0)
 ///   - `--ci`              CI mode: use AI_MODELS_TOKEN for API
 ///   - `--help, -h`        Show this help
 ///

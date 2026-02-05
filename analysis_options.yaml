@@ -10,6 +10,9 @@ analyzer:
     - "**/*.freezed.dart"
     # FRB-generated files (flutter_rust_bridge)
     - "lib/src/rust/**"
+    # Build scripts (not part of public API)
+    - "hook/**"
+    - "scripts/**"
 
   errors:
     # Treat unused imports as warnings (useful during development)
