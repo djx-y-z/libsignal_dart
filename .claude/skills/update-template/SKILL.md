@@ -27,15 +27,16 @@ Review the changelog to understand what changed in the template.
 pip install copier jinja2-strcase
 
 # Run copier update to the new version
-copier update --trust --vcs-ref=vX.Y.Z
+copier update --trust --defaults --vcs-ref=vX.Y.Z
 ```
 
 **Flags:**
 - `--trust` — required because the template has `_tasks` (post-generation commands). Without it, copier refuses to run or prompts for confirmation.
+- `--defaults` — uses default values from `.copier-answers.yml` without prompting. Required in non-interactive environments (e.g., Claude Code), and recommended in general to avoid re-answering questions.
 - `--vcs-ref=vX.Y.Z` — pins the exact version to update to.
 
 Copier will:
-1. Prompt for template questions (press Enter to keep current values from `.copier-answers.yml`)
+1. Use existing answers from `.copier-answers.yml` (no interactive prompts)
 2. Apply changes via 3-way merge (template old vs template new vs your project)
 3. Run template `_tasks` (post-generation commands like `dart format`)
 4. Update `.copier-answers.yml` with the new `_commit` value
@@ -93,7 +94,7 @@ git commit -m "feat: adopt copier template for version vX.Y.Z"
 ### Checklist Summary
 
 - [ ] Read PR changelog — understand what changed
-- [ ] `copier update --trust --vcs-ref=vX.Y.Z` — apply template changes
+- [ ] `copier update --trust --defaults --vcs-ref=vX.Y.Z` — apply template changes
 - [ ] Review diff — no unintended changes
 - [ ] Resolve `.rej` files (if any)
 - [ ] `make analyze` — no issues
@@ -135,7 +136,7 @@ make check-template-updates
 ### Step 3: Apply Update
 
 ```bash
-copier update --trust --vcs-ref=vX.Y.Z
+copier update --trust --defaults --vcs-ref=vX.Y.Z
 ```
 
 ### Step 4: Review and Test
@@ -190,7 +191,7 @@ find . -name "*.rej" -delete
 ```
 
 ### Template asks questions again
-Press Enter to keep current values from `.copier-answers.yml`. Only change values if you need to.
+Use `--defaults` to skip prompts. Without it, press Enter to keep current values from `.copier-answers.yml`. Only change values if you need to.
 
 ### Update changed files I customized
 This is expected. Copier does a 3-way merge. If your customizations conflict with template changes, you'll get `.rej` files to resolve manually.

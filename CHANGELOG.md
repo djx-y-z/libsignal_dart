@@ -41,6 +41,7 @@
 - `make check-template-updates` command to check for new copier template versions
 - `check-template-updates.yml` workflow — daily CI check for template updates with automated notification PR
 - `update-template` Claude skill — step-by-step guide for applying template updates
+  - Documents `--defaults` flag for non-interactive `copier update` (required for Claude Code)
 - `make rust-update` command to update `rust/Cargo.lock` via `cargo update`
 - `make update-changelog` command to update CHANGELOG.md using GitHub Models AI
 - AI-powered changelog generation script (`scripts/update_changelog.dart`)

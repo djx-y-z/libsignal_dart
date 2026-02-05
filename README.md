@@ -451,6 +451,8 @@ make clean              # Clean build artifacts
 make help               # Show all commands
 ```
 
+It also checks for copier template updates daily and creates notification PRs with changelog and update instructions.
+
 ## Architecture
 
 ```
