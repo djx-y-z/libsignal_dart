@@ -1,5 +1,5 @@
 ---
-name: ffi-patterns
+name: frb-patterns
 description: Flutter Rust Bridge patterns and best practices for libsignal. Use when writing Rust API code, adding new bindings, implementing DartFn callbacks, or troubleshooting FRB issues.
 ---
 

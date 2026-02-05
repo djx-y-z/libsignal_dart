@@ -23,6 +23,7 @@
   - `fvm install` → `fvm use` with version from `.fvmrc`
 - Updated example app platform configs to use template-standard naming
   - Renamed `libsignal_example` → `example` in web, Windows, macOS, Linux, iOS configs
+- Renamed Claude skill `ffi-patterns` → `frb-patterns` to match current FRB architecture
 - Improved CI workflows with better step status tracking
   - Each step now reports `success=true/false` for clearer PR status
   - PR body shows inline status for each updated file
