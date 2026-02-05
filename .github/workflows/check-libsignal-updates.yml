@@ -179,7 +179,7 @@ jobs:
             - `CHANGELOG.md` — ${{ steps.changelog.outputs.success == 'true' && 'AI-generated entry (GitHub Models)' || '**NOT UPDATED** (AI failed, manual update required)' }}
             - `README.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'version badge' || '**NOT UPDATED**' }}
             - `CLAUDE.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'example in documentation' || '**NOT UPDATED**' }}
-
+            
             ### Release Notes
 
             See [libsignal ${{ steps.check.outputs.latest_version }} release notes](${{ steps.check.outputs.release_url }})

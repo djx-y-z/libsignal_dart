@@ -31,7 +31,7 @@ make rust-check
 ```
 
 Common issues:
-- **Removed traits** (e.g., `Ord` for `PublicKey` in v0.87.0)
+- **Removed traits** (e.g., `Ord` for `PublicKey`)
 - **Changed function signatures**
 - **Renamed types**
 
@@ -89,7 +89,7 @@ make rust-check
 
 ```bash
 git add rust/Cargo.toml rust/Cargo.lock rust/src/api/ lib/src/rust/ CHANGELOG.md
-git commit -m "fix(keys): adapt for libsignal vX.Y.Z breaking changes"
+git commit -m "fix: adapt for libsignal vX.Y.Z breaking changes"
 ```
 
 ### Checklist Summary
