@@ -78,10 +78,14 @@ make format-check
 
 ### Step 6: Verify .copier-answers.yml
 
-Copier automatically updates this file. Verify that `_commit` matches the target version:
+Copier should update `_commit` automatically, but may fail to do so when:
+- There were merge conflicts during update
+- The project files already match the new template version (no file changes)
+
+**Always check** that `_commit` matches the target version, and update manually if needed:
 
 ```yaml
-_commit: vX.Y.Z  # Should match the version you updated to
+_commit: vX.Y.Z  # Must match the version you updated to
 ```
 
 ### Step 7: Commit Changes
