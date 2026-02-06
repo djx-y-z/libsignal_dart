@@ -1,40 +1,43 @@
 #!/usr/bin/env dart
 
-/// Check for libsignal updates
+/// Check for libsignal updates.
 ///
 /// This script checks for new libsignal releases and optionally updates
-/// the libsignal dependency tags in rust/Cargo.toml.
+/// the upstream dependency tag in rust/Cargo.toml.
 ///
 /// Usage:
-///   fvm dart run scripts/check_new_libsignal_version.dart [options]
+///   fvm dart run scripts/check_new_upstream_version.dart [options]
 ///
 /// Options:
-///   --update          Update rust/Cargo.toml if new version available
-///   --version <ver>   Check/update to specific version
-///   --force           Force update even if versions match
-///   --json            Output results as JSON
-///   --ci              CI mode: write to GITHUB_OUTPUT
-///   --help, -h        Show this help
+///   - `--update`          Update rust/Cargo.toml if new version available
+///   - `--version [ver]`   Check/update to specific version
+///   - `--force`           Force update even if versions match
+///   - `--json`            Output results as JSON
+///   - `--ci`              CI mode: write to GITHUB_OUTPUT
+///   - `--help, -h`        Show this help
 ///
 /// Examples:
+///   ```bash
 ///   # Just check for updates
-///   fvm dart run scripts/check_new_libsignal_version.dart
+///   fvm dart run scripts/check_new_upstream_version.dart
 ///
 ///   # Check and update rust/Cargo.toml
-///   fvm dart run scripts/check_new_libsignal_version.dart --update
+///   fvm dart run scripts/check_new_upstream_version.dart --update
 ///
 ///   # CI mode (writes to GITHUB_OUTPUT)
-///   fvm dart run scripts/check_new_libsignal_version.dart --update --ci
+///   fvm dart run scripts/check_new_upstream_version.dart --update --ci
 ///
 ///   # Update to specific version
-///   fvm dart run scripts/check_new_libsignal_version.dart --update --version v0.87.0
+///   fvm dart run scripts/check_new_upstream_version.dart --update --version v0.86.16
 ///
 ///   # Output JSON for scripting
-///   fvm dart run scripts/check_new_libsignal_version.dart --json
+///   fvm dart run scripts/check_new_upstream_version.dart --json
+///   ```
+library;
 
 import 'dart:io';
 
-import 'src/check_new_libsignal_version.dart';
+import 'src/check_updates.dart';
 
 void main(List<String> args) async {
   if (args.contains('--help') || args.contains('-h')) {
@@ -86,6 +89,7 @@ void main(List<String> args) async {
       printUpdateSummary(
         checkResult: result.checkResult,
         updated: result.updated,
+        updatedFiles: result.updatedFiles,
       );
     }
 
@@ -106,7 +110,7 @@ void _printUsage() {
 Check for libsignal Updates
 
 Usage:
-  fvm dart run scripts/check_new_libsignal_version.dart [options]
+  fvm dart run scripts/check_new_upstream_version.dart [options]
 
 Options:
   --update          Update rust/Cargo.toml if new version available
@@ -118,19 +122,19 @@ Options:
 
 Examples:
   # Just check for updates
-  fvm dart run scripts/check_new_libsignal_version.dart
+  fvm dart run scripts/check_new_upstream_version.dart
 
   # Check and update rust/Cargo.toml
-  fvm dart run scripts/check_new_libsignal_version.dart --update
+  fvm dart run scripts/check_new_upstream_version.dart --update
 
   # CI mode (for GitHub Actions)
-  fvm dart run scripts/check_new_libsignal_version.dart --update --ci
+  fvm dart run scripts/check_new_upstream_version.dart --update --ci
 
   # Update to specific version
-  fvm dart run scripts/check_new_libsignal_version.dart --update --version v0.87.0
+  fvm dart run scripts/check_new_upstream_version.dart --update --version v0.86.16
 
   # Output JSON for scripting
-  fvm dart run scripts/check_new_libsignal_version.dart --json
+  fvm dart run scripts/check_new_upstream_version.dart --json
 
 Exit codes:
   0 - Up to date or successfully updated

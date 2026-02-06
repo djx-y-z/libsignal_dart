@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Pre-commit hook for libsignal_dart
+# Pre-commit hook for libsignal
 #
 # Runs format check and static analysis before each commit.
 # To skip this hook, use: git commit --no-verify

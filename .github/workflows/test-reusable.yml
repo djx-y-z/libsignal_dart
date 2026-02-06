@@ -84,7 +84,7 @@ jobs:
       - name: Setup Rust
         uses: ./.github/actions/setup-rust
 
-      # Install protobuf compiler (required by libsignal)
+      # Install protobuf compiler (required by some native libraries)
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
@@ -130,6 +130,7 @@ jobs:
           COVERAGE=$(lcov --summary coverage/lcov.info 2>&1 | grep 'lines' | sed 's/.*: //' | sed 's/%.*//')
           echo "percentage=$COVERAGE" >> $GITHUB_OUTPUT
           echo "Coverage: $COVERAGE%"
+        shell: bash
 
   # ============================================
   # Update coverage badge (after ALL tests pass)

@@ -3,10 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('LibSignal', () {
-    tearDown(() {
-      // Clean up after each test to reset state
-      LibSignal.cleanup();
-    });
+    tearDown(LibSignal.cleanup);
 
     group('init()', () {
       test('initializes successfully', () async {
@@ -46,12 +43,12 @@ void main() {
     group('ensureInitialized()', () {
       test('throws if not initialized', () {
         expect(LibSignal.isInitialized, isFalse);
-        expect(() => LibSignal.ensureInitialized(), throwsA(isA<StateError>()));
+        expect(LibSignal.ensureInitialized, throwsA(isA<StateError>()));
       });
 
       test('does not throw when already initialized', () async {
         await LibSignal.init();
-        expect(() => LibSignal.ensureInitialized(), returnsNormally);
+        expect(LibSignal.ensureInitialized, returnsNormally);
         expect(LibSignal.isInitialized, isTrue);
       });
     });
@@ -59,7 +56,7 @@ void main() {
     group('cleanup()', () {
       test('cleans up successfully', () async {
         await LibSignal.init();
-        expect(() => LibSignal.cleanup(), returnsNormally);
+        expect(LibSignal.cleanup, returnsNormally);
       });
 
       test('sets isInitialized to false', () async {
@@ -69,7 +66,7 @@ void main() {
       });
 
       test('can be called without init', () {
-        expect(() => LibSignal.cleanup(), returnsNormally);
+        expect(LibSignal.cleanup, returnsNormally);
       });
 
       test('can be called multiple times', () async {
@@ -82,19 +79,17 @@ void main() {
   });
 
   group('LibSignalBase', () {
-    tearDown(() {
-      LibSignal.cleanup();
-    });
+    tearDown(LibSignal.cleanup);
 
     test('ensureInit throws if not initialized', () {
       expect(LibSignal.isInitialized, isFalse);
-      expect(() => LibSignalBase.ensureInit(), throwsA(isA<StateError>()));
+      expect(LibSignalBase.ensureInit, throwsA(isA<StateError>()));
     });
 
     test('ensureInit does not throw when initialized', () async {
       await LibSignal.init();
       expect(LibSignal.isInitialized, isTrue);
-      expect(() => LibSignalBase.ensureInit(), returnsNormally);
+      expect(LibSignalBase.ensureInit, returnsNormally);
     });
   });
 }

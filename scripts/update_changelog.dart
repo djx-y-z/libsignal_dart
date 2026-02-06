@@ -1,6 +1,6 @@
 #!/usr/bin/env dart
 
-/// Update CHANGELOG.md with AI-generated entry for libsignal update
+/// Update CHANGELOG.md with AI-generated entry for libsignal update.
 ///
 /// This script uses GitHub Models API to analyze libsignal release notes
 /// and generate an appropriate changelog entry.
@@ -9,19 +9,22 @@
 ///   fvm dart run scripts/update_changelog.dart [options]
 ///
 /// Options:
-///   --version <ver>   libsignal version (e.g., v0.87.0)
-///   --ci              CI mode: use GITHUB_TOKEN for API
-///   --help, -h        Show this help
+///   - `--version [ver]`   libsignal version (e.g., v1.0.0)
+///   - `--ci`              CI mode: use AI_MODELS_TOKEN for API
+///   - `--help, -h`        Show this help
 ///
 /// Environment:
-///   GITHUB_TOKEN      Required for GitHub Models API authentication
+///   AI_MODELS_TOKEN   Required for GitHub Models API authentication
 ///
 /// Examples:
+///   ```bash
 ///   # Update changelog for specific version
-///   GITHUB_TOKEN=xxx fvm dart run scripts/update_changelog.dart --version v0.87.0
+///   AI_MODELS_TOKEN=xxx fvm dart run scripts/update_changelog.dart --version v1.0.0
 ///
 ///   # CI mode (token from environment)
-///   fvm dart run scripts/update_changelog.dart --version v0.87.0 --ci
+///   fvm dart run scripts/update_changelog.dart --version v1.0.0 --ci
+///   ```
+library;
 
 import 'dart:io';
 
@@ -49,13 +52,13 @@ void main(List<String> args) async {
     exit(1);
   }
 
-  // Check for GitHub token
-  final token = Platform.environment['GITHUB_TOKEN'];
+  // Check for AI Models token
+  final token = Platform.environment['AI_MODELS_TOKEN'];
   if (token == null || token.isEmpty) {
-    print('Error: GITHUB_TOKEN environment variable is required');
+    print('Error: AI_MODELS_TOKEN environment variable is required');
     print('');
     print('Get a token from: https://github.com/settings/tokens');
-    print('The token needs no special permissions for GitHub Models API.');
+    print('Required permission: Models → Read only');
     exit(1);
   }
 
@@ -83,18 +86,18 @@ Usage:
   fvm dart run scripts/update_changelog.dart [options]
 
 Options:
-  --version <ver>   libsignal version (e.g., v0.87.0) [required]
+  --version <ver>   libsignal version (e.g., v1.0.0) [required]
   --ci              CI mode
   --help, -h        Show this help
 
 Environment:
-  GITHUB_TOKEN      Required for GitHub Models API authentication
+  AI_MODELS_TOKEN   Required for GitHub Models API authentication
 
 Examples:
   # Update changelog for specific version
-  GITHUB_TOKEN=xxx fvm dart run scripts/update_changelog.dart --version v0.87.0
+  AI_MODELS_TOKEN=xxx fvm dart run scripts/update_changelog.dart --version v1.0.0
 
   # CI mode (token from environment)
-  fvm dart run scripts/update_changelog.dart --version v0.87.0 --ci
+  fvm dart run scripts/update_changelog.dart --version v1.0.0 --ci
 ''');
 }

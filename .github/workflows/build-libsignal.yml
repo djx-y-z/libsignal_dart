@@ -1,7 +1,7 @@
-# Build libsignal_frb native libraries for all platforms
+# Build libsignal FRB native libraries for all platforms
 #
-# This workflow builds the Flutter Rust Bridge wrapper around libsignal-protocol.
-# Uses cargo build directly for all platforms.
+# This workflow builds Rust code using cargo and creates GitHub Releases
+# with pre-built native libraries for all supported platforms.
 #
 # Platforms:
 # - Linux x86_64, arm64 (dynamic .so)
@@ -9,29 +9,26 @@
 # - iOS device arm64, simulator arm64/x86_64 (dynamic .dylib)
 # - Android arm64-v8a, armeabi-v7a, x86_64 (dynamic .so)
 # - Windows x86_64 (dynamic .dll)
-# - Web/WASM wasm32 (.js + .wasm)
+# - Web (WASM)
 #
 # Trigger:
 # - Manual dispatch (workflow_dispatch) - for first run or force rebuild
-# - Push to main when rust/** changes
+# - Push to main when rust/Cargo.toml changes (contains version)
 #
-# Note: If release with tag libsignal_frb-{version} already exists, build is skipped.
-#
-# After successful build, creates GitHub Release with native library archives.
-# These are downloaded by hook/build.dart during Flutter/Dart builds.
+# After successful build, creates/updates GitHub Release with native library archives.
 
-name: Build libsignal-frb Native Libraries
+name: Build libsignal FRB Libraries
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
     paths:
-      - 'rust/**'
-      - '.github/workflows/build-libsignal-frb.yml'
+      - 'rust/Cargo.toml'
+      - 'rust/src/**'
 
 concurrency:
-  group: build-frb-${{ github.ref }}
+  group: build-libsignal_frb-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -39,7 +36,7 @@ env:
 
 jobs:
   # ============================================
-  # Check if release exists (uses scripts/check_release.dart)
+  # Check if release already exists (uses scripts/check_exists_frb_release.dart)
   # ============================================
   check-release:
     runs-on: ubuntu-latest
@@ -56,11 +53,11 @@ jobs:
       - name: Check if release exists
         id: check
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: make check-exists-libsignal-frb-release ARGS="--ci"
 
   # ============================================
-  # Linux (x86_64 + arm64)
+  # Linux (x86_64 + arm64 on separate runners)
   # ============================================
   build-linux:
     needs: check-release
@@ -86,22 +83,19 @@ jobs:
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
-      - name: Build libsignal_frb for Linux ${{ matrix.arch }}
-        run: make build ARGS="--target ${{ matrix.rust_target }}"
-
-      - name: Copy library to output
+      - name: Build for Linux ${{ matrix.arch }}
         run: |
-          mkdir -p output
-          cp rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.so output/
+          cd rust
+          cargo build --release --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-linux-${{ matrix.arch }}
-          path: output/liblibsignal_frb.so
+          name: libsignal-linux-${{ matrix.arch }}
+          path: rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.so
 
   # ============================================
-  # macOS (arm64 + x86_64)
+  # macOS (arm64 + x86_64 on separate runners)
   # ============================================
   build-macos:
     needs: check-release
@@ -113,7 +107,7 @@ jobs:
             runner: macos-latest
             rust_target: aarch64-apple-darwin
           - arch: x86_64
-            runner: macos-latest  # Cross-compile x86_64 on arm64 runner
+            runner: macos-latest
             rust_target: x86_64-apple-darwin
     runs-on: ${{ matrix.runner }}
     steps:
@@ -127,22 +121,19 @@ jobs:
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
-      - name: Build libsignal_frb for macOS ${{ matrix.arch }}
-        run: make build ARGS="--target ${{ matrix.rust_target }}"
-
-      - name: Copy library to output
+      - name: Build for macOS ${{ matrix.arch }}
         run: |
-          mkdir -p output
-          cp rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.dylib output/
+          cd rust
+          cargo build --release --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-macos-${{ matrix.arch }}
-          path: output/liblibsignal_frb.dylib
+          name: libsignal-macos-${{ matrix.arch }}
+          path: rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.dylib
 
   # ============================================
-  # iOS (device + simulator)
+  # iOS (dynamic .dylib)
   # ============================================
   build-ios:
     needs: check-release
@@ -160,7 +151,7 @@ jobs:
             rust_target: aarch64-apple-ios-sim
           - target: simulator
             arch: x86_64
-            runner: macos-latest  # Cross-compile x86_64 on arm64 runner
+            runner: macos-latest
             rust_target: x86_64-apple-ios
     runs-on: ${{ matrix.runner }}
     steps:
@@ -174,22 +165,19 @@ jobs:
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
-      - name: Build libsignal_frb for iOS ${{ matrix.target }} ${{ matrix.arch }}
-        run: make build ARGS="--target ${{ matrix.rust_target }}"
-
-      - name: Copy library to output
+      - name: Build for iOS ${{ matrix.target }} ${{ matrix.arch }}
         run: |
-          mkdir -p output
-          cp rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.dylib output/
+          cd rust
+          cargo build --release --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-ios-${{ matrix.target }}-${{ matrix.arch }}
-          path: output/liblibsignal_frb.dylib
+          name: libsignal-ios-${{ matrix.target }}-${{ matrix.arch }}
+          path: rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.dylib
 
   # ============================================
-  # Android (all ABIs)
+  # Android (all architectures)
   # ============================================
   build-android:
     needs: check-release
@@ -220,25 +208,22 @@ jobs:
           sdkmanager --install "ndk;26.3.11579264"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.3.11579264" >> $GITHUB_ENV
 
-      - name: Setup Protoc
-        uses: ./.github/actions/setup-protoc
-
       - name: Setup cargo-ndk
         run: cargo install cargo-ndk
 
-      - name: Build libsignal_frb for Android ${{ matrix.abi }}
-        run: make build-android ARGS="--target ${{ matrix.rust_target }}"
+      - name: Setup Protoc
+        uses: ./.github/actions/setup-protoc
 
-      - name: Copy library to output
+      - name: Build for Android ${{ matrix.abi }}
         run: |
-          mkdir -p output
-          cp rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.so output/
+          cd rust
+          cargo ndk -t ${{ matrix.rust_target }} build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-android-${{ matrix.abi }}
-          path: output/liblibsignal_frb.so
+          name: libsignal-android-${{ matrix.abi }}
+          path: rust/target/${{ matrix.rust_target }}/release/liblibsignal_frb.so
 
   # ============================================
   # Windows x86_64
@@ -261,7 +246,7 @@ jobs:
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
-      - name: Build libsignal_frb for Windows
+      - name: Build for Windows
         shell: pwsh
         run: |
           # Temporarily rename Git's link.exe to prevent it from shadowing MSVC's link.exe
@@ -280,16 +265,11 @@ jobs:
             }
           }
 
-      - name: Copy library to output
-        run: |
-          mkdir output
-          copy rust\target\x86_64-pc-windows-msvc\release\libsignal_frb.dll output\
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-windows-x86_64
-          path: output/libsignal_frb.dll
+          name: libsignal-windows-x86_64
+          path: rust/target/x86_64-pc-windows-msvc/release/libsignal_frb.dll
 
   # ============================================
   # WebAssembly (wasm32)
@@ -312,31 +292,33 @@ jobs:
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
 
-      - name: Build libsignal_frb for WASM
+      - name: Build for WASM
         run: make build-web
-
-      - name: Copy files to output
-        run: |
-          mkdir -p output
-          cp rust/target/wasm32/libsignal_frb.js output/
-          cp rust/target/wasm32/libsignal_frb_bg.wasm output/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: libsignal_frb-wasm32
-          path: output/
+          name: libsignal-wasm32
+          path: |
+            rust/target/wasm32/libsignal_frb.js
+            rust/target/wasm32/libsignal_frb_bg.wasm
 
   # ============================================
   # Create GitHub Release
   # ============================================
   create-release:
-    needs: [check-release, build-linux, build-macos, build-ios, build-android, build-windows, build-wasm]
+    needs:
+      - check-release
+      - build-linux
+      - build-macos
+      - build-ios
+      - build-android
+      - build-windows
+      - build-wasm
     if: needs.check-release.outputs.skip != 'true'
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.check-release.outputs.version }}
-      LIBSIGNAL_VERSION: ${{ needs.check-release.outputs.libsignal_version }}
     permissions:
       contents: write
     steps:
@@ -354,45 +336,45 @@ jobs:
 
           # Linux x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-linux-x86_64.tar.gz \
-            -C artifacts/libsignal_frb-linux-x86_64 liblibsignal_frb.so
+            -C artifacts/libsignal-linux-x86_64 liblibsignal_frb.so
 
           # Linux arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-linux-arm64.tar.gz \
-            -C artifacts/libsignal_frb-linux-arm64 liblibsignal_frb.so
+            -C artifacts/libsignal-linux-arm64 liblibsignal_frb.so
 
           # macOS arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-macos-arm64.tar.gz \
-            -C artifacts/libsignal_frb-macos-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-macos-arm64 liblibsignal_frb.dylib
 
           # macOS x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-macos-x86_64.tar.gz \
-            -C artifacts/libsignal_frb-macos-x86_64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-macos-x86_64 liblibsignal_frb.dylib
 
           # Windows x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-windows-x86_64.tar.gz \
-            -C artifacts/libsignal_frb-windows-x86_64 libsignal_frb.dll
+            -C artifacts/libsignal-windows-x86_64 libsignal_frb.dll
 
           # Android ABIs
           for abi in arm64-v8a armeabi-v7a x86_64; do
             tar -czvf release-archives/libsignal_frb-${VERSION}-android-${abi}.tar.gz \
-              -C artifacts/libsignal_frb-android-${abi} liblibsignal_frb.so
+              -C artifacts/libsignal-android-${abi} liblibsignal_frb.so
           done
 
           # iOS device arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-device-arm64.tar.gz \
-            -C artifacts/libsignal_frb-ios-device-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-device-arm64 liblibsignal_frb.dylib
 
           # iOS simulator arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-simulator-arm64.tar.gz \
-            -C artifacts/libsignal_frb-ios-simulator-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-simulator-arm64 liblibsignal_frb.dylib
 
           # iOS simulator x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-simulator-x86_64.tar.gz \
-            -C artifacts/libsignal_frb-ios-simulator-x86_64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-simulator-x86_64 liblibsignal_frb.dylib
 
           # WebAssembly
           tar -czvf release-archives/libsignal_frb-${VERSION}-wasm32.tar.gz \
-            -C artifacts/libsignal_frb-wasm32 libsignal_frb.js libsignal_frb_bg.wasm
+            -C artifacts/libsignal-wasm32 libsignal_frb.js libsignal_frb_bg.wasm
 
           # Generate SHA256 checksums
           cd release-archives
@@ -416,13 +398,11 @@ jobs:
           gh release create "$TAG" \
             --title "$TITLE" \
             --latest \
-            --notes "$(cat <<EOF
+            --notes "$(cat <<'EOF'
           ## libsignal_frb ${VERSION} Native Libraries
 
           Pre-built Flutter Rust Bridge native libraries for all supported platforms.
           **These archives are downloaded automatically by \`hook/build.dart\` during Dart/Flutter builds.**
-
-          **Based on [libsignal ${LIBSIGNAL_VERSION}](https://github.com/signalapp/libsignal/releases/tag/${LIBSIGNAL_VERSION})**
 
           ### Platforms
 

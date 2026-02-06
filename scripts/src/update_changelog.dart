@@ -1,7 +1,8 @@
-/// Update CHANGELOG.md with AI-generated entry for libsignal update
-///
-/// Uses GitHub Models API (OpenAI-compatible) to analyze release notes
-/// and generate appropriate changelog entries.
+// Update CHANGELOG.md with AI-generated entry for libsignal update.
+//
+// Uses GitHub Models API (OpenAI-compatible) to analyze release notes
+// and generate appropriate changelog entries.
+library;
 
 import 'dart:convert';
 import 'dart:io';
@@ -18,7 +19,7 @@ Future<void> updateChangelog({
 
   // Step 1: Read current libsignal_frb version from Cargo.toml
   logStep('Reading libsignal_frb version from rust/Cargo.toml...');
-  final frbVersion = _readLibsignalFrbVersion(packageDir);
+  final frbVersion = _readFrbVersion(packageDir);
   logInfo('Current libsignal_frb version: $frbVersion');
 
   // Step 2: Fetch release notes from GitHub
@@ -43,10 +44,10 @@ Future<void> updateChangelog({
 
   // Parse AI response
   final parsed = jsonDecode(aiResponse) as Map<String, dynamic>;
-  final libsignalHighlight = parsed['libsignal_highlight'] as String;
+  final nativeHighlight = parsed['libsignal_highlight'] as String;
   final frbHighlight = parsed['frb_highlight'] as String;
   final changed = parsed['changed'] as String;
-  logInfo('Generated libsignal highlight: $libsignalHighlight');
+  logInfo('Generated libsignal highlight: $nativeHighlight');
   logInfo('Generated libsignal_frb highlight: $frbHighlight');
   logInfo('Generated changed entry');
 
@@ -54,7 +55,7 @@ Future<void> updateChangelog({
   logStep('Updating CHANGELOG.md...');
   final updatedChangelog = _insertChangelogEntry(
     currentChangelog: currentChangelog,
-    libsignalHighlight: libsignalHighlight,
+    nativeHighlight: nativeHighlight,
     frbHighlight: frbHighlight,
     changed: changed,
     version: version,
@@ -65,7 +66,7 @@ Future<void> updateChangelog({
 }
 
 /// Read libsignal_frb version from rust/Cargo.toml
-String _readLibsignalFrbVersion(Directory packageDir) {
+String _readFrbVersion(Directory packageDir) {
   final cargoToml = File('${packageDir.path}/rust/Cargo.toml');
   final content = cargoToml.readAsStringSync();
 
@@ -115,7 +116,7 @@ Future<String> _generateChangelogEntry({
 
   final prompt =
       '''
-You are updating CHANGELOG.md for a Dart library that wraps libsignal (Signal Protocol).
+You are updating CHANGELOG.md for a Dart library that wraps libsignal.
 
 The library just updated its libsignal native dependency to $version.
 The Rust FFI bindings crate (libsignal_frb) version is $frbVersion.
@@ -149,16 +150,16 @@ Generate a JSON object with THREE fields:
 ## Example output format:
 ```json
 {
-  "libsignal_highlight": "**libsignal v0.86.15** — latest upstream Signal Protocol library",
+  "libsignal_highlight": "**libsignal v1.0.0** — latest upstream native library",
   "frb_highlight": "**libsignal_frb v1.0.2** — Rust FFI bindings",
-  "changed": "- Update libsignal native library to v0.86.15 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.86.15))\n  - SVR2: Updated production enclave\n  - SVRB: Added new production enclave to `current` set\n  - Note: These changes are server-side infrastructure updates, no API changes affect this library"
+  "changed": "- Update libsignal native library to v1.0.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v1.0.0))\n  - Feature X: Description of feature\n  - Feature Y: Another feature\n  - Note: These changes improve performance and stability"
 }
 ```
 
 ## Rules for "libsignal_highlight":
 1. Format: "**libsignal $version** — [brief 3-7 word description]"
 2. Keep it very short and scannable
-3. Examples: "latest upstream Signal Protocol library", "security fixes and enclave updates", "new backup API support"
+3. Examples: "latest upstream native library", "security fixes and improvements", "new API support"
 
 ## Rules for "frb_highlight":
 1. Format: "**libsignal_frb v$frbVersion** — Rust FFI bindings"
@@ -167,10 +168,10 @@ Generate a JSON object with THREE fields:
 ## Rules for "changed":
 1. Start with "- Update libsignal native library to $version ([release notes](...))
 2. Add 2-5 bullet points summarizing key changes from release notes
-3. Focus on changes relevant to library users (crypto, protocol, API changes)
-4. For internal/server-side changes, add "Note: These changes do not affect this library's API"
+3. Focus on changes relevant to library users (API changes, new features, bug fixes)
+4. For internal changes, add "Note: These changes do not affect this library's API"
 5. Use technical but concise language
-6. Mention specific components changed (e.g., "chat:", "SVR2:", "Backup:")
+6. Mention specific components or modules changed
 
 Return ONLY valid JSON, no markdown code blocks.
 ''';
@@ -208,12 +209,19 @@ Return ONLY valid JSON, no markdown code blocks.
     throw Exception('API error: ${error['message']}');
   }
 
-  final choices = response['choices'] as List;
-  if (choices.isEmpty) {
+  final choices = response['choices'] as List<Object?>?;
+  if (choices == null || choices.isEmpty) {
     throw Exception('No response from AI');
   }
 
-  final message = choices[0]['message'] as Map<String, dynamic>;
+  final firstChoice = choices[0];
+  if (firstChoice is! Map<String, dynamic>) {
+    throw Exception('Invalid response format from AI');
+  }
+  final message = firstChoice['message'] as Map<String, dynamic>?;
+  if (message == null) {
+    throw Exception('No message in AI response');
+  }
   final content = (message['content'] as String).trim();
 
   // Parse JSON response
@@ -242,7 +250,7 @@ Return ONLY valid JSON, no markdown code blocks.
 /// 2. If no [Unreleased] section, create it before first version
 String _insertChangelogEntry({
   required String currentChangelog,
-  required String libsignalHighlight,
+  required String nativeHighlight,
   required String frbHighlight,
   required String changed,
   required String version,
@@ -253,16 +261,11 @@ String _insertChangelogEntry({
   final hasUnreleased = lines.any((l) => l.startsWith('## [Unreleased]'));
 
   if (hasUnreleased) {
-    return _insertIntoUnreleased(
-      lines,
-      libsignalHighlight,
-      frbHighlight,
-      changed,
-    );
+    return _insertIntoUnreleased(lines, nativeHighlight, frbHighlight, changed);
   } else {
     return _createUnreleasedSection(
       lines,
-      libsignalHighlight,
+      nativeHighlight,
       frbHighlight,
       changed,
     );
@@ -272,7 +275,7 @@ String _insertChangelogEntry({
 /// Insert entry into existing [Unreleased] section
 String _insertIntoUnreleased(
   List<String> lines,
-  String libsignalHighlight,
+  String nativeHighlight,
   String frbHighlight,
   String changed,
 ) {
@@ -304,7 +307,7 @@ String _insertIntoUnreleased(
           '',
           '#### ✨ Highlights',
           '',
-          '- $libsignalHighlight',
+          '- $nativeHighlight',
           '- $frbHighlight',
           '',
           '#### Changed',
@@ -336,7 +339,7 @@ String _insertIntoUnreleased(
           '',
           '#### ✨ Highlights',
           '',
-          '- $libsignalHighlight',
+          '- $nativeHighlight',
           '- $frbHighlight',
           '',
           '#### Changed',
@@ -356,7 +359,7 @@ String _insertIntoUnreleased(
     if (inForUsers && line.contains('Highlights')) {
       result.add(line);
       result.add('');
-      result.add('- $libsignalHighlight');
+      result.add('- $nativeHighlight');
       result.add('- $frbHighlight');
       insertedHighlights = true;
       // Skip the next empty line if present
@@ -374,15 +377,13 @@ String _insertIntoUnreleased(
           '',
           '#### ✨ Highlights',
           '',
-          '- $libsignalHighlight',
+          '- $nativeHighlight',
           '- $frbHighlight',
           '',
         ]);
         insertedHighlights = true;
       }
-      result.add(line);
-      result.add('');
-      result.add(changed);
+      result.addAll([line, '', changed]);
       insertedChanged = true;
       // Skip the next empty line if present
       if (i + 1 < lines.length && lines[i + 1].trim().isEmpty) {
@@ -400,7 +401,7 @@ String _insertIntoUnreleased(
 /// Create new [Unreleased] section at the top
 String _createUnreleasedSection(
   List<String> lines,
-  String libsignalHighlight,
+  String nativeHighlight,
   String frbHighlight,
   String changed,
 ) {
@@ -415,28 +416,25 @@ String _createUnreleasedSection(
     }
   }
 
-  // Add lines before first version
-  result.addAll(lines.sublist(0, insertIndex));
-
-  // Add Unreleased section with Highlights and Changed
-  result.addAll([
-    '## [Unreleased]',
-    '',
-    '### For Users',
-    '',
-    '#### ✨ Highlights',
-    '',
-    '- $libsignalHighlight',
-    '- $frbHighlight',
-    '',
-    '#### Changed',
-    '',
-    changed,
-    '',
-  ]);
-
-  // Add remaining lines
-  result.addAll(lines.sublist(insertIndex));
+  // Add lines before first version, Unreleased section, and remaining lines
+  result
+    ..addAll(lines.sublist(0, insertIndex))
+    ..addAll([
+      '## [Unreleased]',
+      '',
+      '### For Users',
+      '',
+      '#### ✨ Highlights',
+      '',
+      '- $nativeHighlight',
+      '- $frbHighlight',
+      '',
+      '#### Changed',
+      '',
+      changed,
+      '',
+    ])
+    ..addAll(lines.sublist(insertIndex));
 
   return result.join('\n');
 }

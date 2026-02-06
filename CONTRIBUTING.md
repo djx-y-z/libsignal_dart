@@ -307,7 +307,8 @@ All development tasks should be done via Makefile:
 | `make format-check` | Check formatting |
 | `make codegen` | Regenerate FRB bindings |
 | `make check-new-libsignal-version` | Check for libsignal updates |
-| `make update` | Update rust/Cargo.lock |
+| `make check-template-updates` | Check for copier template updates |
+| `make rust-update` | Update rust/Cargo.lock |
 | `make update-changelog` | Update CHANGELOG.md with AI (requires GITHUB_TOKEN) |
 | `make get` | Get dependencies |
 | `make clean` | Clean build artifacts |
@@ -403,7 +404,7 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
    ```
 3. Update Cargo.lock:
    ```bash
-   make update
+   make rust-update
    ```
 4. Regenerate FRB bindings (if API changed):
    ```bash

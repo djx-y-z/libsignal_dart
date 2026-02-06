@@ -37,21 +37,6 @@ import 'ciphertext_message.dart';
 /// final plaintext = await cipher.decrypt(aliceAddress, ciphertext);
 /// ```
 class SessionCipher {
-  /// The session store for persisting session state.
-  final SessionStore _sessionStore;
-
-  /// The identity key store for our identity and remote identities.
-  final IdentityKeyStore _identityKeyStore;
-
-  /// The pre-key store for one-time pre-keys.
-  final PreKeyStore _preKeyStore;
-
-  /// The signed pre-key store for medium-term pre-keys.
-  final SignedPreKeyStore _signedPreKeyStore;
-
-  /// The Kyber pre-key store for post-quantum pre-keys.
-  final KyberPreKeyStore _kyberPreKeyStore;
-
   /// Creates a new SessionCipher with the given stores.
   ///
   /// All stores are required for full functionality:
@@ -71,6 +56,21 @@ class SessionCipher {
        _preKeyStore = preKeyStore,
        _signedPreKeyStore = signedPreKeyStore,
        _kyberPreKeyStore = kyberPreKeyStore;
+
+  /// The session store for persisting session state.
+  final SessionStore _sessionStore;
+
+  /// The identity key store for our identity and remote identities.
+  final IdentityKeyStore _identityKeyStore;
+
+  /// The pre-key store for one-time pre-keys.
+  final PreKeyStore _preKeyStore;
+
+  /// The signed pre-key store for medium-term pre-keys.
+  final SignedPreKeyStore _signedPreKeyStore;
+
+  /// The Kyber pre-key store for post-quantum pre-keys.
+  final KyberPreKeyStore _kyberPreKeyStore;
 
   /// Encrypts a message for the remote user.
   ///
@@ -105,7 +105,7 @@ class SessionCipher {
         return Uint8List.fromList(keyPair.serialize());
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
     );
 
@@ -183,7 +183,7 @@ class SessionCipher {
         return Uint8List.fromList(keyPair.serialize());
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
       saveIdentity: (name, deviceId, identityKeyBytes) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);
@@ -220,7 +220,7 @@ class SessionCipher {
         return Uint8List.fromList(keyPair.serialize());
       },
       getLocalRegistrationId: () async {
-        return await _identityKeyStore.getLocalRegistrationId();
+        return _identityKeyStore.getLocalRegistrationId();
       },
       saveIdentity: (name, deviceId, identityKeyBytes) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);

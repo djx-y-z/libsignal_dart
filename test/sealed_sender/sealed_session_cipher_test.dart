@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_redundant_argument_values, unnecessary_await_in_return
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,10 +9,8 @@ import 'package:test/test.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('Sealed Sender', () {
     // Trust root key pair (simulates server's root key)

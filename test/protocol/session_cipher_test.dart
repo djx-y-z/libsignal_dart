@@ -1,3 +1,5 @@
+// ignore_for_file: cascade_invocations, avoid_redundant_argument_values
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -7,24 +9,9 @@ import 'package:test/test.dart';
 import '../test_helpers/session_helpers.dart';
 
 /// Helper class to manage all stores and keys for a test party.
+// ignore: unreachable_from_main
 class TestParty {
-  final String name;
-  final int deviceId;
-  final int registrationId;
-  final IdentityKeyPair identityKeyPair;
-  final InMemorySessionStore sessionStore;
-  final InMemoryIdentityKeyStore identityKeyStore;
-  final InMemoryPreKeyStore preKeyStore;
-  final InMemorySignedPreKeyStore signedPreKeyStore;
-  final InMemoryKyberPreKeyStore kyberPreKeyStore;
-
-  late final SessionBuilder sessionBuilder;
-  late final SessionCipher sessionCipher;
-  late final ProtocolAddress address;
-
-  // Pre-keys (for responder role)
-  RemotePartyKeys? _preKeys;
-
+  // ignore: unreachable_from_main
   TestParty({
     required this.name,
     this.deviceId = 1,
@@ -41,6 +28,23 @@ class TestParty {
     // Create address
     address = ProtocolAddress(name: name, deviceId: deviceId);
   }
+
+  final String name;
+  final int deviceId;
+  final int registrationId;
+  final IdentityKeyPair identityKeyPair;
+  final InMemorySessionStore sessionStore;
+  final InMemoryIdentityKeyStore identityKeyStore;
+  final InMemoryPreKeyStore preKeyStore;
+  final InMemorySignedPreKeyStore signedPreKeyStore;
+  final InMemoryKyberPreKeyStore kyberPreKeyStore;
+
+  late final SessionBuilder sessionBuilder;
+  late final SessionCipher sessionCipher;
+  late final ProtocolAddress address;
+
+  // Pre-keys (for responder role)
+  RemotePartyKeys? _preKeys;
 
   /// Initialize with proper identity store.
   static TestParty create({
@@ -70,22 +74,23 @@ class TestParty {
       kyberPreKeyStore: kyberPreKeyStore,
     );
 
-    party.sessionBuilder = SessionBuilder(
-      sessionStore: sessionStore,
-      identityKeyStore: identityKeyStore,
-    );
-
-    party.sessionCipher = SessionCipher(
-      sessionStore: sessionStore,
-      identityKeyStore: identityKeyStore,
-      preKeyStore: preKeyStore,
-      signedPreKeyStore: signedPreKeyStore,
-      kyberPreKeyStore: kyberPreKeyStore,
-    );
+    party
+      ..sessionBuilder = SessionBuilder(
+        sessionStore: sessionStore,
+        identityKeyStore: identityKeyStore,
+      )
+      ..sessionCipher = SessionCipher(
+        sessionStore: sessionStore,
+        identityKeyStore: identityKeyStore,
+        preKeyStore: preKeyStore,
+        signedPreKeyStore: signedPreKeyStore,
+        kyberPreKeyStore: kyberPreKeyStore,
+      );
 
     return party;
   }
 
+  // ignore: sort_constructors_first
   TestParty._internal({
     required this.name,
     required this.deviceId,
@@ -131,7 +136,7 @@ class TestParty {
       publicKey: preKeyPublic,
       privateKey: preKeyPrivate,
     );
-    preKeyStore.storePreKey(preKeyId, preKeyRecord);
+    unawaited(preKeyStore.storePreKey(preKeyId, preKeyRecord));
 
     final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
 
@@ -142,7 +147,9 @@ class TestParty {
       signature: signedPreKeySignature.toList(),
       timestamp: timestamp,
     );
-    signedPreKeyStore.storeSignedPreKey(signedPreKeyId, signedPreKeyRecord);
+    unawaited(
+      signedPreKeyStore.storeSignedPreKey(signedPreKeyId, signedPreKeyRecord),
+    );
 
     final kyberPreKeyRecord = KyberPreKeyRecord.create(
       id: kyberPreKeyId,
@@ -150,7 +157,9 @@ class TestParty {
       signature: kyberPreKeySignature.toList(),
       timestamp: timestamp,
     );
-    kyberPreKeyStore.storeKyberPreKey(kyberPreKeyId, kyberPreKeyRecord);
+    unawaited(
+      kyberPreKeyStore.storeKyberPreKey(kyberPreKeyId, kyberPreKeyRecord),
+    );
 
     // Save for bundle creation
     _preKeys = RemotePartyKeys(
@@ -184,9 +193,7 @@ class TestParty {
 // Since RemotePartyKeys._ is private, let's create our own bundle generation
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
+  setUpAll(LibSignal.init);
 
   group('SessionCipher', () {
     group('encrypt / decrypt', () {

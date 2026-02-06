@@ -1,3 +1,4 @@
+// ignore_for_file: cascade_invocations
 import 'dart:typed_data';
 
 import 'package:libsignal/libsignal.dart';

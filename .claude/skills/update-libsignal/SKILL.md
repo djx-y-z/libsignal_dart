@@ -31,7 +31,7 @@ make rust-check
 ```
 
 Common issues:
-- **Removed traits** (e.g., `Ord` for `PublicKey` in v0.87.0)
+- **Removed traits** (e.g., `Ord` for `PublicKey`)
 - **Changed function signatures**
 - **Renamed types**
 
@@ -89,7 +89,7 @@ make rust-check
 
 ```bash
 git add rust/Cargo.toml rust/Cargo.lock rust/src/api/ lib/src/rust/ CHANGELOG.md
-git commit -m "fix(keys): adapt for libsignal vX.Y.Z breaking changes"
+git commit -m "fix: adapt for libsignal vX.Y.Z breaking changes"
 ```
 
 ### Checklist Summary
@@ -141,7 +141,7 @@ Edit `rust/Cargo.toml` and update the tag for all three libsignal crates:
 ### Step 3: Update Cargo.lock
 
 ```bash
-cd rust && cargo update && cd ..
+make rust-update
 ```
 
 ### Step 4: Regenerate FRB Bindings (if API changed)
@@ -160,7 +160,7 @@ make test
 
 ```bash
 git add rust/Cargo.toml rust/Cargo.lock
-git commit -m "chore(deps): update libsignal to v0.87.0"
+git commit -m "chore(deps): update libsignal to vX.Y.Z"
 git push
 ```
 
@@ -192,14 +192,13 @@ Files automatically updated by `make check-new-libsignal-version ARGS="--update"
 | `rust/Cargo.toml` | libsignal-* tags | Native library dependency version |
 | `README.md` | Badge | Version badge in header |
 | `CLAUDE.md` | Example | Code example in documentation |
-| `.claude/skills/update-libsignal/SKILL.md` | Example | Code example in skill |
 
 Files that need manual update:
 
 | File | What | Description |
 |------|------|-------------|
 | `rust/Cargo.toml` | `version` | Rust crate version (bump patch for deps update) |
-| `rust/Cargo.lock` | Dependencies | Run `cargo update` after changing Cargo.toml |
+| `rust/Cargo.lock` | Dependencies | Run `make rust-update` after changing Cargo.toml |
 | `CHANGELOG.md` | Entry | Document the libsignal version change |
 
 ## Breaking Changes to Watch For

@@ -1,4 +1,5 @@
 /// Sender key store interface for Signal Protocol group messaging.
+// ignore_for_file: avoid_equals_and_hash_code_on_mutable_classes
 library;
 
 import 'dart:typed_data';
@@ -10,15 +11,18 @@ import '../rust/api/address.dart';
 /// A sender key is identified by:
 /// - The sender's protocol address (user + device)
 /// - A distribution ID (UUID identifying the group/distribution)
+///
+/// This class is immutable (final class with only final fields), but the linter
+/// doesn't recognize this pattern without @immutable annotation.
 final class SenderKeyName {
+  /// Creates a new sender key name.
+  const SenderKeyName(this.sender, this.distributionId);
+
   /// The sender's protocol address.
   final ProtocolAddress sender;
 
   /// The distribution ID (typically a UUID string).
   final String distributionId;
-
-  /// Creates a new sender key name.
-  const SenderKeyName(this.sender, this.distributionId);
 
   @override
   bool operator ==(Object other) {

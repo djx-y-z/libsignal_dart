@@ -431,7 +431,8 @@ make build-web          # Build WASM for web (requires wasm-pack)
 
 # CI / Version Management
 make check-new-libsignal-version  # Check for new upstream libsignal version
-make update             # Update rust/Cargo.lock (cargo update)
+make check-template-updates       # Check for new copier template version
+make rust-update        # Update rust/Cargo.lock (cargo update)
 make update-changelog   # Update CHANGELOG.md with AI (requires GITHUB_TOKEN)
 
 # Quality Assurance
@@ -449,6 +450,8 @@ make get                # Get dependencies
 make clean              # Clean build artifacts
 make help               # Show all commands
 ```
+
+It also checks for copier template updates daily and creates notification PRs with changelog and update instructions.
 
 ## Architecture
 

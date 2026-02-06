@@ -1,12 +1,11 @@
+// ignore_for_file: avoid_redundant_argument_values
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
+  setUpAll(LibSignal.init);
 
   group('SessionBuilder', () {
     group('processPreKeyBundle', () {

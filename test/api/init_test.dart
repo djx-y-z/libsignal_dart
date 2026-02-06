@@ -3,9 +3,7 @@ import 'package:libsignal/src/rust/api/init.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
+  setUpAll(LibSignal.init);
 
   group('api/init', () {
     group('initLibsignal', () {

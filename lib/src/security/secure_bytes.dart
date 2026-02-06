@@ -25,13 +25,6 @@ import 'dart:typed_data';
 /// secure.dispose(); // Explicit zeroing (recommended)
 /// ```
 class SecureBytes {
-  static final _finalizer = Finalizer<Uint8List>((list) {
-    list.fillRange(0, list.length, 0); // coverage:ignore-line
-  });
-
-  final Uint8List _data;
-  bool _disposed = false;
-
   /// Creates a SecureBytes by copying the input data.
   ///
   /// **Note:** The original [data] is NOT zeroed - caller is responsible for it.
@@ -51,6 +44,13 @@ class SecureBytes {
   SecureBytes._wrap(this._data) {
     _finalizer.attach(this, _data, detach: this);
   }
+
+  static final _finalizer = Finalizer<Uint8List>((list) {
+    list.fillRange(0, list.length, 0); // coverage:ignore-line
+  });
+
+  final Uint8List _data;
+  bool _disposed = false;
 
   /// Access the underlying bytes.
   ///

@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_redundant_argument_values, cascade_invocations, unnecessary_lambdas
 import 'dart:typed_data';
 
 import 'package:libsignal/libsignal.dart';
@@ -6,10 +7,8 @@ import 'package:test/test.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   group('SessionRecord', () {
     group('deserialize() validation', () {

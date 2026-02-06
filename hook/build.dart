@@ -41,27 +41,39 @@ import 'package:hooks/hooks.dart';
 const _packageName = 'libsignal';
 
 /// Asset ID used for looking up the library at runtime.
-/// Full ID: package:libsignal/libsignal
+/// Note: This is just the name part; CodeAsset combines it with package
+/// to form the full ID: package:libsignal/libsignal
 const _assetId = 'libsignal';
 
 /// GitHub repository for downloading releases.
 const _githubRepo = 'djx-y-z/libsignal_dart';
+
+/// Rust crate name (used for library filenames and release tags).
+const _crateName = 'libsignal_frb';
+
+/// WASM files for web platform.
+const _wasmFiles = ['libsignal_frb.js', 'libsignal_frb_bg.wasm'];
 
 /// Entry point for the build hook.
 void main(List<String> args) async {
   await build(args, (input, output) async {
     final packageRoot = input.packageRoot;
 
-    // Check for skip marker file (used during development with local builds)
+    // Check for skip marker file (used during library building via `make build`)
+    // This avoids chicken-and-egg problem when building native libraries
     final skipMarkerUri = packageRoot.resolve('.skip_libsignal_hook');
     final skipFile = File.fromUri(skipMarkerUri);
+
+    // Add marker file as dependency for cache invalidation
+    // This ensures hook reruns when marker is created/deleted
     output.dependencies.add(skipMarkerUri);
 
     if (skipFile.existsSync()) {
       return;
     }
 
-    // Handle web builds (no code_assets config means web or other non-native target)
+    // Handle web builds (buildCodeAssets is false for web platform)
+    // Web builds don't produce CodeAssets - they copy WASM files to web/pkg/
     if (!input.config.buildCodeAssets) {
       await _handleWebBuild(input, packageRoot);
       return;
@@ -71,10 +83,13 @@ void main(List<String> args) async {
     final targetOS = codeConfig.targetOS;
     final targetArch = codeConfig.targetArchitecture;
 
-    // Check if local build exists (development mode)
+    // Read version from rust/Cargo.toml
+    final version = await _readVersion(packageRoot);
+
+    // Check for local build first (development mode)
+    // This allows developers to use locally built libraries without downloading
     final localLib = _findLocalBuild(packageRoot, targetOS);
     if (localLib != null) {
-      // Use local build
       output.assets.code.add(
         CodeAsset(
           package: _packageName,
@@ -83,22 +98,24 @@ void main(List<String> args) async {
           file: localLib,
         ),
       );
+      output.dependencies.add(packageRoot.resolve('rust/Cargo.toml'));
       return;
     }
 
-    // Download from GitHub Releases
-    final version = await _readVersion(packageRoot);
+    // For native platforms, download from GitHub Releases and bundle with the app
     final assetInfo = _resolveAssetInfo(codeConfig, version);
 
     // Output directory for cached downloads
+    // Use architecture-specific subdirectory for each platform/arch combination
     final archSubdir = '${targetOS.name}-${targetArch.name}';
     final cacheDir = input.outputDirectoryShared.resolve('$archSubdir/');
     final libFile = File.fromUri(cacheDir.resolve(assetInfo.fileName));
 
     // Download if not cached
     if (!libFile.existsSync()) {
+      // Download checksums file for SHA256 verification (supply chain security)
       final baseUrl =
-          'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
+          'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
       Map<String, String>? checksums;
       String? expectedChecksum;
 
@@ -108,15 +125,18 @@ void main(List<String> args) async {
 
         if (expectedChecksum == null) {
           throw HookException(
-            'Checksum not found for ${assetInfo.archiveFileName}. '
-            'Available: ${checksums.keys.join(', ')}',
+            'Checksum not found for ${assetInfo.archiveFileName} in checksums file. '
+            'Available files: ${checksums.keys.join(', ')}',
           );
         }
       } catch (e) {
+        // If checksums download fails, log warning but continue
+        // This allows builds to work even if checksums file is missing
+        // (e.g., for older releases or local development)
         // ignore: avoid_print
         print(
           'Warning: Could not verify SHA256 checksum: $e\n'
-          'Proceeding without verification.',
+          'Proceeding without verification (not recommended for production).',
         );
       }
 
@@ -129,7 +149,7 @@ void main(List<String> args) async {
       );
     }
 
-    // Verify file exists
+    // Verify file exists after download
     if (!libFile.existsSync()) {
       throw HookException(
         'Failed to download libsignal library for $targetOS-$targetArch. '
@@ -137,7 +157,7 @@ void main(List<String> args) async {
       );
     }
 
-    // Register native asset
+    // Register native asset (Flutter converts .dylib to Framework for iOS)
     output.assets.code.add(
       CodeAsset(
         package: _packageName,
@@ -147,202 +167,21 @@ void main(List<String> args) async {
       ),
     );
 
-    // Add dependency on rust/Cargo.toml for cache invalidation
+    // Add dependency on Cargo.toml for cache invalidation
     output.dependencies.add(packageRoot.resolve('rust/Cargo.toml'));
   });
 }
 
-// =============================================================================
-// Web Build Support
-// =============================================================================
-
-/// WASM files required for web builds.
-const _wasmFiles = ['libsignal_frb.js', 'libsignal_frb_bg.wasm'];
-
-/// Handles web builds by downloading WASM files to the app's web/pkg directory.
-Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
-  // Find the app's root directory from the shared output directory
-  // Path: <app_root>/.dart_tool/hooks_runner/shared/libsignal/build/
-  final appRoot = _findAppRoot(input.outputDirectoryShared);
-  if (appRoot == null) {
-    // ignore: avoid_print
-    print(
-      'Warning: Could not determine app root for web build. '
-      'Build WASM manually with "make build-web" in the libsignal package.',
-    );
-    return;
-  }
-
-  final webPkgDir = Directory.fromUri(appRoot.resolve('web/pkg/'));
-
-  // Check if WASM files already exist
-  if (_wasmFilesExist(webPkgDir)) {
-    return;
-  }
-
-  // Check for local WASM build first
-  final localWasm = _findLocalWasmBuild(packageRoot);
-  if (localWasm != null) {
-    await _copyWasmFiles(localWasm, webPkgDir);
-    return;
-  }
-
-  // Download from GitHub Releases
-  final version = await _readVersion(packageRoot);
-  await _downloadWasmFiles(version, webPkgDir);
-}
-
-/// Finds the app's root directory from the shared output path.
-Uri? _findAppRoot(Uri sharedOutputDir) {
-  // sharedOutputDir: <app_root>/.dart_tool/hooks_runner/shared/<package>/build/
-  // We need to go up to find <app_root>
-  var dir = Directory.fromUri(sharedOutputDir);
-
-  // Go up until we find pubspec.yaml (app root)
-  for (var i = 0; i < 10; i++) {
-    final parent = dir.parent;
-    if (parent.path == dir.path) break;
-    dir = parent;
-
-    final pubspec = File('${dir.path}/pubspec.yaml');
-    if (pubspec.existsSync()) {
-      // Verify this is a Flutter project with web support
-      final webDir = Directory('${dir.path}/web');
-      if (webDir.existsSync()) {
-        return dir.uri;
-      }
-    }
-  }
-  return null;
-}
-
-/// Checks if all required WASM files exist.
-bool _wasmFilesExist(Directory webPkgDir) {
-  if (!webPkgDir.existsSync()) return false;
-
-  for (final fileName in _wasmFiles) {
-    final file = File('${webPkgDir.path}/$fileName');
-    if (!file.existsSync()) return false;
-  }
-  return true;
-}
-
-/// Finds local WASM build in the package's rust/target/wasm32 directory.
-Directory? _findLocalWasmBuild(Uri packageRoot) {
-  final localDir = Directory.fromUri(
-    packageRoot.resolve('rust/target/wasm32/'),
-  );
-  if (_wasmFilesExist(localDir)) {
-    return localDir;
-  }
-  return null;
-}
-
-/// Copies WASM files from source to destination directory.
-Future<void> _copyWasmFiles(Directory source, Directory dest) async {
-  await dest.create(recursive: true);
-
-  for (final fileName in _wasmFiles) {
-    final srcFile = File('${source.path}/$fileName');
-    final dstFile = File('${dest.path}/$fileName');
-    await srcFile.copy(dstFile.path);
-  }
-
-  // ignore: avoid_print
-  print('Copied WASM files to ${dest.path}');
-}
-
-/// Downloads WASM files from GitHub Releases.
-Future<void> _downloadWasmFiles(String version, Directory webPkgDir) async {
-  await webPkgDir.create(recursive: true);
-
-  final baseUrl =
-      'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
-  final archiveFileName = 'libsignal_frb-$version-wasm32.tar.gz';
-  final archiveUrl = '$baseUrl/$archiveFileName';
-  final archiveFile = File('${webPkgDir.path}/$archiveFileName');
-
-  // ignore: avoid_print
-  print('Downloading WASM for web: $archiveUrl');
-
-  try {
-    await _downloadWithRetry(archiveUrl, archiveFile);
-
-    // Extract archive
-    final result = await Process.run('tar', [
-      '-xzf',
-      archiveFile.path,
-      '-C',
-      webPkgDir.path,
-    ]);
-
-    if (result.exitCode != 0) {
-      throw HookException('tar extraction failed: ${result.stderr}');
-    }
-
-    // Clean up archive
-    if (archiveFile.existsSync()) {
-      await archiveFile.delete();
-    }
-
-    // ignore: avoid_print
-    print('WASM files installed to ${webPkgDir.path}');
-  } catch (e) {
-    // ignore: avoid_print
-    print(
-      'Warning: Failed to download WASM: $e\n'
-      'Build WASM manually with "make build-web" in the libsignal package.',
-    );
-  }
-}
-
-// =============================================================================
-// Native Build Support
-// =============================================================================
-
-/// Checks for local Rust build (development mode).
-Uri? _findLocalBuild(Uri packageRoot, OS targetOS) {
-  final fileName = _getLibraryFileName(targetOS);
-  final paths = [
-    packageRoot.resolve('rust/target/release/$fileName'),
-    packageRoot.resolve('rust/target/debug/$fileName'),
-  ];
-
-  for (final path in paths) {
-    final file = File.fromUri(path);
-    if (file.existsSync()) {
-      return path;
-    }
-  }
-  return null;
-}
-
-/// Gets the library filename for the target OS.
-String _getLibraryFileName(OS targetOS) {
-  switch (targetOS) {
-    case OS.macOS:
-    case OS.iOS:
-      return 'liblibsignal_frb.dylib';
-    case OS.linux:
-    case OS.android:
-      return 'liblibsignal_frb.so';
-    case OS.windows:
-      return 'libsignal_frb.dll';
-    default:
-      throw HookException('Unsupported OS: $targetOS');
-  }
-}
-
-/// Reads the version from rust/Cargo.toml.
+/// Reads the crate version from rust/Cargo.toml.
 Future<String> _readVersion(Uri packageRoot) async {
   final cargoFile = File.fromUri(packageRoot.resolve('rust/Cargo.toml'));
   if (!cargoFile.existsSync()) {
-    throw HookException('rust/Cargo.toml not found');
+    throw HookException('rust/Cargo.toml not found at ${cargoFile.path}');
   }
 
   final content = await cargoFile.readAsString();
 
-  // Extract version from Cargo.toml [package] section
+  // Extract version from [package] section
   final versionMatch = RegExp(
     r'^version\s*=\s*"([^"]+)"',
     multiLine: true,
@@ -355,29 +194,260 @@ Future<String> _readVersion(Uri packageRoot) async {
   return versionMatch.group(1)!.trim();
 }
 
-/// Information about a native asset.
-class _AssetInfo {
-  final String downloadUrl;
-  final String archiveFileName;
-  final String fileName;
+// =============================================================================
+// Web Build Support
+// =============================================================================
 
+/// Checks if all required WASM files exist in a directory.
+bool _wasmFilesExist(Directory dir) {
+  if (!dir.existsSync()) return false;
+
+  for (final fileName in _wasmFiles) {
+    final file = File('${dir.path}/$fileName');
+    if (!file.existsSync()) return false;
+  }
+  return true;
+}
+
+/// Finds local WASM build in the package's rust/target/wasm32 directory.
+///
+/// This enables development mode where developers can use locally built
+/// WASM files instead of downloading from GitHub Releases.
+Directory? _findLocalWasmBuild(Uri packageRoot) {
+  final localDir = Directory.fromUri(
+    packageRoot.resolve('rust/target/wasm32/'),
+  );
+  if (_wasmFilesExist(localDir)) {
+    return localDir;
+  }
+  return null;
+}
+
+/// Handles web builds by downloading WASM files and copying them to the app's web/pkg/ directory.
+///
+/// Flutter web apps need WASM files in the web/pkg/ directory to be accessible at runtime.
+/// This function:
+/// 1. First checks for local WASM build (development mode)
+/// 2. Otherwise downloads WASM files from GitHub Releases to a shared cache
+/// 3. Finds the Flutter app root (the consuming application)
+/// 4. Copies WASM files to `{app_root}/web/pkg/` where Flutter web expects them
+Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
+  // Find the Flutter app root first
+  final appRoot = _findAppRoot(input.outputDirectoryShared);
+  if (appRoot == null) {
+    // ignore: avoid_print
+    print('Warning: Could not find Flutter app root for web build');
+    return;
+  }
+
+  final webPkgDir = Directory.fromUri(appRoot.resolve('web/pkg/'));
+
+  // Check if WASM files already exist in destination
+  if (_wasmFilesExist(webPkgDir)) {
+    // ignore: avoid_print
+    print('WASM files already exist in ${webPkgDir.path}');
+    return;
+  }
+
+  // Check for local WASM build (development mode)
+  final localWasmDir = _findLocalWasmBuild(packageRoot);
+  if (localWasmDir != null) {
+    // ignore: avoid_print
+    print('Using local WASM build from ${localWasmDir.path}');
+    await _copyWasmFilesToAppRoot(localWasmDir.uri, webPkgDir);
+    return;
+  }
+
+  // Read version from rust/Cargo.toml
+  final version = await _readVersion(packageRoot);
+
+  final baseUrl =
+      'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
+  final cacheDir = input.outputDirectoryShared.resolve('web/');
+
+  // Download checksums for verification
+  Map<String, String>? checksums;
+  try {
+    checksums = await _downloadChecksums(baseUrl, version);
+  } catch (e) {
+    // ignore: avoid_print
+    print(
+      'Warning: Could not download checksums for web assets: $e\n'
+      'Proceeding without verification.',
+    );
+  }
+
+  // Download WASM files to cache
+  final archiveFileName = '$_crateName-$version-wasm32.tar.gz';
+  for (final fileName in _wasmFiles) {
+    final file = File.fromUri(cacheDir.resolve(fileName));
+
+    if (!file.existsSync()) {
+      String? expectedChecksum;
+      if (checksums != null) {
+        expectedChecksum = checksums[archiveFileName];
+      }
+
+      await _downloadAndExtract(
+        '$baseUrl/$archiveFileName',
+        cacheDir,
+        archiveFileName,
+        fileName,
+        expectedChecksum: expectedChecksum,
+      );
+    }
+
+    if (!file.existsSync()) {
+      throw HookException('Failed to download WASM file: $fileName');
+    }
+  }
+
+  // Copy WASM files to web/pkg/
+  await _copyWasmFilesToAppRoot(cacheDir, webPkgDir);
+}
+
+/// Finds the Flutter application root by searching parent directories from shared output.
+///
+/// Uses the shared output directory as starting point and looks for a pubspec.yaml
+/// with a web/ directory, indicating this is a Flutter web application.
+/// Additionally verifies the pubspec.yaml depends on this package to avoid
+/// finding unrelated projects.
+/// Returns null if no Flutter app root is found.
+Uri? _findAppRoot(Uri sharedOutputDir) {
+  var dir = Directory.fromUri(sharedOutputDir);
+
+  // Limit search depth to avoid infinite loops
+  for (var i = 0; i < 10; i++) {
+    final parent = dir.parent;
+    if (parent.path == dir.path) {
+      // Reached filesystem root
+      break;
+    }
+    dir = parent;
+
+    final pubspec = File('${dir.path}/pubspec.yaml');
+    if (pubspec.existsSync()) {
+      final webDir = Directory('${dir.path}/web');
+      if (webDir.existsSync()) {
+        // Verify this pubspec depends on our package
+        if (_pubspecDependsOnPackage(pubspec)) {
+          return dir.uri;
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
+/// Checks if a pubspec.yaml file depends on this package.
+///
+/// Returns true if the pubspec has this package as a dependency (regular, dev, or path).
+bool _pubspecDependsOnPackage(File pubspec) {
+  try {
+    final content = pubspec.readAsStringSync();
+
+    // Look for package name in dependencies section
+    // Handles: package_name:, "package_name":, 'package_name':
+    final packagePattern = RegExp(
+      '^\\s*["\']?$_packageName["\']?\\s*:',
+      multiLine: true,
+    );
+
+    return packagePattern.hasMatch(content);
+  } catch (e) {
+    // If we can't read the file, assume it doesn't depend on us
+    return false;
+  }
+}
+
+/// Copies WASM files from cache to the app's web/pkg/ directory.
+Future<void> _copyWasmFilesToAppRoot(Uri cacheDir, Directory webPkgDir) async {
+  // Create web/pkg/ directory if it doesn't exist
+  if (!webPkgDir.existsSync()) {
+    await webPkgDir.create(recursive: true);
+  }
+
+  // Copy each WASM file
+  for (final fileName in _wasmFiles) {
+    final sourceFile = File.fromUri(cacheDir.resolve(fileName));
+    final destFile = File('${webPkgDir.path}/$fileName');
+
+    if (sourceFile.existsSync()) {
+      // Only copy if source is newer or dest doesn't exist
+      if (!destFile.existsSync() ||
+          sourceFile.lastModifiedSync().isAfter(destFile.lastModifiedSync())) {
+        await sourceFile.copy(destFile.path);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// Native Build Support
+// =============================================================================
+
+/// Looks for locally built library in rust/target/.
+///
+/// This function enables development mode where developers can use
+/// locally built libraries instead of downloading from GitHub Releases.
+/// Checks release profile first, then debug.
+///
+/// Returns the Uri to the local library if found, null otherwise.
+Uri? _findLocalBuild(Uri packageRoot, OS targetOS) {
+  final fileName = _getLibraryFileName(targetOS);
+
+  // Try release first, then debug
+  for (final profile in ['release', 'debug']) {
+    final path = packageRoot.resolve('rust/target/$profile/$fileName');
+    if (File.fromUri(path).existsSync()) {
+      return path;
+    }
+  }
+
+  return null;
+}
+
+/// Gets the library filename for the target OS.
+String _getLibraryFileName(OS targetOS) {
+  switch (targetOS) {
+    case OS.linux:
+    case OS.android:
+      return 'lib$_crateName.so';
+    case OS.macOS:
+    case OS.iOS:
+      return 'lib$_crateName.dylib';
+    case OS.windows:
+      return '$_crateName.dll';
+    default:
+      return 'lib$_crateName.so';
+  }
+}
+
+/// Information about a native asset for a specific platform.
+class _AssetInfo {
   const _AssetInfo({
     required this.downloadUrl,
     required this.archiveFileName,
     required this.fileName,
   });
+
+  final String downloadUrl;
+  final String archiveFileName;
+  final String fileName;
 }
 
 /// Resolves asset information for the target platform.
 _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String version) {
   final baseUrl =
-      'https://github.com/$_githubRepo/releases/download/libsignal_frb-$version';
+      'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
   final targetOS = codeConfig.targetOS;
+  final targetArch = codeConfig.targetArchitecture;
 
   final fileName = _getLibraryFileName(targetOS);
   final platformArch = _getPlatformArchName(codeConfig);
 
-  final archiveFileName = 'libsignal_frb-$version-$platformArch.tar.gz';
+  final archiveFileName = '$_crateName-$version-$platformArch.tar.gz';
 
   return _AssetInfo(
     downloadUrl: '$baseUrl/$archiveFileName',
@@ -411,6 +481,7 @@ String _getPlatformArchName(CodeConfig codeConfig) {
   }
 }
 
+/// Converts Dart Architecture to architecture name (arm64/x86_64).
 String _archName(Architecture arch) {
   switch (arch) {
     case Architecture.arm64:
@@ -422,6 +493,7 @@ String _archName(Architecture arch) {
   }
 }
 
+/// Converts Dart Architecture to Android ABI name.
 String _androidAbi(Architecture arch) {
   switch (arch) {
     case Architecture.arm64:
@@ -435,7 +507,14 @@ String _androidAbi(Architecture arch) {
   }
 }
 
-/// Downloads and extracts the native library.
+// =============================================================================
+// Download Support
+// =============================================================================
+
+/// Downloads and extracts the native library archive with SHA256 verification.
+///
+/// [expectedChecksum] is the expected SHA256 hash of the archive.
+/// If null, verification is skipped (not recommended for production).
 Future<void> _downloadAndExtract(
   String url,
   Uri outputDir,
@@ -448,32 +527,41 @@ Future<void> _downloadAndExtract(
 
   final archiveFile = File('${outDir.path}/$archiveFileName');
 
+  // Download with retry
   await _downloadWithRetry(url, archiveFile);
 
+  // Verify SHA256 checksum if provided
   if (expectedChecksum != null) {
     await _verifyChecksum(archiveFile, expectedChecksum, archiveFileName);
   }
 
+  // Extract based on format
   if (url.endsWith('.zip')) {
     await _extractZip(archiveFile, outDir);
   } else {
     await _extractTarGz(archiveFile, outDir);
   }
 
+  // Clean up archive
   if (archiveFile.existsSync()) {
     await archiveFile.delete();
   }
 
+  // Verify extraction
   final libFile = File('${outDir.path}/$libFileName');
   if (!libFile.existsSync()) {
-    throw HookException('Extraction failed: $libFileName not found');
+    throw HookException(
+      'Extraction failed: $libFileName not found in archive from $url',
+    );
   }
 }
 
+/// Downloads a file with retry logic.
 Future<void> _downloadWithRetry(
   String url,
   File outputFile, {
   int maxRetries = 3,
+  Duration retryDelay = const Duration(seconds: 2),
 }) async {
   final client = HttpClient();
   Exception? lastError;
@@ -490,18 +578,20 @@ Future<void> _downloadWithRetry(
           return;
         } else if (response.statusCode == 404) {
           throw HookException(
-            'Library not found at $url (HTTP 404). '
-            'Make sure the GitHub Release exists.',
+            'Native library not found at $url (HTTP 404). '
+            'Ensure GitHub Release exists with the correct version.',
           );
         } else {
-          throw HookException('HTTP ${response.statusCode} from $url');
+          throw HookException(
+            'Failed to download from $url: HTTP ${response.statusCode}',
+          );
         }
       } on HookException {
         rethrow;
       } catch (e) {
         lastError = e is Exception ? e : Exception(e.toString());
         if (attempt < maxRetries) {
-          await Future.delayed(Duration(seconds: attempt * 2));
+          await Future<void>.delayed(retryDelay * attempt);
         }
       }
     }
@@ -509,9 +599,13 @@ Future<void> _downloadWithRetry(
     client.close();
   }
 
-  throw HookException('Download failed after $maxRetries attempts: $lastError');
+  throw HookException(
+    'Failed to download from $url after $maxRetries attempts. '
+    'Last error: $lastError',
+  );
 }
 
+/// Extracts a tar.gz archive.
 Future<void> _extractTarGz(File archive, Directory outDir) async {
   final result = await Process.run('tar', [
     '-xzf',
@@ -520,12 +614,14 @@ Future<void> _extractTarGz(File archive, Directory outDir) async {
     outDir.path,
   ]);
   if (result.exitCode != 0) {
-    throw HookException('tar extraction failed: ${result.stderr}');
+    throw HookException('Failed to extract tar.gz archive: ${result.stderr}');
   }
 }
 
+/// Extracts a zip archive.
 Future<void> _extractZip(File archive, Directory outDir) async {
   ProcessResult result;
+
   if (Platform.isWindows) {
     result = await Process.run('powershell', [
       '-Command',
@@ -544,25 +640,29 @@ Future<void> _extractZip(File archive, Directory outDir) async {
       outDir.path,
     ]);
   }
+
   if (result.exitCode != 0) {
-    throw HookException('zip extraction failed: ${result.stderr}');
+    throw HookException('Failed to extract zip archive: ${result.stderr}');
   }
 }
 
+/// Downloads and verifies checksums file from GitHub Release.
+///
+/// Returns a map of filename -> expected SHA256 hash.
 Future<Map<String, String>> _downloadChecksums(
   String baseUrl,
   String version,
 ) async {
-  final url = '$baseUrl/libsignal_frb-$version-checksums.sha256';
+  final checksumsUrl = '$baseUrl/$_crateName-$version-checksums.sha256';
   final client = HttpClient();
 
   try {
-    final request = await client.getUrl(Uri.parse(url));
+    final request = await client.getUrl(Uri.parse(checksumsUrl));
     final response = await request.close();
 
     if (response.statusCode != 200) {
       throw HookException(
-        'Checksums download failed: HTTP ${response.statusCode}',
+        'Failed to download checksums from $checksumsUrl: HTTP ${response.statusCode}',
       );
     }
 
@@ -573,34 +673,71 @@ Future<Map<String, String>> _downloadChecksums(
   }
 }
 
+/// Parses SHA256 checksums file content.
+///
+/// Expected format (standard sha256sum output):
+/// ```
+/// <hash>  <filename>
+/// <hash>  <filename>
+/// ```
 Map<String, String> _parseChecksums(String content) {
   final checksums = <String, String>{};
+
   for (final line in content.split('\n')) {
-    final match = RegExp(r'^([a-fA-F0-9]{64})\s+(.+)$').firstMatch(line.trim());
+    final trimmed = line.trim();
+    if (trimmed.isEmpty) continue;
+
+    // Format: "<hash>  <filename>" (two spaces between hash and filename)
+    // Also support single space for compatibility
+    final match = RegExp(r'^([a-fA-F0-9]{64})\s+(.+)$').firstMatch(trimmed);
     if (match != null) {
-      checksums[match.group(2)!] = match.group(1)!.toLowerCase();
+      final hash = match.group(1)!.toLowerCase();
+      final filename = match.group(2)!;
+      checksums[filename] = hash;
     }
   }
+
   return checksums;
 }
 
-Future<void> _verifyChecksum(File file, String expected, String name) async {
+/// Computes SHA256 hash of a file.
+Future<String> _computeFileSha256(File file) async {
   final bytes = await file.readAsBytes();
-  final actual = sha256.convert(bytes).toString();
+  final digest = sha256.convert(bytes);
+  return digest.toString();
+}
 
-  if (actual != expected.toLowerCase()) {
-    await file.delete();
+/// Verifies file SHA256 hash against expected value.
+///
+/// Throws [HookException] if verification fails.
+Future<void> _verifyChecksum(
+  File file,
+  String expectedHash,
+  String filename,
+) async {
+  final actualHash = await _computeFileSha256(file);
+
+  if (actualHash != expectedHash.toLowerCase()) {
+    // Delete the corrupted/tampered file
+    if (file.existsSync()) {
+      await file.delete();
+    }
     throw HookException(
-      'SHA256 mismatch for $name!\n'
-      'Expected: $expected\n'
-      'Actual:   $actual',
+      'SHA256 verification failed for $filename!\n'
+      'Expected: $expectedHash\n'
+      'Actual:   $actualHash\n'
+      'This may indicate a corrupted download or supply chain attack. '
+      'Please report this issue at https://github.com/$_githubRepo/issues',
     );
   }
 }
 
+/// Custom exception for hook errors.
 class HookException implements Exception {
-  final String message;
   HookException(this.message);
+
+  final String message;
+
   @override
   String toString() => 'HookException: $message';
 }

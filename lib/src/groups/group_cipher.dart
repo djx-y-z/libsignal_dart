@@ -44,12 +44,6 @@ import '../stores/sender_key_store.dart';
 /// final plaintext = await cipher.decrypt(senderAddress, distributionId, encrypted);
 /// ```
 class GroupCipher {
-  /// The sender key store for group key storage.
-  final SenderKeyStore _senderKeyStore;
-
-  /// The identity key store for signing distribution messages.
-  final IdentityKeyStore _identityKeyStore;
-
   /// Creates a new group cipher with the given stores.
   ///
   /// - [senderKeyStore] stores sender keys for group members
@@ -59,6 +53,12 @@ class GroupCipher {
     required IdentityKeyStore identityKeyStore,
   }) : _senderKeyStore = senderKeyStore,
        _identityKeyStore = identityKeyStore;
+
+  /// The sender key store for group key storage.
+  final SenderKeyStore _senderKeyStore;
+
+  /// The identity key store for signing distribution messages.
+  final IdentityKeyStore _identityKeyStore;
 
   /// Creates a sender key distribution message for a group.
   ///

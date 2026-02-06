@@ -1,4 +1,5 @@
 /// Test helpers for creating session-related test data.
+// ignore_for_file: sort_constructors_first
 library;
 
 import 'dart:typed_data';

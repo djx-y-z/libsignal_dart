@@ -1,7 +1,5 @@
-# TODO
-TODO.md
-
 # Development files
+TODO.md
 Makefile
 .fvmrc
 .skip_libsignal_hook
@@ -12,6 +10,9 @@ Makefile
 # Build scripts (only needed for development)
 scripts/
 
+# Rust build artifacts
+rust/target/
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -20,7 +21,7 @@ scripts/
 .metadata
 *.iml
 
-# Coverage and test artifacts
+# Coverage
 coverage/
 
 # Documentation
@@ -40,7 +41,7 @@ example/android/.gradle/
 example/ios/Pods/
 example/macos/Pods/
 
-# Xcode workspace
+# Xcode workspace files
 example/ios/Runner.xcworkspace/
 example/macos/Runner.xcworkspace/
 
@@ -53,8 +54,8 @@ example/web/pkg/
 # FVM
 .fvm/
 
-# Rust build artifacts
-rust/target/
+# Hook build cache
+hook/.dart_tool/
 
 # Generated plugin files (not needed for plugin distribution)
 android/app/

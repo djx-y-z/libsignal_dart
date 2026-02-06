@@ -3,7 +3,7 @@
 # This workflow publishes the package to pub.dev and creates a GitHub Release.
 #
 # Flow:
-# 1. Create and push a version tag: git tag v1.0.0 && git push origin v1.0.0
+# 1. Create and push a version tag: git tag vX.Y.Z && git push origin vX.Y.Z
 # 2. Workflow automatically triggers on tag push
 # 3. Validate version tag matches pubspec.yaml
 # 4. Run tests and analysis
@@ -127,7 +127,7 @@ jobs:
           fi
 
   # ============================================
-  # Run tests on all platforms
+  # Run tests (multi-platform)
   # ============================================
   test:
     needs: validate
@@ -150,9 +150,11 @@ jobs:
 
       - name: Install dependencies
         run: make get
+        shell: bash
 
       - name: Validate package
         run: make publish-dry-run
+        shell: bash
 
   # ============================================
   # Publish to pub.dev
@@ -169,16 +171,19 @@ jobs:
 
       - name: Install dependencies
         run: make get
+        shell: bash
 
       - name: Publish to pub.dev (dry run)
         if: github.ref_type != 'tag' || inputs.dry-run
         run: |
           echo "DRY RUN - would publish version ${{ needs.validate.outputs.version }}"
           make publish-dry-run
+        shell: bash
 
       - name: Publish to pub.dev
         if: github.ref_type == 'tag' && !inputs.dry-run
         run: make publish ARGS="--force"
+        shell: bash
 
   # ============================================
   # Create GitHub Release
@@ -206,3 +211,4 @@ jobs:
           **pub.dev:** https://pub.dev/packages/libsignal/versions/${{ needs.validate.outputs.version }}
           EOF
           )"
+        shell: bash

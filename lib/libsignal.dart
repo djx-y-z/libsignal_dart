@@ -57,9 +57,12 @@
 /// See the [README](https://github.com/djx-y-z/libsignal_dart) for more details.
 library;
 
+// Group messaging (high-level Dart API)
+export 'src/groups/group_cipher.dart';
 // Core initialization
 export 'src/libsignal.dart';
-
+// Protocol wrappers (high-level Dart API)
+export 'src/protocol/protocol.dart';
 // FRB-generated API
 export 'src/rust/api/address.dart';
 export 'src/rust/api/bundle.dart';
@@ -70,23 +73,14 @@ export 'src/rust/api/kyber.dart';
 export 'src/rust/api/message.dart';
 export 'src/rust/api/prekey.dart';
 export 'src/rust/api/sealed_sender.dart';
+export 'src/rust/api/session.dart';
 export 'src/rust/api/session_builder.dart';
 export 'src/rust/api/session_cipher.dart';
-export 'src/rust/api/session.dart';
 export 'src/rust/api/signed_prekey.dart';
-
-// Protocol wrappers (high-level Dart API)
-export 'src/protocol/protocol.dart';
-
-// Group messaging (high-level Dart API)
-export 'src/groups/group_cipher.dart';
-
 // Sealed sender (high-level Dart API)
 export 'src/sealed_sender/sealed_sender_cipher.dart';
-
-// Stores (Dart-side implementations)
-export 'src/stores/stores.dart';
-
 // Security utilities
 export 'src/security/secure_bytes.dart';
 export 'src/security/secure_uint8list.dart';
+// Stores (Dart-side implementations)
+export 'src/stores/stores.dart';

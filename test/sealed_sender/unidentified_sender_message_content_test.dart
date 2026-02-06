@@ -2,10 +2,8 @@ import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
 void main() {
-  setUpAll(() async {
-    await LibSignal.init();
-  });
-  tearDownAll(() => LibSignal.cleanup());
+  setUpAll(LibSignal.init);
+  tearDownAll(LibSignal.cleanup);
 
   // Note: UnidentifiedSenderMessageContent is an internal type used by the
   // sealed sender protocol. The public API exposes high-level functions
