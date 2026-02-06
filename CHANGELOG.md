@@ -1,3 +1,68 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- Adopt copier template (`copier-dart-frb-wrapper`) v1.7.2 for project structure
+  - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
+  - Unified common utilities in `scripts/src/common.dart`
+  - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
+- Renamed `make update` → `make rust-update` to avoid ambiguity
+- Refactored build hook (`hook/build.dart`)
+  - Added SHA256 checksum verification for WASM downloads (supply chain security)
+  - Smarter app root detection: verifies pubspec depends on this package before copying WASM files
+  - WASM file caching with shared output directory (avoids redundant downloads)
+  - Incremental file copy: only copies if source is newer than destination
+  - Added `_crateName` constant to eliminate hardcoded `libsignal_frb` strings
+  - Added `rust/Cargo.toml` as dependency for cache invalidation on local builds
+  - Improved error messages with actionable guidance throughout
+- Replaced copier template placeholders with dynamic values from helper scripts
+  - `{{ android_min_sdk }}` → reads from `android/build.gradle` at build time
+  - `{{ crate_name }}` → uses `_crateName` constant
+  - `fvm install` → `fvm use` with version from `.fvmrc`
+- Updated example app platform configs to use template-standard naming
+  - Renamed `libsignal_example` → `example` in web, Windows, macOS, Linux, iOS configs
+- Renamed Claude skill `ffi-patterns` → `frb-patterns` to match current FRB architecture
+- Improved CI workflows with better step status tracking
+  - Each step now reports `success=true/false` for clearer PR status
+  - PR body shows inline status for each updated file
+- Removed unused `GITHUB_TOKEN` from `check_updates.dart` (not needed for public GitHub API)
+- Fully automated libsignal update workflow (`check-libsignal-updates.yml`)
+  - Now automatically runs `cargo update` to update Cargo.lock
+  - Now automatically regenerates FRB bindings via `make codegen`
+  - Now automatically updates CHANGELOG.md using AI (requires `AI_MODELS_TOKEN` secret with `models:read` permission)
+  - All steps are non-blocking: PR is created even if some steps fail
+  - PR description shows status of each step (success/failure)
+  - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
+
+#### Removed
+
+- Removed legacy scripts with project-specific naming
+  - `scripts/check_new_libsignal_version.dart` → `scripts/check_new_upstream_version.dart`
+  - `scripts/check_exists_libsignal_frb_release.dart` → `scripts/check_exists_frb_release.dart`
+  - `scripts/src/check_new_libsignal_version.dart` → `scripts/src/check_updates.dart`
+- Removed unused `scripts/combine_artifacts.dart`
+
+#### Added
+
+- `make check-template-updates` command to check for new copier template versions
+- `check-template-updates.yml` workflow — daily CI check for template updates with automated notification PR
+- `update-template` Claude skill — step-by-step guide for applying template updates
+  - Documents `--defaults` flag for non-interactive `copier update` (required for Claude Code)
+  - Documents manual `_commit` update in `.copier-answers.yml` when copier fails to update it (conflicts or no file changes)
+- `make rust-update` command to update `rust/Cargo.lock` via `cargo update`
+- `make update-changelog` command to update CHANGELOG.md using GitHub Models AI
+- AI-powered changelog generation script (`scripts/update_changelog.dart`)
+  - Fetches libsignal release notes from GitHub API
+  - Uses GitHub Models (gpt-4o-mini) to generate appropriate changelog entry
+  - Includes real examples from project's CHANGELOG in AI prompt for consistent formatting
+  - Automatically inserts entry in correct CHANGELOG.md location
+- Helper scripts for dynamic build configuration
+  - `scripts/get_android_min_sdk.dart` — reads `minSdk` from `android/build.gradle`
+  - `scripts/get_flutter_version.dart` — reads Flutter version from `.fvmrc`
+- Analyzer exclusions for `hook/**`, `scripts/**`, `example/**`, `example_cli/**` (separate packages, not part of main analysis)
+
 ## [2.2.1] - 2026-02-03
 
 ### For Users
@@ -48,62 +113,18 @@
 
 ### For Contributors
 
-#### Changed
-
-- Adopt copier template (`copier-dart-frb-wrapper`) v1.6.0 for project structure
-  - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
-  - Unified common utilities in `scripts/src/common.dart`
-  - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
-- Renamed `make update` → `make rust-update` to avoid ambiguity
-- Refactored build hook (`hook/build.dart`)
-  - Added SHA256 checksum verification for WASM downloads (supply chain security)
-  - Smarter app root detection: verifies pubspec depends on this package before copying WASM files
-  - WASM file caching with shared output directory (avoids redundant downloads)
-  - Incremental file copy: only copies if source is newer than destination
-  - Added `_crateName` constant to eliminate hardcoded `libsignal_frb` strings
-  - Added `rust/Cargo.toml` as dependency for cache invalidation on local builds
-  - Improved error messages with actionable guidance throughout
-- Replaced copier template placeholders with dynamic values from helper scripts
-  - `{{ android_min_sdk }}` → reads from `android/build.gradle` at build time
-  - `{{ crate_name }}` → uses `_crateName` constant
-  - `fvm install` → `fvm use` with version from `.fvmrc`
-- Updated example app platform configs to use template-standard naming
-  - Renamed `libsignal_example` → `example` in web, Windows, macOS, Linux, iOS configs
-- Renamed Claude skill `ffi-patterns` → `frb-patterns` to match current FRB architecture
-- Improved CI workflows with better step status tracking
-  - Each step now reports `success=true/false` for clearer PR status
-  - PR body shows inline status for each updated file
-
-#### Removed
-
-- Removed legacy scripts with project-specific naming
-  - `scripts/check_new_libsignal_version.dart` → `scripts/check_new_upstream_version.dart`
-  - `scripts/check_exists_libsignal_frb_release.dart` → `scripts/check_exists_frb_release.dart`
-  - `scripts/src/check_new_libsignal_version.dart` → `scripts/src/check_updates.dart`
-- Removed unused `scripts/combine_artifacts.dart`
-
 #### Added
 
-- `make check-template-updates` command to check for new copier template versions
-- `check-template-updates.yml` workflow — daily CI check for template updates with automated notification PR
-- `update-template` Claude skill — step-by-step guide for applying template updates
-  - Documents `--defaults` flag for non-interactive `copier update` (required for Claude Code)
-  - Documents manual `_commit` update in `.copier-answers.yml` when copier fails to update it (conflicts or no file changes)
-- `make rust-update` command to update `rust/Cargo.lock` via `cargo update`
+- `make update` command to update `rust/Cargo.lock` via `cargo update`
 - `make update-changelog` command to update CHANGELOG.md using GitHub Models AI
 - AI-powered changelog generation script (`scripts/update_changelog.dart`)
   - Fetches libsignal release notes from GitHub API
   - Uses GitHub Models (gpt-4o-mini) to generate appropriate changelog entry
   - Includes real examples from project's CHANGELOG in AI prompt for consistent formatting
   - Automatically inserts entry in correct CHANGELOG.md location
-- Helper scripts for dynamic build configuration
-  - `scripts/get_android_min_sdk.dart` — reads `minSdk` from `android/build.gradle`
-  - `scripts/get_flutter_version.dart` — reads Flutter version from `.fvmrc`
-- Analyzer exclusions for `hook/**` and `scripts/**` (build scripts are not part of public API)
 
 #### Changed
 
-- Removed unused `GITHUB_TOKEN` from `check_updates.dart` (not needed for public GitHub API)
 - Fully automated libsignal update workflow (`check-libsignal-updates.yml`)
   - Now automatically runs `cargo update` to update Cargo.lock
   - Now automatically regenerates FRB bindings via `make codegen`
@@ -380,7 +401,8 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.1...HEAD
+[2.2.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.0.0...v2.1.0
