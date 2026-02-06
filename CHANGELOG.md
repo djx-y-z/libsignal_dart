@@ -1,4 +1,50 @@
-## [Unreleased]
+## [2.2.1] - 2026-02-03
+
+### For Users
+
+#### Fixed
+
+- Fix native library loading for pure Dart CLI applications
+  - **JIT mode** (`dart run`): loads from `.dart_tool/lib/`
+  - **AOT mode** (`dart build cli`): loads from `bundle/lib/` relative to executable
+  - Enables standalone executables to be distributed and run from any location
+
+#### Security
+
+- Remove CWD-based library search to prevent library hijacking attacks
+  - Previously searched `rust/target/release/` in current working directory
+  - Attacker could place malicious library in CWD to hijack application
+  - Now only searches trusted paths: build hook locations and executable-relative paths
+
+## [2.2.0] - 2026-02-03
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.0** — latest upstream Signal Protocol library
+- **libsignal_frb v1.0.2** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.87.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.0))
+  - **Breaking change in upstream**: `PublicKey` ordered comparison (Ord trait) has been removed
+  - New: `accountExists()` API exposed to client libraries
+  - New: gRPC support for username hash lookup
+  - Note: Our `PublicKey.compare()` method continues to work — now compares by serialized bytes
+- Update `libsignal_frb` (Rust crate) to v1.0.2
+  - Adapted `PublicKey.compare()` to use byte comparison after upstream Ord removal
+
+#### Fixed
+
+- Fix native library loading for pure Dart CLI applications using `dart run`
+  - `DynamicLibrary.open()` doesn't resolve native asset IDs in JIT mode
+  - Now reads `.dart_tool/native_assets.yaml` to get the actual library path
+  - Enables `example_cli` and other CLI apps to work with published package
+
+#### Security
+
+- Updated `bytes` dependency to v1.11.1 to fix integer overflow vulnerability ([RUSTSEC-2026-0007](https://rustsec.org/advisories/RUSTSEC-2026-0007))
 
 ### For Contributors
 
@@ -65,6 +111,9 @@
   - All steps are non-blocking: PR is created even if some steps fail
   - PR description shows status of each step (success/failure)
   - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
+  - Added checklist items for `rust/Cargo.toml` version bump and `make rust-check`
+- Updated `update_changelog.dart` script to generate two Highlights entries (libsignal + libsignal_frb)
+- Updated Claude skill `.claude/skills/update-libsignal/SKILL.md` with "Review Automated PR" section
 
 ## [2.1.1] - 2026-01-30
 
@@ -331,7 +380,8 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.1...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.0...HEAD
+[2.2.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.1...v2.2.0
 [2.1.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.0...v2.1.1
 [2.1.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v1.1.2...v2.0.0
