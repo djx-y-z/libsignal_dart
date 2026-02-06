@@ -4,7 +4,7 @@
 
 #### Changed
 
-- Adopt copier template (`copier-dart-frb-wrapper`) v1.7.2 for project structure
+- Adopt copier template (`copier-dart-frb-wrapper`) v1.9.0 for project structure
   - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
   - Unified common utilities in `scripts/src/common.dart`
   - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
