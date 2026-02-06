@@ -19,7 +19,7 @@ frb_version: "^2.11.1"
 # Multiple upstream crates (git-based)
 upstream_crate: ""
 upstream_crates: "libsignal-protocol,libsignal-core,signal-crypto"
-upstream_version: "v0.86.16"
+upstream_version: "v0.87.0"
 strip_version_prefix: false
 
 # Features

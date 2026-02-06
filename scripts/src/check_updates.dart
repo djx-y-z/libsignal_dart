@@ -167,6 +167,7 @@ Future<Map<String, dynamic>> _fetchLatestRelease() async {
 /// - rust/Cargo.toml (upstream dependency tag)
 /// - README.md (badge) - if exists
 /// - CLAUDE.md (example) - if exists (enable_claude=true)
+/// - .copier-answers.yml (upstream_version) - if exists
 ///
 /// Returns list of updated file names.
 Future<List<String>> updateVersionFiles({
@@ -244,6 +245,23 @@ Future<List<String>> updateVersionFiles({
     await claudeFile.writeAsString(content);
     updatedFiles.add('CLAUDE.md');
     if (!silent) logInfo('Updated CLAUDE.md example');
+  }
+
+  // 4. Update .copier-answers.yml (if exists)
+  final copierFile = File('${packageDir.path}/.copier-answers.yml');
+  if (copierFile.existsSync()) {
+    if (!silent) logStep('Updating .copier-answers.yml...');
+    var content = copierFile.readAsStringSync();
+    final copierPattern = RegExp(r'(upstream_version:\s*)"[^"]+"');
+    if (copierPattern.hasMatch(content)) {
+      content = content.replaceFirstMapped(
+        copierPattern,
+        (match) => '${match.group(1)}"$newVersion"',
+      );
+      await copierFile.writeAsString(content);
+      updatedFiles.add('.copier-answers.yml');
+      if (!silent) logInfo('Updated .copier-answers.yml: upstream_version');
+    }
   }
 
   return updatedFiles;

@@ -178,6 +178,7 @@ jobs:
             - `lib/src/rust/` — ${{ steps.codegen.outputs.success == 'true' && 'regenerated FRB bindings' || '**NOT UPDATED** (codegen failed, manual update required)' }}
             - `CHANGELOG.md` — ${{ steps.changelog.outputs.success == 'true' && 'AI-generated entry (GitHub Models)' || '**NOT UPDATED** (AI failed, manual update required)' }}
             - `README.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'version badge' || '**NOT UPDATED**' }}
+            - `.copier-answers.yml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'upstream_version updated' || '**NOT UPDATED**' }}
             - `CLAUDE.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'example in documentation' || '**NOT UPDATED**' }}
             
             ### Release Notes
