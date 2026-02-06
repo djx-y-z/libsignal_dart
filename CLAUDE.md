@@ -15,34 +15,65 @@ fvm dart run scripts/check_updates.dart --update
 make test test/keys/  # make interprets test/keys/ as target!
 ```
 
-## Quick Reference
+## Available Makefile Commands
 
-| Task | Command |
-|------|---------|
-| Full setup | `make setup` |
-| Setup FVM only | `make setup-fvm` |
-| Setup protoc only | `make setup-protoc` |
-| Setup Rust tools | `make setup-rust-tools` |
-| Setup for web builds | `make setup-web` |
-| Setup for Android builds | `make setup-android` |
-| Show all commands | `make help` |
-| Run tests | `make test` |
-| Run tests with coverage | `make coverage` |
-| Run analysis | `make analyze` |
-| Strict analysis | `make analyze ARGS="--fatal-infos"` |
-| Rust security audit | `make rust-audit` |
-| Rust type check | `make rust-check` |
-| Format code | `make format` |
-| Generate documentation | `make doc` |
-| Regenerate FRB bindings | `make codegen` |
-| Build native library | `make build` |
-| Build for Android | `make build-android` |
-| Build WASM for web | `make build-web` |
-| Check for updates | `make check-new-libsignal-version` |
-| Check template updates | `make check-template-updates` |
-| Update Cargo.lock | `make rust-update` |
-| Update CHANGELOG (AI) | `make update-changelog` |
-| Get dependencies | `make get` |
+### Setup
+```bash
+make setup                        # Full setup (FVM + Rust tools + protoc)
+make setup-fvm                    # Install FVM + Flutter only
+make setup-rust-tools             # Install Rust tools (cargo-audit, frb_codegen)
+make setup-protoc                 # Install protoc (Protocol Buffers compiler)
+make setup-web                    # Install web build tools (wasm-pack)
+make setup-android                # Install Android build tools (cargo-ndk)
+```
+
+### Code Generation
+```bash
+make codegen                      # Generate Dart bindings from Rust code
+```
+
+**Note:** `make codegen` automatically creates a `.skip_libsignal_hook` marker file to prevent Build Hooks from downloading libraries during codegen. The marker is automatically removed after completion.
+
+### Build
+```bash
+make build                              # Build for current platform (debug)
+make build ARGS="--release"             # Build for current platform (release)
+make build ARGS="--target <target>"     # Build for specific Rust target
+make build-android                      # Build for Android (all ABIs)
+make build-android ARGS="--target arm64-v8a"  # Build for specific Android ABI
+make build-web                          # Build WASM for web
+```
+
+### Rust Quality
+```bash
+make rust-check                   # Check Rust code compiles
+make rust-audit                   # Audit Rust dependencies for vulnerabilities
+```
+
+### Dart Quality
+```bash
+make test                                # Run all tests
+make test ARGS="test/example_test.dart"  # Run specific test file
+make coverage                            # Run tests with coverage report
+make analyze                             # Run static analysis
+make analyze ARGS="--fatal-infos"        # Strict analysis
+make format                              # Format Dart code
+make format-check                        # Check formatting without changes
+make doc                                 # Generate documentation
+```
+
+### Utilities
+```bash
+make get                          # Get dependencies
+make clean                        # Clean build artifacts (including rust/target)
+make version                      # Show current crate version
+make rust-update                  # Update Cargo.lock
+make check-new-libsignal-version  # Check for new upstream libsignal version
+make check-new-libsignal-version ARGS="--update"  # Apply update
+make check-template-updates       # Check for copier template updates
+make update-changelog ARGS="--version vX.Y.Z"  # Update CHANGELOG with AI
+make help                         # Show all available commands
+```
 
 ## Project Overview
 
@@ -129,6 +160,73 @@ make codegen                                  # Regenerate FRB bindings
 make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG (requires GITHUB_TOKEN)
 ```
 
+### AI-Powered Changelog
+
+The `update-changelog` command uses GitHub Models API to analyze release notes and generate changelog entries. Requires `AI_MODELS_TOKEN` environment variable:
+
+```bash
+# Get token from https://github.com/settings/tokens (Models → Read only)
+AI_MODELS_TOKEN=xxx make update-changelog ARGS="--version v1.0.0"
+```
+
+## Development Workflow
+
+### 1. Implement Rust API
+
+Add your Rust functions in `rust/src/api/`:
+
+```rust
+// rust/src/api/greeting.rs
+pub fn greet(name: String) -> String {
+    format!("Hello, {}!", name)
+}
+```
+
+Register the module in `rust/src/api/mod.rs`:
+
+```rust
+pub mod greeting;
+```
+
+### 2. Generate Dart Bindings
+
+```bash
+make codegen
+```
+
+This generates Dart code in `lib/src/rust/`.
+
+### 3. Build Native Library
+
+```bash
+# For current platform
+make build
+
+# For specific target
+make build ARGS="--target aarch64-apple-darwin"
+```
+
+### 4. Run Tests
+
+```bash
+make test
+```
+
+## Update Crate Version
+
+Version is stored in `rust/Cargo.toml`.
+
+```bash
+# 1. Edit rust/Cargo.toml - update version
+# 2. Run tests
+make test
+
+# 3. Commit and push (CI will build native libraries)
+git add rust/Cargo.toml
+git commit -m "Bump crate version to X.Y.Z"
+git push
+```
+
 ## Supported Platforms
 
 | Platform | Architecture |
@@ -140,6 +238,21 @@ make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG (requires GITHU
 | Android | arm64-v8a, armeabi-v7a, x86_64 |
 | Web | wasm32 |
 
+## Security Considerations
+
+> **Important:** See [SECURITY.md](SECURITY.md) for full security policy and best practices.
+
+### Supply Chain Security
+- All native libraries are built from source in GitHub Actions
+- SHA256 checksums verify downloaded libraries
+- Pin to specific upstream releases
+
+### Code Review Checklist
+1. No hardcoded keys or secrets
+2. Memory properly freed after use
+3. Sensitive data zeroed before freeing
+4. No timing side-channels
+
 ## FVM (Flutter Version Management)
 
 This project uses FVM for consistent Flutter/Dart versions.
@@ -147,6 +260,13 @@ This project uses FVM for consistent Flutter/Dart versions.
 **Version:** Flutter 3.38.4 (Dart SDK 3.10.0)
 
 FVM is automatically installed by `make setup`.
+
+## Windows Users
+
+On Windows, install `make` first:
+- Chocolatey: `choco install make`
+- Scoop: `scoop install make`
+- Or use Git Bash / WSL
 
 ## Architecture
 
@@ -219,3 +339,42 @@ Stores are **required** for Signal Protocol operations due to Double Ratchet:
 - `InMemorySenderKeyStore`
 
 For production, implement store interfaces with secure storage (SQLite, SecureStorage, etc.).
+
+## Changelog Format
+
+Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format:
+
+```markdown
+## X.Y.Z
+
+### Added
+- New features
+
+### Changed
+- Changes in existing functionality
+
+### Fixed
+- Bug fixes
+
+### Security
+- Security-related changes
+```
+
+## Publishing Checklist
+
+```bash
+# 1. Run quality checks
+make analyze
+make test
+make format-check
+
+# 2. Update version in pubspec.yaml
+# 3. Update CHANGELOG.md
+
+# 4. Dry run
+make publish-dry-run
+
+# 5. Create tag and push (CI will publish)
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
