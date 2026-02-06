@@ -13,6 +13,9 @@ analyzer:
     # Build scripts (not part of public API)
     - "hook/**"
     - "scripts/**"
+    # Example apps (separate packages with own analysis_options.yaml)
+    - "example/**"
+    - "example_cli/**"
 
   errors:
     # Treat unused imports as warnings (useful during development)
