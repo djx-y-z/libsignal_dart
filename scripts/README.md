@@ -9,8 +9,8 @@ Development scripts for managing the libsignal Dart package.
 
 | Script | Description | Makefile Command |
 |--------|-------------|------------------|
-| `check_new_libsignal_version.dart` | Check for new upstream libsignal version | `make check-new-libsignal-version` |
-| `check_exists_libsignal_frb_release.dart` | Check if FRB release exists on GitHub | `make check-exists-libsignal-frb-release` |
+| `check_new_upstream_version.dart` | Check for new upstream libsignal version | `make check-new-libsignal-version` |
+| `check_exists_frb_release.dart` | Check if FRB release exists on GitHub | `make check-exists-libsignal-frb-release` |
 | `check_template_updates.dart` | Check for new copier template version | `make check-template-updates` |
 
 ## Checking for Upstream Updates

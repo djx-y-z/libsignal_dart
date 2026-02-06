@@ -10,8 +10,8 @@ Makefile
 # Build scripts (only needed for development)
 scripts/
 
-# Rust source (included in native library builds)
-rust/
+# Rust build artifacts
+rust/target/
 
 # IDE and editor files
 .vscode/
@@ -53,9 +53,6 @@ example/web/pkg/
 
 # FVM
 .fvm/
-
-# Rust build artifacts
-rust/target/
 
 # Hook build cache
 hook/.dart_tool/

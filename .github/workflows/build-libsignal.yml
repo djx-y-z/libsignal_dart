@@ -53,7 +53,7 @@ jobs:
       - name: Check if release exists
         id: check
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: make check-exists-libsignal-frb-release ARGS="--ci"
 
   # ============================================

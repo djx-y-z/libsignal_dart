@@ -36,6 +36,15 @@
   - PR description shows status of each step (success/failure)
   - Labels added for failed steps (`cargo-toml-failed`, `cargo-lock-failed`, `codegen-failed`, `changelog-needed`)
 
+#### Fixed
+
+- Fix `workflow_run` trigger in `test.yml` — referenced wrong workflow name (`"Build libsignal Native Libraries"` → `"Build libsignal FRB Libraries"`), causing tests to never auto-trigger after build completion
+- Fix env var name in `build-libsignal.yml` check-release step (`GH_TOKEN` → `GITHUB_TOKEN`) — Dart script reads `GITHUB_TOKEN`, not `GH_TOKEN`
+- Fix outdated script filenames in `scripts/README.md` (`check_new_libsignal_version.dart` → `check_new_upstream_version.dart`, `check_exists_libsignal_frb_release.dart` → `check_exists_frb_release.dart`)
+- Fix incorrect env var reference in `CLAUDE.md` inline comment (`GITHUB_TOKEN` → `AI_MODELS_TOKEN`)
+- Upgrade `flutter_lints` in example app from `^5.0.0` to `^6.0.0`
+- Fix `.pubignore` — include Rust source files in published package (only exclude `rust/target/` build artifacts, not entire `rust/` directory); add trailing newline
+
 #### Removed
 
 - Removed legacy scripts with project-specific naming

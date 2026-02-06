@@ -157,7 +157,7 @@ make check-new-libsignal-version              # Check for updates
 make check-new-libsignal-version ARGS="--update"  # Update rust/Cargo.toml
 make rust-update                              # Update Cargo.lock
 make codegen                                  # Regenerate FRB bindings
-make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG (requires GITHUB_TOKEN)
+make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG with AI (requires AI_MODELS_TOKEN)
 ```
 
 ### AI-Powered Changelog
