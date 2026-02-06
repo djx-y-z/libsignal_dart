@@ -50,54 +50,9 @@ ExternalLibrary? tryLoadNativeAsset(String assetId) {
   return null;
 }
 
-/// Find the libsignal package root via package_config.json.
-String? findPackageRoot() {
-  // Try CWD
-  var configFile = File('.dart_tool/package_config.json');
-  // coverage:ignore-start
-  if (!configFile.existsSync()) {
-    // Try script location
-    try {
-      final scriptDir = File(Platform.script.toFilePath()).parent;
-      var dir = scriptDir;
-      for (var i = 0; i < 10; i++) {
-        configFile = File('${dir.path}/.dart_tool/package_config.json');
-        if (configFile.existsSync()) break;
-        final parent = dir.parent;
-        if (parent.path == dir.path) return null;
-        dir = parent;
-      }
-    } catch (_) {
-      return null;
-    }
-  }
-  // coverage:ignore-end
-
-  if (!configFile.existsSync()) return null;
-
-  try {
-    final content =
-        jsonDecode(configFile.readAsStringSync()) as Map<String, dynamic>;
-    final packages = content['packages'] as List<dynamic>?;
-    if (packages == null) return null;
-
-    for (final pkg in packages) {
-      final pkgMap = pkg as Map<String, dynamic>;
-      if (pkgMap['name'] == 'libsignal') {
-        final rootUri = pkgMap['rootUri'] as String?;
-        if (rootUri == null) continue;
-
-        if (rootUri.startsWith('file://')) {
-          return Uri.parse(rootUri).toFilePath(); // coverage:ignore-line
-        } else if (rootUri.startsWith('../')) {
-          final resolved = File('${configFile.parent.path}/$rootUri');
-          return resolved.absolute.path;
-        }
-      }
-    }
-  } catch (_) {}
-
-  return null;
+/// Load library from a file path.
+ExternalLibrary openLibraryFromPath(String path) {
+  return ExternalLibrary.open(path);
 }
 
 /// Get the platform-specific library name.

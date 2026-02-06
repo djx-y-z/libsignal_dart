@@ -165,10 +165,6 @@ Generate a JSON object with THREE fields:
 1. Format: "**libsignal_frb v$frbVersion** — Rust FFI bindings"
 2. Always use exactly this format
 
-## Rules for "frb_highlight":
-1. Format: "**libsignal_frb v$frbVersion** — Rust FFI bindings"
-2. Always use exactly this format
-
 ## Rules for "changed":
 1. Start with "- Update libsignal native library to $version ([release notes](...))
 2. Add 2-5 bullet points summarizing key changes from release notes
