@@ -832,13 +832,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes256GcmSiv(
                 that,
               );
-          final arg1 = cst_encode_list_prim_u_8_loose(ciphertext);
-          final arg2 = cst_encode_list_prim_u_8_loose(nonce);
-          final arg3 = cst_encode_list_prim_u_8_loose(associatedData);
+          var arg1 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg2 = cst_encode_list_prim_u_8_loose(nonce);
+          var arg3 = cst_encode_list_prim_u_8_loose(associatedData);
           return wire.wire__crate__api__crypto__Aes256GcmSiv_decrypt(
             arg0,
             arg1,
@@ -873,13 +873,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes256GcmSiv(
                 that,
               );
-          final arg1 = cst_encode_list_prim_u_8_loose(plaintext);
-          final arg2 = cst_encode_list_prim_u_8_loose(nonce);
-          final arg3 = cst_encode_list_prim_u_8_loose(associatedData);
+          var arg1 = cst_encode_list_prim_u_8_loose(plaintext);
+          var arg2 = cst_encode_list_prim_u_8_loose(nonce);
+          var arg3 = cst_encode_list_prim_u_8_loose(associatedData);
           return wire.wire__crate__api__crypto__Aes256GcmSiv_encrypt(
             arg0,
             arg1,
@@ -909,7 +909,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(key);
+          var arg0 = cst_encode_list_prim_u_8_loose(key);
           return wire.wire__crate__api__crypto__Aes256GcmSiv_new(arg0);
         },
         codec: DcoCodec(
@@ -934,7 +934,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
                 that,
               );
@@ -969,7 +969,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire
               .wire__crate__api__message__DecryptionErrorMessage_deserialize(
                 arg0,
@@ -1001,7 +1001,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
                 that,
               );
@@ -1035,7 +1035,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire
               .wire__crate__api__message__DecryptionErrorMessage_extract_from_serialized_content(
                 arg0,
@@ -1072,10 +1072,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(originalBytes);
-          final arg1 = cst_encode_u_8(messageType);
-          final arg2 = cst_encode_u_64(timestamp);
-          final arg3 = cst_encode_u_32(originalSenderDeviceId);
+          var arg0 = cst_encode_list_prim_u_8_loose(originalBytes);
+          var arg1 = cst_encode_u_8(messageType);
+          var arg2 = cst_encode_u_64(timestamp);
+          var arg3 = cst_encode_u_32(originalSenderDeviceId);
           return wire
               .wire__crate__api__message__DecryptionErrorMessage_for_original_message(
                 arg0,
@@ -1121,7 +1121,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
                 that,
               );
@@ -1154,7 +1154,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
                 that,
               );
@@ -1187,7 +1187,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
                 that,
               );
@@ -1220,7 +1220,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFingerprint(
                 that,
               );
@@ -1251,7 +1251,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFingerprint(
                 that,
               );
@@ -1288,12 +1288,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(iterations);
-          final arg1 = cst_encode_u_32(version);
-          final arg2 = cst_encode_list_prim_u_8_loose(localIdentifier);
-          final arg3 = cst_encode_list_prim_u_8_loose(localPublicKey);
-          final arg4 = cst_encode_list_prim_u_8_loose(remoteIdentifier);
-          final arg5 = cst_encode_list_prim_u_8_loose(remotePublicKey);
+          var arg0 = cst_encode_u_32(iterations);
+          var arg1 = cst_encode_u_32(version);
+          var arg2 = cst_encode_list_prim_u_8_loose(localIdentifier);
+          var arg3 = cst_encode_list_prim_u_8_loose(localPublicKey);
+          var arg4 = cst_encode_list_prim_u_8_loose(remoteIdentifier);
+          var arg5 = cst_encode_list_prim_u_8_loose(remotePublicKey);
           return wire.wire__crate__api__crypto__Fingerprint_new(
             arg0,
             arg1,
@@ -1342,7 +1342,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFingerprint(
                 that,
               );
@@ -1374,7 +1374,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__keys__IdentityKeyPair_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -1403,11 +1403,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 privateKey,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
@@ -1463,7 +1463,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair(
                 that,
               );
@@ -1493,7 +1493,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair(
                 that,
               );
@@ -1523,7 +1523,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair(
                 that,
               );
@@ -1554,11 +1554,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 otherIdentity,
               );
@@ -1591,7 +1591,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair(
                 that,
               );
@@ -1644,7 +1644,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair(
                 that,
               );
@@ -1677,7 +1677,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair(
                 that,
               );
@@ -1710,7 +1710,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1746,13 +1746,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(id);
-          final arg1 = cst_encode_u_64(timestamp);
-          final arg2 =
+          var arg0 = cst_encode_u_32(id);
+          var arg1 = cst_encode_u_64(timestamp);
+          var arg2 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair(
                 keyPair,
               );
-          final arg3 = cst_encode_list_prim_u_8_loose(signature);
+          var arg3 = cst_encode_list_prim_u_8_loose(signature);
           return wire.wire__crate__api__kyber__KyberPreKeyRecord_create(
             arg0,
             arg1,
@@ -1785,7 +1785,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__kyber__KyberPreKeyRecord_deserialize(
             arg0,
           );
@@ -1815,7 +1815,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1848,7 +1848,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1881,7 +1881,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1912,7 +1912,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1942,7 +1942,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -1974,7 +1974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -2006,7 +2006,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord(
                 that,
               );
@@ -2038,7 +2038,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey(
                 that,
               );
@@ -2069,7 +2069,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__kyber__KyberPublicKey_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -2098,11 +2098,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey(
                 other,
               );
@@ -2135,7 +2135,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey(
                 that,
               );
@@ -2165,7 +2165,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey(
                 that,
               );
@@ -2196,7 +2196,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__kyber__KyberSecretKey_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -2224,7 +2224,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey(
                 that,
               );
@@ -2252,7 +2252,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2282,7 +2282,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2310,7 +2310,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2342,7 +2342,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2375,7 +2375,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2418,17 +2418,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(registrationId);
-          final arg1 = cst_encode_u_32(deviceId);
-          final arg2 = cst_encode_opt_box_autoadd_u_32(preKeyId);
-          final arg3 = cst_encode_opt_list_prim_u_8_strict(preKeyPublic);
-          final arg4 = cst_encode_u_32(signedPreKeyId);
-          final arg5 = cst_encode_list_prim_u_8_loose(signedPreKeyPublic);
-          final arg6 = cst_encode_list_prim_u_8_loose(signedPreKeySignature);
-          final arg7 = cst_encode_list_prim_u_8_loose(identityKey);
-          final arg8 = cst_encode_u_32(kyberPreKeyId);
-          final arg9 = cst_encode_list_prim_u_8_loose(kyberPreKeyPublic);
-          final arg10 = cst_encode_list_prim_u_8_loose(kyberPreKeySignature);
+          var arg0 = cst_encode_u_32(registrationId);
+          var arg1 = cst_encode_u_32(deviceId);
+          var arg2 = cst_encode_opt_box_autoadd_u_32(preKeyId);
+          var arg3 = cst_encode_opt_list_prim_u_8_strict(preKeyPublic);
+          var arg4 = cst_encode_u_32(signedPreKeyId);
+          var arg5 = cst_encode_list_prim_u_8_loose(signedPreKeyPublic);
+          var arg6 = cst_encode_list_prim_u_8_loose(signedPreKeySignature);
+          var arg7 = cst_encode_list_prim_u_8_loose(identityKey);
+          var arg8 = cst_encode_u_32(kyberPreKeyId);
+          var arg9 = cst_encode_list_prim_u_8_loose(kyberPreKeyPublic);
+          var arg10 = cst_encode_list_prim_u_8_loose(kyberPreKeySignature);
           return wire.wire__crate__api__bundle__PreKeyBundle_new(
             arg0,
             arg1,
@@ -2490,7 +2490,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2520,7 +2520,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2550,7 +2550,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2580,7 +2580,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2612,7 +2612,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2645,7 +2645,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 that,
               );
@@ -2678,7 +2678,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__prekey__PreKeyRecord_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -2704,7 +2704,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
                 that,
               );
@@ -2733,12 +2733,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(id);
-          final arg1 =
+          var arg0 = cst_encode_u_32(id);
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
-          final arg2 =
+          var arg2 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 privateKey,
               );
@@ -2771,7 +2771,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
                 that,
               );
@@ -2799,7 +2799,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
                 that,
               );
@@ -2827,7 +2827,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
                 that,
               );
@@ -2858,11 +2858,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
@@ -2890,7 +2890,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 that,
               );
@@ -2919,7 +2919,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__keys__PrivateKey_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -2967,7 +2967,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 that,
               );
@@ -2996,7 +2996,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 that,
               );
@@ -3027,11 +3027,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 that,
               );
-          final arg1 = cst_encode_list_prim_u_8_loose(message);
+          var arg1 = cst_encode_list_prim_u_8_loose(message);
           return wire.wire__crate__api__keys__PrivateKey_sign(arg0, arg1);
         },
         codec: DcoCodec(
@@ -3055,7 +3055,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProtocolAddress(
                 that,
               );
@@ -3085,7 +3085,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProtocolAddress(
                 that,
               );
@@ -3116,8 +3116,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_String(name);
-          final arg1 = cst_encode_u_32(deviceId);
+          var arg0 = cst_encode_String(name);
+          var arg1 = cst_encode_u_32(deviceId);
           return wire.wire__crate__api__address__ProtocolAddress_new(
             arg0,
             arg1,
@@ -3146,7 +3146,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
@@ -3175,11 +3175,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 other,
               );
@@ -3207,7 +3207,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__keys__PublicKey_deserialize(arg0);
         },
         codec: DcoCodec(
@@ -3236,11 +3236,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 other,
               );
@@ -3268,7 +3268,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
@@ -3298,7 +3298,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
@@ -3327,12 +3327,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 that,
               );
-          final arg1 = cst_encode_list_prim_u_8_loose(message);
-          final arg2 = cst_encode_list_prim_u_8_loose(signature);
+          var arg1 = cst_encode_list_prim_u_8_loose(message);
+          var arg2 = cst_encode_list_prim_u_8_loose(signature);
           return wire.wire__crate__api__keys__PublicKey_verify(
             arg0,
             arg1,
@@ -3363,7 +3363,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_RefMut_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
@@ -3396,7 +3396,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
@@ -3430,11 +3430,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 key,
               );
@@ -3470,7 +3470,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire.wire__crate__api__session__SessionRecord_deserialize(
             arg0,
           );
@@ -3501,11 +3501,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
-          final arg1 = cst_encode_u_64(nowMillis);
+          var arg1 = cst_encode_u_64(nowMillis);
           return wire
               .wire__crate__api__session__SessionRecord_has_usable_sender_chain(
                 arg0,
@@ -3537,7 +3537,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
@@ -3570,7 +3570,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
@@ -3604,7 +3604,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
                 that,
               );
@@ -3632,7 +3632,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3659,7 +3659,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3690,7 +3690,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3720,7 +3720,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(data);
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
           return wire.wire__crate__api__message__SignalMessage_deserialize(
             arg0,
           );
@@ -3750,7 +3750,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3782,7 +3782,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3812,7 +3812,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3845,7 +3845,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
@@ -3878,13 +3878,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
-          final arg1 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
-          final arg2 = cst_encode_list_prim_u_8_loose(receiverIdentityKey);
-          final arg3 = cst_encode_list_prim_u_8_loose(macKey);
+          var arg1 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
+          var arg2 = cst_encode_list_prim_u_8_loose(receiverIdentityKey);
+          var arg3 = cst_encode_list_prim_u_8_loose(macKey);
           return wire.wire__crate__api__message__SignalMessage_verify_mac(
             arg0,
             arg1,
@@ -3921,7 +3921,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(bytes);
+          var arg0 = cst_encode_list_prim_u_8_loose(bytes);
           return wire
               .wire__crate__api__signed_prekey__SignedPreKeyRecord_deserialize(
                 arg0,
@@ -3953,7 +3953,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -3989,17 +3989,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(id);
-          final arg1 = cst_encode_u_64(timestamp);
-          final arg2 =
+          var arg0 = cst_encode_u_32(id);
+          var arg1 = cst_encode_u_64(timestamp);
+          var arg2 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
-          final arg3 =
+          var arg3 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 privateKey,
               );
-          final arg4 = cst_encode_list_prim_u_8_loose(signature);
+          var arg4 = cst_encode_list_prim_u_8_loose(signature);
           return wire.wire__crate__api__signed_prekey__SignedPreKeyRecord_new(
             arg0,
             arg1,
@@ -4033,7 +4033,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -4067,7 +4067,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -4100,7 +4100,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -4133,7 +4133,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -4166,7 +4166,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
                 that,
               );
@@ -4204,12 +4204,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_String(senderUuid);
-          final arg1 = cst_encode_u_32(senderDeviceId);
-          final arg2 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
-          final arg3 = cst_encode_u_64(expiration);
-          final arg4 = cst_encode_list_prim_u_8_loose(serverCertificate);
-          final arg5 = cst_encode_list_prim_u_8_loose(serverPrivateKey);
+          var arg0 = cst_encode_String(senderUuid);
+          var arg1 = cst_encode_u_32(senderDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
+          var arg3 = cst_encode_u_64(expiration);
+          var arg4 = cst_encode_list_prim_u_8_loose(serverCertificate);
+          var arg5 = cst_encode_list_prim_u_8_loose(serverPrivateKey);
           return wire
               .wire__crate__api__sealed_sender__create_sender_certificate(
                 arg0,
@@ -4265,18 +4265,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(senderName);
-          final arg1 = cst_encode_u_32(senderDeviceId);
-          final arg2 = cst_encode_String(distributionId);
-          final arg3 =
+          var arg0 = cst_encode_String(senderName);
+          var arg1 = cst_encode_u_32(senderDeviceId);
+          var arg2 = cst_encode_String(distributionId);
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSenderKey,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSenderKey,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
@@ -4333,9 +4333,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(keyId);
-          final arg1 = cst_encode_list_prim_u_8_loose(serverPublicKey);
-          final arg2 = cst_encode_list_prim_u_8_loose(trustRootPrivateKey);
+          var arg0 = cst_encode_u_32(keyId);
+          var arg1 = cst_encode_list_prim_u_8_loose(serverPublicKey);
+          var arg2 = cst_encode_list_prim_u_8_loose(trustRootPrivateKey);
           return wire
               .wire__crate__api__sealed_sender__create_server_certificate(
                 arg0,
@@ -4367,7 +4367,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(message);
+          var arg0 = cst_encode_list_prim_u_8_loose(message);
           return wire
               .wire__crate__api__session_cipher__extract_prekey_message_ids(
                 arg0,
@@ -4398,8 +4398,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(fingerprint1);
-          final arg1 = cst_encode_list_prim_u_8_loose(fingerprint2);
+          var arg0 = cst_encode_list_prim_u_8_loose(fingerprint1);
+          var arg1 = cst_encode_list_prim_u_8_loose(fingerprint2);
           return wire.wire__crate__api__crypto__fingerprint_compare(arg0, arg1);
         },
         codec: DcoCodec(
@@ -4432,15 +4432,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(senderName);
-          final arg1 = cst_encode_u_32(senderDeviceId);
-          final arg2 = cst_encode_String(distributionId);
-          final arg3 = cst_encode_list_prim_u_8_loose(ciphertext);
-          final arg4 =
+          var arg0 = cst_encode_String(senderName);
+          var arg1 = cst_encode_u_32(senderDeviceId);
+          var arg2 = cst_encode_String(distributionId);
+          var arg3 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSenderKey,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSenderKey,
               );
@@ -4500,19 +4500,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(senderName);
-          final arg1 = cst_encode_u_32(senderDeviceId);
-          final arg2 = cst_encode_String(distributionId);
-          final arg3 = cst_encode_list_prim_u_8_loose(plaintext);
-          final arg4 =
+          var arg0 = cst_encode_String(senderName);
+          var arg1 = cst_encode_u_32(senderDeviceId);
+          var arg2 = cst_encode_String(distributionId);
+          var arg3 = cst_encode_list_prim_u_8_loose(plaintext);
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSenderKey,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSenderKey,
               );
-          final arg6 =
+          var arg6 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
@@ -4571,10 +4571,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_u_32(outputLength);
-          final arg1 = cst_encode_list_prim_u_8_loose(inputKeyMaterial);
-          final arg2 = cst_encode_list_prim_u_8_loose(salt);
-          final arg3 = cst_encode_list_prim_u_8_loose(info);
+          var arg0 = cst_encode_u_32(outputLength);
+          var arg1 = cst_encode_list_prim_u_8_loose(inputKeyMaterial);
+          var arg2 = cst_encode_list_prim_u_8_loose(salt);
+          var arg3 = cst_encode_list_prim_u_8_loose(info);
           return wire.wire__crate__api__crypto__hkdf_derive(
             arg0,
             arg1,
@@ -4606,11 +4606,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 privateKey,
               );
@@ -4645,15 +4645,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 =
+          var arg0 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 publicKey,
               );
-          final arg1 =
+          var arg1 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey(
                 privateKey,
               );
-          final arg2 =
+          var arg2 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey(
                 otherIdentity,
               );
@@ -4688,7 +4688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_String(libraryPath);
+          var arg0 = cst_encode_String(libraryPath);
           return wire.wire__crate__api__init__init_libsignal(arg0);
         },
         codec: DcoCodec(
@@ -4747,48 +4747,46 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(remoteName);
-          final arg1 = cst_encode_u_32(remoteDeviceId);
-          final arg2 = cst_encode_list_prim_u_8_loose(ciphertext);
-          final arg3 =
+          var arg0 = cst_encode_String(remoteName);
+          var arg1 = cst_encode_u_32(remoteDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          final arg7 =
+          var arg7 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
-          final arg8 =
+          var arg8 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSignedPreKey,
               );
-          final arg9 =
+          var arg9 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadPreKey,
               );
-          final arg10 =
-              cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
-                removePreKey,
-              );
-          final arg11 =
+          var arg10 = cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
+            removePreKey,
+          );
+          var arg11 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadKyberPreKey,
               );
-          final arg12 =
-              cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
-                markKyberPreKeyUsed,
-              );
+          var arg12 = cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
+            markKyberPreKeyUsed,
+          );
           return wire
               .wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks(
                 port_,
@@ -4868,25 +4866,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(remoteName);
-          final arg1 = cst_encode_u_32(remoteDeviceId);
-          final arg2 = cst_encode_list_prim_u_8_loose(ciphertext);
-          final arg3 =
+          var arg0 = cst_encode_String(remoteName);
+          var arg1 = cst_encode_u_32(remoteDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          final arg7 =
+          var arg7 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
@@ -4953,22 +4951,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(remoteName);
-          final arg1 = cst_encode_u_32(remoteDeviceId);
-          final arg2 = cst_encode_list_prim_u_8_loose(plaintext);
-          final arg3 =
+          var arg0 = cst_encode_String(remoteName);
+          var arg1 = cst_encode_u_32(remoteDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(plaintext);
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
           return wire
@@ -5031,28 +5029,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(remoteName);
-          final arg1 = cst_encode_u_32(remoteDeviceId);
-          final arg2 =
+          var arg0 = cst_encode_String(remoteName);
+          var arg1 = cst_encode_u_32(remoteDeviceId);
+          var arg2 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 bundle,
               );
-          final arg3 =
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          final arg7 =
+          var arg7 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
@@ -5120,15 +5118,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(senderName);
-          final arg1 = cst_encode_u_32(senderDeviceId);
-          final arg2 = cst_encode_String(distributionId);
-          final arg3 = cst_encode_list_prim_u_8_loose(distributionMessage);
-          final arg4 =
+          var arg0 = cst_encode_String(senderName);
+          var arg1 = cst_encode_u_32(senderDeviceId);
+          var arg2 = cst_encode_String(distributionId);
+          var arg3 = cst_encode_list_prim_u_8_loose(distributionMessage);
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSenderKey,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSenderKey,
               );
@@ -5194,37 +5192,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_list_prim_u_8_loose(ciphertext);
-          final arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
-          final arg2 = cst_encode_u_64(timestamp);
-          final arg3 =
+          var arg0 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
+          var arg2 = cst_encode_u_64(timestamp);
+          var arg3 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg4 =
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          final arg7 =
+          var arg7 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
-          final arg8 =
+          var arg8 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSignedPreKey,
               );
-          final arg9 =
+          var arg9 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadPreKey,
               );
-          final arg10 =
+          var arg10 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadKyberPreKey,
               );
@@ -5302,23 +5300,23 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
-          final arg0 = cst_encode_String(recipientName);
-          final arg1 = cst_encode_u_32(recipientDeviceId);
-          final arg2 = cst_encode_list_prim_u_8_loose(plaintext);
-          final arg3 = cst_encode_list_prim_u_8_loose(senderCertificate);
-          final arg4 =
+          var arg0 = cst_encode_String(recipientName);
+          var arg1 = cst_encode_u_32(recipientDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(plaintext);
+          var arg3 = cst_encode_list_prim_u_8_loose(senderCertificate);
+          var arg4 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          final arg5 =
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          final arg6 =
+          var arg6 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          final arg7 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg7 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
           return wire
@@ -5378,7 +5376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(certificate);
+          var arg0 = cst_encode_list_prim_u_8_loose(certificate);
           return wire
               .wire__crate__api__sealed_sender__sender_certificate_get_expiration(
                 arg0,
@@ -5409,7 +5407,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(certificate);
+          var arg0 = cst_encode_list_prim_u_8_loose(certificate);
           return wire
               .wire__crate__api__sealed_sender__sender_certificate_get_key(
                 arg0,
@@ -5439,7 +5437,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(certificate);
+          var arg0 = cst_encode_list_prim_u_8_loose(certificate);
           return wire
               .wire__crate__api__sealed_sender__sender_certificate_get_sender_device_id(
                 arg0,
@@ -5471,7 +5469,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(certificate);
+          var arg0 = cst_encode_list_prim_u_8_loose(certificate);
           return wire
               .wire__crate__api__sealed_sender__sender_certificate_get_sender_name(
                 arg0,
@@ -5504,9 +5502,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
-          final arg0 = cst_encode_list_prim_u_8_loose(certificate);
-          final arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
-          final arg2 = cst_encode_u_64(timestamp);
+          var arg0 = cst_encode_list_prim_u_8_loose(certificate);
+          var arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
+          var arg2 = cst_encode_u_64(timestamp);
           return wire
               .wire__crate__api__sealed_sender__validate_sender_certificate(
                 arg0,
@@ -6650,7 +6648,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_String(deserializer);
+    var inner = sse_decode_String(deserializer);
     return AnyhowException(inner);
   }
 
@@ -7053,7 +7051,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   Object sse_decode_DartOpaque(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_isize(deserializer);
+    var inner = sse_decode_isize(deserializer);
     return decodeDartOpaque(inner, generalizedFrbRustBinding);
   }
 
@@ -7252,7 +7250,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   String sse_decode_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final inner = sse_decode_list_prim_u_8_strict(deserializer);
+    var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
   }
 
@@ -7274,10 +7272,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_distributionMessage = sse_decode_list_prim_u_8_strict(
-      deserializer,
-    );
-    final var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_distributionMessage = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
     return CreateSenderKeyDistributionResult(
       distributionMessage: var_distributionMessage,
       senderKeyRecord: var_senderKeyRecord,
@@ -7287,8 +7283,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   EncryptResult sse_decode_encrypt_result(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_messageType = sse_decode_u_8(deserializer);
-    final var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_messageType = sse_decode_u_8(deserializer);
+    var var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
     return EncryptResult(
       messageType: var_messageType,
       ciphertext: var_ciphertext,
@@ -7300,8 +7296,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_plaintext = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_plaintext = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
     return GroupDecryptResult(
       plaintext: var_plaintext,
       senderKeyRecord: var_senderKeyRecord,
@@ -7313,8 +7309,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_senderKeyRecord = sse_decode_list_prim_u_8_strict(deserializer);
     return GroupEncryptResult(
       ciphertext: var_ciphertext,
       senderKeyRecord: var_senderKeyRecord,
@@ -7336,14 +7332,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final len_ = sse_decode_i_32(deserializer);
+    var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
   }
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final len_ = sse_decode_i_32(deserializer);
+    var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
   }
 
@@ -7374,9 +7370,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_preKeyId = sse_decode_opt_box_autoadd_u_32(deserializer);
-    final var_signedPreKeyId = sse_decode_u_32(deserializer);
-    final var_kyberPreKeyId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_preKeyId = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_signedPreKeyId = sse_decode_u_32(deserializer);
+    var var_kyberPreKeyId = sse_decode_opt_box_autoadd_u_32(deserializer);
     return PreKeyMessageIds(
       preKeyId: var_preKeyId,
       signedPreKeyId: var_signedPreKeyId,
@@ -7389,12 +7385,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_plaintext = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_senderName = sse_decode_String(deserializer);
-    final var_senderDeviceId = sse_decode_u_32(deserializer);
-    final var_senderIdentityKey = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_preKeyToRemove = sse_decode_opt_box_autoadd_u_32(deserializer);
+    var var_plaintext = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_senderName = sse_decode_String(deserializer);
+    var var_senderDeviceId = sse_decode_u_32(deserializer);
+    var var_senderIdentityKey = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_preKeyToRemove = sse_decode_opt_box_autoadd_u_32(deserializer);
     return SealedSenderDecryptResult(
       plaintext: var_plaintext,
       senderName: var_senderName,
@@ -7410,8 +7406,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseDeserializer deserializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    final var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
-    final var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_ciphertext = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
     return SealedSenderEncryptResult(
       ciphertext: var_ciphertext,
       sessionRecord: var_sessionRecord,

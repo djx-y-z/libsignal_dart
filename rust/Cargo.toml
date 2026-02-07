@@ -1,6 +1,6 @@
 [package]
 name = "libsignal_frb"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2024"
 rust-version = "1.88"
 description = "Flutter Rust Bridge bindings for libsignal"
@@ -19,9 +19,9 @@ log = "0.4"
 rand = "0.9"
 
 # Official Signal Protocol libraries (AGPL-3.0)
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.0" }
-libsignal-core = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.0" }
-signal-crypto = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.0" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.1" }
+libsignal-core = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.1" }
+signal-crypto = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.1" }
 
 # Cryptographic primitives
 hkdf = "0.12"

@@ -2602,8 +2602,8 @@ class RustLibWire implements BaseWire {
       );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__init__init_libsignal(String library_path) =>
-      wasmModule.wire__crate__api__init__init_libsignal(library_path);
+  wire__crate__api__init__init_libsignal(String _library_path) =>
+      wasmModule.wire__crate__api__init__init_libsignal(_library_path);
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__init__is_libsignal_initialized() =>
@@ -3547,7 +3547,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__init__init_libsignal(String library_path);
+  wire__crate__api__init__init_libsignal(String _library_path);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__init__is_libsignal_initialized();
