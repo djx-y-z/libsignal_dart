@@ -374,7 +374,17 @@ make format-check
 # 4. Dry run
 make publish-dry-run
 
-# 5. Create tag and push (CI will publish)
-git tag vX.Y.Z
+# 5. Create annotated tag and push (CI will publish)
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin main
 git push origin vX.Y.Z
 ```
+
+## Claude Commands
+
+Quick-action slash commands (invoke with `/project:<command>` in Claude Code):
+
+| Command | Description |
+|---------|-------------|
+| `prepare-release` | Prepare a new version for publication |
+| `update-template` | Update copier template to latest version |

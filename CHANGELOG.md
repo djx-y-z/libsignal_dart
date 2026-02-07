@@ -1,3 +1,14 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- Adopt copier template v2.2.0
+  - Publishing checklist now uses annotated tags (`git tag -a`) instead of lightweight tags
+  - Added `git push origin main` step before pushing tag in publishing checklist
+  - Added "Claude Commands" section to CLAUDE.md with available slash commands (`prepare-release`, `update-template`)
+
 ## [2.3.0] - 2026-02-07
 
 ### For Users
