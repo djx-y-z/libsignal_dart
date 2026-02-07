@@ -9,6 +9,12 @@
   - Added `git push origin main` step before pushing tag in publishing checklist
   - Added "Claude Commands" section to CLAUDE.md with available slash commands (`prepare-release`, `update-template`)
 
+#### Fixed
+
+- Restore 100% test coverage by adding `coverage:ignore` markers to untestable platform-specific code in `platform_io.dart`
+  - AOT mode library loading path (unreachable during `dart test` which runs in JIT mode)
+  - `openLibraryFromPath()` function (only called with custom `libraryPath`, already ignored at call site)
+
 ## [2.3.0] - 2026-02-07
 
 ### For Users
