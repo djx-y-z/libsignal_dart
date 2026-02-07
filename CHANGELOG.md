@@ -23,10 +23,12 @@
 
 #### Changed
 
-- Adopt copier template (`copier-dart-frb-wrapper`) v1.9.0 for project structure
+- Adopt copier template (`copier-dart-frb-wrapper`) v2.0.1 for project structure
   - Standardized scripts naming: `check_new_upstream_version.dart`, `check_exists_frb_release.dart`
   - Unified common utilities in `scripts/src/common.dart`
   - Renamed workflow: `build-libsignal-frb.yml` → `build-libsignal.yml`
+  - Configurable `version_tag_prefix` for upstream version tag handling
+  - Improved version normalization in `check_updates.dart` — supports configurable tag prefix instead of hardcoded `v` stripping
 - Renamed `make update` → `make rust-update` to avoid ambiguity
 - Refactored build hook (`hook/build.dart`)
   - Added SHA256 checksum verification for WASM downloads (supply chain security)

@@ -128,7 +128,7 @@ This will:
 Check `rust/Cargo.toml`:
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.0" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.1" }
 ```
 
 ### Step 2: Update Version

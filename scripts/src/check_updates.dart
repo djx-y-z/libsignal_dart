@@ -12,6 +12,9 @@ import 'common.dart';
 /// GitHub repository for upstream libsignal releases.
 const _upstreamRepo = 'signalapp/libsignal';
 
+/// Tag prefix used by the upstream repo for libsignal releases.
+const _tagPrefix = 'v';
+
 /// Result of checking for updates.
 class UpdateCheckResult {
   const UpdateCheckResult({
@@ -124,17 +127,30 @@ Future<UpdateCheckResult> checkForUpdates({
   );
 }
 
-/// Normalize version by removing 'v' prefix for comparison.
+/// Normalize version by removing the tag prefix for comparison.
+///
+/// Strips the configured tag prefix ('v') and falls back
+/// to stripping a plain 'v'/'V' prefix if the tag prefix doesn't match.
 String _normalizeVersion(String version) {
+  if (version.startsWith(_tagPrefix)) {
+    return version.substring(_tagPrefix.length);
+  }
+  if (version.startsWith('v') || version.startsWith('V')) {
+    return version.substring(1);
+  }
   return version;
 }
 
 /// Check if a version is a prerelease.
+///
+/// Normalizes the version first to strip the tag prefix, then
+/// checks for prerelease indicators like `-alpha`, `-beta`, `-rc`.
 bool _isPrerelease(String version) {
-  return version.contains('-') ||
-      version.contains('alpha') ||
-      version.contains('beta') ||
-      version.contains('rc');
+  final normalized = _normalizeVersion(version);
+  return normalized.contains('-') ||
+      normalized.contains('alpha') ||
+      normalized.contains('beta') ||
+      normalized.contains('rc');
 }
 
 /// Fetch the latest release from GitHub API.
@@ -177,7 +193,7 @@ Future<List<String>> updateVersionFiles({
 }) async {
   final packageDir = getPackageDir();
   final updatedFiles = <String>[];
-  // 1. Update rust/Cargo.toml (all upstream dependency tags)
+  // 1. Update rust/Cargo.toml (upstream dependency tags)
   if (!silent) logStep('Updating rust/Cargo.toml...');
   final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
   if (!cargoFile.existsSync()) {
