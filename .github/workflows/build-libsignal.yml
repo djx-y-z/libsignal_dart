@@ -404,7 +404,8 @@ jobs:
 
           Pre-built Flutter Rust Bridge native libraries for all supported platforms.
           **These archives are downloaded automatically by \`hook/build.dart\` during Dart/Flutter builds.**
-          Based on libsignal ${NATIVE_VERSION}.
+          
+          **Based on [libsignal ${NATIVE_VERSION}](https://github.com/signalapp/libsignal/releases/tag/${NATIVE_VERSION})**
 
           ### Platforms
 
