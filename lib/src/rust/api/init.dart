@@ -8,14 +8,14 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 /// Initialize the libsignal library.
 ///
-/// With the pure Rust implementation using libsignal-protocol crate,
-/// this function is no longer required but kept for API compatibility.
-/// The library_path parameter is ignored.
+/// This function is called from Dart during library initialization.
+/// The library_path parameter is typically used for loading external
+/// dependencies if needed.
 void initLibsignal({required String libraryPath}) =>
     RustLib.instance.api.crateApiInitInitLibsignal(libraryPath: libraryPath);
 
 /// Check if the libsignal library is initialized.
 ///
-/// With the pure Rust implementation, this always returns true.
+/// Returns true if the library has been successfully initialized.
 bool isLibsignalInitialized() =>
     RustLib.instance.api.crateApiInitIsLibsignalInitialized();

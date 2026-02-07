@@ -1,5 +1,24 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.1** — latest upstream native library
+- **libsignal_frb v1.0.3** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.87.1 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.1))
+  - `CallLinkRootKey` now allows variable sizing; call link epochs removed from backup
+  - Test infrastructure improvements (reusable session fuzz test support)
+  - Note: These changes do not affect this library's API
+- Update `libsignal_frb` (Rust crate) to v1.0.3
+
+#### Security
+
+- Updated `bytes` dependency to v1.11.1 to address [RUSTSEC-2026-0009](https://rustsec.org/advisories/RUSTSEC-2026-0009)
+
 ### For Contributors
 
 #### Changed
@@ -71,21 +90,6 @@
   - `scripts/get_android_min_sdk.dart` — reads `minSdk` from `android/build.gradle`
   - `scripts/get_flutter_version.dart` — reads Flutter version from `.fvmrc`
 - Analyzer exclusions for `hook/**`, `scripts/**`, `example/**`, `example_cli/**` (separate packages, not part of main analysis)
-
-
-### For Users
-
-#### ✨ Highlights
-
-- **libsignal v0.87.1** — latest upstream native library
-- **libsignal_frb v1.0.2** — Rust FFI bindings
-
-#### Changed
-
-- Update libsignal native library to v0.87.1 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.1))
-  - New: `accountExists()` API exposed to client libraries
-  - New: gRPC support for username hash lookup
-  - Note: These changes improve functionality and maintain compatibility with existing methods
 
 ## [2.2.1] - 2026-02-03
 
