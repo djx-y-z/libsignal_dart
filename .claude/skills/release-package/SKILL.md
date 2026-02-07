@@ -176,22 +176,6 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z"
 git push origin vX.Y.Z
 ```
 
-## Full Automation
-
-Use the `/project:prepare-release` command to automate the entire flow:
-
-```
-/project:prepare-release 1.2.3
-```
-
-This will:
-1. Update `pubspec.yaml` version
-2. Update `CHANGELOG.md` (rename `[Unreleased]`, add comparison links)
-3. Run `make publish-dry-run` to validate
-4. Commit the changes
-5. Create an annotated tag `vX.Y.Z`
-6. Push the commit and tag to origin
-
 ## Resources
 
 - [pub.dev Publishing Guide](https://dart.dev/tools/pub/publishing)

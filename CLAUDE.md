@@ -380,11 +380,11 @@ git push origin main
 git push origin vX.Y.Z
 ```
 
-## Claude Commands
+## Claude Skills
 
-Quick-action slash commands (invoke with `/project:<command>` in Claude Code):
+Claude Code skills available in this project (invoke with `/<skill>` or used automatically by Claude):
 
-| Command | Description |
-|---------|-------------|
-| `prepare-release` | Prepare a new version for publication |
+| Skill | Description |
+|-------|-------------|
+| `release-package` | Prepare a new version for publication to pub.dev |
 | `update-template` | Update copier template to latest version |
