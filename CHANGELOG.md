@@ -4,11 +4,20 @@
 
 #### Changed
 
-- Adopt copier template v2.2.0 → v2.2.3
+- Adopt copier template v2.2.0 → v2.3.2
   - Publishing checklist now uses annotated tags (`git tag -a`) instead of lightweight tags
   - Added `git push origin main` step before pushing tag in publishing checklist
   - Replaced "Claude Commands" section with "Claude Skills" section in CLAUDE.md
   - Removed redundant `prepare-release` and `update-template` Claude commands (functionality covered by Claude skills)
+  - Updated platform support table in README: SDK 24+, iOS 13.0+, macOS 10.15+, WASM label
+  - Improved `frb-patterns` Claude skill with additional patterns:
+    - Added anti-pattern example to Constructor-Style API Pattern section
+    - Added Transparent Struct Pattern section
+    - Added Bridging Sync Traits to Async Callbacks section with `block_on` example
+    - Added Adapter Pattern documentation for bridging DartFn callbacks to upstream traits
+    - Added `block_on` panics troubleshooting entry
+    - Added "When to regenerate" checklist to Regenerating Bindings section
+    - Added No Threading on WASM warning
 
 #### Fixed
 

@@ -3,7 +3,7 @@ name: frb-patterns
 description: Flutter Rust Bridge patterns and best practices for libsignal. Use when writing Rust API code, adding new bindings, implementing DartFn callbacks, or troubleshooting FRB issues.
 ---
 
-# FRB Patterns for libsignal_dart
+# FRB Patterns for libsignal
 
 Patterns and templates for writing correct Flutter Rust Bridge code in this project.
 
@@ -42,7 +42,7 @@ impl PrivateKey {
     }
 }
 
-// ❌ WRONG - generates privateKeyGenerate() in Dart
+// ❌ WRONG - generates privateKeyGenerate() as a top-level function in Dart
 pub fn private_key_generate() -> Result<PrivateKey, String> { ... }
 ```
 
@@ -71,6 +71,27 @@ impl PrivateKey {
 }
 ```
 
+FRB manages the lifecycle automatically - no `dispose()` needed in Dart.
+
+## Transparent Struct Pattern
+
+For data types that cross FFI as plain values:
+
+```rust
+pub struct MyResult {
+    pub data: Vec<u8>,
+    pub count: u32,
+}
+
+pub enum MyEnum {
+    OptionA,
+    OptionB,
+    OptionC,
+}
+```
+
+FRB generates Dart classes/enums with constructors automatically.
+
 ## DartFn Callbacks for Store Operations
 
 For operations requiring Dart store callbacks:
@@ -91,6 +112,21 @@ pub async fn process_prekey_bundle_with_callbacks(
     // Implementation uses callbacks to access Dart stores
 }
 ```
+
+### Bridging Sync Traits to Async Callbacks
+
+If the upstream crate has sync trait methods but DartFn is async, use `futures::executor::block_on()`:
+
+```rust
+// In Cargo.toml: futures = "0.3"
+
+fn sync_trait_method(&self) -> Result<(), Error> {
+    futures::executor::block_on((self.callback)(data));
+    Ok(())
+}
+```
+
+This works because FRB runs Rust functions on separate threads, not the Dart isolate.
 
 ### Adapter Pattern for libsignal Traits
 
@@ -126,6 +162,8 @@ where
     }
 }
 ```
+
+This lets Dart-side store implementations satisfy Rust trait requirements via callbacks.
 
 ## Sync vs Async Functions
 
@@ -174,6 +212,7 @@ FRB automatically converts `Result<T, String>` to Dart exceptions.
 - No manual `dispose()` needed in Dart
 - No finalizers to register
 - No double-free concerns
+- Opaque types are dropped when Dart GC collects them
 
 ```dart
 // Dart - no cleanup needed!
@@ -226,6 +265,11 @@ make codegen
 
 This runs `flutter_rust_bridge_codegen generate` using `flutter_rust_bridge.yaml` config.
 
+**When to regenerate:**
+- After modifying any `pub fn` or `pub async fn` in `rust/src/api/`
+- After changing struct/enum definitions
+- After updating upstream crate version (if API changed)
+
 ## Files to Reference
 
 | Pattern | Reference File |
@@ -256,6 +300,10 @@ load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
 
 Use `Vec<u8>` for complex types instead of trying to pass libsignal types directly.
 
+### `block_on` panics
+
+`futures::executor::block_on()` requires a non-async context. This works because FRB runs Rust functions on separate threads. Do NOT call storage callbacks from an async Rust context without `block_on`.
+
 ## Web/WASM Considerations
 
 FRB automatically handles web platform differences, but keep in mind:
@@ -268,7 +316,7 @@ Configuration in `rust/.cargo/config.toml`:
 rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
 ```
 
-### No threading on WASM
+### No Threading on WASM
 - Avoid `parking_lot::Mutex` in hot paths on web
 - Use single-threaded alternatives when possible
 - FRB handles this automatically for most cases
