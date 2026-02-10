@@ -1,4 +1,10 @@
-## [Unreleased]
+## [2.3.1] - 2026-02-11
+
+### For Users
+
+#### Changed
+
+- Remove `flutter` SDK constraint from `environment` — pub.dev now displays both Dart and Flutter SDK badges ([#14](https://github.com/djx-y-z/libsignal_dart/pull/14), thanks [@ahnaineh](https://github.com/ahnaineh))
 
 ### For Contributors
 
@@ -458,7 +464,8 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v2.3.1...HEAD
+[2.3.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.3.0...v2.3.1
 [2.3.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.1...v2.3.0
 [2.2.1]: https://github.com/djx-y-z/libsignal_dart/compare/v2.2.0...v2.2.1
 [2.2.0]: https://github.com/djx-y-z/libsignal_dart/compare/v2.1.1...v2.2.0
