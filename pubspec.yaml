@@ -25,6 +25,13 @@ dev_dependencies:
   # Required by flutter_rust_bridge_codegen
   ffigen: ^20.1.1
 
+platforms: 
+   android: 
+   ios: 
+   linux: 
+   macos: 
+   windows: 
+   web:
 
 topics:
   - rust
