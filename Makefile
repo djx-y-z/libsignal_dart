@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates rust-audit rust-check doc publish publish-dry-run rust-update update-changelog
+.PHONY: help setup setup-fvm setup-rust-tools setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-check doc publish publish-dry-run rust-update update-changelog
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -50,6 +50,8 @@ help:
 	@echo "                                        Example: make check-new-libsignal-version ARGS=\"--update\""
 	@echo "    make check-exists-libsignal-frb-release - Check if FRB release exists on GitHub"
 	@echo "    make check-template-updates       - Check for new copier template version"
+	@echo "    make check-targets                - Check deployment target consistency (iOS/macOS/Android)"
+	@echo "                                        Example: make check-targets ARGS=\"--ios --set 14.0\""
 	@echo "    make rust-update                  - Update Cargo.lock (cargo update)"
 	@echo "    make update-changelog             - Update CHANGELOG.md with AI"
 	@echo "                                        Example: make update-changelog ARGS=\"--version v1.0.0\""
@@ -239,16 +241,16 @@ rust-audit:
 # =============================================================================
 
 check-new-libsignal-version:
-	@touch .skip_libsignal_hook
-	@$(FVM) dart run scripts/check_new_upstream_version.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+	@$(FVM) dart scripts/check_new_upstream_version.dart $(ARGS)
 
 check-exists-libsignal-frb-release:
-	@touch .skip_libsignal_hook
-	@$(FVM) dart run scripts/check_exists_frb_release.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+	@$(FVM) dart scripts/check_exists_frb_release.dart $(ARGS)
 
 check-template-updates:
-	@touch .skip_libsignal_hook
-	@$(FVM) dart run scripts/check_template_updates.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+	@$(FVM) dart scripts/check_template_updates.dart $(ARGS)
+
+check-targets:
+	@$(FVM) dart scripts/check_deployment_targets.dart $(ARGS)
 
 rust-update:
 	@echo "Updating Cargo.lock..."
@@ -257,8 +259,7 @@ rust-update:
 	@echo "Cargo.lock updated!"
 
 update-changelog:
-	@touch .skip_libsignal_hook
-	@$(FVM) dart run scripts/update_changelog.dart $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
+	@$(FVM) dart scripts/update_changelog.dart $(ARGS)
 
 # =============================================================================
 # Dart Quality
@@ -302,11 +303,11 @@ clean:
 	@$(FVM) dart pub get --no-example; ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
 version:
-	@$(FVM) dart run scripts/get_version.dart
+	@$(FVM) dart scripts/get_version.dart
 
 # Internal target for getting version in scripts (outputs only the value)
 get-version:
-	@$(FVM) dart run scripts/get_version.dart --field version
+	@$(FVM) dart scripts/get_version.dart --field version
 
 # =============================================================================
 # Publishing
