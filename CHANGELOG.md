@@ -13,6 +13,21 @@
   - Replaced `dart run scripts/` with `dart scripts/` in Makefile commands, removing `.skip_libsignal_hook` workaround (scripts only use `dart:` imports, so `dart run` build hooks are unnecessary)
   - Fixed WASM build hook: local builds now take priority over cached/downloaded files, avoiding stale content hash mismatches
 
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.2** — latest upstream native library
+- **libsignal_frb v1.0.3** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.87.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.2))
+  - Improved test infrastructure with reusable session fuzz test support
+  - Enhanced performance and reliability in various components
+  - Note: These changes do not affect this library's API
+
 ## [2.3.1] - 2026-02-11
 
 ### For Users
