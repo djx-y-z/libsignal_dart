@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.2** — security hardening for Diffie-Hellman key agreements
+- **libsignal_frb v1.1.0** — Rust FFI bindings
+
+#### Security
+
+- Update libsignal native library to v0.87.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.2))
+  - Added validation of X25519 Diffie-Hellman shared secrets — rejects all-zero outputs per [RFC 7748 §6.1](https://www.rfc-editor.org/rfc/rfc7748.html#section-6.1), preventing potential use of predictable shared secrets from malicious low-order public keys
+  - Enabled overflow checks for release builds
+  - Updated BoringSSL to signalapp/boring v4.21.1
+  - Note: No changes to this library's public API
+
 ### For Contributors
 
 #### Changed
