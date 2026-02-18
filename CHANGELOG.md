@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.2** — security hardening for Diffie-Hellman key agreements
+- **libsignal_frb v1.1.0** — Rust FFI bindings
+
+#### Security
+
+- Update libsignal native library to v0.87.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.2))
+  - Added validation of X25519 Diffie-Hellman shared secrets — rejects all-zero outputs per [RFC 7748 §6.1](https://www.rfc-editor.org/rfc/rfc7748.html#section-6.1), preventing potential use of predictable shared secrets from malicious low-order public keys
+  - Enabled overflow checks for release builds
+  - Updated BoringSSL to signalapp/boring v4.21.1
+  - Note: No changes to this library's public API
+
 ### For Contributors
 
 #### Changed
@@ -12,21 +27,6 @@
   - Added "Setting up Coverage Badge" and "Setting up pub.dev Publishing" sections to CONTRIBUTING.md
   - Replaced `dart run scripts/` with `dart scripts/` in Makefile commands, removing `.skip_libsignal_hook` workaround (scripts only use `dart:` imports, so `dart run` build hooks are unnecessary)
   - Fixed WASM build hook: local builds now take priority over cached/downloaded files, avoiding stale content hash mismatches
-
-
-### For Users
-
-#### ✨ Highlights
-
-- **libsignal v0.87.2** — latest upstream native library
-- **libsignal_frb v1.0.3** — Rust FFI bindings
-
-#### Changed
-
-- Update libsignal native library to v0.87.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.2))
-  - Improved test infrastructure with reusable session fuzz test support
-  - Enhanced performance and reliability in various components
-  - Note: These changes do not affect this library's API
 
 ## [2.3.1] - 2026-02-11
 
