@@ -4,15 +4,16 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.87.4** — security fixes and improvements
-- **libsignal_frb v1.1.0** — Rust FFI bindings
+- **libsignal v0.87.4** — updated BoringSSL and internal improvements
+- **libsignal_frb v1.2.0** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.87.4 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.4))
-  - Enhanced security for Diffie-Hellman key agreements with improved validation
-  - Updated BoringSSL to signalapp/boring v4.21.1
-  - Note: These changes do not affect this library's API
+  - Updated `boring` dependency to v5.0.1 (bundled BoringSSL update)
+  - Added RemoteConfig for accountExists gRPC
+  - keytrans: removed search-with-version fallback from `monitor_and_search`
+  - Note: These changes do not affect this library's public API
 
 ## [2.4.0] - 2026-02-18
 
