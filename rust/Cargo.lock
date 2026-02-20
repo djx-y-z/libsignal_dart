@@ -93,9 +93,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.101"
+version = "1.0.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5f0e0fee31ef5ed1ba1316088939cea399010ed7731dba877ed44aeb407a75ea"
+checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "assert_matches"
@@ -173,9 +173,9 @@ checksum = "832133bbabbbaa9fbdba793456a2827627a7d2b8fb96032fa1e7666d7895832b"
 
 [[package]]
 name = "bumpalo"
-version = "3.19.1"
+version = "3.20.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5dd9dc738b7a8311c7ade152424974d8115f2cdad61e8dab8dac9f2362298510"
+checksum = "5d20789868f4b01b2f2caec9f5c4e0213b41e3e5702a50157d699ae31ced2fcb"
 
 [[package]]
 name = "bytemuck"
@@ -1028,7 +1028,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.87.2#12d487ffb94c9542c005082efd92b7a0926b9f5d"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.87.4#38514bdc8acaaffbccd5c96515c68deb2019abe0"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1046,7 +1046,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.87.2#12d487ffb94c9542c005082efd92b7a0926b9f5d"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.87.4#38514bdc8acaaffbccd5c96515c68deb2019abe0"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1083,7 +1083,7 @@ dependencies = [
 
 [[package]]
 name = "libsignal_frb"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "aes-gcm-siv",
  "async-trait",
@@ -1668,7 +1668,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.87.2#12d487ffb94c9542c005082efd92b7a0926b9f5d"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.87.4#38514bdc8acaaffbccd5c96515c68deb2019abe0"
 dependencies = [
  "aes",
  "cbc",
@@ -1738,9 +1738,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.116"
+version = "2.0.117"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3df424c70518695237746f84cede799c9c58fcb37450d7b23716568cc8bc69cb"
+checksum = "e665b8803e7b1d2a727f4023456bbbbe74da67099c585258af0ad9c5013b9b99"
 dependencies = [
  "proc-macro2",
  "quote",
