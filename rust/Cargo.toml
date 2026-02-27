@@ -51,15 +51,18 @@ parking_lot = "0.12"
 getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 # getrandom 0.3.x (used by libsignal-core, uuid)
 getrandom = { version = "0.3", features = ["wasm_js"] }
-wasm-bindgen = "0.2"
-wasm-bindgen-futures = "0.4"
+# Pinned: wasm-bindgen >=0.2.109 introduced generic type params on js-sys types
+# (Array<T>, Object<T>) which breaks flutter_rust_bridge 2.11.1.
+# Remove pin when FRB is updated to support the new wasm-bindgen API.
+wasm-bindgen = ">=0.2, <0.2.109"
+wasm-bindgen-futures = ">=0.4, <0.4.59"
 
 # For WASM: Use js_sys for console/timing
 [target.'cfg(target_arch = "wasm32")'.dependencies.js-sys]
-version = "0.3"
+version = ">=0.3, <0.3.86"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
-version = "0.3"
+version = ">=0.3, <0.3.86"
 features = ["console", "Window", "Performance"]
 
 # Release profile optimizations
