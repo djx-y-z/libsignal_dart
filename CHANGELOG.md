@@ -4,14 +4,15 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.87.5** — updated BoringSSL and improvements
-- **libsignal_frb v1.2.0** — Rust FFI bindings
+- **libsignal v0.87.5** — updated post-quantum cryptography dependencies
+- **libsignal_frb v1.3.0** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.87.5 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.5))
-  - Updated `boring` dependency to v5.0.2 (bundled BoringSSL update)
-  - Internal improvements and optimizations
+  - Updated SPQR (SparsePostQuantumRatchet) to v1.5.0
+  - Updated hpke-rs to v0.6.0 and libcrux-ml-kem to v0.0.7
+  - Added `zeroize` support for HPKE Rng in signal-crypto
   - Note: These changes do not affect this library's public API
 
 ## [2.5.0] - 2026-02-21
