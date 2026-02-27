@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.87.5** — updated BoringSSL and improvements
+- **libsignal_frb v1.2.0** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.87.5 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.87.5))
+  - Updated `boring` dependency to v5.0.2 (bundled BoringSSL update)
+  - Internal improvements and optimizations
+  - Note: These changes do not affect this library's public API
+
 ## [2.5.0] - 2026-02-21
 
 ### For Users
