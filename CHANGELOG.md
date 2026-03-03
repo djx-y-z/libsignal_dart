@@ -4,15 +4,14 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.88.0** — performance improvements and updates
-- **libsignal_frb v1.3.0** — Rust FFI bindings
+- **libsignal v0.88.0** — internal bridge refactoring, no protocol changes
+- **libsignal_frb v1.4.0** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.88.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.88.0))
-  - Enhanced performance and stability across various modules
-  - Improved error handling in cryptographic operations
-  - Note: These changes do not affect this library's public API
+  - Internal refactoring: consolidated SenderKeyStore bridge implementations
+  - No changes to `libsignal-protocol` crate API — this library's public API is unaffected
 
 ## [2.6.0] - 2026-02-27
 
