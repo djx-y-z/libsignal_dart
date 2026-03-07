@@ -5,7 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.88.1** — internal bridge refactoring
-- **libsignal_frb v1.4.0** — Rust FFI bindings
+- **libsignal_frb v1.4.1** — Rust FFI bindings
 
 #### Changed
 
