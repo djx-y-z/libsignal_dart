@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.88.3** — internal improvements and updates
+- **libsignal_frb v1.4.1** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.88.3 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.88.3))
+  - Internal improvements to SenderKeyStore and related modules
+  - Enhanced performance and stability across various components
+  - Note: These changes do not affect this library's public API
+
 ## [2.7.1] - 2026-03-07
 
 ### For Users
