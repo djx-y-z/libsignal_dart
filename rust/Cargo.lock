@@ -869,9 +869,9 @@ dependencies = [
 
 [[package]]
 name = "itoa"
-version = "1.0.17"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92ecc6618181def0457392ccd0ee51198e065e016d1d527a7ac1b6dc7c1f09d2"
+checksum = "8f42a60cbdf9a97f5d2305f08a87dc4e09308d1276d28c869c684d7777685682"
 
 [[package]]
 name = "js-sys"
@@ -1041,11 +1041,12 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.0#a47ba487a7ad0fcf9b014e9bb48a15b6a12a8aad"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
  "displaydoc",
+ "libsignal-debug",
  "log",
  "rand",
  "sha2",
@@ -1057,9 +1058,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "libsignal-debug"
+version = "0.89.1"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.0#a47ba487a7ad0fcf9b014e9bb48a15b6a12a8aad"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1079,6 +1088,7 @@ dependencies = [
  "itertools",
  "libcrux-ml-kem",
  "libsignal-core",
+ "libsignal-debug",
  "log",
  "prost",
  "prost-build",
@@ -1687,7 +1697,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.0#a47ba487a7ad0fcf9b014e9bb48a15b6a12a8aad"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
 dependencies = [
  "aes",
  "cbc",
@@ -1700,6 +1710,7 @@ dependencies = [
  "hpke-rs",
  "hpke-rs-crypto",
  "libsignal-core",
+ "libsignal-debug",
  "rand_chacha",
  "rand_core 0.9.5",
  "sha1",
@@ -2147,18 +2158,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.42"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2578b716f8a7a858b7f02d5bd870c14bf4ddbbcf3a4c05414ba6503640505e3"
+checksum = "efbb2a062be311f2ba113ce66f697a4dc589f85e78a4aea276200804cea0ed87"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.42"
+version = "0.8.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e6cc098ea4d3bd6246687de65af3f920c430e236bee1e3bf2e441463f08a02f"
+checksum = "0e8bc7269b54418e7aeeef514aa68f8690b8c0489a06b0136e5f57c4c5ccab89"
 dependencies = [
  "proc-macro2",
  "quote",
