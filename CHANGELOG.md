@@ -4,14 +4,16 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.89.2** — patch release with dependency updates
-- **libsignal_frb v1.4.4** — Rust FFI bindings
+- **libsignal v0.89.2** — dependency updates and networking improvements
+- **libsignal_frb v1.4.5** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.89.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.89.2))
-  - Patch release with internal dependency updates
-  - No public API changes
+  - Updated libcrux and SPQR (post-quantum) dependencies
+  - Updated rustls-webpki and tokio-util dependencies
+  - Networking improvements: service-level backoff, request cancellation
+  - Note: No changes to `libsignal-protocol` crate API — this library's public API is unaffected
 
 ## [2.8.1] - 2026-03-20
 
