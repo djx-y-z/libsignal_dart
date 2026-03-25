@@ -808,12 +808,12 @@ dependencies = [
 
 [[package]]
 name = "hpke-rs"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "762ad77634765543485d098af3d352b2ffca88370b4eb3c329a088a3c708832a"
+checksum = "b6ad6a58eb3e0ee30be8bfc7a9770ae98adcfa1d9bc820a5847732ce84f70837"
 dependencies = [
  "hpke-rs-crypto",
- "libcrux-sha3 0.0.6",
+ "libcrux-sha3",
  "log",
  "rand_core 0.9.5",
  "subtle",
@@ -822,9 +822,9 @@ dependencies = [
 
 [[package]]
 name = "hpke-rs-crypto"
-version = "0.6.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "46a198e2bf992951574b61616f1a27521adf032c8db1db06f4cec423c32cf99d"
+checksum = "0a73a99d9008010d73289f41335a3f6e14fb8c04eaf60e9111b450463b1bbc7f"
 dependencies = [
  "rand_core 0.9.5",
  "zeroize",
@@ -923,16 +923,6 @@ dependencies = [
 
 [[package]]
 name = "libcrux-intrinsics"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0aa4779454e853d1de200cd12f19a8185aac47d99a5ec404cea3295c943d48f1"
-dependencies = [
- "core-models",
- "hax-lib",
-]
-
-[[package]]
-name = "libcrux-intrinsics"
 version = "0.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1b5db005ff8001e026b73a6842ee81bbef8ec5ff0e1915a67ae65fd2a9fafa5"
@@ -953,16 +943,16 @@ dependencies = [
 
 [[package]]
 name = "libcrux-ml-kem"
-version = "0.0.7"
+version = "0.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aca7de713c6dddcf7aaf76e8ef9dc0097c8d7ce23a8eadf04c8761734714e184"
+checksum = "a14ab3e477de9df6ee1273a114018ff62c4996ca9220070c4e5cb1743f94a67d"
 dependencies = [
  "hax-lib",
- "libcrux-intrinsics 0.0.6",
+ "libcrux-intrinsics",
  "libcrux-platform",
  "libcrux-secrets",
- "libcrux-sha3 0.0.7",
- "libcrux-traits 0.0.6",
+ "libcrux-sha3",
+ "libcrux-traits",
 ]
 
 [[package]]
@@ -991,41 +981,19 @@ checksum = "e9d253473f259fc74a280c43f29c464f7e374abdf28b4942234dc707f529d4b7"
 dependencies = [
  "libcrux-hacl-rs",
  "libcrux-macros",
- "libcrux-traits 0.0.6",
+ "libcrux-traits",
 ]
 
 [[package]]
 name = "libcrux-sha3"
-version = "0.0.6"
+version = "0.0.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3dabce2795479bd7294f853f7966a678cadf7a26d3d29f61cf15f5123e7ba4f"
+checksum = "b1ae0b7d0e1cc4793a609fd0ff2ca3b3a3fabae523770c619a3d4bc86417b0d7"
 dependencies = [
  "hax-lib",
- "libcrux-intrinsics 0.0.5",
+ "libcrux-intrinsics",
  "libcrux-platform",
- "libcrux-traits 0.0.5",
-]
-
-[[package]]
-name = "libcrux-sha3"
-version = "0.0.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c50f6e04a184511b782c5cc1eb6a227c6d36f2c935e93d698655a93a99696b5"
-dependencies = [
- "hax-lib",
- "libcrux-intrinsics 0.0.6",
- "libcrux-platform",
- "libcrux-traits 0.0.6",
-]
-
-[[package]]
-name = "libcrux-traits"
-version = "0.0.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "695ff2fb97627e4d57315a2fdfbfe50df1c80c6ef7d91ba34216169bd6f41c00"
-dependencies = [
- "libcrux-secrets",
- "rand",
+ "libcrux-traits",
 ]
 
 [[package]]
@@ -1041,7 +1009,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1059,8 +1027,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.89.1"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
+version = "0.89.2"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
 dependencies = [
  "cfg-if",
 ]
@@ -1068,7 +1036,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1697,7 +1665,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.1#a5e76674882a89bac1ed3f4a982120652966d21e"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
 dependencies = [
  "aes",
  "cbc",
@@ -1740,8 +1708,8 @@ checksum = "19f58d7b0190c7f12df7e8be6b79767a0836059159811b869d5ab55721fe14d0"
 
 [[package]]
 name = "spqr"
-version = "1.5.0"
-source = "git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.0#63d9b93634bf543845376eb57b8a33ef29337aa8"
+version = "1.5.1"
+source = "git+https://github.com/signalapp/SparsePostQuantumRatchet.git?tag=v1.5.1#f2589fef855c10f39d72634dab3d14654dd410bf"
 dependencies = [
  "cpufeatures",
  "curve25519-dalek",
@@ -1831,18 +1799,18 @@ dependencies = [
 
 [[package]]
 name = "toml_datetime"
-version = "1.0.1+spec-1.1.0"
+version = "1.1.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b320e741db58cac564e26c607d3cc1fdc4a88fd36c879568c07856ed83ff3e9"
+checksum = "97251a7c317e03ad83774a8752a7e81fb6067740609f75ea2b585b569a59198f"
 dependencies = [
  "serde_core",
 ]
 
 [[package]]
 name = "toml_edit"
-version = "0.25.5+spec-1.1.0"
+version = "0.25.8+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ca1a40644a28bce036923f6a431df0b34236949d111cc07cb6dca830c9ef2e1"
+checksum = "16bff38f1d86c47f9ff0647e6838d7bb362522bdf44006c7068c2b1e606f1f3c"
 dependencies = [
  "indexmap",
  "toml_datetime",
@@ -1852,9 +1820,9 @@ dependencies = [
 
 [[package]]
 name = "toml_parser"
-version = "1.0.10+spec-1.1.0"
+version = "1.1.0+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7df25b4befd31c4816df190124375d5a20c6b6921e2cad937316de3fccd63420"
+checksum = "2334f11ee363607eb04df9b8fc8a13ca1715a72ba8662a26ac285c98aabb4011"
 dependencies = [
  "winnow",
 ]
