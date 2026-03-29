@@ -206,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.57"
+version = "1.2.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a0dd1ca384932ff3641c8718a02769f1698e7563dc6974ffd03346116310423"
+checksum = "e1e928d4b69e3077709075a938a05ffbedfa53a84c8f766efbf8220bb1ff60e1"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -1009,7 +1009,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.90.0#0a58e80bbc312a5a628c3cf8a65cde5f2c6384d1"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1027,8 +1027,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.89.2"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
+version = "0.90.0"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.90.0#0a58e80bbc312a5a628c3cf8a65cde5f2c6384d1"
 dependencies = [
  "cfg-if",
 ]
@@ -1036,7 +1036,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.90.0#0a58e80bbc312a5a628c3cf8a65cde5f2c6384d1"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1665,7 +1665,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.89.2#da00edb1ecfea026adcaebfc92782db4810d9c83"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.90.0#0a58e80bbc312a5a628c3cf8a65cde5f2c6384d1"
 dependencies = [
  "aes",
  "cbc",
@@ -1857,9 +1857,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.22.0"
+version = "1.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a68d3c8f01c0cfa54a75291d83601161799e4a89a39e0929f4b0354d88757a37"
+checksum = "5ac8b6f42ead25368cf5b098aeb3dc8a1a2c05a3eee8a9a1a68c640edbfc79d9"
 dependencies = [
  "getrandom 0.4.2",
  "js-sys",
@@ -2126,18 +2126,18 @@ dependencies = [
 
 [[package]]
 name = "zerocopy"
-version = "0.8.47"
+version = "0.8.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "efbb2a062be311f2ba113ce66f697a4dc589f85e78a4aea276200804cea0ed87"
+checksum = "eed437bf9d6692032087e337407a86f04cd8d6a16a37199ed57949d415bd68e9"
 dependencies = [
  "zerocopy-derive",
 ]
 
 [[package]]
 name = "zerocopy-derive"
-version = "0.8.47"
+version = "0.8.48"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0e8bc7269b54418e7aeeef514aa68f8690b8c0489a06b0136e5f57c4c5ccab89"
+checksum = "70e3cd084b1788766f53af483dd21f93881ff30d7320490ec3ef7526d203bad4"
 dependencies = [
  "proc-macro2",
  "quote",
