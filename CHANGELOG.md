@@ -13,6 +13,9 @@
   - `CiphertextMessage` enum now derives `Clone` (previously only `Debug`)
   - Networking improvements: authenticated WebSocket message sending, key transparency API simplification
   - Note: These changes do not affect this library's public API
+- Update Flutter Rust Bridge to v2.12.0 ([fix](https://github.com/fzyzcjy/flutter_rust_bridge/pull/3010))
+  - Fixes web build compatibility with wasm-bindgen >=0.2.109
+  - Removed version pins for wasm-bindgen, js-sys, and web-sys
 
 ## [2.8.2] - 2026-03-25
 
