@@ -4,14 +4,14 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.90.0** — dependency updates and improvements
-- **libsignal_frb v1.4.5** — Rust FFI bindings
+- **libsignal v0.90.0** — `CiphertextMessage` now implements `Clone`
+- **libsignal_frb v1.5.0** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.90.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.90.0))
-  - Updated libcrux and SPQR (post-quantum) dependencies
-  - Improved networking features: service-level backoff and request cancellation
+  - `CiphertextMessage` enum now derives `Clone` (previously only `Debug`)
+  - Networking improvements: authenticated WebSocket message sending, key transparency API simplification
   - Note: These changes do not affect this library's public API
 
 ## [2.8.2] - 2026-03-25
