@@ -41,6 +41,7 @@ class SealedSenderDecryptionResult {
 /// Example usage:
 /// ```dart
 /// final cipher = SealedSenderCipher(
+///   localAddress: myAddress,
 ///   sessionStore: mySessionStore,
 ///   identityKeyStore: myIdentityKeyStore,
 ///   preKeyStore: myPreKeyStore,
@@ -66,22 +67,28 @@ class SealedSenderCipher {
   /// Creates a new SealedSenderCipher with the given stores.
   ///
   /// All stores are required for full functionality:
+  /// - [localAddress] our protocol address (UUID + device ID)
   /// - [sessionStore] for session state
   /// - [identityKeyStore] for identity keys
   /// - [preKeyStore] for one-time pre-keys (needed for decrypting pre-key messages)
   /// - [signedPreKeyStore] for signed pre-keys (needed for decrypting pre-key messages)
   /// - [kyberPreKeyStore] for Kyber pre-keys (needed for decrypting pre-key messages)
   SealedSenderCipher({
+    required ProtocolAddress localAddress,
     required SessionStore sessionStore,
     required IdentityKeyStore identityKeyStore,
     required PreKeyStore preKeyStore,
     required SignedPreKeyStore signedPreKeyStore,
     required KyberPreKeyStore kyberPreKeyStore,
-  }) : _sessionStore = sessionStore,
+  }) : _localAddress = localAddress,
+       _sessionStore = sessionStore,
        _identityKeyStore = identityKeyStore,
        _preKeyStore = preKeyStore,
        _signedPreKeyStore = signedPreKeyStore,
        _kyberPreKeyStore = kyberPreKeyStore;
+
+  /// Our local protocol address.
+  final ProtocolAddress _localAddress;
 
   /// The session store for persisting session state.
   final SessionStore _sessionStore;
@@ -162,6 +169,8 @@ class SealedSenderCipher {
       ciphertext: ciphertext,
       trustRoot: trustRoot,
       timestamp: BigInt.from(timestamp),
+      localName: _localAddress.name(),
+      localDeviceId: _localAddress.deviceId(),
       loadSession: (name, deviceId) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);
         final session = await _sessionStore.loadSession(addr);

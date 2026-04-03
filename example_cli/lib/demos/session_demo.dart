@@ -144,6 +144,7 @@ Future<void> runSessionDemo() async {
 
   // 7. Create session ciphers
   final aliceCipher = SessionCipher(
+    localAddress: aliceAddress,
     sessionStore: aliceSessionStore,
     identityKeyStore: aliceIdentityStore,
     preKeyStore: alicePreKeyStore,
@@ -151,6 +152,7 @@ Future<void> runSessionDemo() async {
     kyberPreKeyStore: aliceKyberPreKeyStore,
   );
   final bobCipher = SessionCipher(
+    localAddress: bobAddress,
     sessionStore: bobSessionStore,
     identityKeyStore: bobIdentityStore,
     preKeyStore: bobPreKeyStore,

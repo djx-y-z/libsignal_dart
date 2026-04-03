@@ -3853,6 +3853,8 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     remote_name: impl CstDecode<String>,
     remote_device_id: impl CstDecode<u32>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     ciphertext: impl CstDecode<Vec<u8>>,
     load_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
@@ -3874,6 +3876,8 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
         move || {
             let api_remote_name = remote_name.cst_decode();
             let api_remote_device_id = remote_device_id.cst_decode();
+            let api_local_name = local_name.cst_decode();
+            let api_local_device_id = local_device_id.cst_decode();
             let api_ciphertext = ciphertext.cst_decode();
             let api_load_session =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -3918,6 +3922,8 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
                             crate::api::session_cipher::message_decrypt_prekey_with_callbacks(
                                 api_remote_name,
                                 api_remote_device_id,
+                                api_local_name,
+                                api_local_device_id,
                                 api_ciphertext,
                                 api_load_session,
                                 api_store_session,
@@ -4006,6 +4012,8 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     remote_name: impl CstDecode<String>,
     remote_device_id: impl CstDecode<u32>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     plaintext: impl CstDecode<Vec<u8>>,
     load_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
@@ -4021,6 +4029,8 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
         move || {
             let api_remote_name = remote_name.cst_decode();
             let api_remote_device_id = remote_device_id.cst_decode();
+            let api_local_name = local_name.cst_decode();
+            let api_local_device_id = local_device_id.cst_decode();
             let api_plaintext = plaintext.cst_decode();
             let api_load_session =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -4043,6 +4053,8 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
                         let output_ok = crate::api::session_cipher::message_encrypt_with_callbacks(
                             api_remote_name,
                             api_remote_device_id,
+                            api_local_name,
+                            api_local_device_id,
                             api_plaintext,
                             api_load_session,
                             api_store_session,
@@ -4162,6 +4174,8 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
     ciphertext: impl CstDecode<Vec<u8>>,
     trust_root: impl CstDecode<Vec<u8>>,
     timestamp: impl CstDecode<u64>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     load_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
@@ -4181,6 +4195,8 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
             let api_ciphertext = ciphertext.cst_decode();
             let api_trust_root = trust_root.cst_decode();
             let api_timestamp = timestamp.cst_decode();
+            let api_local_name = local_name.cst_decode();
+            let api_local_device_id = local_device_id.cst_decode();
             let api_load_session =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     load_session.cst_decode(),
@@ -4220,6 +4236,8 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                                 api_ciphertext,
                                 api_trust_root,
                                 api_timestamp,
+                                api_local_name,
+                                api_local_device_id,
                                 api_load_session,
                                 api_store_session,
                                 api_get_identity_key_pair,
@@ -7783,6 +7801,8 @@ mod io {
         port_: i64,
         remote_name: *mut wire_cst_list_prim_u_8_strict,
         remote_device_id: u32,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         ciphertext: *mut wire_cst_list_prim_u_8_loose,
         load_session: *const std::ffi::c_void,
         store_session: *const std::ffi::c_void,
@@ -7799,6 +7819,8 @@ mod io {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             ciphertext,
             load_session,
             store_session,
@@ -7843,6 +7865,8 @@ mod io {
         port_: i64,
         remote_name: *mut wire_cst_list_prim_u_8_strict,
         remote_device_id: u32,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         plaintext: *mut wire_cst_list_prim_u_8_loose,
         load_session: *const std::ffi::c_void,
         store_session: *const std::ffi::c_void,
@@ -7853,6 +7877,8 @@ mod io {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             plaintext,
             load_session,
             store_session,
@@ -7913,6 +7939,8 @@ mod io {
         ciphertext: *mut wire_cst_list_prim_u_8_loose,
         trust_root: *mut wire_cst_list_prim_u_8_loose,
         timestamp: u64,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         load_session: *const std::ffi::c_void,
         store_session: *const std::ffi::c_void,
         get_identity_key_pair: *const std::ffi::c_void,
@@ -7927,6 +7955,8 @@ mod io {
             ciphertext,
             trust_root,
             timestamp,
+            local_name,
+            local_device_id,
             load_session,
             store_session,
             get_identity_key_pair,
@@ -10092,6 +10122,8 @@ mod web {
         port_: flutter_rust_bridge::for_generated::MessagePort,
         remote_name: String,
         remote_device_id: u32,
+        local_name: String,
+        local_device_id: u32,
         ciphertext: Box<[u8]>,
         load_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -10108,6 +10140,8 @@ mod web {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             ciphertext,
             load_session,
             store_session,
@@ -10152,6 +10186,8 @@ mod web {
         port_: flutter_rust_bridge::for_generated::MessagePort,
         remote_name: String,
         remote_device_id: u32,
+        local_name: String,
+        local_device_id: u32,
         plaintext: Box<[u8]>,
         load_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -10162,6 +10198,8 @@ mod web {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             plaintext,
             load_session,
             store_session,
@@ -10222,6 +10260,8 @@ mod web {
         ciphertext: Box<[u8]>,
         trust_root: Box<[u8]>,
         timestamp: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        local_name: String,
+        local_device_id: u32,
         load_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -10236,6 +10276,8 @@ mod web {
             ciphertext,
             trust_root,
             timestamp,
+            local_name,
+            local_device_id,
             load_session,
             store_session,
             get_identity_key_pair,

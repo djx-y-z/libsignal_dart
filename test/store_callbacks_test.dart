@@ -292,6 +292,8 @@ void main() {
       final encrypted1 = await messageEncryptWithCallbacks(
         remoteName: 'bob',
         remoteDeviceId: 1,
+        localName: 'alice',
+        localDeviceId: 1,
         plaintext: utf8.encode(message1),
         loadSession: alice.loadSession,
         storeSession: alice.storeSession,
@@ -311,6 +313,8 @@ void main() {
       final decrypted1 = await messageDecryptPrekeyWithCallbacks(
         remoteName: 'alice',
         remoteDeviceId: 1,
+        localName: 'bob',
+        localDeviceId: 1,
         ciphertext: encrypted1.ciphertext.toList(),
         loadSession: bob.loadSession,
         storeSession: bob.storeSession,
@@ -336,6 +340,8 @@ void main() {
       final encrypted2 = await messageEncryptWithCallbacks(
         remoteName: 'alice',
         remoteDeviceId: 1,
+        localName: 'bob',
+        localDeviceId: 1,
         plaintext: utf8.encode(message2),
         loadSession: bob.loadSession,
         storeSession: bob.storeSession,
@@ -371,6 +377,8 @@ void main() {
       final encrypted3 = await messageEncryptWithCallbacks(
         remoteName: 'bob',
         remoteDeviceId: 1,
+        localName: 'alice',
+        localDeviceId: 1,
         plaintext: utf8.encode(message3),
         loadSession: alice.loadSession,
         storeSession: alice.storeSession,

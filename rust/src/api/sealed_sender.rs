@@ -321,11 +321,15 @@ pub struct SealedSenderDecryptResult {
 /// - `ciphertext` - The sealed sender ciphertext
 /// - `trust_root` - Server's trust root public key
 /// - `timestamp` - Current timestamp for certificate validation
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 #[allow(clippy::too_many_arguments)]
 pub async fn sealed_sender_decrypt_with_callbacks(
     ciphertext: Vec<u8>,
     trust_root: Vec<u8>,
     timestamp: u64,
+    local_name: String,
+    local_device_id: u32,
     // SessionStore callbacks
     load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
@@ -347,6 +351,8 @@ pub async fn sealed_sender_decrypt_with_callbacks(
         &ciphertext,
         &trust_root,
         timestamp,
+        &local_name,
+        local_device_id,
         &identity_key_pair_bytes,
         local_registration_id,
         &load_session,
@@ -379,6 +385,8 @@ async fn sealed_sender_decrypt_inner<LoadSessionFn, LoadSignedPreKeyFn, LoadPreK
     ciphertext: &[u8],
     trust_root: &[u8],
     timestamp: u64,
+    local_name: &str,
+    local_device_id: u32,
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
     load_session: &LoadSessionFn,
@@ -447,6 +455,11 @@ where
     let message_bytes = usmc.contents()
         .map_err(|e| format!("Failed to get contents from USMC: {}", e))?;
 
+    let local_address = ProtocolAddress::new(
+        local_name.to_string(),
+        local_device_id.try_into().map_err(|_| "Invalid local device ID")?,
+    );
+
     let mut pre_key_to_remove: Option<u32> = None;
 
     let plaintext = if msg_type == CiphertextMessageType::PreKey {
@@ -497,6 +510,7 @@ where
             libsignal_protocol::message_decrypt_prekey(
                 &prekey_message,
                 &sender_address,
+                &local_address,
                 &mut session_store,
                 &mut identity_store,
                 &mut prekey_store,

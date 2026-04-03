@@ -146,10 +146,14 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
 /// - `ciphertext` - The sealed sender ciphertext
 /// - `trust_root` - Server's trust root public key
 /// - `timestamp` - Current timestamp for certificate validation
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   required List<int> ciphertext,
   required List<int> trustRoot,
   required BigInt timestamp,
+  required String localName,
+  required int localDeviceId,
   required FutureOr<Uint8List?> Function(String, int) loadSession,
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
@@ -162,6 +166,8 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   ciphertext: ciphertext,
   trustRoot: trustRoot,
   timestamp: timestamp,
+  localName: localName,
+  localDeviceId: localDeviceId,
   loadSession: loadSession,
   storeSession: storeSession,
   getIdentityKeyPair: getIdentityKeyPair,

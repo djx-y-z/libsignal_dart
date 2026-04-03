@@ -525,6 +525,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
       // 7. Create ciphers
       final aliceCipher = SessionCipher(
+        localAddress: aliceAddress,
         sessionStore: aliceSessionStore,
         identityKeyStore: aliceIdentityStore,
         preKeyStore: alicePreKeyStore,
@@ -532,6 +533,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         kyberPreKeyStore: aliceKyberPreKeyStore,
       );
       final bobCipher = SessionCipher(
+        localAddress: bobAddress,
         sessionStore: bobSessionStore,
         identityKeyStore: bobIdentityStore,
         preKeyStore: bobPreKeyStore,

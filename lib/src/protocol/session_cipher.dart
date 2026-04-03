@@ -23,6 +23,7 @@ import 'ciphertext_message.dart';
 /// Example usage:
 /// ```dart
 /// final cipher = SessionCipher(
+///   localAddress: myAddress,
 ///   sessionStore: mySessionStore,
 ///   identityKeyStore: myIdentityKeyStore,
 ///   preKeyStore: myPreKeyStore,
@@ -40,22 +41,28 @@ class SessionCipher {
   /// Creates a new SessionCipher with the given stores.
   ///
   /// All stores are required for full functionality:
+  /// - [localAddress] our protocol address (UUID + device ID)
   /// - [sessionStore] for session state
   /// - [identityKeyStore] for identity keys
   /// - [preKeyStore] for one-time pre-keys (needed for decrypting pre-key messages)
   /// - [signedPreKeyStore] for signed pre-keys (needed for decrypting pre-key messages)
   /// - [kyberPreKeyStore] for Kyber pre-keys (needed for decrypting pre-key messages)
   SessionCipher({
+    required ProtocolAddress localAddress,
     required SessionStore sessionStore,
     required IdentityKeyStore identityKeyStore,
     required PreKeyStore preKeyStore,
     required SignedPreKeyStore signedPreKeyStore,
     required KyberPreKeyStore kyberPreKeyStore,
-  }) : _sessionStore = sessionStore,
+  }) : _localAddress = localAddress,
+       _sessionStore = sessionStore,
        _identityKeyStore = identityKeyStore,
        _preKeyStore = preKeyStore,
        _signedPreKeyStore = signedPreKeyStore,
        _kyberPreKeyStore = kyberPreKeyStore;
+
+  /// Our local protocol address.
+  final ProtocolAddress _localAddress;
 
   /// The session store for persisting session state.
   final SessionStore _sessionStore;
@@ -89,6 +96,8 @@ class SessionCipher {
     final result = await rust.messageEncryptWithCallbacks(
       remoteName: remoteAddress.name(),
       remoteDeviceId: remoteAddress.deviceId(),
+      localName: _localAddress.name(),
+      localDeviceId: _localAddress.deviceId(),
       plaintext: plaintext.toList(),
       loadSession: (name, deviceId) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);
@@ -204,6 +213,8 @@ class SessionCipher {
     final plaintext = await rust.messageDecryptPrekeyWithCallbacks(
       remoteName: remoteAddress.name(),
       remoteDeviceId: remoteAddress.deviceId(),
+      localName: _localAddress.name(),
+      localDeviceId: _localAddress.deviceId(),
       ciphertext: ciphertext.toList(),
       loadSession: (name, deviceId) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);
