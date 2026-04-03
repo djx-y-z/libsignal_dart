@@ -4,15 +4,17 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.91.0** — dependency updates and improvements
-- **libsignal_frb v1.5.0** — Rust FFI bindings
+- **libsignal v0.91.0** — message encryption now includes sender/recipient addresses in MAC for misdirection protection
+- **libsignal_frb v2.0.0** — Rust FFI bindings updated with new `localAddress` parameter (breaking)
 
 #### Changed
 
 - Update libsignal native library to v0.91.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.91.0))
-  - Improved performance and stability across various modules
-  - Updated dependencies for enhanced security
-  - Note: These changes do not affect this library's public API
+  - **Breaking:** `SessionCipher` and `SealedSenderCipher` constructors now require `localAddress` parameter
+  - **Breaking:** `messageEncryptWithCallbacks` and `messageDecryptPrekeyWithCallbacks` now require `localName` and `localDeviceId` parameters
+  - **Breaking:** `sealedSenderDecryptWithCallbacks` now requires `localName` and `localDeviceId` parameters
+  - 1:1 message encryption and decryption now includes sender/recipient addresses in the message MAC to prevent message misdirection attacks
+  - Backward compatible with messages from older clients that don't include addresses
 
 ## [2.9.0] - 2026-03-29
 

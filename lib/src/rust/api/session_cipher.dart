@@ -22,9 +22,15 @@ PreKeyMessageIds extractPrekeyMessageIds({required List<int> message}) =>
 /// - `store_session(name, device_id, record)` - Store the updated session record
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 Future<EncryptResult> messageEncryptWithCallbacks({
   required String remoteName,
   required int remoteDeviceId,
+  required String localName,
+  required int localDeviceId,
   required List<int> plaintext,
   required FutureOr<Uint8List?> Function(String, int) loadSession,
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -33,6 +39,8 @@ Future<EncryptResult> messageEncryptWithCallbacks({
 }) => RustLib.instance.api.crateApiSessionCipherMessageEncryptWithCallbacks(
   remoteName: remoteName,
   remoteDeviceId: remoteDeviceId,
+  localName: localName,
+  localDeviceId: localDeviceId,
   plaintext: plaintext,
   loadSession: loadSession,
   storeSession: storeSession,
@@ -82,9 +90,15 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load a Kyber pre-key by ID (may return None)
 /// - `mark_kyber_pre_key_used(id)` - Mark a Kyber pre-key as used
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 Future<Uint8List> messageDecryptPrekeyWithCallbacks({
   required String remoteName,
   required int remoteDeviceId,
+  required String localName,
+  required int localDeviceId,
   required List<int> ciphertext,
   required FutureOr<Uint8List?> Function(String, int) loadSession,
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -100,6 +114,8 @@ Future<Uint8List> messageDecryptPrekeyWithCallbacks({
     RustLib.instance.api.crateApiSessionCipherMessageDecryptPrekeyWithCallbacks(
       remoteName: remoteName,
       remoteDeviceId: remoteDeviceId,
+      localName: localName,
+      localDeviceId: localDeviceId,
       ciphertext: ciphertext,
       loadSession: loadSession,
       storeSession: storeSession,

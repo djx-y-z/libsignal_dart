@@ -4192,6 +4192,8 @@ class RustLibWire implements BaseWire {
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> remote_name,
     int remote_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
     ffi.Pointer<ffi.Void> load_session,
     ffi.Pointer<ffi.Void> store_session,
@@ -4208,6 +4210,8 @@ class RustLibWire implements BaseWire {
       port_,
       remote_name,
       remote_device_id,
+      local_name,
+      local_device_id,
       ciphertext,
       load_session,
       store_session,
@@ -4227,6 +4231,8 @@ class RustLibWire implements BaseWire {
         ffi.NativeFunction<
           ffi.Void Function(
             ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
@@ -4249,6 +4255,8 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacksPtr
           .asFunction<
             void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
@@ -4328,6 +4336,8 @@ class RustLibWire implements BaseWire {
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> remote_name,
     int remote_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> plaintext,
     ffi.Pointer<ffi.Void> load_session,
     ffi.Pointer<ffi.Void> store_session,
@@ -4338,6 +4348,8 @@ class RustLibWire implements BaseWire {
       port_,
       remote_name,
       remote_device_id,
+      local_name,
+      local_device_id,
       plaintext,
       load_session,
       store_session,
@@ -4351,6 +4363,8 @@ class RustLibWire implements BaseWire {
         ffi.NativeFunction<
           ffi.Void Function(
             ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
@@ -4367,6 +4381,8 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__session_cipher__message_encrypt_with_callbacksPtr
           .asFunction<
             void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
@@ -4492,6 +4508,8 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> trust_root,
     int timestamp,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     ffi.Pointer<ffi.Void> load_session,
     ffi.Pointer<ffi.Void> store_session,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
@@ -4506,6 +4524,8 @@ class RustLibWire implements BaseWire {
       ciphertext,
       trust_root,
       timestamp,
+      local_name,
+      local_device_id,
       load_session,
       store_session,
       get_identity_key_pair,
@@ -4525,6 +4545,8 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Uint64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4545,6 +4567,8 @@ class RustLibWire implements BaseWire {
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,

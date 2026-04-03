@@ -81,6 +81,8 @@ void main() {
         final encrypted = await messageEncryptWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           plaintext: utf8.encode(message),
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -132,6 +134,8 @@ void main() {
         final encrypted = await messageEncryptWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           plaintext: utf8.encode('Test message'),
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -188,6 +192,8 @@ void main() {
         final encrypted = await messageEncryptWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           plaintext: utf8.encode('Test'),
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -233,6 +239,8 @@ void main() {
         final encrypted = await messageEncryptWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           plaintext: utf8.encode('Test'),
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],

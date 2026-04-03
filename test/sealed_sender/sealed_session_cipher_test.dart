@@ -145,6 +145,7 @@ void main() {
 
         // Create cipher for Alice
         final aliceCipher = SealedSenderCipher(
+          localAddress: aliceAddress,
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
           preKeyStore: alicePreKeyStore,
@@ -165,6 +166,7 @@ void main() {
 
         // Create cipher for Bob
         final bobCipher = SealedSenderCipher(
+          localAddress: bobAddress,
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
           preKeyStore: bobPreKeyStore,
@@ -212,6 +214,7 @@ void main() {
 
         // Create cipher for Alice
         final aliceCipher = SealedSenderCipher(
+          localAddress: aliceAddress,
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
           preKeyStore: alicePreKeyStore,
@@ -235,6 +238,8 @@ void main() {
           ciphertext: ciphertext.toList(),
           trustRoot: trustRootPublicKey.serialize().toList(),
           timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          localName: bobAddress.name(),
+          localDeviceId: bobAddress.deviceId(),
           loadSession: (name, deviceId) async {
             final addr = ProtocolAddress(name: name, deviceId: deviceId);
             final session = await bobSessionStore.loadSession(addr);
@@ -296,6 +301,7 @@ void main() {
 
         // Create cipher for Alice
         final aliceCipher = SealedSenderCipher(
+          localAddress: aliceAddress,
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
           preKeyStore: alicePreKeyStore,
@@ -315,6 +321,8 @@ void main() {
           ciphertext: ciphertext.toList(),
           trustRoot: trustRootPublicKey.serialize().toList(),
           timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          localName: bobAddress.name(),
+          localDeviceId: bobAddress.deviceId(),
           loadSession: (name, deviceId) async {
             final addr = ProtocolAddress(name: name, deviceId: deviceId);
             final session = await bobSessionStore.loadSession(addr);
@@ -375,6 +383,7 @@ void main() {
         );
 
         final aliceCipher = SealedSenderCipher(
+          localAddress: aliceAddress,
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
           preKeyStore: alicePreKeyStore,
@@ -389,6 +398,7 @@ void main() {
         );
 
         final bobCipher = SealedSenderCipher(
+          localAddress: bobAddress,
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
           preKeyStore: bobPreKeyStore,
@@ -420,6 +430,7 @@ void main() {
         );
 
         final aliceCipher = SealedSenderCipher(
+          localAddress: aliceAddress,
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
           preKeyStore: alicePreKeyStore,
@@ -437,6 +448,7 @@ void main() {
         final wrongTrustRoot = PrivateKey.generate().getPublicKey();
 
         final bobCipher = SealedSenderCipher(
+          localAddress: bobAddress,
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
           preKeyStore: bobPreKeyStore,
@@ -456,6 +468,7 @@ void main() {
 
       test('fails with garbage ciphertext', () async {
         final bobCipher = SealedSenderCipher(
+          localAddress: bobAddress,
           sessionStore: bobSessionStore,
           identityKeyStore: bobIdentityStore,
           preKeyStore: bobPreKeyStore,

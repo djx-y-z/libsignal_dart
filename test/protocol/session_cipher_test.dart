@@ -80,6 +80,7 @@ class TestParty {
         identityKeyStore: identityKeyStore,
       )
       ..sessionCipher = SessionCipher(
+        localAddress: ProtocolAddress(name: name, deviceId: deviceId),
         sessionStore: sessionStore,
         identityKeyStore: identityKeyStore,
         preKeyStore: preKeyStore,

@@ -67,9 +67,15 @@ pub fn extract_prekey_message_ids(message: Vec<u8>) -> Result<PreKeyMessageIds, 
 /// - `store_session(name, device_id, record)` - Store the updated session record
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 pub async fn message_encrypt_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
+    local_name: String,
+    local_device_id: u32,
     plaintext: Vec<u8>,
     load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
@@ -93,6 +99,8 @@ pub async fn message_encrypt_with_callbacks(
     let result = message_encrypt_inner(
         &remote_name,
         remote_device_id,
+        &local_name,
+        local_device_id,
         &plaintext,
         &session_bytes,
         &identity_key_pair_bytes,
@@ -113,6 +121,8 @@ pub async fn message_encrypt_with_callbacks(
 fn message_encrypt_inner(
     remote_name: &str,
     remote_device_id: u32,
+    local_name: &str,
+    local_device_id: u32,
     plaintext: &[u8],
     session_bytes: &[u8],
     identity_key_pair_bytes: &[u8],
@@ -125,12 +135,18 @@ fn message_encrypt_inner(
     // Parse session
     let session = NativeSessionRecord::deserialize(session_bytes).map_err(|e| e.to_string())?;
 
-    // Create protocol address
+    // Create protocol addresses
     let remote_address = ProtocolAddress::new(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid device ID")?,
+            .map_err(|_| "Invalid remote device ID")?,
+    );
+    let local_address = ProtocolAddress::new(
+        local_name.to_string(),
+        local_device_id
+            .try_into()
+            .map_err(|_| "Invalid local device ID")?,
     );
 
     // Create in-memory stores
@@ -146,6 +162,7 @@ fn message_encrypt_inner(
         libsignal_protocol::message_encrypt(
             plaintext,
             &remote_address,
+            &local_address,
             &mut session_store,
             &mut identity_store,
             crate::current_time(),
@@ -317,9 +334,15 @@ fn message_decrypt_signal_inner(
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load a Kyber pre-key by ID (may return None)
 /// - `mark_kyber_pre_key_used(id)` - Mark a Kyber pre-key as used
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 pub async fn message_decrypt_prekey_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
+    local_name: String,
+    local_device_id: u32,
     ciphertext: Vec<u8>,
     load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
@@ -365,6 +388,8 @@ pub async fn message_decrypt_prekey_with_callbacks(
     let result = message_decrypt_prekey_inner(
         &remote_name,
         remote_device_id,
+        &local_name,
+        local_device_id,
         &ciphertext,
         &existing_session_bytes,
         &identity_key_pair_bytes,
@@ -403,6 +428,8 @@ pub async fn message_decrypt_prekey_with_callbacks(
 fn message_decrypt_prekey_inner(
     remote_name: &str,
     remote_device_id: u32,
+    local_name: &str,
+    local_device_id: u32,
     ciphertext: &[u8],
     existing_session_bytes: &Option<Vec<u8>>,
     identity_key_pair_bytes: &[u8],
@@ -427,12 +454,18 @@ fn message_decrypt_prekey_inner(
         None => None,
     };
 
-    // Create protocol address
+    // Create protocol addresses
     let remote_address = ProtocolAddress::new(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid device ID")?,
+            .map_err(|_| "Invalid remote device ID")?,
+    );
+    let local_address = ProtocolAddress::new(
+        local_name.to_string(),
+        local_device_id
+            .try_into()
+            .map_err(|_| "Invalid local device ID")?,
     );
 
     // Create in-memory stores
@@ -484,6 +517,7 @@ fn message_decrypt_prekey_inner(
         libsignal_protocol::message_decrypt_prekey(
             &message,
             &remote_address,
+            &local_address,
             &mut session_store,
             &mut identity_store,
             &mut prekey_store,
