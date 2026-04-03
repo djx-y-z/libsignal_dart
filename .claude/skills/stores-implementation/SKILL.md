@@ -323,14 +323,12 @@ final kyberPreKeyStore = SqliteKyberPreKeyStore(db);
 final builder = SessionBuilder(
   sessionStore: sessionStore,
   identityKeyStore: identityStore,
-  preKeyStore: preKeyStore,
-  signedPreKeyStore: signedPreKeyStore,
-  kyberPreKeyStore: kyberPreKeyStore,
 );
 await builder.processPreKeyBundle(recipientAddress, preKeyBundle);
 
 // Encrypt/decrypt messages
 final cipher = SessionCipher(
+  localAddress: myAddress,
   sessionStore: sessionStore,
   identityKeyStore: identityStore,
   preKeyStore: preKeyStore,

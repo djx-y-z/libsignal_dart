@@ -64,7 +64,7 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 
 | Class | Key Methods |
 |-------|-------------|
-| `SessionCipher` | encrypt, decryptSignalMessage, decryptPreKeySignalMessage |
+| `SessionCipher` | encrypt, decrypt, decryptSignalMessage, decryptPreKeyMessage |
 | `SessionBuilder` | processPreKeyBundle |
 | `SessionRecord` | serialize, deserialize |
 | `ProtocolAddress` | new, name, deviceId |
@@ -84,7 +84,7 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 
 | Class | Key Methods |
 |-------|-------------|
-| `SealedSessionCipher` | encrypt, decrypt |
+| `SealedSenderCipher` | encrypt, decrypt |
 | `SenderCertificate` | create, validate, serialize |
 | `ServerCertificate` | create, serialize |
 | `UnidentifiedSenderMessageContent` | create, serialize |
@@ -220,6 +220,9 @@ import 'package:libsignal/libsignal.dart';
 // Create stores
 final sessionStore = InMemorySessionStore();
 final identityStore = InMemoryIdentityKeyStore(identity, registrationId);
+final preKeyStore = InMemoryPreKeyStore();
+final signedPreKeyStore = InMemorySignedPreKeyStore();
+final kyberPreKeyStore = InMemoryKyberPreKeyStore();
 
 // Build session from pre-key bundle
 final builder = SessionBuilder(
@@ -230,8 +233,12 @@ await builder.processPreKeyBundle(recipientAddress, preKeyBundle);
 
 // Encrypt messages
 final cipher = SessionCipher(
+  localAddress: myAddress,
   sessionStore: sessionStore,
   identityKeyStore: identityStore,
+  preKeyStore: preKeyStore,
+  signedPreKeyStore: signedPreKeyStore,
+  kyberPreKeyStore: kyberPreKeyStore,
 );
 final encrypted = await cipher.encrypt(recipientAddress, plaintext);
 
@@ -244,39 +251,30 @@ final decrypted = await cipher.decrypt(senderAddress, ciphertext);
 ```dart
 import 'package:libsignal/libsignal.dart';
 
-// Create sealed session cipher
-final sealedCipher = SealedSessionCipher(
+// Create sealed sender cipher
+final sealedCipher = SealedSenderCipher(
+  localAddress: myAddress,
   sessionStore: sessionStore,
   identityKeyStore: identityStore,
-);
-
-// Create sender certificate (issued by server)
-final senderCert = SenderCertificate.create(
-  senderUuid: 'my-uuid',
-  deviceId: 1,
-  senderKey: identity.publicKey,
-  expiration: DateTime.now().toUtc().add(Duration(days: 30)),
-  signerCertificate: serverCert,
-  signerKey: serverPrivateKey,
+  preKeyStore: preKeyStore,
+  signedPreKeyStore: signedPreKeyStore,
+  kyberPreKeyStore: kyberPreKeyStore,
 );
 
 // Encrypt with sealed sender (server won't know who sent it)
 final sealed = await sealedCipher.encrypt(
-  recipientAddress,
-  plaintext,
-  senderCert,
-  contentHint: ContentHint.resendable,
+  recipientAddress: recipientAddress,
+  plaintext: plaintext,
+  senderCertificate: senderCertBytes,
 );
 
 // Recipient decrypts and learns sender identity
 final result = await recipientCipher.decrypt(
-  sealed,
-  trustRoot: trustRootPublicKey,
-  timestamp: DateTime.now().toUtc(),
-  localUuid: 'recipient-uuid',
-  localDeviceId: 1,
+  ciphertext: sealed,
+  trustRoot: trustRootBytes,
+  timestamp: DateTime.now().millisecondsSinceEpoch,
 );
-print('Message from: ${result.senderUuid}');
+print('Message from: ${result.senderAddress.name()}');
 ```
 
 ### Group Messaging (SenderKey)

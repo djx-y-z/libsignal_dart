@@ -1,3 +1,11 @@
+## UNRELEASED
+
+#### Fixed
+
+- Fix README examples for `SessionCipher` and `SealedSenderCipher` to match new API (added `localAddress` and all required stores)
+- Fix incorrect class name `SealedSessionCipher` → `SealedSenderCipher` in README
+- Fix incorrect method name `decryptPreKeySignalMessage` → `decryptPreKeyMessage` in README
+
 ## [3.0.0] - 2026-04-03
 
 ### For Users
