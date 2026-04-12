@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.92.1** — SPQR v1 enforcement and dependency updates
+- **libsignal_frb v2.0.1** — updated native dependencies
+
+#### Changed
+
+- Update libsignal native library to v0.92.1 ([v0.92.0](https://github.com/signalapp/libsignal/releases/tag/v0.92.0), [v0.92.1](https://github.com/signalapp/libsignal/releases/tag/v0.92.1))
+  - Force use of SPQR v1 for all newly initiated sessions (v0.92.0) — fallback to non-PQR sessions is no longer allowed
+  - Expose `getUploadForm()` for backup uploads (v0.92.1)
+  - Note: These changes do not affect this library's public API
+
 ## [3.0.1] - 2026-04-03
 
 #### Fixed
