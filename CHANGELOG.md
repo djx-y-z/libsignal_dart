@@ -1,3 +1,20 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.92.2** — internal refactors and dependency updates
+- **libsignal_frb v2.0.2** — Rust FFI bindings (libsignal upstream bump)
+
+#### Changed
+
+- Update libsignal native library to v0.92.2 ([compare](https://github.com/signalapp/libsignal/compare/v0.92.1...v0.92.2))
+  - Internal refactor of 1:1 messaging code
+  - Key Transparency (keytrans) improvements: persist latest distinguished tree head, validate search responses
+  - Upgraded `rand` crate and `rustls-webpki`
+  - Note: These changes do not affect this library's public API
+
 ## [3.0.2] - 2026-04-12
 
 ### For Users
