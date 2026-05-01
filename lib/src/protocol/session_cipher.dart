@@ -176,6 +176,8 @@ class SessionCipher {
     final plaintext = await rust.messageDecryptSignalWithCallbacks(
       remoteName: remoteAddress.name(),
       remoteDeviceId: remoteAddress.deviceId(),
+      localName: _localAddress.name(),
+      localDeviceId: _localAddress.deviceId(),
       ciphertext: ciphertext.toList(),
       loadSession: (name, deviceId) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);

@@ -226,6 +226,7 @@ final kyberPreKeyStore = InMemoryKyberPreKeyStore();
 
 // Build session from pre-key bundle
 final builder = SessionBuilder(
+  localAddress: myAddress,
   sessionStore: sessionStore,
   identityKeyStore: identityStore,
 );

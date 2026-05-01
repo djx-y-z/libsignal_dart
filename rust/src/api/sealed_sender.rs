@@ -528,6 +528,7 @@ where
             libsignal_protocol::message_decrypt_signal(
                 &signal_message,
                 &sender_address,
+                &local_address,
                 &mut session_store,
                 &mut identity_store,
                 &mut OsRng.unwrap_err(),

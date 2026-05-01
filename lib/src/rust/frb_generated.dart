@@ -590,6 +590,8 @@ abstract class RustLibApi extends BaseApi {
   Future<Uint8List> crateApiSessionCipherMessageDecryptSignalWithCallbacks({
     required String remoteName,
     required int remoteDeviceId,
+    required String localName,
+    required int localDeviceId,
     required List<int> ciphertext,
     required FutureOr<Uint8List?> Function(String, int) loadSession,
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -613,6 +615,8 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiSessionBuilderProcessPrekeyBundleWithCallbacks({
     required String remoteName,
     required int remoteDeviceId,
+    required String localName,
+    required int localDeviceId,
     required PreKeyBundle bundle,
     required FutureOr<Uint8List?> Function(String, int) loadSession,
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -4873,6 +4877,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<Uint8List> crateApiSessionCipherMessageDecryptSignalWithCallbacks({
     required String remoteName,
     required int remoteDeviceId,
+    required String localName,
+    required int localDeviceId,
     required List<int> ciphertext,
     required FutureOr<Uint8List?> Function(String, int) loadSession,
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -4885,23 +4891,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           var arg0 = cst_encode_String(remoteName);
           var arg1 = cst_encode_u_32(remoteDeviceId);
-          var arg2 = cst_encode_list_prim_u_8_loose(ciphertext);
-          var arg3 =
+          var arg2 = cst_encode_String(localName);
+          var arg3 = cst_encode_u_32(localDeviceId);
+          var arg4 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          var arg4 =
+          var arg6 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          var arg5 =
+          var arg7 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg8 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          var arg7 =
+          var arg9 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
@@ -4916,6 +4924,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg5,
                 arg6,
                 arg7,
+                arg8,
+                arg9,
               );
         },
         codec: DcoCodec(
@@ -4927,6 +4937,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [
           remoteName,
           remoteDeviceId,
+          localName,
+          localDeviceId,
           ciphertext,
           loadSession,
           storeSession,
@@ -4946,6 +4958,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: [
           "remoteName",
           "remoteDeviceId",
+          "localName",
+          "localDeviceId",
           "ciphertext",
           "loadSession",
           "storeSession",
@@ -5046,6 +5060,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Future<void> crateApiSessionBuilderProcessPrekeyBundleWithCallbacks({
     required String remoteName,
     required int remoteDeviceId,
+    required String localName,
+    required int localDeviceId,
     required PreKeyBundle bundle,
     required FutureOr<Uint8List?> Function(String, int) loadSession,
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -5058,26 +5074,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         callFfi: (port_) {
           var arg0 = cst_encode_String(remoteName);
           var arg1 = cst_encode_u_32(remoteDeviceId);
-          var arg2 =
+          var arg2 = cst_encode_String(localName);
+          var arg3 = cst_encode_u_32(localDeviceId);
+          var arg4 =
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
                 bundle,
               );
-          var arg3 =
+          var arg5 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadSession,
               );
-          var arg4 =
+          var arg6 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 storeSession,
               );
-          var arg5 =
+          var arg7 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg8 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
-          var arg7 =
+          var arg9 =
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
@@ -5092,6 +5110,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg5,
                 arg6,
                 arg7,
+                arg8,
+                arg9,
               );
         },
         codec: DcoCodec(
@@ -5103,6 +5123,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argValues: [
           remoteName,
           remoteDeviceId,
+          localName,
+          localDeviceId,
           bundle,
           loadSession,
           storeSession,
@@ -5122,6 +5144,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         argNames: [
           "remoteName",
           "remoteDeviceId",
+          "localName",
+          "localDeviceId",
           "bundle",
           "loadSession",
           "storeSession",

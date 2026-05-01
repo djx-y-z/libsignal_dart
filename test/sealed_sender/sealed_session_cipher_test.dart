@@ -122,6 +122,7 @@ void main() {
 
       // Alice establishes session with Bob
       final aliceBuilder = SessionBuilder(
+        localAddress: aliceAddress,
         sessionStore: aliceSessionStore,
         identityKeyStore: aliceIdentityStore,
       );
