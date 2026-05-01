@@ -209,9 +209,15 @@ fn message_encrypt_inner(
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
 /// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 pub async fn message_decrypt_signal_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
+    local_name: String,
+    local_device_id: u32,
     ciphertext: Vec<u8>,
     load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
@@ -236,6 +242,8 @@ pub async fn message_decrypt_signal_with_callbacks(
     let result = message_decrypt_signal_inner(
         &remote_name,
         remote_device_id,
+        &local_name,
+        local_device_id,
         &ciphertext,
         &session_bytes,
         &identity_key_pair_bytes,
@@ -254,9 +262,12 @@ pub async fn message_decrypt_signal_with_callbacks(
     Ok(plaintext)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn message_decrypt_signal_inner(
     remote_name: &str,
     remote_device_id: u32,
+    local_name: &str,
+    local_device_id: u32,
     ciphertext: &[u8],
     session_bytes: &[u8],
     identity_key_pair_bytes: &[u8],
@@ -272,12 +283,18 @@ fn message_decrypt_signal_inner(
     // Parse session
     let session = NativeSessionRecord::deserialize(session_bytes).map_err(|e| e.to_string())?;
 
-    // Create protocol address
+    // Create protocol addresses
     let remote_address = ProtocolAddress::new(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid device ID")?,
+            .map_err(|_| "Invalid remote device ID")?,
+    );
+    let local_address = ProtocolAddress::new(
+        local_name.to_string(),
+        local_device_id
+            .try_into()
+            .map_err(|_| "Invalid local device ID")?,
     );
 
     // Create in-memory stores
@@ -293,6 +310,7 @@ fn message_decrypt_signal_inner(
         libsignal_protocol::message_decrypt_signal(
             &message,
             &remote_address,
+            &local_address,
             &mut session_store,
             &mut identity_store,
             &mut OsRng.unwrap_err(),

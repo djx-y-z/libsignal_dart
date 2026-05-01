@@ -1,3 +1,20 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.93.1** — extends sender/recipient address binding to remaining session APIs
+- **libsignal_frb v3.0.0** — Rust FFI bindings updated with new `localAddress` parameter (breaking)
+
+#### Changed
+
+- Update libsignal native library to v0.93.1 ([v0.93.0](https://github.com/signalapp/libsignal/releases/tag/v0.93.0), [v0.93.1](https://github.com/signalapp/libsignal/releases/tag/v0.93.1))
+  - **Breaking:** `SessionBuilder` constructor now requires `localAddress` parameter
+  - **Breaking:** `processPrekeyBundleWithCallbacks` now requires `localName` and `localDeviceId` parameters
+  - **Breaking:** `messageDecryptSignalWithCallbacks` now requires `localName` and `localDeviceId` parameters
+  - `process_prekey_bundle` and `message_decrypt_signal` now bind sender/recipient addresses, completing the misdirection protection introduced in v0.91.0
+
 ## [3.0.3] - 2026-04-20
 
 ### For Users

@@ -76,6 +76,7 @@ class TestParty {
 
     party
       ..sessionBuilder = SessionBuilder(
+        localAddress: ProtocolAddress(name: name, deviceId: deviceId),
         sessionStore: sessionStore,
         identityKeyStore: identityKeyStore,
       )

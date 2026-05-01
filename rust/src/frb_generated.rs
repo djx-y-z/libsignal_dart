@@ -3949,6 +3949,8 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     remote_name: impl CstDecode<String>,
     remote_device_id: impl CstDecode<u32>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     ciphertext: impl CstDecode<Vec<u8>>,
     load_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
@@ -3965,6 +3967,8 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
         move || {
             let api_remote_name = remote_name.cst_decode();
             let api_remote_device_id = remote_device_id.cst_decode();
+            let api_local_name = local_name.cst_decode();
+            let api_local_device_id = local_device_id.cst_decode();
             let api_ciphertext = ciphertext.cst_decode();
             let api_load_session =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -3992,6 +3996,8 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
                             crate::api::session_cipher::message_decrypt_signal_with_callbacks(
                                 api_remote_name,
                                 api_remote_device_id,
+                                api_local_name,
+                                api_local_device_id,
                                 api_ciphertext,
                                 api_load_session,
                                 api_store_session,
@@ -4074,6 +4080,8 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     remote_name: impl CstDecode<String>,
     remote_device_id: impl CstDecode<u32>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     bundle: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PreKeyBundle>>,
     >,
@@ -4092,6 +4100,8 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
         move || {
             let api_remote_name = remote_name.cst_decode();
             let api_remote_device_id = remote_device_id.cst_decode();
+            let api_local_name = local_name.cst_decode();
+            let api_local_device_id = local_device_id.cst_decode();
             let api_bundle = bundle.cst_decode();
             let api_load_session =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -4138,6 +4148,8 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
                             crate::api::session_builder::process_prekey_bundle_with_callbacks(
                                 api_remote_name,
                                 api_remote_device_id,
+                                api_local_name,
+                                api_local_device_id,
                                 &*api_bundle_guard,
                                 api_load_session,
                                 api_store_session,
@@ -7840,6 +7852,8 @@ mod io {
         port_: i64,
         remote_name: *mut wire_cst_list_prim_u_8_strict,
         remote_device_id: u32,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         ciphertext: *mut wire_cst_list_prim_u_8_loose,
         load_session: *const std::ffi::c_void,
         store_session: *const std::ffi::c_void,
@@ -7851,6 +7865,8 @@ mod io {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             ciphertext,
             load_session,
             store_session,
@@ -7892,6 +7908,8 @@ mod io {
         port_: i64,
         remote_name: *mut wire_cst_list_prim_u_8_strict,
         remote_device_id: u32,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         bundle: usize,
         load_session: *const std::ffi::c_void,
         store_session: *const std::ffi::c_void,
@@ -7903,6 +7921,8 @@ mod io {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             bundle,
             load_session,
             store_session,
@@ -10161,6 +10181,8 @@ mod web {
         port_: flutter_rust_bridge::for_generated::MessagePort,
         remote_name: String,
         remote_device_id: u32,
+        local_name: String,
+        local_device_id: u32,
         ciphertext: Box<[u8]>,
         load_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -10172,6 +10194,8 @@ mod web {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             ciphertext,
             load_session,
             store_session,
@@ -10213,6 +10237,8 @@ mod web {
         port_: flutter_rust_bridge::for_generated::MessagePort,
         remote_name: String,
         remote_device_id: u32,
+        local_name: String,
+        local_device_id: u32,
         bundle: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
@@ -10224,6 +10250,8 @@ mod web {
             port_,
             remote_name,
             remote_device_id,
+            local_name,
+            local_device_id,
             bundle,
             load_session,
             store_session,

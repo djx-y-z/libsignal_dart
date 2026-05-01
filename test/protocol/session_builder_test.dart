@@ -33,6 +33,7 @@ void main() {
 
         // Create SessionBuilder for Alice
         final builder = SessionBuilder(
+          localAddress: ProtocolAddress(name: 'alice', deviceId: 1),
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
         );
@@ -70,6 +71,7 @@ void main() {
 
         // Create session
         final builder = SessionBuilder(
+          localAddress: ProtocolAddress(name: 'alice', deviceId: 1),
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
         );
@@ -106,6 +108,7 @@ void main() {
 
         // Create first session
         final builder = SessionBuilder(
+          localAddress: ProtocolAddress(name: 'alice', deviceId: 1),
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
         );
@@ -180,6 +183,7 @@ void main() {
         );
 
         final builder = SessionBuilder(
+          localAddress: ProtocolAddress(name: 'alice', deviceId: 1),
           sessionStore: aliceSessionStore,
           identityKeyStore: aliceIdentityStore,
         );

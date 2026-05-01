@@ -22,11 +22,17 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// - `get_local_registration_id()` - Get our registration ID
 /// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
 ///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
+///
 /// # Returns
 /// The result containing the new session record and identity to save.
 Future<void> processPrekeyBundleWithCallbacks({
   required String remoteName,
   required int remoteDeviceId,
+  required String localName,
+  required int localDeviceId,
   required PreKeyBundle bundle,
   required FutureOr<Uint8List?> Function(String, int) loadSession,
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -37,6 +43,8 @@ Future<void> processPrekeyBundleWithCallbacks({
     RustLib.instance.api.crateApiSessionBuilderProcessPrekeyBundleWithCallbacks(
       remoteName: remoteName,
       remoteDeviceId: remoteDeviceId,
+      localName: localName,
+      localDeviceId: localDeviceId,
       bundle: bundle,
       loadSession: loadSession,
       storeSession: storeSession,

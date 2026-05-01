@@ -56,9 +56,15 @@ Future<EncryptResult> messageEncryptWithCallbacks({
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
 /// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
+///
+/// # Parameters
+/// - `local_name` - Our user identifier (UUID)
+/// - `local_device_id` - Our device ID
 Future<Uint8List> messageDecryptSignalWithCallbacks({
   required String remoteName,
   required int remoteDeviceId,
+  required String localName,
+  required int localDeviceId,
   required List<int> ciphertext,
   required FutureOr<Uint8List?> Function(String, int) loadSession,
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
@@ -69,6 +75,8 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
     RustLib.instance.api.crateApiSessionCipherMessageDecryptSignalWithCallbacks(
       remoteName: remoteName,
       remoteDeviceId: remoteDeviceId,
+      localName: localName,
+      localDeviceId: localDeviceId,
       ciphertext: ciphertext,
       loadSession: loadSession,
       storeSession: storeSession,

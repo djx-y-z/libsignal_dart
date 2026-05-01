@@ -239,6 +239,8 @@ void main() {
       await processPrekeyBundleWithCallbacks(
         remoteName: 'bob',
         remoteDeviceId: 1,
+        localName: 'alice',
+        localDeviceId: 1,
         bundle: bobBundle,
         loadSession: loadSession,
         storeSession: storeSession,
@@ -275,6 +277,8 @@ void main() {
       await processPrekeyBundleWithCallbacks(
         remoteName: 'bob',
         remoteDeviceId: 1,
+        localName: 'alice',
+        localDeviceId: 1,
         bundle: bobBundle,
         loadSession: alice.loadSession,
         storeSession: alice.storeSession,
@@ -361,6 +365,8 @@ void main() {
       final decrypted2 = await messageDecryptSignalWithCallbacks(
         remoteName: 'bob',
         remoteDeviceId: 1,
+        localName: 'alice',
+        localDeviceId: 1,
         ciphertext: encrypted2.ciphertext.toList(),
         loadSession: alice.loadSession,
         storeSession: alice.storeSession,
@@ -397,6 +403,8 @@ void main() {
       final decrypted3 = await messageDecryptSignalWithCallbacks(
         remoteName: 'alice',
         remoteDeviceId: 1,
+        localName: 'bob',
+        localDeviceId: 1,
         ciphertext: encrypted3.ciphertext.toList(),
         loadSession: bob.loadSession,
         storeSession: bob.storeSession,

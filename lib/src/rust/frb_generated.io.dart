@@ -4278,6 +4278,8 @@ class RustLibWire implements BaseWire {
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> remote_name,
     int remote_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
     ffi.Pointer<ffi.Void> load_session,
     ffi.Pointer<ffi.Void> store_session,
@@ -4289,6 +4291,8 @@ class RustLibWire implements BaseWire {
       port_,
       remote_name,
       remote_device_id,
+      local_name,
+      local_device_id,
       ciphertext,
       load_session,
       store_session,
@@ -4303,6 +4307,8 @@ class RustLibWire implements BaseWire {
         ffi.NativeFunction<
           ffi.Void Function(
             ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
@@ -4320,6 +4326,8 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__session_cipher__message_decrypt_signal_with_callbacksPtr
           .asFunction<
             void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
@@ -4398,6 +4406,8 @@ class RustLibWire implements BaseWire {
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> remote_name,
     int remote_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     int bundle,
     ffi.Pointer<ffi.Void> load_session,
     ffi.Pointer<ffi.Void> store_session,
@@ -4409,6 +4419,8 @@ class RustLibWire implements BaseWire {
       port_,
       remote_name,
       remote_device_id,
+      local_name,
+      local_device_id,
       bundle,
       load_session,
       store_session,
@@ -4423,6 +4435,8 @@ class RustLibWire implements BaseWire {
         ffi.NativeFunction<
           ffi.Void Function(
             ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.UintPtr,
@@ -4440,6 +4454,8 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__session_builder__process_prekey_bundle_with_callbacksPtr
           .asFunction<
             void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,

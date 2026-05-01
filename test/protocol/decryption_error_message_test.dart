@@ -65,6 +65,8 @@ void main() {
         await processPrekeyBundleWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           bundle: bobBundle,
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -120,6 +122,8 @@ void main() {
         await processPrekeyBundleWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           bundle: bobBundle,
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -178,6 +182,8 @@ void main() {
         await processPrekeyBundleWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           bundle: bobBundle,
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],
@@ -225,6 +231,8 @@ void main() {
         await processPrekeyBundleWithCallbacks(
           remoteName: 'bob',
           remoteDeviceId: 1,
+          localName: 'alice',
+          localDeviceId: 1,
           bundle: bobBundle,
           loadSession: (name, deviceId) =>
               aliceSessionStorage['$name:$deviceId'],

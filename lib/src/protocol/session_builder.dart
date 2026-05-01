@@ -20,6 +20,7 @@ import '../stores/session_store.dart';
 /// Example usage:
 /// ```dart
 /// final builder = SessionBuilder(
+///   localAddress: myAddress,
 ///   sessionStore: mySessionStore,
 ///   identityKeyStore: myIdentityKeyStore,
 /// );
@@ -35,12 +36,19 @@ import '../stores/session_store.dart';
 class SessionBuilder {
   /// Creates a new SessionBuilder with the given stores.
   ///
-  /// The stores are used to persist session state and identity information.
+  /// - [localAddress] our protocol address (UUID + device ID)
+  /// - [sessionStore] for persisting session state
+  /// - [identityKeyStore] for identity keys
   SessionBuilder({
+    required ProtocolAddress localAddress,
     required SessionStore sessionStore,
     required IdentityKeyStore identityKeyStore,
-  }) : _sessionStore = sessionStore,
+  }) : _localAddress = localAddress,
+       _sessionStore = sessionStore,
        _identityKeyStore = identityKeyStore;
+
+  /// Our local protocol address.
+  final ProtocolAddress _localAddress;
 
   /// The session store for persisting session state.
   final SessionStore _sessionStore;
@@ -69,6 +77,8 @@ class SessionBuilder {
     await rust.processPrekeyBundleWithCallbacks(
       remoteName: remoteAddress.name(),
       remoteDeviceId: remoteAddress.deviceId(),
+      localName: _localAddress.name(),
+      localDeviceId: _localAddress.deviceId(),
       bundle: preKeyBundle,
       loadSession: (name, deviceId) async {
         final addr = ProtocolAddress(name: name, deviceId: deviceId);
