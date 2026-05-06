@@ -1011,7 +1011,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.93.1#4c460615cdbe4ed53b23a5d1bf71493514bf2a80"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.93.2#bbc16886cae2feab1cd1fe271ccc651e8860ce96"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1029,8 +1029,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.93.1"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.93.1#4c460615cdbe4ed53b23a5d1bf71493514bf2a80"
+version = "0.93.2"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.93.2#bbc16886cae2feab1cd1fe271ccc651e8860ce96"
 dependencies = [
  "cfg-if",
 ]
@@ -1038,7 +1038,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.93.1#4c460615cdbe4ed53b23a5d1bf71493514bf2a80"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.93.2#bbc16886cae2feab1cd1fe271ccc651e8860ce96"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1667,7 +1667,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.93.1#4c460615cdbe4ed53b23a5d1bf71493514bf2a80"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.93.2#bbc16886cae2feab1cd1fe271ccc651e8860ce96"
 dependencies = [
  "aes",
  "cbc",
@@ -1792,9 +1792,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.52.1"
+version = "1.52.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b67dee974fe86fd92cc45b7a95fdd2f99a36a6d7b0d431a231178d3d670bbcc6"
+checksum = "110a78583f19d5cdb2c5ccf321d1290344e71313c6c37d43520d386027d18386"
 dependencies = [
  "pin-project-lite",
 ]
