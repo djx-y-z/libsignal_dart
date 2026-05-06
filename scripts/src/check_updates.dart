@@ -268,12 +268,16 @@ Future<List<String>> updateVersionFiles({
   if (copierFile.existsSync()) {
     if (!silent) logStep('Updating .copier-answers.yml...');
     var content = copierFile.readAsStringSync();
-    final copierPattern = RegExp(r'(upstream_version:\s*)"[^"]+"');
+    // Accept double-quoted ("v0.93.2"), single-quoted ('v0.93.2'), and
+    // unquoted (v0.93.2) YAML values — preserve the original quoting style.
+    final copierPattern = RegExp(
+      '''(upstream_version:\\s*)(["']?)([^"'\\s]+)\\2''',
+    );
     if (copierPattern.hasMatch(content)) {
-      content = content.replaceFirstMapped(
-        copierPattern,
-        (match) => '${match.group(1)}"$newVersion"',
-      );
+      content = content.replaceFirstMapped(copierPattern, (match) {
+        final quote = match.group(2) ?? '';
+        return '${match.group(1)}$quote$newVersion$quote';
+      });
       await copierFile.writeAsString(content);
       updatedFiles.add('.copier-answers.yml');
       if (!silent) logInfo('Updated .copier-answers.yml: upstream_version');

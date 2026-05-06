@@ -5,14 +5,15 @@
 #### ✨ Highlights
 
 - **libsignal v0.93.2** — internal improvements and updates
-- **libsignal_frb v3.0.0** — Rust FFI bindings
+- **libsignal_frb v3.0.1** — Rust FFI bindings
 
 #### Changed
 
-- Update libsignal native library to v0.93.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.93.2))
-  - Internal refactors and optimizations for messaging and session management
-  - Dependency updates for improved performance
-  - Note: These changes do not affect this library's public API
+- Update libsignal native library to v0.93.2 ([compare](https://github.com/signalapp/libsignal/compare/v0.93.1...v0.93.2))
+  - Networking improvements: H2 GOAWAY (graceful shutdown) handling for WebSockets
+  - Updated `hickory-proto` DNS dependency to 0.26.1
+  - Updated CDSI production enclave and added new SVR enclaves (server-side)
+  - Note: No changes to libsignal-protocol crate — does not affect this library's public API
 
 ## [4.0.0] - 2026-05-01
 
