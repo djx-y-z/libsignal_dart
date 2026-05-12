@@ -85,8 +85,15 @@ abstract class SignalMessage implements RustOpaqueInterface {
 
   /// Verify the MAC on this message.
   ///
-  /// Takes serialized public keys for sender and receiver identity keys.
+  /// Takes the sender's and recipient's protocol addresses (name + device id),
+  /// the serialized public keys for the sender and receiver identity keys, and
+  /// the MAC key. If the message includes embedded addresses, they are also
+  /// verified against the supplied addresses for backward compatibility.
   bool verifyMac({
+    required String senderAddressName,
+    required int senderAddressDeviceId,
+    required String recipientAddressName,
+    required int recipientAddressDeviceId,
     required List<int> senderIdentityKey,
     required List<int> receiverIdentityKey,
     required List<int> macKey,

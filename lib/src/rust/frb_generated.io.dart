@@ -3593,12 +3593,20 @@ class RustLibWire implements BaseWire {
 
   WireSyncRust2DartDco wire__crate__api__message__SignalMessage_verify_mac(
     int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> sender_address_name,
+    int sender_address_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> recipient_address_name,
+    int recipient_address_device_id,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> sender_identity_key,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> receiver_identity_key,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> mac_key,
   ) {
     return _wire__crate__api__message__SignalMessage_verify_mac(
       that,
+      sender_address_name,
+      sender_address_device_id,
+      recipient_address_name,
+      recipient_address_device_id,
       sender_identity_key,
       receiver_identity_key,
       mac_key,
@@ -3610,6 +3618,10 @@ class RustLibWire implements BaseWire {
         ffi.NativeFunction<
           WireSyncRust2DartDco Function(
             ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
@@ -3620,6 +3632,10 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__message__SignalMessage_verify_macPtr
           .asFunction<
             WireSyncRust2DartDco Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,

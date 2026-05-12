@@ -1,3 +1,18 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.94.0** — extends sender/recipient address binding to `SignalMessage.verifyMac()`
+- **libsignal_frb v4.0.0** — Rust FFI bindings updated with new sender/recipient address parameters on `verifyMac` (breaking)
+
+#### Changed
+
+- Update libsignal native library to v0.94.0 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.94.0))
+  - **Breaking:** `SignalMessage.verifyMac()` now requires `senderAddressName`, `senderAddressDeviceId`, `recipientAddressName`, and `recipientAddressDeviceId` parameters
+  - Upstream made the previous `SignalMessage::verify_mac` method private and exposed `verify_mac_with_addresses` as the public replacement, extending the misdirection protection (started in v0.91.0) to message MAC verification
+
 ## [4.0.1] - 2026-05-06
 
 ### For Users

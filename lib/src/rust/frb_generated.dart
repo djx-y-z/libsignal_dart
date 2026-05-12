@@ -450,6 +450,10 @@ abstract class RustLibApi extends BaseApi {
 
   bool crateApiMessageSignalMessageVerifyMac({
     required SignalMessage that,
+    required String senderAddressName,
+    required int senderAddressDeviceId,
+    required String recipientAddressName,
+    required int recipientAddressDeviceId,
     required List<int> senderIdentityKey,
     required List<int> receiverIdentityKey,
     required List<int> macKey,
@@ -3882,6 +3886,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @override
   bool crateApiMessageSignalMessageVerifyMac({
     required SignalMessage that,
+    required String senderAddressName,
+    required int senderAddressDeviceId,
+    required String recipientAddressName,
+    required int recipientAddressDeviceId,
     required List<int> senderIdentityKey,
     required List<int> receiverIdentityKey,
     required List<int> macKey,
@@ -3893,14 +3901,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage(
                 that,
               );
-          var arg1 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
-          var arg2 = cst_encode_list_prim_u_8_loose(receiverIdentityKey);
-          var arg3 = cst_encode_list_prim_u_8_loose(macKey);
+          var arg1 = cst_encode_String(senderAddressName);
+          var arg2 = cst_encode_u_32(senderAddressDeviceId);
+          var arg3 = cst_encode_String(recipientAddressName);
+          var arg4 = cst_encode_u_32(recipientAddressDeviceId);
+          var arg5 = cst_encode_list_prim_u_8_loose(senderIdentityKey);
+          var arg6 = cst_encode_list_prim_u_8_loose(receiverIdentityKey);
+          var arg7 = cst_encode_list_prim_u_8_loose(macKey);
           return wire.wire__crate__api__message__SignalMessage_verify_mac(
             arg0,
             arg1,
             arg2,
             arg3,
+            arg4,
+            arg5,
+            arg6,
+            arg7,
           );
         },
         codec: DcoCodec(
@@ -3908,7 +3924,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: dco_decode_String,
         ),
         constMeta: kCrateApiMessageSignalMessageVerifyMacConstMeta,
-        argValues: [that, senderIdentityKey, receiverIdentityKey, macKey],
+        argValues: [
+          that,
+          senderAddressName,
+          senderAddressDeviceId,
+          recipientAddressName,
+          recipientAddressDeviceId,
+          senderIdentityKey,
+          receiverIdentityKey,
+          macKey,
+        ],
         apiImpl: this,
       ),
     );
@@ -3919,6 +3944,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         debugName: "SignalMessage_verify_mac",
         argNames: [
           "that",
+          "senderAddressName",
+          "senderAddressDeviceId",
+          "recipientAddressName",
+          "recipientAddressDeviceId",
           "senderIdentityKey",
           "receiverIdentityKey",
           "macKey",
@@ -9791,13 +9820,24 @@ class SignalMessageImpl extends RustOpaque implements SignalMessage {
 
   /// Verify the MAC on this message.
   ///
-  /// Takes serialized public keys for sender and receiver identity keys.
+  /// Takes the sender's and recipient's protocol addresses (name + device id),
+  /// the serialized public keys for the sender and receiver identity keys, and
+  /// the MAC key. If the message includes embedded addresses, they are also
+  /// verified against the supplied addresses for backward compatibility.
   bool verifyMac({
+    required String senderAddressName,
+    required int senderAddressDeviceId,
+    required String recipientAddressName,
+    required int recipientAddressDeviceId,
     required List<int> senderIdentityKey,
     required List<int> receiverIdentityKey,
     required List<int> macKey,
   }) => RustLib.instance.api.crateApiMessageSignalMessageVerifyMac(
     that: this,
+    senderAddressName: senderAddressName,
+    senderAddressDeviceId: senderAddressDeviceId,
+    recipientAddressName: recipientAddressName,
+    recipientAddressDeviceId: recipientAddressDeviceId,
     senderIdentityKey: senderIdentityKey,
     receiverIdentityKey: receiverIdentityKey,
     macKey: macKey,

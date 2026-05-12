@@ -3185,6 +3185,10 @@ fn wire__crate__api__message__SignalMessage_verify_mac_impl(
     that: impl CstDecode<
         RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SignalMessage>>,
     >,
+    sender_address_name: impl CstDecode<String>,
+    sender_address_device_id: impl CstDecode<u32>,
+    recipient_address_name: impl CstDecode<String>,
+    recipient_address_device_id: impl CstDecode<u32>,
     sender_identity_key: impl CstDecode<Vec<u8>>,
     receiver_identity_key: impl CstDecode<Vec<u8>>,
     mac_key: impl CstDecode<Vec<u8>>,
@@ -3197,6 +3201,10 @@ fn wire__crate__api__message__SignalMessage_verify_mac_impl(
         },
         move || {
             let api_that = that.cst_decode();
+            let api_sender_address_name = sender_address_name.cst_decode();
+            let api_sender_address_device_id = sender_address_device_id.cst_decode();
+            let api_recipient_address_name = recipient_address_name.cst_decode();
+            let api_recipient_address_device_id = recipient_address_device_id.cst_decode();
             let api_sender_identity_key = sender_identity_key.cst_decode();
             let api_receiver_identity_key = receiver_identity_key.cst_decode();
             let api_mac_key = mac_key.cst_decode();
@@ -3217,6 +3225,10 @@ fn wire__crate__api__message__SignalMessage_verify_mac_impl(
                 let api_that_guard = api_that_guard.unwrap();
                 let output_ok = crate::api::message::SignalMessage::verify_mac(
                     &*api_that_guard,
+                    api_sender_address_name,
+                    api_sender_address_device_id,
+                    api_recipient_address_name,
+                    api_recipient_address_device_id,
                     api_sender_identity_key,
                     api_receiver_identity_key,
                     api_mac_key,
@@ -7574,12 +7586,20 @@ mod io {
     #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_libsignal_wire__crate__api__message__SignalMessage_verify_mac(
         that: usize,
+        sender_address_name: *mut wire_cst_list_prim_u_8_strict,
+        sender_address_device_id: u32,
+        recipient_address_name: *mut wire_cst_list_prim_u_8_strict,
+        recipient_address_device_id: u32,
         sender_identity_key: *mut wire_cst_list_prim_u_8_loose,
         receiver_identity_key: *mut wire_cst_list_prim_u_8_loose,
         mac_key: *mut wire_cst_list_prim_u_8_loose,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__message__SignalMessage_verify_mac_impl(
             that,
+            sender_address_name,
+            sender_address_device_id,
+            recipient_address_name,
+            recipient_address_device_id,
             sender_identity_key,
             receiver_identity_key,
             mac_key,
@@ -9903,12 +9923,20 @@ mod web {
     #[wasm_bindgen]
     pub fn wire__crate__api__message__SignalMessage_verify_mac(
         that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        sender_address_name: String,
+        sender_address_device_id: u32,
+        recipient_address_name: String,
+        recipient_address_device_id: u32,
         sender_identity_key: Box<[u8]>,
         receiver_identity_key: Box<[u8]>,
         mac_key: Box<[u8]>,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__message__SignalMessage_verify_mac_impl(
             that,
+            sender_address_name,
+            sender_address_device_id,
+            recipient_address_name,
+            recipient_address_device_id,
             sender_identity_key,
             receiver_identity_key,
             mac_key,

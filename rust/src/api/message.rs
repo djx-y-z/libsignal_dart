@@ -2,7 +2,8 @@
 
 use libsignal_protocol::{
     CiphertextMessageType, DecryptionErrorMessage as NativeDecryptionErrorMessage,
-    IdentityKey, PublicKey as NativePublicKey, SignalMessage as NativeSignalMessage, Timestamp,
+    DeviceId, IdentityKey, ProtocolAddress, PublicKey as NativePublicKey,
+    SignalMessage as NativeSignalMessage, Timestamp,
 };
 
 /// An encrypted Signal Protocol message (whisper message).
@@ -71,10 +72,17 @@ impl SignalMessage {
 
     /// Verify the MAC on this message.
     ///
-    /// Takes serialized public keys for sender and receiver identity keys.
+    /// Takes the sender's and recipient's protocol addresses (name + device id),
+    /// the serialized public keys for the sender and receiver identity keys, and
+    /// the MAC key. If the message includes embedded addresses, they are also
+    /// verified against the supplied addresses for backward compatibility.
     #[flutter_rust_bridge::frb(sync)]
     pub fn verify_mac(
         &self,
+        sender_address_name: String,
+        sender_address_device_id: u32,
+        recipient_address_name: String,
+        recipient_address_device_id: u32,
         sender_identity_key: Vec<u8>,
         receiver_identity_key: Vec<u8>,
         mac_key: Vec<u8>,
@@ -85,9 +93,21 @@ impl SignalMessage {
             NativePublicKey::deserialize(&receiver_identity_key).map_err(|e| e.to_string())?;
         let sender_identity = IdentityKey::new(sender_pub);
         let receiver_identity = IdentityKey::new(receiver_pub);
+        let sender_device_id =
+            DeviceId::try_from(sender_address_device_id).map_err(|e| e.to_string())?;
+        let recipient_device_id =
+            DeviceId::try_from(recipient_address_device_id).map_err(|e| e.to_string())?;
+        let sender_address = ProtocolAddress::new(sender_address_name, sender_device_id);
+        let recipient_address = ProtocolAddress::new(recipient_address_name, recipient_device_id);
         self.inner
-            .verify_mac(&sender_identity, &receiver_identity, &mac_key)
-            .map_err(|e| e.to_string())
+            .verify_mac_with_addresses(
+                &sender_address,
+                &recipient_address,
+                &sender_identity,
+                &receiver_identity,
+                &mac_key,
+            )
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
     }
 
     /// Create a copy of this message.
