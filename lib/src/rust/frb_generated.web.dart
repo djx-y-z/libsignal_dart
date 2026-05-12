@@ -2400,11 +2400,19 @@ class RustLibWire implements BaseWire {
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__message__SignalMessage_verify_mac(
     int that,
+    String sender_address_name,
+    int sender_address_device_id,
+    String recipient_address_name,
+    int recipient_address_device_id,
     JSAny sender_identity_key,
     JSAny receiver_identity_key,
     JSAny mac_key,
   ) => wasmModule.wire__crate__api__message__SignalMessage_verify_mac(
     that,
+    sender_address_name,
+    sender_address_device_id,
+    recipient_address_name,
+    recipient_address_device_id,
     sender_identity_key,
     receiver_identity_key,
     mac_key,
@@ -3452,6 +3460,10 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__message__SignalMessage_verify_mac(
     int that,
+    String sender_address_name,
+    int sender_address_device_id,
+    String recipient_address_name,
+    int recipient_address_device_id,
     JSAny sender_identity_key,
     JSAny receiver_identity_key,
     JSAny mac_key,
