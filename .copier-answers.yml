@@ -26,5 +26,5 @@ rust_edition: '2024'
 rust_version: '1.88'
 topics: rust,flutter-rust-bridge,signal,cryptography,encryption
 upstream_crates: libsignal-protocol,libsignal-core,signal-crypto
-upstream_version: v0.94.0
+upstream_version: v0.94.1
 version_tag_prefix: v
