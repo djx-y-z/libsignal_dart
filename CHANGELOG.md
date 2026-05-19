@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.94.1** — internal improvements and updates
+- **libsignal_frb v4.0.1** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.94.1 ([compare](https://github.com/signalapp/libsignal/compare/v0.94.0...v0.94.1))
+  - Networking improvements: gRPC/H2 transport additions, reflector proxy support
+  - Key Transparency: added account data reset, additional logging around monitor versions
+  - Note: No changes to libsignal-protocol crate — does not affect this library's public API
+
 ## [5.0.0] - 2026-05-12
 
 ### For Users
