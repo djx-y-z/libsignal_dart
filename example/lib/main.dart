@@ -515,6 +515,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
       // 6. Alice processes bundle (X3DH/PQXDH)
       final aliceBuilder = SessionBuilder(
+        localAddress: aliceAddress,
         sessionStore: aliceSessionStore,
         identityKeyStore: aliceIdentityStore,
       );

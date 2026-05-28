@@ -132,6 +132,7 @@ Future<void> runSessionDemo() async {
 
   // 6. Alice processes Bob's bundle (X3DH/PQXDH key agreement)
   final aliceBuilder = SessionBuilder(
+    localAddress: aliceAddress,
     sessionStore: aliceSessionStore,
     identityKeyStore: aliceIdentityStore,
   );
