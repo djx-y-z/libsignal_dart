@@ -6,6 +6,21 @@
 
 - Document `flutter build web --wasm` (dart2wasm) limitation in README — Rust returns fail with `Type 'JSValue' is not a subtype of type 'List<dynamic>'` under dart2wasm. Upstream limitation in `flutter_rust_bridge` ([#2575](https://github.com/fzyzcjy/flutter_rust_bridge/issues/2575)), affects every FRB-based Dart package. Standard `flutter build web` (dart2js) target continues to work.
 
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.94.2** — internal improvements and updates
+- **libsignal_frb v4.0.1** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.94.2 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.94.2))
+  - Networking improvements: enhanced gRPC/H2 transport capabilities
+  - Key Transparency: improved logging and monitoring features
+  - Note: These changes do not affect this library's public API
+
 ## [5.0.1] - 2026-05-19
 
 ### For Users
