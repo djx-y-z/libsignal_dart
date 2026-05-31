@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-brightgreen.svg)](https://dart.dev)
 [![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.38.0-blue.svg)](https://flutter.dev)
-[![libsignal](https://img.shields.io/badge/libsignal-v0.94.1-orange.svg)](https://github.com/signalapp/libsignal)
+[![libsignal](https://img.shields.io/badge/libsignal-v0.94.3-orange.svg)](https://github.com/signalapp/libsignal)
 
 Dart bindings for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
