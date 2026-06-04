@@ -143,9 +143,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.11.1"
+version = "2.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
+checksum = "84d7ced0ae9557296835c32bf1b1e02b44c746701f898460fb000d7eaa84f00a"
 
 [[package]]
 name = "block-buffer"
@@ -1011,7 +1011,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.94.3#5441a83eb66f12b66c72096b033cfb1e0dc982fb"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.94.4#46d867c986f66201e34e7ae20ce423eec742bf3f"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1029,8 +1029,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.94.3"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.94.3#5441a83eb66f12b66c72096b033cfb1e0dc982fb"
+version = "0.94.4"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.94.4#46d867c986f66201e34e7ae20ce423eec742bf3f"
 dependencies = [
  "cfg-if",
 ]
@@ -1038,7 +1038,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.94.3#5441a83eb66f12b66c72096b033cfb1e0dc982fb"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.94.4#46d867c986f66201e34e7ae20ce423eec742bf3f"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1076,7 +1076,7 @@ dependencies = [
 
 [[package]]
 name = "libsignal_frb"
-version = "4.0.2"
+version = "4.0.3"
 dependencies = [
  "aes-gcm-siv",
  "async-trait",
@@ -1119,9 +1119,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.30"
+version = "0.4.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "616ec5685824bcc94416c6d4a7a446eea774a31efd7062c8480ba6fd06d7a6e5"
+checksum = "113b30b4cd05f7c06868fdb2854f66a7b9fece9a48425351cd532e810d74024f"
 
 [[package]]
 name = "md-5"
@@ -1667,7 +1667,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.94.3#5441a83eb66f12b66c72096b033cfb1e0dc982fb"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.94.4#46d867c986f66201e34e7ae20ce423eec742bf3f"
 dependencies = [
  "aes",
  "cbc",
