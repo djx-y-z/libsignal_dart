@@ -5,7 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.94.4** — internal improvements and updates
-- **libsignal_frb v4.0.2** — Rust FFI bindings
+- **libsignal_frb v4.0.3** — Rust FFI bindings
 
 #### Changed
 
