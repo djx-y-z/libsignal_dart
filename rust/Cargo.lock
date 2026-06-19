@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.1#a85f3c0d892a14d32b76fd724d07fec4a23821f0"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1012,8 +1012,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.96.1"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.1#a85f3c0d892a14d32b76fd724d07fec4a23821f0"
+version = "0.96.2"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
 dependencies = [
  "cfg-if",
 ]
@@ -1021,7 +1021,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.1#a85f3c0d892a14d32b76fd724d07fec4a23821f0"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1650,7 +1650,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.1#a85f3c0d892a14d32b76fd724d07fec4a23821f0"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
 dependencies = [
  "aes",
  "cbc",
