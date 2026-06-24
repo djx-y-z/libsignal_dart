@@ -206,9 +206,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.64"
+version = "1.2.65"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dad887fd958be91b5098c0248def011f4523ab786cd411be668777e55063501f"
+checksum = "e228eec9be7c17ccb640b59b36a5cd805ea2a564a4c5e162c2f659fea30d3b96"
 dependencies = [
  "find-msvc-tools",
  "shlex",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.3#6733123fc92fb37613f2293983d5a51ed713693b"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1012,8 +1012,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.96.2"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
+version = "0.96.3"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.3#6733123fc92fb37613f2293983d5a51ed713693b"
 dependencies = [
  "cfg-if",
 ]
@@ -1021,7 +1021,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.3#6733123fc92fb37613f2293983d5a51ed713693b"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1102,9 +1102,9 @@ dependencies = [
 
 [[package]]
 name = "log"
-version = "0.4.32"
+version = "0.4.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "953f07c43838f8e6f9758cab68bf5bed85465e7587ebe0b823f1bcd81978ad3a"
+checksum = "0ceec5bc11778974d1bcb055b18002eba7f4b3518b6a0081b3af5f21666da9ad"
 
 [[package]]
 name = "md-5"
@@ -1405,9 +1405,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.45"
+version = "1.0.46"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41f2619966050689382d2b44f664f4bc593e129785a36d6ee376ddf37259b924"
+checksum = "dfbc457d0c7a0759a614551b11a6409e5951f6c7537be1f1b7682b9ae9230368"
 dependencies = [
  "proc-macro2",
 ]
@@ -1650,7 +1650,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.96.2#38428a7bb70509910d72b3f78208c1daf33774d8"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.96.3#6733123fc92fb37613f2293983d5a51ed713693b"
 dependencies = [
  "aes",
  "cbc",

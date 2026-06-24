@@ -1,3 +1,18 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.96.3** — internal improvements and updates
+- **libsignal_frb v4.0.7** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.96.3 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.96.3))
+  - Internal improvements and updates
+  - Note: These changes do not affect this library's public API
+
 ## [5.0.7] - 2026-06-20
 
 ### For Users
