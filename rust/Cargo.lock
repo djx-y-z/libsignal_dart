@@ -1059,7 +1059,7 @@ dependencies = [
 
 [[package]]
 name = "libsignal_frb"
-version = "4.0.7"
+version = "4.0.8"
 dependencies = [
  "aes-gcm-siv",
  "async-trait",

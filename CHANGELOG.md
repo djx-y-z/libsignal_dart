@@ -5,12 +5,12 @@
 #### ✨ Highlights
 
 - **libsignal v0.96.3** — internal improvements and updates
-- **libsignal_frb v4.0.7** — Rust FFI bindings
+- **libsignal_frb v4.0.8** — Rust FFI bindings
 
 #### Changed
 
 - Update libsignal native library to v0.96.3 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.96.3))
-  - Internal improvements and updates
+  - Upstream changes are limited to an internal ML-KEM parameter key type fix plus net/node/gRPC/server-side updates, none of which this library exposes
   - Note: These changes do not affect this library's public API
 
 ## [5.0.7] - 2026-06-20
