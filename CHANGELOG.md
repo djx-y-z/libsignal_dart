@@ -1,4 +1,4 @@
-## [Unreleased]
+## [5.0.8] - 2026-06-24
 
 ### For Users
 
@@ -874,7 +874,8 @@
 - Secret keys are handled securely with proper memory management
 - Cryptographic operations use constant-time implementations where applicable
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.7...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.8...HEAD
+[5.0.8]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.7...v5.0.8
 [5.0.7]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.6...v5.0.7
 [5.0.6]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.5...v5.0.6
 [5.0.5]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.4...v5.0.5
