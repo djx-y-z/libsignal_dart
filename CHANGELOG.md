@@ -5,13 +5,14 @@
 #### ✨ Highlights
 
 - **libsignal v0.96.4** — internal improvements and updates
-- **libsignal_frb v4.0.8** — Rust FFI bindings
+- **libsignal_frb v4.0.9** — Rust FFI bindings
 
 #### Changed
 
-- Update libsignal native library to v0.96.4 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.96.4))
-  - Upstream changes include internal improvements and updates across various components.
-  - Note: These changes do not affect this library's public API.
+- Update libsignal native library to v0.96.4 ([compare](https://github.com/signalapp/libsignal/compare/v0.96.3...v0.96.4))
+  - Upstream changes are limited to net/registration and chat gRPC helpers, server-side SVR enclave rotation (2026Q2), FFI bridge tooling, and new typed `reserveUsernameHash()` / donation-permit client APIs — none of which this library exposes
+  - The `libsignal-protocol` and `signal-crypto` crates are unchanged; `libsignal-core` only bumps its internal version string
+  - Note: These changes do not affect this library's public API
 
 ## [5.0.8] - 2026-06-24
 

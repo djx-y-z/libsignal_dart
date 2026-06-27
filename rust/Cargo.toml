@@ -1,6 +1,6 @@
 [package]
 name = "libsignal_frb"
-version = "4.0.8"
+version = "4.0.9"
 edition = "2024"
 rust-version = "1.88"
 description = "Flutter Rust Bridge bindings for libsignal"
