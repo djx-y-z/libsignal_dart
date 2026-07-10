@@ -35,6 +35,11 @@ impl PreKeyBundle {
     /// * `kyber_pre_key_id` - The Kyber pre-key ID (required by libsignal)
     /// * `kyber_pre_key_public` - The Kyber pre-key public key bytes (required by libsignal)
     /// * `kyber_pre_key_signature` - The Kyber pre-key signature (required by libsignal)
+    // A PreKeyBundle genuinely carries this many components (X3DH signed
+    // pre-key + optional one-time pre-key + Kyber pre-key + identity); the
+    // argument list mirrors libsignal's own `PreKeyBundle::new`, so the count
+    // is inherent to the bundle, not a refactor smell.
+    #[allow(clippy::too_many_arguments)]
     #[flutter_rust_bridge::frb(sync)]
     pub fn new(
         registration_id: u32,
@@ -50,7 +55,7 @@ impl PreKeyBundle {
         kyber_pre_key_signature: Vec<u8>,
     ) -> Result<PreKeyBundle, String> {
         // Parse the device ID
-        let dev_id = DeviceId::new(device_id as u8)
+        let dev_id = DeviceId::try_from(device_id)
             .map_err(|_| format!("Invalid device ID: {} (must be 1-127)", device_id))?;
 
         // Parse the optional pre-key
@@ -106,7 +111,7 @@ impl PreKeyBundle {
     /// Get the registration ID.
     #[flutter_rust_bridge::frb(sync)]
     pub fn registration_id(&self) -> Result<u32, String> {
-        Ok(self.inner.registration_id().map_err(|e| e.to_string())?)
+        self.inner.registration_id().map_err(|e| e.to_string())
     }
 
     /// Get the device ID.

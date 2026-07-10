@@ -25,7 +25,7 @@ impl ProtocolAddress {
     /// * `device_id` - The device identifier (must be 1-127)
     #[flutter_rust_bridge::frb(sync)]
     pub fn new(name: String, device_id: u32) -> Result<ProtocolAddress, String> {
-        let dev_id = DeviceId::new(device_id as u8)
+        let dev_id = DeviceId::try_from(device_id)
             .map_err(|_| format!("Invalid device ID: {} (must be 1-127)", device_id))?;
         let native = NativeProtocolAddress::new(name, dev_id);
         Ok(ProtocolAddress { inner: native })
