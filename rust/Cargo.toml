@@ -10,7 +10,8 @@ publish = false  # Internal crate, not published to crates.io
 
 [lib]
 name = "libsignal_frb"
-crate-type = ["cdylib", "staticlib"]
+# rlib is required so the fuzz crate (rust/fuzz) can link against this crate
+crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.12.0"
@@ -68,6 +69,15 @@ lto = true        # Link-Time Optimization for smaller binaries
 opt-level = "z"   # Optimize for size (important for WASM)
 strip = true      # Strip debug symbols
 
+# Turn silent integer wraparound into a deterministic panic (surfaced to Dart
+# as a catchable exception via FRB) — but ONLY for this crate's own code.
+# Applying overflow-checks tree-wide would change the release arithmetic of the
+# audited crypto dependencies (curve25519-dalek, libsignal-protocol, …), some
+# of which legitimately rely on wrapping in hot paths. Scoping keeps the
+# defense-in-depth for our wrapper without touching upstream behavior.
+[profile.release.package.libsignal_frb]
+overflow-checks = true
+
 # WASM-pack configuration for wasm-opt
 # Enable WASM features that Rust compiler generates by default:
 # - bulk-memory: memory.copy, memory.fill (standard since 2020)
@@ -80,3 +90,6 @@ wasm-opt = ["-O4", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
 # Suppress FRB macro warnings (known issue with flutter_rust_bridge 2.x)
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(frb_expand)"] }
+# No unsafe in hand-written code; the FRB-generated module opts out explicitly
+# via #[allow(unsafe_code)] in lib.rs.
+unsafe_code = "deny"

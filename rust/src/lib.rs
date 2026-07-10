@@ -8,6 +8,9 @@
 // in future API expansions.
 #![allow(dead_code)]
 
+// The FRB-generated bridge is the only module allowed to contain unsafe code;
+// everything hand-written is covered by `unsafe_code = "deny"` in Cargo.toml.
+#[allow(unsafe_code)]
 mod frb_generated;
 mod utils;
 
