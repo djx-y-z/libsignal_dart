@@ -53,7 +53,9 @@ class InMemoryIdentityKeyStore implements IdentityKeyStore {
       return true; // New identity
     }
 
-    if (existing != identityKey) {
+    // FRB-generated types use identity (reference) equality, so compare the
+    // key material via `equals()` rather than `==`/`!=`.
+    if (!existing.equals(other: identityKey)) {
       _identities[key] = identityKey;
       return true; // Changed identity
     }
@@ -82,7 +84,8 @@ class InMemoryIdentityKeyStore implements IdentityKeyStore {
       return true;
     }
 
-    return existing == identityKey;
+    // Compare key material, not object identity (FRB types are reference-equal).
+    return existing.equals(other: identityKey);
   }
 
   /// Clears all stored identities.
