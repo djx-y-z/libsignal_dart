@@ -34,6 +34,18 @@ pub fn hkdf_derive(
     mut salt: Vec<u8>,
     info: Vec<u8>,
 ) -> Result<Vec<u8>, String> {
+    // RFC 5869: HKDF-SHA256 output is limited to 255 * HashLen (8160 bytes).
+    // Validate before allocating so an invalid length cannot trigger a huge allocation.
+    const MAX_OUTPUT_LENGTH: u32 = 255 * 32;
+    if output_length > MAX_OUTPUT_LENGTH {
+        input_key_material.zeroize();
+        salt.zeroize();
+        return Err(format!(
+            "HKDF output length {} exceeds maximum {}",
+            output_length, MAX_OUTPUT_LENGTH
+        ));
+    }
+
     let salt_ref = if salt.is_empty() { None } else { Some(&salt[..]) };
     let hk = Hkdf::<Sha256>::new(salt_ref, &input_key_material);
     let mut output = vec![0u8; output_length as usize];
