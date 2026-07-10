@@ -113,32 +113,18 @@ void main(List<String> args) async {
 
     // Download if not cached
     if (!libFile.existsSync()) {
-      // Download checksums file for SHA256 verification (supply chain security)
       final baseUrl =
           'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
-      Map<String, String>? checksums;
-      String? expectedChecksum;
 
-      try {
-        checksums = await _downloadChecksums(baseUrl, version);
-        expectedChecksum = checksums[assetInfo.archiveFileName];
-
-        if (expectedChecksum == null) {
-          throw HookException(
-            'Checksum not found for ${assetInfo.archiveFileName} in checksums file. '
-            'Available files: ${checksums.keys.join(', ')}',
-          );
-        }
-      } catch (e) {
-        // If checksums download fails, log warning but continue
-        // This allows builds to work even if checksums file is missing
-        // (e.g., for older releases or local development)
-        // ignore: avoid_print
-        print(
-          'Warning: Could not verify SHA256 checksum: $e\n'
-          'Proceeding without verification (not recommended for production).',
-        );
-      }
+      // SECURITY: resolve the expected SHA256 before fetching the binary.
+      // Fail-closed — if a trusted checksum cannot be obtained the build aborts
+      // (unless explicitly overridden), so a failed/interfered checksum fetch
+      // cannot silently downgrade to running an unverified native library.
+      final expectedChecksum = await _resolveExpectedChecksum(
+        baseUrl,
+        version,
+        assetInfo.archiveFileName,
+      );
 
       await _downloadAndExtract(
         assetInfo.downloadUrl,
@@ -266,29 +252,22 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
       'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
   final cacheDir = input.outputDirectoryShared.resolve('web/');
 
-  // Download checksums for verification
-  Map<String, String>? checksums;
-  try {
-    checksums = await _downloadChecksums(baseUrl, version);
-  } catch (e) {
-    // ignore: avoid_print
-    print(
-      'Warning: Could not download checksums for web assets: $e\n'
-      'Proceeding without verification.',
-    );
-  }
-
   // Download WASM files to cache
   final archiveFileName = '$_crateName-$version-wasm32.tar.gz';
+
+  // SECURITY: resolve the expected SHA256 up front (fail-closed, see the
+  // native path above). The WASM assets are shipped in a single archive, so
+  // one checksum covers every file extracted from it.
+  final expectedChecksum = await _resolveExpectedChecksum(
+    baseUrl,
+    version,
+    archiveFileName,
+  );
+
   for (final fileName in _wasmFiles) {
     final file = File.fromUri(cacheDir.resolve(fileName));
 
     if (!file.existsSync()) {
-      String? expectedChecksum;
-      if (checksums != null) {
-        expectedChecksum = checksums[archiveFileName];
-      }
-
       await _downloadAndExtract(
         '$baseUrl/$archiveFileName',
         cacheDir,
@@ -645,6 +624,72 @@ Future<void> _extractZip(File archive, Directory outDir) async {
   if (result.exitCode != 0) {
     throw HookException('Failed to extract zip archive: ${result.stderr}');
   }
+}
+
+/// Environment variable that downgrades a missing/unfetchable checksum from a
+/// hard build failure to a warning. Unset by default, so verification is
+/// fail-closed: a network problem or an interfered checksum fetch aborts the
+/// build instead of silently loading an unverified native library.
+const _allowUnverifiedEnv = 'LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD';
+
+/// Whether the developer has explicitly opted out of checksum verification.
+bool _allowUnverifiedDownload() {
+  final value = Platform.environment[_allowUnverifiedEnv]?.trim().toLowerCase();
+  return value == '1' || value == 'true' || value == 'yes';
+}
+
+/// Resolves the expected SHA256 for [archiveFileName] from the release's
+/// checksums file.
+///
+/// Fail-closed: throws a [HookException] if the checksums file cannot be
+/// downloaded or has no entry for the archive, so an unverified binary is never
+/// used. Returns `null` (verification skipped, with a warning) only when the
+/// [_allowUnverifiedEnv] escape hatch is set.
+Future<String?> _resolveExpectedChecksum(
+  String baseUrl,
+  String version,
+  String archiveFileName,
+) async {
+  Map<String, String> checksums;
+  try {
+    checksums = await _downloadChecksums(baseUrl, version);
+  } catch (e) {
+    if (_allowUnverifiedDownload()) {
+      // ignore: avoid_print
+      print(
+        'Warning: could not download SHA256 checksums: $e\n'
+        '$_allowUnverifiedEnv is set — proceeding WITHOUT verification.',
+      );
+      return null;
+    }
+    throw HookException(
+      'Refusing to use an unverified native library: failed to download the '
+      'SHA256 checksums file for $_crateName-$version.\n'
+      'Cause: $e\n'
+      'This guards against a corrupted or tampered download. If you are '
+      'deliberately building against a release with no checksums file, set '
+      '$_allowUnverifiedEnv=1 to override (NOT recommended for production).',
+    );
+  }
+
+  final expected = checksums[archiveFileName];
+  if (expected == null) {
+    if (_allowUnverifiedDownload()) {
+      // ignore: avoid_print
+      print(
+        'Warning: no checksum entry for $archiveFileName.\n'
+        '$_allowUnverifiedEnv is set — proceeding WITHOUT verification.',
+      );
+      return null;
+    }
+    throw HookException(
+      'Refusing to use an unverified native library: the checksums file for '
+      '$_crateName-$version has no entry for $archiveFileName.\n'
+      'Available entries: ${checksums.keys.join(', ')}\n'
+      'Set $_allowUnverifiedEnv=1 to override (NOT recommended for production).',
+    );
+  }
+  return expected;
 }
 
 /// Downloads and verifies checksums file from GitHub Release.
