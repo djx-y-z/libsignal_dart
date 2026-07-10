@@ -177,6 +177,9 @@ pub struct SealedSenderEncryptResult {
 /// - `recipient_device_id` - Recipient's device ID
 /// - `plaintext` - The message to encrypt
 /// - `sender_certificate` - Our sender certificate (serialized)
+// FRB entry point: carries the SessionStore + IdentityKeyStore callbacks, so
+// the argument count mirrors the Signal store interface, not a refactor smell.
+#[allow(clippy::too_many_arguments)]
 pub async fn sealed_sender_encrypt_with_callbacks(
     recipient_name: String,
     recipient_device_id: u32,
@@ -188,12 +191,15 @@ pub async fn sealed_sender_encrypt_with_callbacks(
     // IdentityKeyStore callbacks
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<SealedSenderEncryptResult, String> {
     // Step 1: Load data via callbacks
     let mut session_bytes = load_session(recipient_name.clone(), recipient_device_id).await
         .ok_or("No session found - cannot encrypt without established session")?;
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
     let local_registration_id = get_local_registration_id().await;
+    // Previously-trusted identity for this recipient (None on first contact).
+    let known_recipient_identity = get_identity(recipient_name.clone(), recipient_device_id).await;
 
     // Step 2: Perform encryption
     let result = sealed_sender_encrypt_inner(
@@ -204,6 +210,7 @@ pub async fn sealed_sender_encrypt_with_callbacks(
         &session_bytes,
         &identity_key_pair_bytes,
         local_registration_id,
+        &known_recipient_identity,
     );
 
     // SECURITY: Zeroize sensitive data
@@ -221,6 +228,7 @@ pub async fn sealed_sender_encrypt_with_callbacks(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn sealed_sender_encrypt_inner(
     recipient_name: &str,
     recipient_device_id: u32,
@@ -229,6 +237,7 @@ fn sealed_sender_encrypt_inner(
     session_bytes: &[u8],
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
+    known_recipient_identity: &Option<Vec<u8>>,
 ) -> Result<(Vec<u8>, Vec<u8>), String> {
     // Parse sender certificate
     let cert = SenderCertificate::deserialize(sender_certificate)
@@ -250,6 +259,12 @@ fn sealed_sender_encrypt_inner(
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
+
+    // SECURITY: enforce identity-trust for the recipient (see preseed_identity).
+    // sealed_sender_encrypt goes through libsignal's message_encrypt, which
+    // consults is_trusted_identity(Sending), so a stored identity that differs
+    // from the session's yields UntrustedIdentity.
+    super::preseed_identity(&mut identity_store, &recipient_address, known_recipient_identity)?;
 
     // Populate session store
     block_on(async {
@@ -341,6 +356,7 @@ pub async fn sealed_sender_decrypt_with_callbacks(
     load_signed_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     load_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<SealedSenderDecryptResult, String> {
     // Step 1: Load identity data
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
@@ -359,6 +375,7 @@ pub async fn sealed_sender_decrypt_with_callbacks(
         &load_signed_pre_key,
         &load_pre_key,
         &load_kyber_pre_key,
+        &get_identity,
     ).await;
 
     // SECURITY: Zeroize identity key bytes
@@ -381,7 +398,13 @@ pub async fn sealed_sender_decrypt_with_callbacks(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn sealed_sender_decrypt_inner<LoadSessionFn, LoadSignedPreKeyFn, LoadPreKeyFn, LoadKyberPreKeyFn>(
+async fn sealed_sender_decrypt_inner<
+    LoadSessionFn,
+    LoadSignedPreKeyFn,
+    LoadPreKeyFn,
+    LoadKyberPreKeyFn,
+    GetIdentityFn,
+>(
     ciphertext: &[u8],
     trust_root: &[u8],
     timestamp: u64,
@@ -393,12 +416,14 @@ async fn sealed_sender_decrypt_inner<LoadSessionFn, LoadSignedPreKeyFn, LoadPreK
     load_signed_pre_key: &LoadSignedPreKeyFn,
     load_pre_key: &LoadPreKeyFn,
     load_kyber_pre_key: &LoadKyberPreKeyFn,
+    get_identity: &GetIdentityFn,
 ) -> Result<(Vec<u8>, String, u32, Vec<u8>, Vec<u8>, Option<u32>), String>
 where
     LoadSessionFn: Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
     LoadSignedPreKeyFn: Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
     LoadPreKeyFn: Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
     LoadKyberPreKeyFn: Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
+    GetIdentityFn: Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
 {
     // Parse trust root
     let root = PublicKey::deserialize(trust_root).map_err(|e| e.to_string())?;
@@ -419,7 +444,7 @@ where
     let usmc = block_on(async {
         libsignal_protocol::sealed_sender_decrypt_to_usmc(
             ciphertext,
-            &mut identity_store,
+            &identity_store,
         ).await
     }).map_err(|e| e.to_string())?;
 
@@ -439,6 +464,13 @@ where
         sender_name.clone(),
         sender_device_id.try_into().map_err(|_| "Invalid sender device ID")?,
     );
+
+    // SECURITY: enforce identity-trust against the previously-trusted identity
+    // for this cert-derived sender before establishing/advancing the session
+    // (see preseed_identity). Matters for the pre-key branch below, where
+    // libsignal's is_trusted_identity is consulted.
+    let known_sender_identity = get_identity(sender_name.clone(), sender_device_id).await;
+    super::preseed_identity(&mut identity_store, &sender_address, &known_sender_identity)?;
 
     // Load existing session if we have one
     if let Some(session_bytes) = load_session(sender_name.clone(), sender_device_id).await {
@@ -482,27 +514,27 @@ where
         }).map_err(|e| e.to_string())?;
         signed_pre_key_bytes.zeroize();
 
-        if let Some(id) = pre_key_id {
-            if let Some(mut bytes) = load_pre_key(id).await {
-                let prekey_record = PreKeyRecord::deserialize(&bytes)
-                    .map_err(|e| e.to_string())?;
-                block_on(async {
-                    prekey_store.save_pre_key(PreKeyId::from(id), &prekey_record).await
-                }).map_err(|e| e.to_string())?;
-                bytes.zeroize();
-                pre_key_to_remove = Some(id);
-            }
+        if let Some(id) = pre_key_id
+            && let Some(mut bytes) = load_pre_key(id).await
+        {
+            let prekey_record = PreKeyRecord::deserialize(&bytes)
+                .map_err(|e| e.to_string())?;
+            block_on(async {
+                prekey_store.save_pre_key(PreKeyId::from(id), &prekey_record).await
+            }).map_err(|e| e.to_string())?;
+            bytes.zeroize();
+            pre_key_to_remove = Some(id);
         }
 
-        if let Some(id) = kyber_pre_key_id {
-            if let Some(mut bytes) = load_kyber_pre_key(id).await {
-                let kyber_prekey_record = KyberPreKeyRecord::deserialize(&bytes)
-                    .map_err(|e: SignalProtocolError| e.to_string())?;
-                block_on(async {
-                    kyber_prekey_store.save_kyber_pre_key(KyberPreKeyId::from(id), &kyber_prekey_record).await
-                }).map_err(|e| e.to_string())?;
-                bytes.zeroize();
-            }
+        if let Some(id) = kyber_pre_key_id
+            && let Some(mut bytes) = load_kyber_pre_key(id).await
+        {
+            let kyber_prekey_record = KyberPreKeyRecord::deserialize(&bytes)
+                .map_err(|e: SignalProtocolError| e.to_string())?;
+            block_on(async {
+                kyber_prekey_store.save_kyber_pre_key(KyberPreKeyId::from(id), &kyber_prekey_record).await
+            }).map_err(|e| e.to_string())?;
+            bytes.zeroize();
         }
 
         // Decrypt pre-key message

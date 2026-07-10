@@ -76,6 +76,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         // Alice encrypts a message
@@ -92,6 +94,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         // Create a DecryptionErrorMessage from the encrypted bytes
@@ -133,6 +137,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final encrypted = await messageEncryptWithCallbacks(
@@ -147,6 +153,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
@@ -193,6 +201,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final encrypted = await messageEncryptWithCallbacks(
@@ -207,6 +217,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final timestamp = BigInt.from(1234567890000);
@@ -242,6 +254,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final encrypted = await messageEncryptWithCallbacks(
@@ -256,6 +270,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final errorMsg = DecryptionErrorMessage.forOriginalMessage(

@@ -116,6 +116,14 @@ class SessionCipher {
       getLocalRegistrationId: () async {
         return _identityKeyStore.getLocalRegistrationId();
       },
+      // Enforces identity-trust when sending: the Rust layer pre-seeds this
+      // known identity so libsignal rejects encryption to a session whose
+      // remote key differs from the stored one with UntrustedIdentity.
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
+      },
     );
 
     return CiphertextMessage.fromRaw(
@@ -203,6 +211,14 @@ class SessionCipher {
         );
         await _identityKeyStore.saveIdentity(addr, identityKey);
       },
+      // Enforces identity-trust when receiving: the Rust layer pre-seeds this
+      // known identity so libsignal rejects a message from a session whose
+      // remote key differs from the stored one with UntrustedIdentity.
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
+      },
     );
 
     return plaintext;
@@ -259,6 +275,14 @@ class SessionCipher {
       },
       markKyberPreKeyUsed: (id) async {
         await _kyberPreKeyStore.markKyberPreKeyUsed(id);
+      },
+      // Enforces identity-trust for the new session: the Rust layer pre-seeds
+      // this known identity so libsignal rejects a changed sender key with
+      // UntrustedIdentity instead of silently accepting it.
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
       },
     );
 

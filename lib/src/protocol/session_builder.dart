@@ -104,6 +104,13 @@ class SessionBuilder {
         );
         await _identityKeyStore.saveIdentity(addr, identityKey);
       },
+      // Enforces identity-trust: the Rust layer pre-seeds this known identity so
+      // libsignal rejects a changed remote key with UntrustedIdentity.
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
+      },
     );
   }
 }

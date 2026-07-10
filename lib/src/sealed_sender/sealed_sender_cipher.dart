@@ -141,6 +141,14 @@ class SealedSenderCipher {
       getLocalRegistrationId: () async {
         return _identityKeyStore.getLocalRegistrationId();
       },
+      // Enforces identity-trust when sending: sealed_sender_encrypt goes
+      // through libsignal's message_encrypt, so a stored recipient identity
+      // that differs from the session's is rejected with UntrustedIdentity.
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
+      },
     );
 
     return result.ciphertext;
@@ -204,6 +212,14 @@ class SealedSenderCipher {
       loadKyberPreKey: (id) async {
         final preKey = await _kyberPreKeyStore.loadKyberPreKey(id);
         return preKey?.serialize();
+      },
+      // Enforces identity-trust for the sender: the Rust layer pre-seeds this
+      // known identity so a changed sender key is rejected with UntrustedIdentity
+      // (relevant for the pre-key branch of sealed-sender decryption).
+      getIdentity: (name, deviceId) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identity = await _identityKeyStore.getIdentity(addr);
+        return identity?.serialize();
       },
     );
 

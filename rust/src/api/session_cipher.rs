@@ -71,6 +71,9 @@ pub fn extract_prekey_message_ids(message: Vec<u8>) -> Result<PreKeyMessageIds, 
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID
+// FRB entry point: carries the SessionStore + IdentityKeyStore callbacks, so
+// the argument count mirrors the Signal store interface, not a refactor smell.
+#[allow(clippy::too_many_arguments)]
 pub async fn message_encrypt_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
@@ -81,6 +84,7 @@ pub async fn message_encrypt_with_callbacks(
     store_session: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<EncryptResult, String> {
     // Step 1: Load data via callbacks
     let session_bytes = load_session(remote_name.clone(), remote_device_id)
@@ -94,6 +98,8 @@ pub async fn message_encrypt_with_callbacks(
         })?;
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
     let local_registration_id = get_local_registration_id().await;
+    // Previously-trusted identity for this recipient (None on first contact).
+    let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
     // Step 2: Encrypt
     let result = message_encrypt_inner(
@@ -105,6 +111,7 @@ pub async fn message_encrypt_with_callbacks(
         &session_bytes,
         &identity_key_pair_bytes,
         local_registration_id,
+        &known_remote_identity,
     );
 
     // SECURITY: Zeroize sensitive data
@@ -118,6 +125,7 @@ pub async fn message_encrypt_with_callbacks(
     Ok(encrypt_result)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn message_encrypt_inner(
     remote_name: &str,
     remote_device_id: u32,
@@ -127,6 +135,7 @@ fn message_encrypt_inner(
     session_bytes: &[u8],
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
+    known_remote_identity: &Option<Vec<u8>>,
 ) -> Result<(EncryptResult, Vec<u8>), String> {
     // Parse our identity
     let our_identity =
@@ -152,6 +161,11 @@ fn message_encrypt_inner(
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
+
+    // SECURITY: enforce identity-trust for the recipient (see preseed_identity).
+    // libsignal's message_encrypt consults is_trusted_identity(Sending), so a
+    // stored identity that differs from the session's yields UntrustedIdentity.
+    super::preseed_identity(&mut identity_store, &remote_address, known_remote_identity)?;
 
     // Populate session store
     block_on(async { session_store.store_session(&remote_address, &session).await })
@@ -213,6 +227,9 @@ fn message_encrypt_inner(
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID
+// FRB entry point: carries the SessionStore + IdentityKeyStore callbacks, so
+// the argument count mirrors the Signal store interface, not a refactor smell.
+#[allow(clippy::too_many_arguments)]
 pub async fn message_decrypt_signal_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
@@ -224,6 +241,7 @@ pub async fn message_decrypt_signal_with_callbacks(
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
     save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, String> {
     // Step 1: Load data via callbacks
     let session_bytes = load_session(remote_name.clone(), remote_device_id)
@@ -237,6 +255,8 @@ pub async fn message_decrypt_signal_with_callbacks(
         })?;
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
     let local_registration_id = get_local_registration_id().await;
+    // Previously-trusted identity for this sender (None on first contact).
+    let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
     // Step 2: Decrypt
     let result = message_decrypt_signal_inner(
@@ -248,6 +268,7 @@ pub async fn message_decrypt_signal_with_callbacks(
         &session_bytes,
         &identity_key_pair_bytes,
         local_registration_id,
+        &known_remote_identity,
     );
 
     // SECURITY: Zeroize sensitive data
@@ -262,7 +283,10 @@ pub async fn message_decrypt_signal_with_callbacks(
     Ok(plaintext)
 }
 
-#[allow(clippy::too_many_arguments)]
+// too_many_arguments: mirrors the store-callback surface above. type_complexity:
+// the returned tuple bundles the serialized outputs handed back to the async
+// wrapper (plaintext + updated session + identity to save).
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn message_decrypt_signal_inner(
     remote_name: &str,
     remote_device_id: u32,
@@ -272,6 +296,7 @@ fn message_decrypt_signal_inner(
     session_bytes: &[u8],
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
+    known_remote_identity: &Option<Vec<u8>>,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), String> {
     // Parse the message
     let message = SignalMessage::try_from(ciphertext).map_err(|e| e.to_string())?;
@@ -300,6 +325,11 @@ fn message_decrypt_signal_inner(
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
+
+    // SECURITY: enforce identity-trust for the sender (see preseed_identity).
+    // libsignal's message_decrypt_signal consults is_trusted_identity(Receiving),
+    // so a stored identity that differs from the session's yields UntrustedIdentity.
+    super::preseed_identity(&mut identity_store, &remote_address, known_remote_identity)?;
 
     // Populate session store
     block_on(async { session_store.store_session(&remote_address, &session).await })
@@ -356,6 +386,10 @@ fn message_decrypt_signal_inner(
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID
+// FRB entry point: carries the session, identity, pre-key, signed-pre-key and
+// Kyber store callbacks, so the argument count mirrors the Signal store
+// interface rather than being a refactor smell.
+#[allow(clippy::too_many_arguments)]
 pub async fn message_decrypt_prekey_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
@@ -372,6 +406,7 @@ pub async fn message_decrypt_prekey_with_callbacks(
     remove_pre_key: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     mark_kyber_pre_key_used: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, String> {
     // Extract pre-key IDs from the message first
     let prekey_msg =
@@ -384,6 +419,8 @@ pub async fn message_decrypt_prekey_with_callbacks(
     let existing_session_bytes = load_session(remote_name.clone(), remote_device_id).await;
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
     let local_registration_id = get_local_registration_id().await;
+    // Previously-trusted identity for this sender (None on first contact).
+    let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
     // Load pre-keys
     let signed_pre_key_bytes = load_signed_pre_key(signed_pre_key_id)
@@ -418,6 +455,7 @@ pub async fn message_decrypt_prekey_with_callbacks(
         &pre_key_bytes,
         kyber_pre_key_id.map(|id| id.into()),
         &kyber_pre_key_bytes,
+        &known_remote_identity,
     );
 
     // SECURITY: Zeroize sensitive data
@@ -442,7 +480,10 @@ pub async fn message_decrypt_prekey_with_callbacks(
     Ok(plaintext)
 }
 
-#[allow(clippy::too_many_arguments)]
+// too_many_arguments: mirrors the store-callback surface above. type_complexity:
+// the returned tuple bundles the serialized outputs handed back to the async
+// wrapper (plaintext + updated session + identity + decrypt result).
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn message_decrypt_prekey_inner(
     remote_name: &str,
     remote_device_id: u32,
@@ -458,6 +499,7 @@ fn message_decrypt_prekey_inner(
     pre_key_bytes: &Option<Vec<u8>>,
     kyber_pre_key_id: Option<u32>,
     kyber_pre_key_bytes: &Option<Vec<u8>>,
+    known_remote_identity: &Option<Vec<u8>>,
 ) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, DecryptResult), String> {
     // Parse the message
     let message = PreKeySignalMessage::try_from(ciphertext).map_err(|e| e.to_string())?;
@@ -492,6 +534,9 @@ fn message_decrypt_prekey_inner(
     let mut prekey_store = InMemPreKeyStore::new();
     let mut signed_prekey_store = InMemSignedPreKeyStore::new();
     let mut kyber_prekey_store = InMemKyberPreKeyStore::new();
+
+    // SECURITY: enforce identity-trust for the new session (see preseed_identity).
+    super::preseed_identity(&mut identity_store, &remote_address, known_remote_identity)?;
 
     // Populate session store if we have an existing session
     if let Some(session) = existing_session {

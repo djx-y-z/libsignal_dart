@@ -114,6 +114,7 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSealedSenderSealedSenderEncryptWithCallbacks(
   recipientName: recipientName,
   recipientDeviceId: recipientDeviceId,
@@ -123,6 +124,7 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
   storeSession: storeSession,
   getIdentityKeyPair: getIdentityKeyPair,
   getLocalRegistrationId: getLocalRegistrationId,
+  getIdentity: getIdentity,
 );
 
 /// Decrypt a Sealed Sender message.
@@ -162,6 +164,7 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
   required FutureOr<Uint8List?> Function(int) loadPreKey,
   required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSealedSenderSealedSenderDecryptWithCallbacks(
   ciphertext: ciphertext,
   trustRoot: trustRoot,
@@ -176,6 +179,7 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   loadSignedPreKey: loadSignedPreKey,
   loadPreKey: loadPreKey,
   loadKyberPreKey: loadKyberPreKey,
+  getIdentity: getIdentity,
 );
 
 /// Result of sealed sender decryption.

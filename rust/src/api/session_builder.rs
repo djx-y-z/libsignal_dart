@@ -43,6 +43,10 @@ pub struct ProcessPreKeyBundleResult {
 ///
 /// # Returns
 /// The result containing the new session record and identity to save.
+// FRB entry point: carries the full set of store callbacks (session, identity,
+// pre-key, signed-pre-key, Kyber), so the argument count mirrors the Signal
+// store interface rather than being a refactor smell.
+#[allow(clippy::too_many_arguments)]
 pub async fn process_prekey_bundle_with_callbacks(
     remote_name: String,
     remote_device_id: u32,
@@ -54,12 +58,16 @@ pub async fn process_prekey_bundle_with_callbacks(
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
     save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
+    get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<(), String> {
     // Step 1: Load data via callbacks
     let mut existing_session_bytes =
         load_session(remote_name.clone(), remote_device_id).await;
     let mut identity_key_pair_bytes = get_identity_key_pair().await;
     let local_registration_id = get_local_registration_id().await;
+    // The previously-trusted identity for this remote address (None on first
+    // contact). Used to enforce identity-trust below.
+    let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
     // Step 2: Process the bundle
     let result = process_prekey_bundle_inner(
@@ -71,6 +79,7 @@ pub async fn process_prekey_bundle_with_callbacks(
         &existing_session_bytes,
         &identity_key_pair_bytes,
         local_registration_id,
+        &known_remote_identity,
     );
 
     // SECURITY: Zeroize sensitive data
@@ -108,6 +117,7 @@ fn process_prekey_bundle_inner(
     existing_session_bytes: &Option<Vec<u8>>,
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
+    known_remote_identity: &Option<Vec<u8>>,
 ) -> Result<ProcessPreKeyBundleResult, String> {
     // Parse the identity key pair
     let our_identity =
@@ -130,6 +140,12 @@ fn process_prekey_bundle_inner(
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
+
+    // SECURITY: pre-seed the previously-trusted remote identity so libsignal's
+    // `is_trusted_identity` rejects a changed key with `UntrustedIdentity`
+    // instead of the fresh store silently trusting it (TOFU). None = first
+    // contact, which is still trusted-on-first-use.
+    super::preseed_identity(&mut identity_store, &remote_address, known_remote_identity)?;
 
     // Populate session store with existing session if provided
     if let Some(bytes) = existing_session_bytes {

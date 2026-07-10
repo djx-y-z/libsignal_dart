@@ -167,6 +167,9 @@ class PartyState {
   void saveIdentity(String name, int deviceId, Uint8List key) =>
       identityStorage['$name:$deviceId'] = key;
 
+  Uint8List? getIdentity(String name, int deviceId) =>
+      identityStorage['$name:$deviceId'];
+
   Uint8List loadSignedPreKey(int id) {
     final data = signedPreKeyStorage[id];
     if (data == null) throw StateError('Signed pre-key $id not found');
@@ -235,6 +238,10 @@ void main() {
         identityStorage['$name:$deviceId'] = identityKey;
       }
 
+      Uint8List? getIdentity(String name, int deviceId) {
+        return identityStorage['$name:$deviceId'];
+      }
+
       // Process Bob's bundle (Alice initiates session)
       await processPrekeyBundleWithCallbacks(
         remoteName: 'bob',
@@ -247,6 +254,7 @@ void main() {
         getIdentityKeyPair: getIdentityKeyPair,
         getLocalRegistrationId: getLocalRegistrationId,
         saveIdentity: saveIdentity,
+        getIdentity: getIdentity,
       );
 
       // Verify session was created and stored via callbacks
@@ -285,6 +293,7 @@ void main() {
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
         saveIdentity: alice.saveIdentity,
+        getIdentity: alice.getIdentity,
       );
 
       // Verify Alice now has a session with Bob
@@ -303,6 +312,7 @@ void main() {
         storeSession: alice.storeSession,
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
+        getIdentity: alice.getIdentity,
       );
 
       // First message should be a pre-key message (type 3)
@@ -330,6 +340,7 @@ void main() {
         removePreKey: bob.removePreKey,
         loadKyberPreKey: bob.loadKyberPreKey,
         markKyberPreKeyUsed: bob.markKyberPreKeyUsed,
+        getIdentity: bob.getIdentity,
       );
 
       // Verify the decrypted message (returns Uint8List directly)
@@ -351,6 +362,7 @@ void main() {
         storeSession: bob.storeSession,
         getIdentityKeyPair: bob.getIdentityKeyPair,
         getLocalRegistrationId: bob.getLocalRegistrationId,
+        getIdentity: bob.getIdentity,
       );
 
       // Bob's reply should be a Signal message (type 1) since session is established
@@ -373,6 +385,7 @@ void main() {
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
         saveIdentity: alice.saveIdentity,
+        getIdentity: alice.getIdentity,
       );
 
       // Verify the decrypted message (returns Uint8List directly)
@@ -390,6 +403,7 @@ void main() {
         storeSession: alice.storeSession,
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
+        getIdentity: alice.getIdentity,
       );
 
       // Should now be a Signal message since Bob has replied
@@ -411,6 +425,7 @@ void main() {
         getIdentityKeyPair: bob.getIdentityKeyPair,
         getLocalRegistrationId: bob.getLocalRegistrationId,
         saveIdentity: bob.saveIdentity,
+        getIdentity: bob.getIdentity,
       );
 
       expect(utf8.decode(decrypted3), equals(message3));

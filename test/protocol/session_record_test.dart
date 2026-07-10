@@ -65,6 +65,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
       });
 
@@ -156,6 +158,8 @@ void main() {
           getLocalRegistrationId: () => 111,
           saveIdentity: (name, deviceId, key) =>
               aliceIdentityStorage['$name:$deviceId'] = key,
+          getIdentity: (name, deviceId) =>
+              aliceIdentityStorage['$name:$deviceId'],
         );
 
         final sessionData = aliceSessionStorage['bob:1']!;

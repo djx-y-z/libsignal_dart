@@ -3878,6 +3878,7 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
     remove_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_kyber_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     mark_kyber_pre_key_used: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -3927,6 +3928,10 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
             let api_mark_kyber_pre_key_used = decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
                 mark_kyber_pre_key_used.cst_decode(),
             );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
+                );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
                     (move || async move {
@@ -3947,6 +3952,7 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
                                 api_remove_pre_key,
                                 api_load_kyber_pre_key,
                                 api_mark_kyber_pre_key_used,
+                                api_get_identity,
                             )
                             .await?;
                         Ok(output_ok)
@@ -3969,6 +3975,7 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_local_registration_id: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     save_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -4001,6 +4008,10 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
                 decode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                     save_identity.cst_decode(),
                 );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
+                );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
                     (move || async move {
@@ -4016,6 +4027,7 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
                                 api_get_identity_key_pair,
                                 api_get_local_registration_id,
                                 api_save_identity,
+                                api_get_identity,
                             )
                             .await?;
                         Ok(output_ok)
@@ -4037,6 +4049,7 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_local_registration_id: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -4065,6 +4078,10 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
             let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(
                 get_local_registration_id.cst_decode(),
             );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
+                );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
                     (move || async move {
@@ -4078,6 +4095,7 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
                             api_store_session,
                             api_get_identity_key_pair,
                             api_get_local_registration_id,
+                            api_get_identity,
                         )
                         .await?;
                         Ok(output_ok)
@@ -4102,6 +4120,7 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_local_registration_id: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     save_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -4133,6 +4152,10 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
             let api_save_identity =
                 decode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                     save_identity.cst_decode(),
+                );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
                 );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
@@ -4168,6 +4191,7 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
                                 api_get_identity_key_pair,
                                 api_get_local_registration_id,
                                 api_save_identity,
+                                api_get_identity,
                             )
                             .await?;
                         Ok(output_ok)
@@ -4208,6 +4232,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
     load_signed_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_kyber_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -4252,6 +4277,10 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                 decode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     load_kyber_pre_key.cst_decode(),
                 );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
+                );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
                     (move || async move {
@@ -4270,6 +4299,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                                 api_load_signed_pre_key,
                                 api_load_pre_key,
                                 api_load_kyber_pre_key,
+                                api_get_identity,
                             )
                             .await?;
                         Ok(output_ok)
@@ -4290,6 +4320,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
     store_session: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_local_registration_id: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
         flutter_rust_bridge::for_generated::TaskInfo {
@@ -4317,6 +4348,10 @@ fn wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
             let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(
                 get_local_registration_id.cst_decode(),
             );
+            let api_get_identity =
+                decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                    get_identity.cst_decode(),
+                );
             move |context| async move {
                 transform_result_dco::<_, _, String>(
                     (move || async move {
@@ -4330,6 +4365,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
                                 api_store_session,
                                 api_get_identity_key_pair,
                                 api_get_local_registration_id,
+                                api_get_identity,
                             )
                             .await?;
                         Ok(output_ok)
@@ -7846,6 +7882,7 @@ mod io {
         remove_pre_key: *const std::ffi::c_void,
         load_kyber_pre_key: *const std::ffi::c_void,
         mark_kyber_pre_key_used: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
             port_,
@@ -7864,6 +7901,7 @@ mod io {
             remove_pre_key,
             load_kyber_pre_key,
             mark_kyber_pre_key_used,
+            get_identity,
         )
     }
 
@@ -7880,6 +7918,7 @@ mod io {
         get_identity_key_pair: *const std::ffi::c_void,
         get_local_registration_id: *const std::ffi::c_void,
         save_identity: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
             port_,
@@ -7893,6 +7932,7 @@ mod io {
             get_identity_key_pair,
             get_local_registration_id,
             save_identity,
+            get_identity,
         )
     }
 
@@ -7908,6 +7948,7 @@ mod io {
         store_session: *const std::ffi::c_void,
         get_identity_key_pair: *const std::ffi::c_void,
         get_local_registration_id: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
             port_,
@@ -7920,6 +7961,7 @@ mod io {
             store_session,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 
@@ -7936,6 +7978,7 @@ mod io {
         get_identity_key_pair: *const std::ffi::c_void,
         get_local_registration_id: *const std::ffi::c_void,
         save_identity: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
             port_,
@@ -7949,6 +7992,7 @@ mod io {
             get_identity_key_pair,
             get_local_registration_id,
             save_identity,
+            get_identity,
         )
     }
 
@@ -7989,6 +8033,7 @@ mod io {
         load_signed_pre_key: *const std::ffi::c_void,
         load_pre_key: *const std::ffi::c_void,
         load_kyber_pre_key: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
             port_,
@@ -8005,6 +8050,7 @@ mod io {
             load_signed_pre_key,
             load_pre_key,
             load_kyber_pre_key,
+            get_identity,
         )
     }
 
@@ -8019,6 +8065,7 @@ mod io {
         store_session: *const std::ffi::c_void,
         get_identity_key_pair: *const std::ffi::c_void,
         get_local_registration_id: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
             port_,
@@ -8030,6 +8077,7 @@ mod io {
             store_session,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 
@@ -10183,6 +10231,7 @@ mod web {
         remove_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_kyber_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         mark_kyber_pre_key_used: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
             port_,
@@ -10201,6 +10250,7 @@ mod web {
             remove_pre_key,
             load_kyber_pre_key,
             mark_kyber_pre_key_used,
+            get_identity,
         )
     }
 
@@ -10217,6 +10267,7 @@ mod web {
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_local_registration_id: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         save_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
             port_,
@@ -10230,6 +10281,7 @@ mod web {
             get_identity_key_pair,
             get_local_registration_id,
             save_identity,
+            get_identity,
         )
     }
 
@@ -10245,6 +10297,7 @@ mod web {
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_local_registration_id: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
             port_,
@@ -10257,6 +10310,7 @@ mod web {
             store_session,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 
@@ -10273,6 +10327,7 @@ mod web {
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_local_registration_id: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         save_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
             port_,
@@ -10286,6 +10341,7 @@ mod web {
             get_identity_key_pair,
             get_local_registration_id,
             save_identity,
+            get_identity,
         )
     }
 
@@ -10326,6 +10382,7 @@ mod web {
         load_signed_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_kyber_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
             port_,
@@ -10342,6 +10399,7 @@ mod web {
             load_signed_pre_key,
             load_pre_key,
             load_kyber_pre_key,
+            get_identity,
         )
     }
 
@@ -10356,6 +10414,7 @@ mod web {
         store_session: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_local_registration_id: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
             port_,
@@ -10367,6 +10426,7 @@ mod web {
             store_session,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 

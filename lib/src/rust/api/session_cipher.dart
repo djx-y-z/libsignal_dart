@@ -36,6 +36,7 @@ Future<EncryptResult> messageEncryptWithCallbacks({
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSessionCipherMessageEncryptWithCallbacks(
   remoteName: remoteName,
   remoteDeviceId: remoteDeviceId,
@@ -46,6 +47,7 @@ Future<EncryptResult> messageEncryptWithCallbacks({
   storeSession: storeSession,
   getIdentityKeyPair: getIdentityKeyPair,
   getLocalRegistrationId: getLocalRegistrationId,
+  getIdentity: getIdentity,
 );
 
 /// Decrypt a Signal message (not a pre-key message) with DartFn callbacks.
@@ -71,6 +73,7 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
   required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) =>
     RustLib.instance.api.crateApiSessionCipherMessageDecryptSignalWithCallbacks(
       remoteName: remoteName,
@@ -83,6 +86,7 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
       getIdentityKeyPair: getIdentityKeyPair,
       getLocalRegistrationId: getLocalRegistrationId,
       saveIdentity: saveIdentity,
+      getIdentity: getIdentity,
     );
 
 /// Decrypt a pre-key Signal message (first message in a new session) with DartFn callbacks.
@@ -118,6 +122,7 @@ Future<Uint8List> messageDecryptPrekeyWithCallbacks({
   required FutureOr<void> Function(int) removePreKey,
   required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
   required FutureOr<void> Function(int) markKyberPreKeyUsed,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) =>
     RustLib.instance.api.crateApiSessionCipherMessageDecryptPrekeyWithCallbacks(
       remoteName: remoteName,
@@ -135,6 +140,7 @@ Future<Uint8List> messageDecryptPrekeyWithCallbacks({
       removePreKey: removePreKey,
       loadKyberPreKey: loadKyberPreKey,
       markKyberPreKeyUsed: markKyberPreKeyUsed,
+      getIdentity: getIdentity,
     );
 
 /// Result of encrypting a message.

@@ -39,6 +39,7 @@ Future<void> processPrekeyBundleWithCallbacks({
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
   required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) =>
     RustLib.instance.api.crateApiSessionBuilderProcessPrekeyBundleWithCallbacks(
       remoteName: remoteName,
@@ -51,4 +52,5 @@ Future<void> processPrekeyBundleWithCallbacks({
       getIdentityKeyPair: getIdentityKeyPair,
       getLocalRegistrationId: getLocalRegistrationId,
       saveIdentity: saveIdentity,
+      getIdentity: getIdentity,
     );

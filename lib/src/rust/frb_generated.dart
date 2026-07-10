@@ -589,6 +589,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
     required FutureOr<void> Function(int) markKyberPreKeyUsed,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<Uint8List> crateApiSessionCipherMessageDecryptSignalWithCallbacks({
@@ -602,6 +603,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<EncryptResult> crateApiSessionCipherMessageEncryptWithCallbacks({
@@ -614,6 +616,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<void> crateApiSessionBuilderProcessPrekeyBundleWithCallbacks({
@@ -627,6 +630,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<Uint8List>
@@ -655,6 +659,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<SealedSenderEncryptResult>
@@ -667,6 +672,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   BigInt crateApiSealedSenderSenderCertificateGetExpiration({
@@ -4785,6 +4791,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
     required FutureOr<void> Function(int) markKyberPreKeyUsed,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -4831,6 +4838,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           var arg14 = cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
             markKyberPreKeyUsed,
           );
+          var arg15 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks(
                 port_,
@@ -4849,6 +4860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg12,
                 arg13,
                 arg14,
+                arg15,
               );
         },
         codec: DcoCodec(
@@ -4873,6 +4885,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           removePreKey,
           loadKyberPreKey,
           markKyberPreKeyUsed,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -4899,6 +4912,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "removePreKey",
           "loadKyberPreKey",
           "markKyberPreKeyUsed",
+          "getIdentity",
         ],
       );
 
@@ -4914,6 +4928,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -4942,6 +4957,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
+          var arg10 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks(
                 port_,
@@ -4955,6 +4974,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg7,
                 arg8,
                 arg9,
+                arg10,
               );
         },
         codec: DcoCodec(
@@ -4974,6 +4994,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           getIdentityKeyPair,
           getLocalRegistrationId,
           saveIdentity,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -4995,6 +5016,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "getIdentityKeyPair",
           "getLocalRegistrationId",
           "saveIdentity",
+          "getIdentity",
         ],
       );
 
@@ -5009,6 +5031,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -5033,6 +5056,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           var arg8 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
+          var arg9 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__session_cipher__message_encrypt_with_callbacks(
                 port_,
@@ -5045,6 +5072,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg6,
                 arg7,
                 arg8,
+                arg9,
               );
         },
         codec: DcoCodec(
@@ -5062,6 +5090,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -5082,6 +5111,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "getIdentity",
         ],
       );
 
@@ -5097,6 +5127,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -5128,6 +5159,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
                 saveIdentity,
               );
+          var arg10 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__session_builder__process_prekey_bundle_with_callbacks(
                 port_,
@@ -5141,6 +5176,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg7,
                 arg8,
                 arg9,
+                arg10,
               );
         },
         codec: DcoCodec(
@@ -5160,6 +5196,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           getIdentityKeyPair,
           getLocalRegistrationId,
           saveIdentity,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -5181,6 +5218,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "getIdentityKeyPair",
           "getLocalRegistrationId",
           "saveIdentity",
+          "getIdentity",
         ],
       );
 
@@ -5270,6 +5308,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -5310,6 +5349,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadKyberPreKey,
               );
+          var arg13 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
                 port_,
@@ -5326,6 +5369,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg10,
                 arg11,
                 arg12,
+                arg13,
               );
         },
         codec: DcoCodec(
@@ -5348,6 +5392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           loadSignedPreKey,
           loadPreKey,
           loadKyberPreKey,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -5372,6 +5417,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "loadSignedPreKey",
           "loadPreKey",
           "loadKyberPreKey",
+          "getIdentity",
         ],
       );
 
@@ -5386,6 +5432,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -5409,6 +5456,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           var arg7 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
+          var arg8 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
                 port_,
@@ -5420,6 +5471,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg5,
                 arg6,
                 arg7,
+                arg8,
               );
         },
         codec: DcoCodec(
@@ -5437,6 +5489,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -5456,6 +5509,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "getIdentity",
         ],
       );
 

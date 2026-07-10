@@ -4221,6 +4221,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> remove_pre_key,
     ffi.Pointer<ffi.Void> load_kyber_pre_key,
     ffi.Pointer<ffi.Void> mark_kyber_pre_key_used,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks(
       port_,
@@ -4239,6 +4240,7 @@ class RustLibWire implements BaseWire {
       remove_pre_key,
       load_kyber_pre_key,
       mark_kyber_pre_key_used,
+      get_identity,
     );
   }
 
@@ -4252,6 +4254,7 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4287,6 +4290,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
             )
           >();
 
@@ -4302,6 +4306,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
     ffi.Pointer<ffi.Void> save_identity,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks(
       port_,
@@ -4315,6 +4320,7 @@ class RustLibWire implements BaseWire {
       get_identity_key_pair,
       get_local_registration_id,
       save_identity,
+      get_identity,
     );
   }
 
@@ -4328,6 +4334,7 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4353,6 +4360,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
             )
           >();
 
@@ -4367,6 +4375,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> store_session,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__session_cipher__message_encrypt_with_callbacks(
       port_,
@@ -4379,6 +4388,7 @@ class RustLibWire implements BaseWire {
       store_session,
       get_identity_key_pair,
       get_local_registration_id,
+      get_identity,
     );
   }
 
@@ -4392,6 +4402,7 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4415,6 +4426,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
             )
           >();
 
@@ -4430,6 +4442,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
     ffi.Pointer<ffi.Void> save_identity,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__session_builder__process_prekey_bundle_with_callbacks(
       port_,
@@ -4443,6 +4456,7 @@ class RustLibWire implements BaseWire {
       get_identity_key_pair,
       get_local_registration_id,
       save_identity,
+      get_identity,
     );
   }
 
@@ -4456,6 +4470,7 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.UintPtr,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4476,6 +4491,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               int,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
@@ -4550,6 +4566,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> load_signed_pre_key,
     ffi.Pointer<ffi.Void> load_pre_key,
     ffi.Pointer<ffi.Void> load_kyber_pre_key,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
       port_,
@@ -4566,6 +4583,7 @@ class RustLibWire implements BaseWire {
       load_signed_pre_key,
       load_pre_key,
       load_kyber_pre_key,
+      get_identity,
     );
   }
 
@@ -4579,6 +4597,7 @@ class RustLibWire implements BaseWire {
             ffi.Uint64,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4610,6 +4629,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
             )
           >();
 
@@ -4623,6 +4643,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> store_session,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
       port_,
@@ -4634,6 +4655,7 @@ class RustLibWire implements BaseWire {
       store_session,
       get_identity_key_pair,
       get_local_registration_id,
+      get_identity,
     );
   }
 
@@ -4646,6 +4668,7 @@ class RustLibWire implements BaseWire {
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4664,6 +4687,7 @@ class RustLibWire implements BaseWire {
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,

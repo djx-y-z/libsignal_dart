@@ -263,6 +263,11 @@ void main() {
             final identityKey = PublicKey.deserialize(bytes: identityBytes);
             await bobIdentityStore.saveIdentity(addr, identityKey);
           },
+          getIdentity: (name, deviceId) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final identity = await bobIdentityStore.getIdentity(addr);
+            return identity?.serialize();
+          },
           loadSignedPreKey: (id) async {
             final preKey = await bobSignedPreKeyStore.loadSignedPreKey(id);
             if (preKey == null) {
@@ -345,6 +350,11 @@ void main() {
             final addr = ProtocolAddress(name: name, deviceId: deviceId);
             final identityKey = PublicKey.deserialize(bytes: identityBytes);
             await bobIdentityStore.saveIdentity(addr, identityKey);
+          },
+          getIdentity: (name, deviceId) async {
+            final addr = ProtocolAddress(name: name, deviceId: deviceId);
+            final identity = await bobIdentityStore.getIdentity(addr);
+            return identity?.serialize();
           },
           loadSignedPreKey: (id) async {
             final preKey = await bobSignedPreKeyStore.loadSignedPreKey(id);

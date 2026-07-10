@@ -2634,6 +2634,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer remove_pre_key,
     PlatformPointer load_kyber_pre_key,
     PlatformPointer mark_kyber_pre_key_used,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks(
         port_,
@@ -2652,6 +2653,7 @@ class RustLibWire implements BaseWire {
         remove_pre_key,
         load_kyber_pre_key,
         mark_kyber_pre_key_used,
+        get_identity,
       );
 
   void wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks(
@@ -2666,6 +2668,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
     PlatformPointer save_identity,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks(
         port_,
@@ -2679,6 +2682,7 @@ class RustLibWire implements BaseWire {
         get_identity_key_pair,
         get_local_registration_id,
         save_identity,
+        get_identity,
       );
 
   void wire__crate__api__session_cipher__message_encrypt_with_callbacks(
@@ -2692,6 +2696,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_cipher__message_encrypt_with_callbacks(
         port_,
@@ -2704,6 +2709,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        get_identity,
       );
 
   void wire__crate__api__session_builder__process_prekey_bundle_with_callbacks(
@@ -2718,6 +2724,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
     PlatformPointer save_identity,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_builder__process_prekey_bundle_with_callbacks(
         port_,
@@ -2731,6 +2738,7 @@ class RustLibWire implements BaseWire {
         get_identity_key_pair,
         get_local_registration_id,
         save_identity,
+        get_identity,
       );
 
   void
@@ -2768,6 +2776,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer load_signed_pre_key,
     PlatformPointer load_pre_key,
     PlatformPointer load_kyber_pre_key,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
         port_,
@@ -2784,6 +2793,7 @@ class RustLibWire implements BaseWire {
         load_signed_pre_key,
         load_pre_key,
         load_kyber_pre_key,
+        get_identity,
       );
 
   void wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
@@ -2796,6 +2806,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
         port_,
@@ -2807,6 +2818,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        get_identity,
       );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3602,6 +3614,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer remove_pre_key,
     PlatformPointer load_kyber_pre_key,
     PlatformPointer mark_kyber_pre_key_used,
+    PlatformPointer get_identity,
   );
 
   external void
@@ -3617,6 +3630,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
     PlatformPointer save_identity,
+    PlatformPointer get_identity,
   );
 
   external void
@@ -3631,6 +3645,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   );
 
   external void
@@ -3646,6 +3661,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
     PlatformPointer save_identity,
+    PlatformPointer get_identity,
   );
 
   external void
@@ -3675,6 +3691,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer load_signed_pre_key,
     PlatformPointer load_pre_key,
     PlatformPointer load_kyber_pre_key,
+    PlatformPointer get_identity,
   );
 
   external void
@@ -3688,6 +3705,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
