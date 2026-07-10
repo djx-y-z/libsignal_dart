@@ -224,6 +224,106 @@ These concerns from the old C FFI architecture are now handled automatically:
 | Use-after-free | Rust ownership |
 | Memory zeroing | Rust (zeroize crate in libsignal) |
 
+## Supply Chain Security
+
+Native libraries are built from source in GitHub Actions and downloaded by the
+build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
+
+- **Integrity (implemented):** every downloaded archive is verified against a
+  SHA256 checksum published in the same release. Verification is **fail-closed** —
+  if the checksums file cannot be fetched or lacks an entry for the archive, the
+  build **aborts** rather than loading an unverified binary. The escape hatch
+  `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD=1` exists only for building against older
+  releases with no checksums file and should not be used in production.
+- **Authenticity (not yet implemented):** the checksums file is served from the
+  same release as the archive, so SHA256 alone does not defend against a release
+  or maintainer-token compromise (an attacker who replaces the archive can also
+  replace its checksum). A detached signature (e.g. minisign/cosign) with a
+  public key pinned in `hook/build.dart`, plus SLSA build provenance
+  (`actions/attest-build-provenance`), is the recommended next step and is
+  tracked as future work.
+
+### Dependency Auditing
+
+Two complementary checks run in CI (on pushes to `main` and on pull requests
+that touch the sources) and can be run locally:
+
+```bash
+make rust-audit   # cargo audit — fails on known RustSec vulnerabilities
+make rust-deny    # cargo deny — advisories + license + source allow-list policy
+```
+
+`rust/deny.toml` restricts dependency sources to crates.io and the official
+Signal git repositories, and constrains licenses to an AGPL-compatible set.
+
+## Static Analysis
+
+Both language surfaces are linted in CI (and can be run locally):
+
+```bash
+make analyze ARGS="--fatal-infos"   # dart analyze — Dart/Flutter lints (fatal infos)
+make rust-clippy                    # cargo clippy --all-targets -- -D warnings
+```
+
+`make rust-clippy` treats every Clippy warning as an error, so the hand-written
+Rust wrapper stays lint-clean. The handful of Clippy lints that are inherent to
+the FRB boundary — the many-argument store-callback signatures and the tuple
+return types the async wrappers hand back — carry a justified site-local
+`#[allow]` rather than a blanket suppression. The FRB-generated bridge is out of
+scope. The separate, nightly-only fuzz crate can additionally be linted with
+`cd rust/fuzz && cargo +nightly clippy` — a manual command, not part of the CI
+clippy gate.
+
+## Fuzzing
+
+Byte-parsing entry points (the network/storage boundary) are covered by
+`cargo-fuzz` targets under `rust/fuzz/`:
+
+| Target | Covers |
+|--------|--------|
+| `keys` | `PublicKey` / `PrivateKey` / `IdentityKeyPair` deserialization |
+| `messages` | `SignalMessage` / `DecryptionErrorMessage` parsing |
+| `records` | pre-key / signed-pre-key / session / Kyber record deserialization |
+| `certificates` | sealed-sender certificate parsing and validation |
+| `crypto_primitives` | HKDF, AES-256-GCM-SIV, fingerprint comparison |
+| `session_decrypt` | pre-key message decryption (network-controlled ciphertext) |
+
+```bash
+make setup-fuzz                          # one-time: nightly toolchain + cargo-fuzz
+make fuzz-seed                           # generate a valid seed corpus
+make fuzz ARGS="keys -- -max_total_time=60"
+```
+
+A dedicated `Fuzz` workflow runs a short smoke pass on every PR that touches
+`rust/**` and a longer weekly pass, uploading any crash reproducer as an artifact.
+
+## Identity Trust (MITM / safety-number-change detection)
+
+Identity-trust is **enforced on every session operation**, matching upstream
+libsignal's `is_trusted_identity` semantics: session establishment
+(`processPreKeyBundle`), encryption (`SessionCipher.encrypt` and
+`SealedSenderCipher.encrypt` — upstream's `Direction::Sending` check), and
+decryption of both pre-key and regular (Whisper) messages, including Sealed
+Sender (`Direction::Receiving`). The library pre-seeds the previously-trusted
+remote identity (read from your `IdentityKeyStore.getIdentity`) into libsignal,
+so a **remote identity key that differs from the stored one is rejected with an
+`UntrustedIdentity` error** rather than being silently accepted — whether it
+arrives in a new bundle / pre-key message or disagrees with the identity bound
+to an existing session. First contact (no stored identity) is
+trusted-on-first-use.
+
+Applications **must handle the `UntrustedIdentity` error** (its message contains
+`untrusted identity`): treat it as a safety-number change — surface it to the
+user, and only after explicit verification save the new identity (or remove the
+old one) in your store. Note that after re-trusting a new identity, messages
+from sessions still bound to the old key are rejected too — archive or delete
+the old session for that address so a fresh one is established. Continue to
+offer fingerprint / safety-number verification via `Fingerprint`.
+
+This depends on your `IdentityKeyStore` implementing `getIdentity` correctly (the
+provided in-memory store does). A store that always returns `null` from
+`getIdentity` effectively disables the check.
+
 ## Known Limitations
 
 1. **Dart VM memory:** Dart's garbage collector may copy data before Rust can zero it. This is a platform limitation, but libsignal's Rust code uses the `zeroize` crate for sensitive data.

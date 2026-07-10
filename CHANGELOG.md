@@ -1,3 +1,43 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **Identity-trust enforcement (breaking)** — a remote identity key that differs from the stored one is now rejected with `UntrustedIdentity` on every session operation (MITM / safety-number-change detection), instead of being silently accepted
+- **Hardened supply chain & binary** — the native-binary download is now fail-closed (aborts if it can't be verified), and the wrapper crate is built with integer-overflow checks
+- **libsignal v0.96.4** — unchanged this release
+- **libsignal_frb (internal Rust FFI crate)** — breaking: adds a required `get_identity` callback (version bumped at release)
+
+#### Changed (Breaking)
+
+- **Identity-trust is now enforced on every session operation**, matching upstream libsignal's `is_trusted_identity` semantics. `SessionBuilder.processPreKeyBundle`, `SessionCipher.encrypt`/`decrypt` (both pre-key and regular Whisper messages), and `SealedSenderCipher.encrypt`/`decrypt` now consult your `IdentityKeyStore.getIdentity` and reject a remote identity key that differs from the stored one with an `UntrustedIdentity` error. Previously a substituted identity (e.g. from a malicious key-distribution server) was accepted without error. First contact is still trusted-on-first-use.
+  - **Action required:** catch `UntrustedIdentity` (its message contains `untrusted identity`) and treat it as a safety-number change — verify with the user, then save the new identity (or clear the old one) in your store and archive the old session for that address before retrying. Requires your `IdentityKeyStore.getIdentity` to be implemented correctly.
+
+#### Security
+
+- **Fail-closed native library verification** — the build hook (`hook/build.dart`) now aborts the build if the SHA256 checksums for a downloaded binary cannot be fetched or the archive has no entry, instead of silently proceeding unverified. An escape hatch (`LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD=1`) remains for releases with no checksums file
+- **Hardened crate build** — the wrapper's release profile enables `overflow-checks`, so an integer overflow in the wrapper is a deterministic (catchable) panic rather than silent wraparound (the audited crypto dependencies are left untouched)
+
+#### Fixed
+
+- **Device ID truncation** — the `ProtocolAddress` and `PreKeyBundle` constructors no longer truncate the `u32` device ID to `u8` before validating (e.g. `257` is no longer accepted as device `1`); out-of-range IDs are rejected as documented (1–127)
+- **HKDF output bound** — `hkdfDerive` now rejects an output length above the RFC 5869 maximum (`255 × 32 = 8160` bytes) before allocating, instead of attempting an oversized allocation
+- **In-memory identity-store equality** — `InMemoryIdentityKeyStore` now compares identity keys by value (`equals()`) rather than by object reference, so a re-presented key is correctly seen as unchanged (matters for production stores copied from this reference implementation)
+
+### For Contributors
+
+#### Added
+
+- **Fuzzing harness** — `cargo-fuzz` targets (`rust/fuzz/`) covering every byte-parsing entry point (keys, messages, records, sealed-sender certificates, crypto primitives, pre-key decryption), a seed-corpus generator, and a `Fuzz` CI workflow (per-PR smoke run + weekly deep run). See `make fuzz-list` / `make fuzz`
+- **Dependency policy** — `cargo-deny` (`rust/deny.toml`, `make rust-deny`, CI `deny` job) enforcing RustSec advisories, an AGPL-compatible license allow-list, and a source allow-list restricted to crates.io and the official Signal repositories
+- **Rust linting (Clippy)** — `cargo clippy --all-targets -- -D warnings` now runs in CI (the reusable test workflow, on the Linux x86_64 leg) and locally via `make rust-clippy`; the hand-written wrapper is lint-clean, with the FRB-inherent lints (many-callback store signatures, complex tuple returns) annotated with justified site-local `#[allow]`s
+
+#### Changed
+
+- **CI least-privilege** — the reusable test workflow now declares `permissions: contents: read`
+- **Rust lint** — hand-written Rust is compiled with `unsafe_code = "deny"` (only the FRB-generated bridge is exempt)
+
 ## [5.0.9] - 2026-06-27
 
 ### For Users
