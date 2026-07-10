@@ -14,6 +14,9 @@ runs:
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ inputs.targets }}
+        # clippy is needed by `make rust-clippy` (the test job's lint step).
+        # dtolnay/rust-toolchain installs the minimal profile, which omits it.
+        components: clippy
 
     - name: Add cargo bin to PATH (Unix)
       if: runner.os != 'Windows'

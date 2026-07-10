@@ -1,0 +1,81 @@
+[package]
+name = "libsignal_frb-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", features = ["derive"] }
+# Must match the version used by the main crate so DartFnFuture is the same type.
+flutter_rust_bridge = "=2.12.0"
+once_cell = "1"
+# Drives async entry points the way FRB does in production; the wrapper's
+# internal futures::executor::block_on calls panic if nested inside another
+# futures executor, so the harness must not use one.
+tokio = { version = "1", features = ["rt"] }
+
+[dependencies.libsignal_frb]
+path = ".."
+
+# Keep overflow and debug-assertion checks on even for optimized fuzzing runs
+# so arithmetic bugs surface as crashes instead of silent wraparound.
+[profile.release]
+debug = 1
+overflow-checks = true
+debug-assertions = true
+
+[[bin]]
+name = "keys"
+path = "fuzz_targets/keys.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "messages"
+path = "fuzz_targets/messages.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "records"
+path = "fuzz_targets/records.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "certificates"
+path = "fuzz_targets/certificates.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "crypto_primitives"
+path = "fuzz_targets/crypto_primitives.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "session_decrypt"
+path = "fuzz_targets/session_decrypt.rs"
+test = false
+doc = false
+bench = false
+
+# Not a fuzz target: a helper that writes a valid seed corpus. Kept as an
+# example (not a [[bin]]) so `cargo fuzz list` doesn't treat it as a target,
+# while still reusing the exact serialization the fuzz targets consume.
+[[example]]
+name = "gen_corpus"
+path = "examples/gen_corpus.rs"
+test = false
+doc = false
+bench = false

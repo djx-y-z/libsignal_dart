@@ -36,8 +36,7 @@ make codegen                      # Generate Dart bindings from Rust code
 
 ### Build
 ```bash
-make build                              # Build for current platform (debug)
-make build ARGS="--release"             # Build for current platform (release)
+make build                              # Build for current platform (always release)
 make build ARGS="--target <target>"     # Build for specific Rust target
 make build-android                      # Build for Android (all ABIs)
 make build-android ARGS="--target arm64-v8a"  # Build for specific Android ABI
@@ -47,8 +46,22 @@ make build-web                          # Build WASM for web
 ### Rust Quality
 ```bash
 make rust-check                   # Check Rust code compiles
+make rust-clippy                  # Lint Rust code with clippy (warnings = errors)
 make rust-audit                   # Audit Rust dependencies for vulnerabilities
+make rust-deny                    # Check advisories/licenses/sources (cargo-deny)
 ```
+
+### Fuzzing
+```bash
+make setup-fuzz                   # One-time: install nightly + cargo-fuzz
+make fuzz-list                    # List available fuzz targets
+make fuzz-seed                    # Generate the seed corpus (rust/fuzz/corpus/)
+make fuzz ARGS="keys -- -max_total_time=60"  # Run a target
+```
+
+Fuzz targets live in `rust/fuzz/fuzz_targets/`; the seed generator is
+`rust/fuzz/examples/gen_corpus.rs`. A `Fuzz` CI workflow runs a smoke pass on
+`rust/**` PRs and a longer weekly pass. See `SECURITY.md` for the coverage table.
 
 ### Dart Quality
 ```bash
@@ -344,23 +357,59 @@ For production, implement store interfaces with secure storage (SQLite, SecureSt
 
 ## Changelog Format
 
-Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format:
+Each release is a `## [X.Y.Z] - YYYY-MM-DD` heading split into **audience-scoped**
+sections. Keep this structure so entries stay consistent across releases.
 
 ```markdown
-## X.Y.Z
+## [X.Y.Z] - YYYY-MM-DD
 
-### Added
-- New features
+### For Users
 
-### Changed
-- Changes in existing functionality
+#### ✨ Highlights
 
-### Fixed
-- Bug fixes
+- **<headline>** — short description (mark breaking ones **(breaking)**)
+- **libsignal vX.Y.Z** — ... (state "unchanged this release" if it didn't move)
+- **libsignal_frb vX.Y.Z** — Rust FFI bindings
 
-### Security
-- Security-related changes
+#### Changed (Breaking)
+
+- **<summary>** — what broke. Include an **Action required:** note.
+
+#### Changed
+
+- **<summary>** — non-breaking behavior/API change
+
+#### Security
+
+- **<summary>** — security-relevant, user-observable change
+
+#### Fixed
+
+- **<summary>** — bug fix
+
+### For Contributors
+
+#### Added
+
+- **<summary>** — internal tooling only (fuzzing, cargo-deny, scripts, …)
+
+#### Changed
+
+- **<summary>** — CI / lints / build config / template adoption
 ```
+
+Rules:
+- **`### For Users`** = anything a consumer of the published package can observe
+  (public API, runtime behavior, the native binary, the build hook). A change is
+  "For Users" even if it feels internal when a consumer sees it at build/run time
+  (e.g. `overflow-checks` in the shipped binary).
+- **`### For Contributors`** = changes that do NOT affect the published package's
+  behavior (CI, dev tooling, lints, fuzzing, cargo-deny, build scripts, template
+  adoption).
+- Every bullet starts with a **bold summary** + em-dash, then the detail.
+- Omit any section/subsection with no entries. Order subsections as shown
+  (Highlights → Changed (Breaking) → Changed → Security → Fixed).
+- Released sections are immutable; edit the top pending version until release.
 
 ## Publishing Checklist
 

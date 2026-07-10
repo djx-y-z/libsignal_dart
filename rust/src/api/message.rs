@@ -76,6 +76,9 @@ impl SignalMessage {
     /// the serialized public keys for the sender and receiver identity keys, and
     /// the MAC key. If the message includes embedded addresses, they are also
     /// verified against the supplied addresses for backward compatibility.
+    // MAC verification needs both protocol addresses plus both identity keys
+    // and the MAC key — the argument count is inherent to the operation.
+    #[allow(clippy::too_many_arguments)]
     #[flutter_rust_bridge::frb(sync)]
     pub fn verify_mac(
         &self,

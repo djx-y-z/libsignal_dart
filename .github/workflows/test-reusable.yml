@@ -33,6 +33,10 @@ on:
         description: 'Coverage percentage (from Linux x86_64 run)'
         value: ${{ jobs.test.outputs.coverage }}
 
+# Least-privilege default: jobs only read the repo unless they opt into more.
+permissions:
+  contents: read
+
 jobs:
   # ============================================
   # Security Audit (Rust dependencies)
@@ -48,6 +52,21 @@ jobs:
 
       - name: Run cargo audit
         run: make rust-audit
+
+  # ============================================
+  # Supply-chain policy (licenses, bans, sources, advisories)
+  # ============================================
+  deny:
+    name: Dependency Policy (cargo-deny)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust tools
+        run: make setup-rust-tools
+
+      - name: Run cargo deny
+        run: make rust-deny
 
   test:
     strategy:
@@ -98,6 +117,17 @@ jobs:
       # Build Rust library - FRB loads from rust/target/release/ automatically
       - name: Build Rust library
         run: make build
+        shell: bash
+
+      # Lint hand-written Rust with clippy (warnings = errors). Runs once, on
+      # Linux x86_64: clippy is a full check-compile of libsignal and its
+      # findings are platform-independent for this portable FRB glue, so
+      # repeating it on every matrix leg (Windows especially) would multiply CI
+      # time for no extra signal. The clippy component ships with the rustup
+      # toolchain set up above — nothing extra to install.
+      - name: Rust clippy
+        if: matrix.name == 'Linux x86_64'
+        run: make rust-clippy
         shell: bash
 
       - name: Analyze

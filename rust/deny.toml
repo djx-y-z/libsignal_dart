@@ -1,0 +1,81 @@
+# cargo-deny configuration for libsignal_frb.
+#
+# Runs in CI (see .github/workflows/test-reusable.yml) and locally via
+# `make rust-deny`. Complements `cargo audit`:
+#   - advisories: fail on known RustSec vulnerabilities
+#   - licenses:   only allow licenses compatible with this AGPL-3.0 package
+#   - bans:       flag duplicate/wildcard dependencies
+#   - sources:    only permit crates.io and the official signalapp/libsignal git
+#
+# Schema reference: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+# Check the host plus the platforms we ship binaries for. Empty = all targets.
+targets = []
+all-features = false
+
+[advisories]
+version = 2
+# Add advisory IDs here (with a justification comment) only to consciously
+# accept a risk that cannot yet be remediated.
+ignore = [
+    # proc-macro-error2 is unmaintained (RUSTSEC-2026-0173). It is a
+    # build-time-only proc-macro pulled transitively by upstream libsignal's
+    # ML-KEM stack (hax-lib-macros -> libcrux). It ships no code into the
+    # binary, has no safe upgrade, and is not actionable from this repo.
+    # Revisit when libsignal updates its libcrux/hax dependencies.
+    "RUSTSEC-2026-0173",
+]
+
+[licenses]
+version = 2
+confidence-threshold = 0.9
+# This package is AGPL-3.0 (matching upstream libsignal). Everything below is
+# either AGPL itself or a permissive license that AGPL can incorporate.
+allow = [
+    "AGPL-3.0",
+    "AGPL-3.0-only",
+    "AGPL-3.0-or-later",
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "CC0-1.0",
+    "0BSD",
+]
+# Per-crate license overrides go here if a dependency's license cannot be
+# detected automatically, e.g.:
+# exceptions = [{ allow = ["OpenSSL"], name = "ring" }]
+exceptions = []
+
+[bans]
+# Diamond dependencies are unavoidable in this tree (e.g. multiple getrandom /
+# hashbrown / rand_core majors pulled by the crypto + WASM stacks), so
+# duplicates are a warning, not an error.
+multiple-versions = "warn"
+# The libsignal crates are git dependencies pinned by tag (and by commit in
+# Cargo.lock) with no version requirement, which cargo-deny reports as a
+# wildcard. That is intentional for this project, so wildcards warn, not fail —
+# a genuinely sloppy `"*"` crates.io dep still shows up in the log.
+wildcards = "warn"
+allow = []
+deny = []
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+# The only git dependencies permitted are official Signal repositories, pinned
+# by tag in Cargo.toml and by commit in Cargo.lock:
+#   - libsignal:                 the protocol / core / crypto crates
+#   - SparsePostQuantumRatchet:  spqr, pulled transitively by libsignal-protocol
+allow-git = [
+    "https://github.com/signalapp/libsignal",
+    "https://github.com/signalapp/SparsePostQuantumRatchet",
+]

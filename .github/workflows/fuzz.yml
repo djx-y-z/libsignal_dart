@@ -1,0 +1,105 @@
+# Fuzzing workflow (cargo-fuzz + libFuzzer)
+#
+# - Pull requests touching rust/**: a short smoke run per target catches
+#   regressions that make a parser panic on malformed input.
+# - Weekly schedule: a longer run per target for deeper exploration.
+# - Manual dispatch: choose the per-target duration.
+#
+# Any crash is uploaded as an artifact (the reproducing input) so it can be
+# replayed locally with `cargo +nightly fuzz run <target> <artifact>`.
+
+name: Fuzz
+
+on:
+  pull_request:
+    paths:
+      - 'rust/**'
+      - '.github/workflows/fuzz.yml'
+  schedule:
+    # Mondays 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Seconds to run each fuzz target'
+        type: string
+        default: '300'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fuzz-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fuzz:
+    name: Fuzz ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - keys
+          - messages
+          - records
+          - certificates
+          - crypto_primitives
+          - session_decrypt
+    steps:
+      - uses: actions/checkout@v4
+
+      # libsignal's spqr dependency needs protoc to build.
+      - name: Setup Protoc
+        uses: ./.github/actions/setup-protoc
+
+      - name: Setup nightly Rust
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            rust -> target
+            rust/fuzz -> target
+          cache-on-failure: true
+
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+
+      # Duration per target: short smoke on PRs, longer on schedule/dispatch.
+      - name: Determine run duration
+        id: duration
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "seconds=60" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "seconds=${{ github.event.inputs.duration }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "seconds=600" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate seed corpus
+        run: make fuzz-seed
+
+      - name: Run fuzz target
+        run: |
+          cd rust
+          # -timeout gives libFuzzer a per-input watchdog: a pathological input
+          # that hangs a single execution is aborted and reported, instead of
+          # making the job run until GitHub's hard timeout (-max_total_time only
+          # bounds the loop between executions, not a single stuck one).
+          cargo +nightly fuzz run ${{ matrix.target }} -- \
+            -max_total_time=${{ steps.duration.outputs.seconds }} \
+            -timeout=30 \
+            -rss_limit_mb=4096
+
+      # If libFuzzer found a crash it writes the reproducer here and the run
+      # fails; capture it so the exact input can be replayed.
+      - name: Upload crash artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-artifacts-${{ matrix.target }}
+          path: rust/fuzz/artifacts/${{ matrix.target }}/
+          if-no-files-found: ignore
