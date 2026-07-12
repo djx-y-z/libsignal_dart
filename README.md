@@ -493,9 +493,16 @@ This library would not be possible without [libsignal](https://github.com/signal
 
 ## License
 
-This project is licensed under the AGPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the AGPL-3.0 License with an app store exception - see the [LICENSE](LICENSE) file for details.
 
-The bundled libsignal library is also licensed under AGPL-3.0 - see [LICENSE.libsignal](LICENSE.libsignal) for the Signal license.
+As additional permission under section 7, you are allowed to distribute the
+software through an app store, even if that store has restrictive terms and
+conditions that are incompatible with the AGPL, provided that the source is
+also available under the AGPL with or without this permission through a
+channel without those restrictive terms and conditions. See
+[LICENSE.appstore](LICENSE.appstore) for the full permission and its scope.
+
+The bundled libsignal library is also licensed under AGPL-3.0 - see [LICENSE.libsignal](LICENSE.libsignal) for the Signal license. **Note:** the app store permission above covers only the code in this repository; it does not extend to Signal's `libsignal` contained in the precompiled binaries (an equivalent upstream permission is tracked in [signalapp/libsignal#684](https://github.com/signalapp/libsignal/issues/684)).
 
 ## Related Projects
 

@@ -6,6 +6,7 @@
 
 - **Identity-trust enforcement (breaking)** — a remote identity key that differs from the stored one is now rejected with `UntrustedIdentity` on every session operation (MITM / safety-number-change detection), instead of being silently accepted
 - **Hardened supply chain & binary** — the native-binary download is now fail-closed (aborts if it can't be verified), and the wrapper crate is built with integer-overflow checks
+- **App store additional permission** — the license now allows AGPL-compliant apps to ship through app stores with AGPL-incompatible terms (e.g. the Apple App Store); see `LICENSE.appstore`
 - **libsignal v0.96.4** — unchanged this release
 - **libsignal_frb (internal Rust FFI crate)** — breaking: adds a required `get_identity` callback (version bumped at release)
 
@@ -13,6 +14,10 @@
 
 - **Identity-trust is now enforced on every session operation**, matching upstream libsignal's `is_trusted_identity` semantics. `SessionBuilder.processPreKeyBundle`, `SessionCipher.encrypt`/`decrypt` (both pre-key and regular Whisper messages), and `SealedSenderCipher.encrypt`/`decrypt` now consult your `IdentityKeyStore.getIdentity` and reject a remote identity key that differs from the stored one with an `UntrustedIdentity` error. Previously a substituted identity (e.g. from a malicious key-distribution server) was accepted without error. First contact is still trusted-on-first-use.
   - **Action required:** catch `UntrustedIdentity` (its message contains `untrusted identity`) and treat it as a safety-number change — verify with the user, then save the new identity (or clear the old one) in your store and archive the old session for that address before retrying. Requires your `IdentityKeyStore.getIdentity` to be implemented correctly.
+
+#### Changed
+
+- **App store additional permission (AGPL §7)** — the package license now carries an explicit app-store exception (the Feeel/wger wording, see `LICENSE.appstore`): GPL/AGPL-compliant applications may distribute this package in object-code form through app stores whose terms are incompatible with the AGPL (such as the Apple App Store), provided their source stays available under the AGPL through an unrestricted channel. The permission covers only this repository's code; the status of an equivalent permission for the bundled upstream `libsignal` is tracked in [signalapp/libsignal#684](https://github.com/signalapp/libsignal/issues/684). Requested in [#44](https://github.com/djx-y-z/libsignal_dart/issues/44)
 
 #### Security
 
