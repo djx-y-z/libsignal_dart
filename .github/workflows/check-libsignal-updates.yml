@@ -71,9 +71,29 @@ jobs:
           echo "Check completed. Outputs:"
           cat $GITHUB_OUTPUT || true
 
+      # Idempotency gate: if an open PR for this exact version already exists,
+      # do nothing. Without this, every scheduled run regenerates the update
+      # (cargo update + AI changelog are not byte-deterministic) and
+      # force-pushes the PR branch — adding daily noise commits and wiping any
+      # manual commits pushed to the PR. force_update bypasses the gate.
+      - name: Check for existing update PR
+        id: existing
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="update-libsignal-${{ steps.check.outputs.latest_version }}"
+          OPEN_PRS=$(gh pr list --head "$BRANCH" --state open --json number --jq 'length')
+          if [ "$OPEN_PRS" != "0" ] && [ "${{ inputs.force_update }}" != "true" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Open update PR for branch $BRANCH already exists — skipping to avoid force-pushing over it."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Update rust/Cargo.toml
         id: cargo-toml
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         run: |
           # Build arguments for update
           ARGS="--update --ci"
@@ -94,21 +114,37 @@ jobs:
             echo "::error::Failed to update rust/Cargo.toml"
           fi
 
+      # Runs before Cargo.lock is updated: the AI may raise the crate version
+      # above the SemVer-mirror bump (0.x upstreams ship breaking changes in
+      # minor releases), and the lock file must be generated afterwards.
+      - name: Update CHANGELOG.md
+        id: changelog
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
+        env:
+          AI_MODELS_TOKEN: ${{ secrets.AI_MODELS_TOKEN }}
+        run: |
+          if make update-changelog ARGS="--version ${{ steps.check.outputs.latest_version }} --from ${{ steps.check.outputs.current_version }} --crate-version-before ${{ steps.cargo-toml.outputs.crate_version_before }} --ci"; then
+            echo "success=true" >> $GITHUB_OUTPUT
+          else
+            echo "success=false" >> $GITHUB_OUTPUT
+            echo "::warning::AI changelog update failed. Please update CHANGELOG.md manually."
+          fi
+
       - name: Setup Rust
         id: setup-rust
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         continue-on-error: true
         uses: ./.github/actions/setup-rust
 
       - name: Setup protoc
         id: setup-protoc
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         continue-on-error: true
         uses: ./.github/actions/setup-protoc
 
       - name: Update Cargo.lock
         id: cargo-lock
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         run: |
           if make rust-update; then
             echo "success=true" >> $GITHUB_OUTPUT
@@ -117,9 +153,22 @@ jobs:
             echo "::warning::Failed to update Cargo.lock"
           fi
 
+      # The codegen binary is not preinstalled on runners; without this step
+      # `make codegen` fails with exit 127 on every run. Pinned so CI and
+      # local runs generate identical bindings (cached by rust-cache).
+      - name: Install FRB codegen
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
+        continue-on-error: true
+        run: make setup-frb-codegen
+
+      - name: Get Dart dependencies
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
+        continue-on-error: true
+        run: make get
+
       - name: Regenerate FRB bindings
         id: codegen
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         run: |
           if make codegen; then
             echo "success=true" >> $GITHUB_OUTPUT
@@ -128,21 +177,8 @@ jobs:
             echo "::warning::FRB codegen failed. libsignal API may have changed."
           fi
 
-      - name: Update CHANGELOG.md
-        id: changelog
-        if: steps.check.outputs.needs_update == 'true'
-        env:
-          AI_MODELS_TOKEN: ${{ secrets.AI_MODELS_TOKEN }}
-        run: |
-          if make update-changelog ARGS="--version ${{ steps.check.outputs.latest_version }} --ci"; then
-            echo "success=true" >> $GITHUB_OUTPUT
-          else
-            echo "success=false" >> $GITHUB_OUTPUT
-            echo "::warning::AI changelog update failed. Please update CHANGELOG.md manually."
-          fi
-
       - name: Create Pull Request
-        if: steps.check.outputs.needs_update == 'true'
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.app-token.outputs.token }}
@@ -171,9 +207,11 @@ jobs:
 
             ${{ steps.changelog.outputs.success == 'false' && '> **Warning**: AI changelog update failed. Please update CHANGELOG.md manually.' || '' }}
 
+            ${{ (steps.changelog.outputs.success == 'false' || steps.changelog.outputs.bump_verified == 'false') && '> ⚠️ **Crate version bump is UNVERIFIED** — the AI severity check did not run, so the bump only mirrors the upstream SemVer delta. 0.x upstreams often ship BREAKING changes in minor releases: review the upstream changes and raise the `libsignal_frb` major version manually if needed.' || '' }}
+
             ### Files Updated Automatically
 
-            - `rust/Cargo.toml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'libsignal dependency tags' || '**NOT UPDATED** (update failed)' }}
+            - `rust/Cargo.toml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'libsignal dependency tags + `libsignal_frb` version bump (mirrors upstream SemVer delta)' || '**NOT UPDATED** (update failed)' }}
             - `rust/Cargo.lock` — ${{ steps.cargo-lock.outputs.success == 'true' && 'updated dependencies' || '**NOT UPDATED** (cargo update failed)' }}
             - `lib/src/rust/` — ${{ steps.codegen.outputs.success == 'true' && 'regenerated FRB bindings' || '**NOT UPDATED** (codegen failed, manual update required)' }}
             - `CHANGELOG.md` — ${{ steps.changelog.outputs.success == 'true' && 'AI-generated entry (GitHub Models)' || '**NOT UPDATED** (AI failed, manual update required)' }}
@@ -191,8 +229,6 @@ jobs:
             ${{ steps.cargo-lock.outputs.success == 'false' && '1. **RUN `make rust-update`** — Cargo.lock update failed' || '' }}
             1. ${{ steps.codegen.outputs.success == 'false' && '**FIX FRB BINDINGS** — codegen failed, check libsignal API changes' || 'Review FRB bindings — check if API changes require Dart code updates' }}
             2. **Review CHANGELOG.md** — ${{ steps.changelog.outputs.success == 'true' && 'verify AI-generated entry is accurate' || '**ADD CHANGELOG ENTRY MANUALLY**' }}
-            3. **Bump `rust/Cargo.toml` version** — update `libsignal_frb` version if Rust code changed
-            4. **Run `make rust-check`** — sync `Cargo.lock` with new version
 
             ### After Merge
 
@@ -217,10 +253,16 @@ jobs:
             ${{ steps.cargo-lock.outputs.success == 'false' && 'cargo-lock-failed' || '' }}
             ${{ steps.codegen.outputs.success == 'false' && 'codegen-failed' || '' }}
             ${{ steps.changelog.outputs.success == 'false' && 'changelog-needed' || '' }}
+            ${{ (steps.changelog.outputs.success == 'false' || steps.changelog.outputs.bump_verified == 'false') && 'bump-unverified' || '' }}
 
       - name: Summary
         run: |
-          if [ "${{ steps.check.outputs.needs_update }}" = "true" ]; then
+          if [ "${{ steps.existing.outputs.skip }}" = "true" ]; then
+            echo "## Update PR Already Open" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "An open PR for **${{ steps.check.outputs.latest_version }}** already exists — nothing to do." >> $GITHUB_STEP_SUMMARY
+            echo "Re-run with \`force_update\` to regenerate it (this force-pushes the PR branch)." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check.outputs.needs_update }}" = "true" ]; then
             echo "## Update Available" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
@@ -232,6 +274,8 @@ jobs:
             echo "| Cargo.lock | ${{ steps.cargo-lock.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
             echo "| FRB Codegen | ${{ steps.codegen.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
             echo "| AI Changelog | ${{ steps.changelog.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Bump AI-verified | ${{ steps.changelog.outputs.bump_verified }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Crate version | ${{ steps.changelog.outputs.crate_version }} |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "A pull request has been created for review." >> $GITHUB_STEP_SUMMARY
             if [ "${{ steps.cargo-toml.outputs.success }}" = "false" ]; then

@@ -79,6 +79,7 @@ void main(List<String> args) async {
       await writeGitHubOutputs(
         checkResult: result.checkResult,
         updated: result.updated,
+        crateVersionBefore: result.crateVersionBefore,
       );
     }
 

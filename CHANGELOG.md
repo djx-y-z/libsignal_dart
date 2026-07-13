@@ -29,6 +29,7 @@
 - **Device ID truncation** — the `ProtocolAddress` and `PreKeyBundle` constructors no longer truncate the `u32` device ID to `u8` before validating (e.g. `257` is no longer accepted as device `1`); out-of-range IDs are rejected as documented (1–127)
 - **HKDF output bound** — `hkdfDerive` now rejects an output length above the RFC 5869 maximum (`255 × 32 = 8160` bytes) before allocating, instead of attempting an oversized allocation
 - **In-memory identity-store equality** — `InMemoryIdentityKeyStore` now compares identity keys by value (`equals()`) rather than by object reference, so a re-presented key is correctly seen as unchanged (matters for production stores copied from this reference implementation)
+- **Native-library download cache key** — the build hook (`hook/build.dart`) now keys its download cache by crate version and the full platform variant (e.g. `ios-device-arm64` vs `ios-simulator-arm64`) rather than only OS + architecture. On Apple-silicon hosts iOS device and simulator builds shared a key, so whichever built first poisoned the cache for the other and `dyld` rejected the bundled library at runtime (`incompatible platform: have 'iOS-simulator', need 'iOS'`); a version bump could also serve a stale cached binary
 
 ### For Contributors
 
@@ -42,6 +43,7 @@
 
 - **CI least-privilege** — the reusable test workflow now declares `permissions: contents: read`
 - **Rust lint** — hand-written Rust is compiled with `unsafe_code = "deny"` (only the FRB-generated bridge is exempt)
+- **Copier template adopted (v2.5.1)** — `flutter_rust_bridge_codegen` is now pinned via `make setup-frb-codegen` (kept in sync with the `flutter_rust_bridge` dependency, `2.12.0`); the libsignal-update workflow installs the codegen binary (fixing a codegen step that failed with exit 127) and skips regenerating an update PR that already exists; `check_updates.dart` bumps the wrapper crate version mirroring the upstream SemVer delta, `update_changelog.dart` classifies update severity via AI, and the `update-libsignal` skill now analyzes the full upstream diff
 
 ## [5.0.9] - 2026-06-27
 

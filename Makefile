@@ -8,10 +8,16 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-fuzz setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-seed fuzz-list doc publish publish-dry-run rust-update update-changelog
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-fuzz setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-seed fuzz-list doc publish publish-dry-run rust-update update-changelog
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
+
+# Pinned flutter_rust_bridge_codegen version.
+# Must match the flutter_rust_bridge dependency in pubspec.yaml — a codegen
+# binary of a different version produces different bindings, which makes CI
+# and local codegen runs disagree.
+FRB_CODEGEN_VERSION ?= 2.12.0
 
 # Arguments are passed via ARGS variable
 ARGS ?=
@@ -33,6 +39,7 @@ help:
 	@echo "    make setup                        - Full setup (FVM + Rust tools + protoc)"
 	@echo "    make setup-fvm                    - Install FVM and project Flutter version only"
 	@echo "    make setup-rust-tools             - Install Rust tools (cargo-audit, frb codegen)"
+	@echo "    make setup-frb-codegen            - Install pinned flutter_rust_bridge_codegen"
 	@echo "    make setup-protoc                 - Install protoc (Protocol Buffers compiler)"
 	@echo "    make setup-android                - Install Android build tools (cargo-ndk)"
 	@echo "    make setup-web                    - Install web build tools (wasm-pack)"
@@ -128,12 +135,7 @@ setup-rust-tools:
 	else \
 		echo "cargo-audit already installed"; \
 	fi
-	@if ! command -v flutter_rust_bridge_codegen >/dev/null 2>&1; then \
-		echo "Installing flutter_rust_bridge_codegen..."; \
-		cargo install flutter_rust_bridge_codegen; \
-	else \
-		echo "flutter_rust_bridge_codegen already installed"; \
-	fi
+	@$(MAKE) setup-frb-codegen
 	@if ! command -v cargo-deny >/dev/null 2>&1; then \
 		echo "Installing cargo-deny..."; \
 		cargo install cargo-deny --locked; \
@@ -142,6 +144,15 @@ setup-rust-tools:
 	fi
 	@echo ""
 	@echo "Rust tools setup complete!"
+
+setup-frb-codegen:
+	@INSTALLED="$$(flutter_rust_bridge_codegen --version 2>/dev/null | awk '{print $$NF}')"; \
+	if [ "$$INSTALLED" = "$(FRB_CODEGEN_VERSION)" ]; then \
+		echo "flutter_rust_bridge_codegen $(FRB_CODEGEN_VERSION) already installed"; \
+	else \
+		echo "Installing flutter_rust_bridge_codegen $(FRB_CODEGEN_VERSION) (found: $${INSTALLED:-none})..."; \
+		cargo install flutter_rust_bridge_codegen --version $(FRB_CODEGEN_VERSION) --locked --force; \
+	fi
 
 setup-fuzz:
 	@echo "Installing fuzzing tools..."

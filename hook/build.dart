@@ -82,6 +82,7 @@ void main(List<String> args) async {
     final codeConfig = input.config.code;
     final targetOS = codeConfig.targetOS;
     final targetArch = codeConfig.targetArchitecture;
+    final iosSdk = targetOS == OS.iOS ? codeConfig.iOS.targetSdk : null;
 
     // Read version from rust/Cargo.toml
     final version = await _readVersion(packageRoot);
@@ -103,11 +104,20 @@ void main(List<String> args) async {
     }
 
     // For native platforms, download from GitHub Releases and bundle with the app
-    final assetInfo = _resolveAssetInfo(codeConfig, version);
+    final assetInfo = _resolveAssetInfo(
+      targetOS: targetOS,
+      targetArch: targetArch,
+      iosSdk: iosSdk,
+      version: version,
+    );
 
     // Output directory for cached downloads
-    // Use architecture-specific subdirectory for each platform/arch combination
-    final archSubdir = '${targetOS.name}-${targetArch.name}';
+    final archSubdir = downloadCacheSubdir(
+      version: version,
+      targetOS: targetOS,
+      targetArchitecture: targetArch,
+      iosSdk: iosSdk,
+    );
     final cacheDir = input.outputDirectoryShared.resolve('$archSubdir/');
     final libFile = File.fromUri(cacheDir.resolve(assetInfo.fileName));
 
@@ -418,14 +428,17 @@ class _AssetInfo {
 }
 
 /// Resolves asset information for the target platform.
-_AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String version) {
+_AssetInfo _resolveAssetInfo({
+  required OS targetOS,
+  required Architecture targetArch,
+  required IOSSdk? iosSdk,
+  required String version,
+}) {
   final baseUrl =
       'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
-  final targetOS = codeConfig.targetOS;
-  final targetArch = codeConfig.targetArchitecture;
 
   final fileName = _getLibraryFileName(targetOS);
-  final platformArch = _getPlatformArchName(codeConfig);
+  final platformArch = _getPlatformArchName(targetOS, targetArch, iosSdk);
 
   final archiveFileName = '$_crateName-$version-$platformArch.tar.gz';
 
@@ -436,11 +449,32 @@ _AssetInfo _resolveAssetInfo(CodeConfig codeConfig, String version) {
   );
 }
 
-/// Gets platform-architecture name for download URL.
-String _getPlatformArchName(CodeConfig codeConfig) {
-  final targetOS = codeConfig.targetOS;
-  final targetArch = codeConfig.targetArchitecture;
+/// Computes the subdirectory of the shared output directory in which a
+/// downloaded library is cached.
+///
+/// The shared output directory is reused across build configurations
+/// (`package:hooks` requires hooks to sub-key it by every config field that
+/// influences their output). The returned key must therefore include every
+/// input that changes which artifact is downloaded: the crate [version] and
+/// the full platform variant — notably iOS device vs. simulator, which share
+/// [targetOS] and [targetArchitecture] on Apple-silicon hosts.
+///
+/// Top-level and public so the hook tests can exercise it.
+String downloadCacheSubdir({
+  required String version,
+  required OS targetOS,
+  required Architecture targetArchitecture,
+  IOSSdk? iosSdk,
+}) {
+  return '$version-${_getPlatformArchName(targetOS, targetArchitecture, iosSdk)}';
+}
 
+/// Gets platform-architecture name for download URL.
+String _getPlatformArchName(
+  OS targetOS,
+  Architecture targetArch,
+  IOSSdk? iosSdk,
+) {
   switch (targetOS) {
     case OS.linux:
       return 'linux-${_archName(targetArch)}';
@@ -451,8 +485,7 @@ String _getPlatformArchName(CodeConfig codeConfig) {
     case OS.android:
       return 'android-${_androidAbi(targetArch)}';
     case OS.iOS:
-      final isSimulator = codeConfig.iOS.targetSdk == IOSSdk.iPhoneSimulator;
-      if (isSimulator) {
+      if (iosSdk == IOSSdk.iPhoneSimulator) {
         return 'ios-simulator-${_archName(targetArch)}';
       }
       return 'ios-device-arm64';

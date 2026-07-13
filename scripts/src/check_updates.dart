@@ -55,6 +55,7 @@ class PerformUpdateResult {
     required this.checkResult,
     required this.updated,
     this.updatedFiles = const [],
+    this.crateVersionBefore,
   });
 
   /// The update check result.
@@ -65,6 +66,22 @@ class PerformUpdateResult {
 
   /// List of files that were updated.
   final List<String> updatedFiles;
+
+  /// The libsignal_frb version before the automatic bump, or null when no
+  /// bump was applied. Passed to the AI changelog step so it can re-classify
+  /// the bump severity from the actual upstream changes.
+  final String? crateVersionBefore;
+}
+
+/// Result of [updateVersionFiles].
+class UpdateFilesResult {
+  const UpdateFilesResult({
+    required this.updatedFiles,
+    this.crateVersionBefore,
+  });
+
+  final List<String> updatedFiles;
+  final String? crateVersionBefore;
 }
 
 /// Checks for updates from upstream GitHub releases.
@@ -127,6 +144,32 @@ Future<UpdateCheckResult> checkForUpdates({
   );
 }
 
+/// Determines which SemVer component changed between two upstream versions:
+/// 0 = major, 1 = minor, 2 = patch.
+///
+/// Falls back to a patch bump when either version doesn't parse as X.Y.Z
+/// (e.g. prereleases with unusual formats).
+int _upstreamBumpIndex(String oldVersion, String newVersion) {
+  final oldParts = _versionParts(_normalizeVersion(oldVersion));
+  final newParts = _versionParts(_normalizeVersion(newVersion));
+  if (oldParts == null || newParts == null) return 2;
+  if (newParts[0] != oldParts[0]) return 0;
+  if (newParts[1] != oldParts[1]) return 1;
+  return 2;
+}
+
+/// Parses the leading X.Y.Z of a normalized version, or null if it doesn't
+/// match.
+List<int>? _versionParts(String version) {
+  final match = RegExp(r'^(\d+)\.(\d+)\.(\d+)').firstMatch(version);
+  if (match == null) return null;
+  return [
+    int.parse(match.group(1)!),
+    int.parse(match.group(2)!),
+    int.parse(match.group(3)!),
+  ];
+}
+
 /// Normalize version by removing the tag prefix for comparison.
 ///
 /// Strips the configured tag prefix ('v') and falls back
@@ -180,19 +223,21 @@ Future<Map<String, dynamic>> _fetchLatestRelease() async {
 /// Update upstream version in all relevant files.
 ///
 /// Updates:
-/// - rust/Cargo.toml (upstream dependency tag)
+/// - rust/Cargo.toml (upstream dependency tag + libsignal_frb patch bump)
 /// - README.md (badge) - if exists
 /// - CLAUDE.md (example) - if exists (enable_claude=true)
 /// - .copier-answers.yml (upstream_version) - if exists
 ///
-/// Returns list of updated file names.
-Future<List<String>> updateVersionFiles({
+/// Returns the list of updated file names and the crate version before the
+/// automatic bump.
+Future<UpdateFilesResult> updateVersionFiles({
   required String newVersion,
   required String oldVersion,
   bool silent = false,
 }) async {
   final packageDir = getPackageDir();
   final updatedFiles = <String>[];
+  String? crateVersionBefore;
   // 1. Update rust/Cargo.toml (upstream dependency tags)
   if (!silent) logStep('Updating rust/Cargo.toml...');
   final cargoFile = File('${packageDir.path}/rust/Cargo.toml');
@@ -226,6 +271,50 @@ Future<List<String>> updateVersionFiles({
     tagPattern3,
     (match) => '${match.group(1)}$newVersion${match.group(2)}',
   );
+
+  // Bump the libsignal_frb crate version so the native library release
+  // workflow publishes binaries for the new upstream version. The bump
+  // mirrors the upstream SemVer delta (upstream minor bump -> crate minor
+  // bump, etc.), with lower components reset to zero. Skipping this used to
+  // be a manual "Before Merge" step in every update PR.
+  final crateVersionPattern = RegExp(
+    r'^(version\s*=\s*")(\d+)\.(\d+)\.(\d+)(")',
+    multiLine: true,
+  );
+  final crateVersionMatch = crateVersionPattern.firstMatch(cargoContent);
+  if (crateVersionMatch != null) {
+    crateVersionBefore =
+        '${crateVersionMatch.group(2)}.${crateVersionMatch.group(3)}.'
+        '${crateVersionMatch.group(4)}';
+    final bumpIndex = _upstreamBumpIndex(oldVersion, newVersion);
+    final parts = [
+      int.parse(crateVersionMatch.group(2)!),
+      int.parse(crateVersionMatch.group(3)!),
+      int.parse(crateVersionMatch.group(4)!),
+    ];
+    parts[bumpIndex]++;
+    for (var i = bumpIndex + 1; i < parts.length; i++) {
+      parts[i] = 0;
+    }
+    final bumped = parts.join('.');
+    cargoContent = cargoContent.replaceFirst(
+      crateVersionPattern,
+      '${crateVersionMatch.group(1)}$bumped${crateVersionMatch.group(5)}',
+    );
+    if (!silent) {
+      const bumpNames = ['major', 'minor', 'patch'];
+      logInfo(
+        'Bumped libsignal_frb version to $bumped '
+        '(${bumpNames[bumpIndex]} bump, mirroring upstream '
+        '$oldVersion -> $newVersion)',
+      );
+    }
+  } else if (!silent) {
+    logWarning(
+      'Could not bump libsignal_frb version: '
+      'version field not found or not plain X.Y.Z — bump it manually',
+    );
+  }
 
   await cargoFile.writeAsString(cargoContent);
   updatedFiles.add('rust/Cargo.toml');
@@ -268,8 +357,8 @@ Future<List<String>> updateVersionFiles({
   if (copierFile.existsSync()) {
     if (!silent) logStep('Updating .copier-answers.yml...');
     var content = copierFile.readAsStringSync();
-    // Accept double-quoted ("v0.93.2"), single-quoted ('v0.93.2'), and
-    // unquoted (v0.93.2) YAML values — preserve the original quoting style.
+    // Accept double-quoted ("vX.Y.Z"), single-quoted ('vX.Y.Z'), and
+    // unquoted (vX.Y.Z) YAML values — preserve the original quoting style.
     final copierPattern = RegExp(
       '''(upstream_version:\\s*)(["']?)([^"'\\s]+)\\2''',
     );
@@ -284,7 +373,10 @@ Future<List<String>> updateVersionFiles({
     }
   }
 
-  return updatedFiles;
+  return UpdateFilesResult(
+    updatedFiles: updatedFiles,
+    crateVersionBefore: crateVersionBefore,
+  );
 }
 
 /// Perform full update check with optional update.
@@ -299,22 +391,19 @@ Future<PerformUpdateResult> performUpdateCheck({
     silent: silent,
   );
 
-  var updated = false;
-  final updatedFiles = doUpdate && (checkResult.needsUpdate || force)
+  final filesResult = doUpdate && (checkResult.needsUpdate || force)
       ? await updateVersionFiles(
           newVersion: checkResult.latestVersion,
           oldVersion: checkResult.currentVersion,
           silent: silent,
         )
-      : <String>[];
-  if (updatedFiles.isNotEmpty) {
-    updated = true;
-  }
+      : const UpdateFilesResult(updatedFiles: []);
 
   return PerformUpdateResult(
     checkResult: checkResult,
-    updated: updated,
-    updatedFiles: updatedFiles,
+    updated: filesResult.updatedFiles.isNotEmpty,
+    updatedFiles: filesResult.updatedFiles,
+    crateVersionBefore: filesResult.crateVersionBefore,
   );
 }
 
@@ -322,6 +411,7 @@ Future<PerformUpdateResult> performUpdateCheck({
 Future<void> writeGitHubOutputs({
   required UpdateCheckResult checkResult,
   required bool updated,
+  String? crateVersionBefore,
 }) async {
   final githubOutput = Platform.environment['GITHUB_OUTPUT'];
   if (githubOutput == null) return;
@@ -334,6 +424,9 @@ Future<void> writeGitHubOutputs({
     ..writeln('is_prerelease=${checkResult.isPrerelease}')
     ..writeln('release_url=${checkResult.releaseUrl}')
     ..writeln('updated=$updated');
+  if (crateVersionBefore != null) {
+    buffer.writeln('crate_version_before=$crateVersionBefore');
+  }
 
   file.writeAsStringSync(buffer.toString(), mode: FileMode.append);
 }

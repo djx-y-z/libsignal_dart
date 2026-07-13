@@ -11,17 +11,55 @@ Guide for updating the libsignal native library version in this project.
 
 When the CI creates an automated PR for libsignal update, follow these steps:
 
-### Step 1: Analyze Release Notes
+### Step 1: Analyze Upstream Changes (IMPORTANT — go beyond release notes)
+
+Release notes are often terse or incomplete. Always examine what actually
+changed between the two tags. `vOLD` is the version being replaced (see the
+PR title/diff), `vNEW` is the new one.
+
+**1a. Release notes (starting point, not the whole story):**
 
 ```bash
-# Fetch and read release notes
-gh api repos/signalapp/libsignal/releases/tags/vX.Y.Z --jq '.body'
+gh api repos/signalapp/libsignal/releases/tags/vNEW --jq '.body'
 ```
 
-Look for:
-- **Breaking changes** (API removals, signature changes)
-- **New features** (new APIs exposed)
-- **Security fixes**
+**1b. Full commit list between the tags:**
+
+```bash
+gh api "repos/signalapp/libsignal/compare/vOLD...vNEW" --paginate \
+  --jq '.commits[].commit.message | split("\n")[0]'
+```
+
+**1c. Which files changed, scoped to the crates we bind:**
+
+```bash
+gh api "repos/signalapp/libsignal/compare/vOLD...vNEW" --paginate --jq '.files[].filename' \
+  | grep -E 'libsignal-protocol|libsignal-core|signal-crypto'
+```
+
+For large ranges the compare API truncates `files` — fall back to a shallow clone:
+
+```bash
+git clone --filter=blob:none https://github.com/signalapp/libsignal /tmp/upstream
+git -C /tmp/upstream diff vOLD..vNEW --stat -- <crate dirs>
+```
+
+**1d. Check the public API surface we actually bind.** List the upstream
+types/functions referenced in `rust/src/api/*.rs`, then look for them in the
+diff:
+
+```bash
+git -C /tmp/upstream diff vOLD..vNEW -- <crate>/src | grep -E '^[-+].*(pub fn|pub struct|pub enum|pub trait)'
+```
+
+**1e. Upstream `Cargo.toml` deltas** — MSRV bumps, new/removed features,
+dependency updates with security advisories.
+
+Summarize findings as:
+- **Breaking changes** (API removals, signature changes) → Rust wrapper must adapt
+- **New features / new APIs** → candidates to expose in `rust/src/api/`
+- **Security fixes** → must be called out in CHANGELOG.md
+- **Internal-only changes** → one CHANGELOG line ("does not affect this library's API")
 
 ### Step 2: Check Why Codegen Failed (if applicable)
 
@@ -61,22 +99,28 @@ make analyze
 
 ### Step 7: Update CHANGELOG.md
 
-Verify AI-generated entry is accurate. Update if needed:
+Verify the AI-generated entry against YOUR findings from Step 1 — the AI only
+sees the release notes and commit subjects, not the diffs:
 - Fix incorrect descriptions
-- Add details about breaking changes and workarounds
-- Ensure `libsignal_frb` version is mentioned in Highlights
+- Add breaking changes, workarounds, and security fixes you found in the diff
+- Ensure `libsignal_frb` version in Highlights matches `rust/Cargo.toml`
 
-### Step 8: Bump libsignal_frb Version
+### Step 8: Verify libsignal_frb Version Bump
 
-Edit `rust/Cargo.toml`:
+The automated update bumps the version in `rust/Cargo.toml` in two stages:
+a deterministic bump mirroring the upstream SemVer delta, then an AI severity
+check (from the release notes and commit list) that can raise it — e.g. to
+major when a 0.x upstream ships breaking changes in a minor release.
+
+- If the PR carries the **`bump-unverified`** label (or the ⚠️ warning in the
+  PR body), the AI check did not run — classify the update yourself using
+  your Step 1 findings and fix the version if needed.
+- Even when verified, adjust if the *wrapper's own* API changed differently —
+  e.g. bump major if adapting to upstream forced breaking changes in
+  `rust/src/api/`:
+
 ```toml
-version = "X.Y.Z"  # Bump patch for deps, minor for new features
-```
-
-Update CHANGELOG.md Highlights:
-```markdown
-- **libsignal vX.Y.Z** — description
-- **libsignal_frb vX.Y.Z** — Rust FFI bindings
+version = "X.Y.Z"
 ```
 
 ### Step 9: Sync Cargo.lock
@@ -94,13 +138,14 @@ git commit -m "fix: adapt for libsignal vX.Y.Z breaking changes"
 
 ### Checklist Summary
 
-- [ ] Read release notes for breaking changes
+- [ ] Read release notes AND the actual commit list / diff between the tags
+- [ ] Check the diff against the API surface bound in `rust/src/api/`
 - [ ] Fix Rust compilation errors (if any)
 - [ ] `make codegen` — regenerate FRB bindings
 - [ ] `make test` — all tests pass
 - [ ] `make analyze` — no issues
-- [ ] CHANGELOG.md — accurate description
-- [ ] `rust/Cargo.toml` — bump `libsignal_frb` version
+- [ ] CHANGELOG.md — accurate and complete (breaking changes, security fixes)
+- [ ] `rust/Cargo.toml` — `libsignal_frb` version bumped (automatic; verify)
 - [ ] `make rust-check` — sync Cargo.lock
 - [ ] Commit all changes
 
@@ -190,6 +235,7 @@ Files automatically updated by `make check-new-libsignal-version ARGS="--update"
 | File | What | Description |
 |------|------|-------------|
 | `rust/Cargo.toml` | libsignal-* tags | Native library dependency version |
+| `rust/Cargo.toml` | `version` | `libsignal_frb` bump mirroring upstream SemVer delta (adjust manually if wrapper API changed differently) |
 | `README.md` | Badge | Version badge in header |
 | `CLAUDE.md` | Example | Code example in documentation |
 
@@ -197,9 +243,8 @@ Files that need manual update:
 
 | File | What | Description |
 |------|------|-------------|
-| `rust/Cargo.toml` | `version` | Rust crate version (bump patch for deps update) |
 | `rust/Cargo.lock` | Dependencies | Run `make rust-update` after changing Cargo.toml |
-| `CHANGELOG.md` | Entry | Document the libsignal version change |
+| `CHANGELOG.md` | Entry | AI-generated in CI; verify against the upstream diff |
 
 ## Breaking Changes to Watch For
 
