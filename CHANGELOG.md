@@ -8,7 +8,7 @@
 - **Hardened supply chain & binary** — the native-binary download is now fail-closed (aborts if it can't be verified), and the wrapper crate is built with integer-overflow checks
 - **App store additional permission** — the license now allows AGPL-compliant apps to ship through app stores with AGPL-incompatible terms (e.g. the Apple App Store); see `LICENSE.appstore`
 - **libsignal v0.97.2** — internal/dependency update, no public-API impact
-- **libsignal_frb (internal Rust FFI crate)** — breaking: adds a required `get_identity` callback (version bumped at release)
+- **libsignal_frb v5.0.0 (internal Rust FFI crate)** — breaking (major): adds a required `get_identity` callback
 
 #### Changed (Breaking)
 
