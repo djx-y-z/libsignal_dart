@@ -90,6 +90,14 @@ abstract class PrivateKey implements RustOpaqueInterface {
   Uint8List agree({required PublicKey publicKey});
 
   /// Create a copy of this private key.
+  ///
+  /// # Security
+  /// This duplicates sensitive secret key material into a second independent
+  /// object. Each copy holds the secret in native memory until it is dropped,
+  /// so every copy must be handled with the same care as the original.
+  /// In security-critical applications, call `dispose()` on the Dart side of
+  /// each copy as soon as it is no longer needed rather than waiting for the
+  /// garbage collector, and avoid making copies you do not need.
   PrivateKey cloneKey();
 
   /// Deserialize a private key from bytes.

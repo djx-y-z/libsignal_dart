@@ -23,6 +23,7 @@
 
 - **Fail-closed native library verification** — the build hook (`hook/build.dart`) now aborts the build if the SHA256 checksums for a downloaded binary cannot be fetched or the archive has no entry, instead of silently proceeding unverified. An escape hatch (`LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD=1`) remains for releases with no checksums file
 - **Hardened crate build** — the wrapper's release profile enables `overflow-checks`, so an integer overflow in the wrapper is a deterministic (catchable) panic rather than silent wraparound (the audited crypto dependencies are left untouched)
+- **Secret-lifetime & zeroing caveats documented** — `SECURITY.md` now spells out that opaque secret handles (`PrivateKey`, `KyberSecretKey`, `SessionRecord`, …) stay resident in native memory until a non-deterministic GC finalizer runs, so security-critical code should call `dispose()` to bound that window (noting the extractable key types are `Copy`/plain-boxed and thus not zeroized on drop — `dispose()` shortens the exposure window, it does not wipe), and that Rust's `zeroize` covers Rust memory only: secret bytes that cross the FFI boundary into a Dart `Uint8List` live on the un-zeroed GC heap where `SecureBytes`/`zeroize()` are best-effort. `PrivateKey.cloneKey()` / `KyberSecretKey.cloneKey()` now carry a `# Security` doc note that each copy is an independent secret
 
 #### Fixed
 

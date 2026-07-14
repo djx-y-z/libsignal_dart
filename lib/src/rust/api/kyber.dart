@@ -11,6 +11,14 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KyberKeyPair>>
 abstract class KyberKeyPair implements RustOpaqueInterface {
   /// Clone this Kyber key pair.
+  ///
+  /// # Security
+  /// This duplicates the pair's sensitive secret key material into a second
+  /// independent object. Each copy holds the secret in native memory until it
+  /// is dropped, so every copy must be handled with the same care as the
+  /// original. In security-critical applications, call `dispose()` on the Dart
+  /// side of each copy as soon as it is no longer needed rather than waiting
+  /// for the garbage collector, and avoid making copies you do not need.
   KyberKeyPair cloneKey();
 
   /// Generate a new random Kyber key pair.
@@ -107,6 +115,14 @@ abstract class KyberPublicKey implements RustOpaqueInterface {
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KyberSecretKey>>
 abstract class KyberSecretKey implements RustOpaqueInterface {
   /// Clone this Kyber secret key.
+  ///
+  /// # Security
+  /// This duplicates sensitive secret key material into a second independent
+  /// object. Each copy holds the secret in native memory until it is dropped,
+  /// so every copy must be handled with the same care as the original.
+  /// In security-critical applications, call `dispose()` on the Dart side of
+  /// each copy as soon as it is no longer needed rather than waiting for the
+  /// garbage collector, and avoid making copies you do not need.
   KyberSecretKey cloneKey();
 
   /// Deserialize a Kyber secret key from bytes.

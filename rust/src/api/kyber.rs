@@ -90,6 +90,14 @@ impl KyberSecretKey {
     }
 
     /// Clone this Kyber secret key.
+    ///
+    /// # Security
+    /// This duplicates sensitive secret key material into a second independent
+    /// object. Each copy holds the secret in native memory until it is dropped,
+    /// so every copy must be handled with the same care as the original.
+    /// In security-critical applications, call `dispose()` on the Dart side of
+    /// each copy as soon as it is no longer needed rather than waiting for the
+    /// garbage collector, and avoid making copies you do not need.
     #[flutter_rust_bridge::frb(sync)]
     pub fn clone_key(&self) -> Result<KyberSecretKey, String> {
         Ok(KyberSecretKey {
@@ -144,6 +152,14 @@ impl KyberKeyPair {
     }
 
     /// Clone this Kyber key pair.
+    ///
+    /// # Security
+    /// This duplicates the pair's sensitive secret key material into a second
+    /// independent object. Each copy holds the secret in native memory until it
+    /// is dropped, so every copy must be handled with the same care as the
+    /// original. In security-critical applications, call `dispose()` on the Dart
+    /// side of each copy as soon as it is no longer needed rather than waiting
+    /// for the garbage collector, and avoid making copies you do not need.
     #[flutter_rust_bridge::frb(sync)]
     pub fn clone_key(&self) -> Result<KyberKeyPair, String> {
         Ok(KyberKeyPair {

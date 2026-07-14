@@ -9,7 +9,10 @@ This library uses **Flutter Rust Bridge (FRB)** with the **libsignal-protocol** 
 - **Memory safety** is handled by Rust's ownership system
 - **Cryptographic operations** are implemented in libsignal-protocol (Signal's official Rust implementation)
 - **No manual memory management** in Dart - FRB handles all cleanup automatically
-- **No `dispose()` calls needed** - Rust drops resources when they go out of scope
+- **No `dispose()` calls needed for correctness** - Rust drops resources when the
+  owning Dart object is garbage-collected. Cleanup timing is *not* deterministic,
+  so security-critical code holding secrets should still dispose explicitly
+  (see [A: Memory Safety](#a-memory-safety-rust-handled))
 
 ## Security Considerations
 
@@ -28,7 +31,48 @@ Rust's ownership system ensures:
 - No use-after-free
 - No double-free
 - No memory leaks
-- Deterministic cleanup
+
+#### Cleanup timing and secret material
+
+An opaque handle (`PrivateKey`, `KyberSecretKey`, `SessionRecord`, …) keeps its
+Rust value — including any secret key material — alive in **native memory** until
+the underlying `Arc` is dropped, which only happens when Dart's garbage collector
+eventually reclaims the Dart object via its `NativeFinalizer`. **GC timing is
+non-deterministic**: the secret can linger in native memory from milliseconds to
+minutes after your last use.
+
+For ordinary use this is fine — the statement "no `dispose()` calls needed" is
+correct for *correctness* and leak-freedom. But when you are building a secure
+messenger on top of this library, minimise the window in which secrets are
+resident:
+
+```dart
+final privateKey = PrivateKey.generate();
+try {
+  final signature = privateKey.sign(message: data);
+  // ...
+} finally {
+  privateKey.dispose(); // frees the native allocation now, not at GC time
+}
+```
+
+`dispose()` (from FRB's `RustOpaqueInterface`) is available on every opaque type
+and forces the drop deterministically instead of waiting for the GC. After
+`dispose()` the handle must not be used again (`isDisposed` becomes `true`).
+
+Note what `dispose()` does and does not guarantee. It **bounds how long the
+secret is resident and reachable** by returning the native allocation to the
+allocator immediately rather than at an unpredictable GC point — a real
+reduction in exposure. It does **not** actively wipe those bytes: libsignal's
+extractable key types are not zeroized on drop (`PrivateKey` is `Copy`, so it
+cannot have a `Drop` impl at all; the Kyber `SecretKey` holds a plain boxed
+buffer with no `ZeroizeOnDrop`), so the freed memory is reclaimed unwiped and
+lingers until the allocator reuses it. Prompt `dispose()` therefore shrinks the
+window but is not erasure. This matters most for the secret-bearing types
+(`PrivateKey`, `KyberSecretKey`, key pairs, and the record types that embed
+them) and for any copies made via `cloneKey()` — each copy holds its own native
+secret. The strongest protection is to not extract secrets into Dart in the
+first place (keep them behind opaque handles).
 
 ### B: Timing Attack Prevention
 
@@ -222,7 +266,18 @@ These concerns from the old C FFI architecture are now handled automatically:
 | Double-free prevention | Rust borrow checker |
 | Buffer overflow prevention | Rust bounds checking |
 | Use-after-free | Rust ownership |
-| Memory zeroing | Rust (zeroize crate in libsignal) |
+| Memory zeroing (Rust-side only) | Rust (zeroize crate in libsignal) |
+
+> **Memory zeroing covers Rust memory only.** libsignal's `zeroize` guarantees
+> apply to secrets *while they live inside Rust*. As soon as a value crosses the
+> FFI boundary into Dart — every `serialize()` / `private_key()` call returns a
+> `Vec<u8>` that becomes a Dart `Uint8List` — those bytes live on the Dart GC
+> heap, which is **never zeroed on collection** (freed blocks go back on the VM
+> free-list unsanitized, and the copying scavenger duplicates live objects
+> without wiping the from-space copy). On the Dart side, `SecureBytes` /
+> `zeroize()` are **best-effort defence-in-depth, not a guarantee** (see
+> [J: Zeroing Sensitive Data](#j-zeroing-sensitive-data)). For strong guarantees,
+> keep secrets in Rust (opaque types) and avoid serializing them into Dart at all.
 
 ## Supply Chain Security
 
