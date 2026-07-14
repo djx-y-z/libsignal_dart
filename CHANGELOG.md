@@ -7,7 +7,7 @@
 - **Identity-trust enforcement (breaking)** — a remote identity key that differs from the stored one is now rejected with `UntrustedIdentity` on every session operation (MITM / safety-number-change detection), instead of being silently accepted
 - **Hardened supply chain & binary** — the native-binary download is now fail-closed (aborts if it can't be verified), and the wrapper crate is built with integer-overflow checks
 - **App store additional permission** — the license now allows AGPL-compliant apps to ship through app stores with AGPL-incompatible terms (e.g. the Apple App Store); see `LICENSE.appstore`
-- **libsignal v0.96.4** — unchanged this release
+- **libsignal v0.97.2** — internal/dependency update, no public-API impact
 - **libsignal_frb (internal Rust FFI crate)** — breaking: adds a required `get_identity` callback (version bumped at release)
 
 #### Changed (Breaking)
@@ -17,6 +17,10 @@
 
 #### Changed
 
+- Update libsignal native library to v0.97.2 ([compare](https://github.com/signalapp/libsignal/compare/v0.96.4...v0.97.2))
+  - Upstream changes between v0.96.4 and v0.97.2 are limited to net/registration, chat/backups gRPC, bridge/codegen tooling, and CI / language-binding (node/swift/java) updates — none of which this library exposes
+  - The only diffs in the crates we bind are cosmetic: a test-only import in `kem.rs`, an internal `TryFrom` refactor in `state/bundle.rs` (`and_then(…map…)` → `.zip(…)`, behavior identical), and the `libsignal-core` version string
+  - Note: These changes do not affect this library's public API
 - **App store additional permission (AGPL §7)** — the package license now carries an explicit app-store exception (the Feeel/wger wording, see `LICENSE.appstore`): GPL/AGPL-compliant applications may distribute this package in object-code form through app stores whose terms are incompatible with the AGPL (such as the Apple App Store), provided their source stays available under the AGPL through an unrestricted channel. The permission covers only this repository's code; the status of an equivalent permission for the bundled upstream `libsignal` is tracked in [signalapp/libsignal#684](https://github.com/signalapp/libsignal/issues/684). Requested in [#44](https://github.com/djx-y-z/libsignal_dart/issues/44)
 
 #### Security
