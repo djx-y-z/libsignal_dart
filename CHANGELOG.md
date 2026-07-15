@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### For Users
+
+#### Fixed
+
+- **Stale web WASM after a package upgrade** — the web build hook (`hook/build.dart`) now records the provisioned crate version in `web/pkg/.wasm-version` and re-downloads when it changes, instead of skipping whenever the two WASM files merely exist. Previously, upgrading the package kept the prior version's WASM in the consuming app's `web/pkg/` (it survives `flutter clean`), so on web any FRB entry that calls Dart store callbacks — `SessionBuilder.processPreKeyBundle`, `SessionCipher`, `SealedSenderCipher`, group messaging — panicked with an argument-count mismatch (`called Option::unwrap() on a None value`) once the wire signature had changed between versions. The download cache is now version-keyed and `rust/Cargo.toml` is a declared web-build dependency, both mirroring the native path (which was unaffected)
+
 ## [6.0.0] - 2026-07-14
 
 ### For Users
