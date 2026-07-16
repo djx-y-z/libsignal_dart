@@ -4,16 +4,15 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.97.3** — chat transport error handling improvements
+- **libsignal v0.97.3** — internal/dependency update, no public-API impact
 - **libsignal_frb v5.1.0** — Rust FFI bindings
 
 #### Changed
 
-- Update libsignal native library to v0.97.3 ([release notes](https://github.com/signalapp/libsignal/releases/tag/v0.97.3))
-  - Added `AuthUsernamesService.deleteUsernameHash/deleteUsernameLink` methods for enhanced username management.
-  - Reclassified chat transport errors as retryable (`.ioError`), improving error handling during message transport.
-  - Increased tolerance interval for clock skew in key transport, enhancing reliability in time-sensitive operations.
-  - Note: These changes do not affect this library's API
+- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))
+  - Upstream changes are limited to `AuthUsernamesService.deleteUsernameHash()`/`deleteUsernameLink()` (username services), reclassifying an established chat connection's transport errors as retryable (`.ioError`, Swift binding), and increasing the key-transparency clock-skew tolerance interval — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings; `make codegen` produces no binding diff
+  - Note: These changes do not affect this library's public API
 
 #### Fixed
 
