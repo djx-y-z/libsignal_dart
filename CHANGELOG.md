@@ -1,3 +1,23 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.97.3** — internal/dependency update, no public-API impact
+- **libsignal_frb v5.1.0** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))
+  - Upstream changes are limited to `AuthUsernamesService.deleteUsernameHash()`/`deleteUsernameLink()` (username services), reclassifying an established chat connection's transport errors as retryable (`.ioError`, Swift binding), and increasing the key-transparency clock-skew tolerance interval — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings; `make codegen` produces no binding diff
+  - Note: These changes do not affect this library's public API
+
+#### Fixed
+
+- **Stale web WASM after a package upgrade** — the web build hook (`hook/build.dart`) now records the provisioned crate version in `web/pkg/.wasm-version` and re-downloads when it changes, instead of skipping whenever the two WASM files merely exist. Previously, upgrading the package kept the prior version's WASM in the consuming app's `web/pkg/` (it survives `flutter clean`), so on web any FRB entry that calls Dart store callbacks — `SessionBuilder.processPreKeyBundle`, `SessionCipher`, `SealedSenderCipher`, group messaging — panicked with an argument-count mismatch (`called Option::unwrap() on a None value`) once the wire signature had changed between versions. The download cache is now version-keyed and `rust/Cargo.toml` is a declared web-build dependency, both mirroring the native path (which was unaffected)
+
 ## [6.0.0] - 2026-07-14
 
 ### For Users

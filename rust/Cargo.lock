@@ -1003,7 +1003,7 @@ dependencies = [
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.97.2#4e9bd5d7feca2f61cf2ce0c7d99a60eb8b9e0102"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.97.3#b83aee1994b40ab5f004f90cf61e65530b72d306"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1021,8 +1021,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.97.2"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.97.2#4e9bd5d7feca2f61cf2ce0c7d99a60eb8b9e0102"
+version = "0.97.3"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.97.3#b83aee1994b40ab5f004f90cf61e65530b72d306"
 dependencies = [
  "cfg-if",
 ]
@@ -1030,7 +1030,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.97.2#4e9bd5d7feca2f61cf2ce0c7d99a60eb8b9e0102"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.97.3#b83aee1994b40ab5f004f90cf61e65530b72d306"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1068,7 +1068,7 @@ dependencies = [
 
 [[package]]
 name = "libsignal_frb"
-version = "5.0.0"
+version = "5.1.0"
 dependencies = [
  "aes-gcm-siv",
  "async-trait",
@@ -1659,7 +1659,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.97.2#4e9bd5d7feca2f61cf2ce0c7d99a60eb8b9e0102"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.97.3#b83aee1994b40ab5f004f90cf61e65530b72d306"
 dependencies = [
  "aes",
  "cbc",
@@ -1731,9 +1731,9 @@ checksum = "13c2bddecc57b384dee18652358fb23172facb8a2c51ccc10d74c157bdea3292"
 
 [[package]]
 name = "syn"
-version = "2.0.118"
+version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b9ae57f904213ebb649ce6895b8a66c66f0203b9319718f69a5612a065b1422"
+checksum = "872831b642d1a07999a962a351ed35b955ea2cfc8f3862091e2a240a84f17297"
 dependencies = [
  "proc-macro2",
  "quote",
