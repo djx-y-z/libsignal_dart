@@ -54,6 +54,15 @@ const _crateName = 'libsignal_frb';
 /// WASM files for web platform.
 const _wasmFiles = ['libsignal_frb.js', 'libsignal_frb_bg.wasm'];
 
+/// Marker file recording which package version provisioned `web/pkg/`.
+/// Lets the web build hook detect a version upgrade and refresh the WASM
+/// instead of serving a stale copy left behind by a previous version.
+const _wasmVersionMarkerName = '.wasm-version';
+
+/// Sentinel written to the marker when `web/pkg/` came from a local dev build,
+/// so a later switch back to released binaries always forces a refresh.
+const _localWasmMarker = 'local-dev';
+
 /// Entry point for the build hook.
 void main(List<String> args) async {
   await build(args, (input, output) async {
@@ -75,6 +84,11 @@ void main(List<String> args) async {
     // Handle web builds (buildCodeAssets is false for web platform)
     // Web builds don't produce CodeAssets - they copy WASM files to web/pkg/
     if (!input.config.buildCodeAssets) {
+      // Declare rust/Cargo.toml as a dependency so a crate-version bump forces
+      // the hook to re-run (the version-marker check inside then refreshes
+      // web/pkg/). Without this the build system can reuse a cached hook result
+      // and keep serving the previous version's WASM after an upgrade.
+      output.dependencies.add(packageRoot.resolve('rust/Cargo.toml'));
       await _handleWebBuild(input, packageRoot);
       return;
     }
@@ -205,6 +219,36 @@ bool _wasmFilesExist(Directory dir) {
   return true;
 }
 
+/// Reads the version marker from a provisioned `web/pkg/` directory.
+///
+/// Returns the recorded version string, or null if the marker is absent or
+/// unreadable (treated as "unknown", forcing a refresh).
+String? _readWasmVersionMarker(Directory webPkgDir) {
+  final file = File('${webPkgDir.path}/$_wasmVersionMarkerName');
+  if (!file.existsSync()) return null;
+  try {
+    return file.readAsStringSync().trim();
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Records which version provisioned `web/pkg/` so a later build can detect an
+/// upgrade and refresh. Best-effort: a write failure must not fail the build —
+/// without the marker the next build simply re-provisions.
+void _writeWasmVersionMarker(Directory webPkgDir, String version) {
+  try {
+    if (!webPkgDir.existsSync()) {
+      webPkgDir.createSync(recursive: true);
+    }
+    File(
+      '${webPkgDir.path}/$_wasmVersionMarkerName',
+    ).writeAsStringSync('$version\n');
+  } catch (_) {
+    // Non-fatal.
+  }
+}
+
 /// Finds local WASM build in the package's rust/target/wasm32 directory.
 ///
 /// This enables development mode where developers can use locally built
@@ -238,6 +282,10 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
 
   final webPkgDir = Directory.fromUri(appRoot.resolve('web/pkg/'));
 
+  // Read version from rust/Cargo.toml up front — it keys both the download
+  // cache and the freshness check below.
+  final version = await _readVersion(packageRoot);
+
   // Check for local WASM build first (development mode) — takes priority
   // over cached/downloaded files to avoid stale content hash mismatches.
   final localWasmDir = _findLocalWasmBuild(packageRoot);
@@ -245,22 +293,28 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
     // ignore: avoid_print
     print('Using local WASM build from ${localWasmDir.path}');
     await _copyWasmFilesToAppRoot(localWasmDir.uri, webPkgDir);
+    _writeWasmVersionMarker(webPkgDir, _localWasmMarker);
     return;
   }
 
-  // Check if WASM files already exist in destination (downloaded previously)
-  if (_wasmFilesExist(webPkgDir)) {
+  // Skip only when web/pkg/ already holds THIS version's WASM. Existence alone
+  // is NOT sufficient: a stale web/pkg/ left over from an older package version
+  // carries an outdated FRB wire signature, so `*_with_callbacks` calls would
+  // panic with an argument-count mismatch. The marker forces a refresh on
+  // upgrade (native platforms get this for free via a version-keyed cache).
+  if (_wasmFilesExist(webPkgDir) &&
+      _readWasmVersionMarker(webPkgDir) == version) {
     // ignore: avoid_print
-    print('WASM files already exist in ${webPkgDir.path}');
+    print('WASM files for $version already present in ${webPkgDir.path}');
     return;
   }
-
-  // Read version from rust/Cargo.toml
-  final version = await _readVersion(packageRoot);
 
   final baseUrl =
       'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
-  final cacheDir = input.outputDirectoryShared.resolve('web/');
+  // Version-key the download cache (mirrors the native path) so bumping the
+  // package version resolves to a fresh directory and re-downloads instead of
+  // reusing a previous version's archive.
+  final cacheDir = input.outputDirectoryShared.resolve('web/$version/');
 
   // Download WASM files to cache
   final archiveFileName = '$_crateName-$version-wasm32.tar.gz';
@@ -292,8 +346,10 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
     }
   }
 
-  // Copy WASM files to web/pkg/
+  // Copy WASM files to web/pkg/ and record the version so the next build can
+  // detect an upgrade and refresh instead of serving stale binaries.
   await _copyWasmFilesToAppRoot(cacheDir, webPkgDir);
+  _writeWasmVersionMarker(webPkgDir, version);
 }
 
 /// Finds the Flutter application root by searching parent directories from shared output.
@@ -358,17 +414,16 @@ Future<void> _copyWasmFilesToAppRoot(Uri cacheDir, Directory webPkgDir) async {
     await webPkgDir.create(recursive: true);
   }
 
-  // Copy each WASM file
+  // Copy each WASM file, always overwriting. The caller only reaches this
+  // point after deciding web/pkg/ needs (re)provisioning, so an mtime-based
+  // skip here would wrongly keep a stale copy — e.g. on a version downgrade
+  // where the fresh source is older than the leftover destination.
   for (final fileName in _wasmFiles) {
     final sourceFile = File.fromUri(cacheDir.resolve(fileName));
     final destFile = File('${webPkgDir.path}/$fileName');
 
     if (sourceFile.existsSync()) {
-      // Only copy if source is newer or dest doesn't exist
-      if (!destFile.existsSync() ||
-          sourceFile.lastModifiedSync().isAfter(destFile.lastModifiedSync())) {
-        await sourceFile.copy(destFile.path);
-      }
+      await sourceFile.copy(destFile.path);
     }
   }
 }
