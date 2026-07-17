@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-fuzz setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-seed fuzz-list doc publish publish-dry-run rust-update update-changelog
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-fuzz setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-seed fuzz-list doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -43,6 +43,7 @@ help:
 	@echo "    make setup-protoc                 - Install protoc (Protocol Buffers compiler)"
 	@echo "    make setup-android                - Install Android build tools (cargo-ndk)"
 	@echo "    make setup-web                    - Install web build tools (wasm-pack)"
+	@echo "    make setup-repo-protections       - Apply GitHub rulesets + native-build env (one-time, needs gh admin)"
 	@echo ""
 	@echo "  BUILD & CODEGEN"
 	@echo "    make codegen                      - Generate Dart bindings from Rust code"
@@ -84,6 +85,12 @@ help:
 	@echo "    make format                       - Format Dart code"
 	@echo "    make format-check                 - Check Dart code formatting"
 	@echo "    make doc                          - Generate API documentation"
+	@echo ""
+	@echo "  RELEASE"
+	@echo "    make release-frb                  - Release libsignal_frb native crate (stage 1)"
+	@echo "                                        Example: make release-frb ARGS=\"--version 5.2.0\""
+	@echo "    make release                      - Release Dart package to pub.dev (stage 2)"
+	@echo "                                        Example: make release ARGS=\"--version 6.1.0\""
 	@echo ""
 	@echo "  PUBLISHING"
 	@echo "    make publish-dry-run              - Validate package before publishing"
@@ -230,6 +237,14 @@ setup-web:
 	@echo ""
 	@echo "Web setup complete!"
 
+# Apply the committed repository rulesets (.github/rulesets/*.json) and the
+# native-build environment to the GitHub repo via `gh` (one-time; run after the
+# GitHub repo exists). Idempotent by ruleset name; needs `gh` as a repo admin.
+#   make setup-repo-protections                  # apply (skips existing rulesets)
+#   make setup-repo-protections ARGS="--update"  # overwrite existing rulesets
+setup-repo-protections:
+	@$(FVM) dart scripts/setup_repo_protections.dart $(ARGS)
+
 # =============================================================================
 # Code Generation
 # =============================================================================
@@ -332,6 +347,27 @@ rust-update:
 
 update-changelog:
 	@$(FVM) dart scripts/update_changelog.dart $(ARGS)
+
+# =============================================================================
+# Release
+# =============================================================================
+
+# Stage 1: release the libsignal_frb native crate. Bumps rust/Cargo.toml,
+# stamps the CHANGELOG highlight, signs a commit + `libsignal_frb-<version>`
+# tag, and pushes (triggers the native build). You enter your signing
+# passphrase interactively during the command.
+#   Example: make release-frb ARGS="--version 5.2.0"
+release-frb:
+	@$(FVM) dart scripts/release_frb.dart $(ARGS)
+
+# Stage 2: release the Dart package to pub.dev. Verifies the stage-1 native
+# binary exists, bumps pubspec.yaml, finalizes the CHANGELOG, validates with a
+# publish dry-run, then signs a commit + `vX.Y.Z` tag and pushes (triggers
+# publish.yml). You enter your signing passphrase interactively during the
+# command.
+#   Example: make release ARGS="--version 6.1.0"
+release:
+	@$(FVM) dart scripts/release.dart $(ARGS)
 
 # =============================================================================
 # Dart Quality

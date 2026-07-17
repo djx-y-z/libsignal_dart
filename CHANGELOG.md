@@ -18,6 +18,20 @@
 
 - **Stale web WASM after a package upgrade** — the web build hook (`hook/build.dart`) now records the provisioned crate version in `web/pkg/.wasm-version` and re-downloads when it changes, instead of skipping whenever the two WASM files merely exist. Previously, upgrading the package kept the prior version's WASM in the consuming app's `web/pkg/` (it survives `flutter clean`), so on web any FRB entry that calls Dart store callbacks — `SessionBuilder.processPreKeyBundle`, `SessionCipher`, `SealedSenderCipher`, group messaging — panicked with an argument-count mismatch (`called Option::unwrap() on a None value`) once the wire signature had changed between versions. The download cache is now version-keyed and `rust/Cargo.toml` is a declared web-build dependency, both mirroring the native path (which was unaffected)
 
+### For Contributors
+
+#### Added
+
+- **`make release-frb` + `release-frb-crate` skill** — one-command native-crate release (stage 1): bumps `rust/Cargo.toml`, stamps the CHANGELOG `libsignal_frb` Highlights line, and creates a signed commit + `libsignal_frb-<version>` tag, pushing to trigger the native build. The commit/tag/push inherit the terminal, so the signing passphrase is entered interactively during the command. Pairs with `release-package` (stage 2)
+- **`make release` + updated `release-package` skill** — one-command Dart package release (stage 2) symmetric to `make release-frb`: verifies the stage-1 native binary exists on GitHub Releases, bumps `pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → dated version + a fresh `[Unreleased]` + the bottom compare-link refs), validates with a publish dry-run, then signs a commit + `vX.Y.Z` tag and pushes to trigger the pub.dev publish. The two release commands share git/terminal helpers in `scripts/src/release_common.dart`
+- **Repository-protection tooling** — the branch and release-tag rulesets now live in-repo as committed JSON (`.github/rulesets/*.json`, the source of truth), and `make setup-repo-protections` applies them to GitHub via `gh` (idempotent by ruleset name) and configures the `native-build` environment. A new **Protect release tags** ruleset restricts who can create `libsignal_frb-*` / `v*` tags, and the native-crate publish (`build-libsignal.yml`) now runs in the required-reviewer `native-build` environment — gating tag-push and `workflow_dispatch` alike, mirroring the `pub.dev` environment that gates pub.dev publishing
+
+#### Changed
+
+- **Decoupled the `libsignal_frb` native release from libsignal dependency updates** — automated update PRs no longer bump the crate version or build binaries; dependency updates accumulate on `main` (tested from source in CI), and the native build is now triggered by pushing a `libsignal_frb-<version>` tag instead of by pushing to `main`. The crate-version bump is now a deliberate release decision (`make release-frb`). See CLAUDE.md → Release Flow
+- **AI changelog generator classifies upstream changes against the bound-crate surface** — the prompt now states which crates/APIs this wrapper actually binds, so out-of-scope upstream changes (net / chat / keytrans / username services / zkgroup / …) are framed as "none of which this library exposes", and it links to a version `compare` instead of the (often incomplete) release notes
+- **CI enforces deployment-target consistency** — `test-reusable.yml` now runs `make check-targets` (Linux leg) so the build fails if the iOS / macOS / Android minimum deployment targets drift out of sync across the podspecs, `Info.plist`s, xcconfigs and gradle. Previously the check existed (`make check-targets`) but was never run automatically
+
 ## [6.0.0] - 2026-07-14
 
 ### For Users

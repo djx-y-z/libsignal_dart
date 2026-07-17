@@ -52,17 +52,6 @@ void main(List<String> args) async {
     fromVersion = args[fromIndex + 1];
   }
 
-  String? crateVersionBefore;
-  final beforeIndex = args.indexOf('--crate-version-before');
-  if (beforeIndex != -1 && beforeIndex + 1 < args.length) {
-    final value = args[beforeIndex + 1].trim();
-    // Guard against an empty value swallowing the next flag (the workflow
-    // passes the output of a step that may not have produced it).
-    if (value.isNotEmpty && !value.startsWith('--')) {
-      crateVersionBefore = value;
-    }
-  }
-
   if (version == null) {
     print('Error: --version is required');
     print('');
@@ -90,7 +79,6 @@ void main(List<String> args) async {
     await updateChangelog(
       version: version,
       fromVersion: fromVersion,
-      crateVersionBefore: crateVersionBefore,
       token: token,
       ciMode: ciMode,
     );
@@ -113,12 +101,8 @@ Options:
   --version <ver>   libsignal version (e.g., v1.0.0) [required]
   --from <ver>      Previous libsignal version — when given, the
                     upstream commit list between the two tags is fed to the AI
-                    for a more complete changelog entry
-  --crate-version-before <ver>
-                    libsignal_frb version before the automatic SemVer-mirror
-                    bump — when given, the AI classifies the update severity
-                    (patch/minor/major) and the crate version is raised if the
-                    AI verdict is more severe than the mirror bump
+                    for a more complete changelog entry, and a compare link is
+                    used instead of a release-notes link
   --ci              CI mode
   --help, -h        Show this help
 
