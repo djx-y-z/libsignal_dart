@@ -309,7 +309,9 @@ All development tasks should be done via Makefile:
 | `make check-new-libsignal-version` | Check for libsignal updates |
 | `make check-template-updates` | Check for copier template updates |
 | `make rust-update` | Update rust/Cargo.lock |
-| `make update-changelog` | Update CHANGELOG.md with AI (requires GITHUB_TOKEN) |
+| `make update-changelog` | Update CHANGELOG.md with AI (requires `AI_MODELS_TOKEN`) |
+| `make release-frb` | Release the `libsignal_frb` native crate (stage 1) — see [Releasing](#releasing-two-stages) |
+| `make release` | Release the Dart package to pub.dev (stage 2) — see [Releasing](#releasing-two-stages) |
 | `make get` | Get dependencies |
 | `make clean` | Clean build artifacts |
 
@@ -349,6 +351,60 @@ make test
 Native libraries are built automatically by **Cargokit** during `flutter build`. You don't need to build them manually for most development work.
 
 For development, Cargokit builds from source when you run tests or the example app:
+
+### Releasing (two stages)
+
+Releasing happens in **two independent stages**, each with its own command and
+git tag. The `libsignal_frb` native crate and the `libsignal` Dart package are
+versioned and released separately.
+
+1. **Native crate (stage 1)** — from a clean, up-to-date `main`:
+   ```bash
+   make release-frb ARGS="--version X.Y.Z"
+   ```
+   Bumps `rust/Cargo.toml`, stamps the CHANGELOG `libsignal_frb` highlight, and
+   creates a **signed** commit + tag `libsignal_frb-X.Y.Z`, then pushes. The tag
+   triggers `build-libsignal.yml`, which builds and publishes the native
+   binaries. The commit/tag/push inherit your terminal, so you enter your signing
+   passphrase interactively during the command.
+
+2. **Dart package (stage 2)** — after the native build succeeds:
+   ```bash
+   make release ARGS="--version X.Y.Z"
+   ```
+   Verifies the stage-1 native release `libsignal_frb-<crate>` exists, bumps
+   `pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + a fresh
+   `[Unreleased]` + the bottom compare links), validates with a publish dry-run,
+   then creates a **signed** commit + tag `vX.Y.Z` and pushes. `publish.yml`
+   publishes to pub.dev. Same interactive signing flow as stage 1.
+
+**Order matters:** stage 1 must finish first — the published package's build hook
+downloads the precompiled `libsignal_frb-<crate>` binary, so it must already
+exist before you tag the pub.dev release.
+
+> Automated libsignal update PRs **do not** bump the `libsignal_frb` crate or
+> build binaries — dependency updates accumulate on `main` (tested from source in
+> CI), and you cut a native release deliberately with `make release-frb`. See
+> `CLAUDE.md` → Release Flow for the full picture.
+
+### Repository rulesets & branch/tag protection
+
+This repository is guarded by GitHub **repository rulesets** and a
+required-reviewer **environment**, so that the crypto library's releases can't be
+published without the right people and review:
+
+- **Signed commits** are required on all branches — configure commit signing
+  (SSH or GPG) before you push.
+- **`main`** is protected (changes land via PR; force-push and deletion blocked).
+- **Release tags** (`libsignal_frb-*`, `v*`) can only be created by
+  Admins/Maintainers and must be signed — this is what triggers native/pub.dev
+  publishing.
+- The **native-build publish** waits on a required reviewer (the `native-build`
+  environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
+
+The maintainer runbook — what each ruleset does, the exact `gh` commands to
+apply / verify / roll them back, and how to configure the `native-build`
+environment — is in [`.github/rulesets/README.md`](.github/rulesets/README.md).
 
 ### Setting up Coverage Badge
 
@@ -450,14 +506,18 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
    ```bash
    make codegen
    ```
-5. Update CHANGELOG.md (requires `GITHUB_TOKEN` with `models:read` permission):
+5. Update CHANGELOG.md (requires `AI_MODELS_TOKEN` with GitHub Models read access):
    ```bash
-   GITHUB_TOKEN=your_token make update-changelog ARGS="--version vX.Y.Z"
+   AI_MODELS_TOKEN=your_token make update-changelog ARGS="--version vX.Y.Z"
    ```
 6. Test all protocol operations:
    ```bash
    make test
    ```
+
+> Updating the dependency does **not** bump the `libsignal_frb` crate version or
+> build native binaries — that is a separate, deliberate step. When you are ready
+> to ship, cut the release with `make release-frb` (see [Releasing](#releasing-two-stages)).
 
 ## Questions?
 

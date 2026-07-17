@@ -3,39 +3,71 @@ name: release-package
 description: Prepare a new version of libsignal for publication to pub.dev. Use when user wants to release, publish, or tag a new version of the package.
 ---
 
-# Release Package
+# Release the Dart Package (Stage 2)
 
-Guide for preparing and publishing new versions of libsignal.
+Guide for publishing a new version of the `libsignal` Dart package to pub.dev.
 
-## Quick Release Checklist
+> **Stage 2 of 2.** Releasing this project has two stages. This skill covers
+> **stage 2** (publishing the Dart package to pub.dev). It does **not** release
+> the native `libsignal_frb` crate — that is **stage 1**, handled by the
+> [release-frb-crate](../release-frb-crate/SKILL.md) skill / `make release-frb`.
+>
+> **Run stage 1 first and let its native build finish.** The published package's
+> build hook downloads the precompiled `libsignal_frb-<crate>` binary, so that
+> binary must already exist before you tag the pub.dev release. `make release`
+> verifies this automatically (see below).
+
+## How to run
 
 ```bash
-# 1. Run quality checks
-make analyze
-make test
-make format-check
-make rust-check
-make rust-audit
-
-# 2. Update version in pubspec.yaml
-# 3. Update CHANGELOG.md (move [Unreleased] to new version)
-
-# 4. Dry run
-make publish-dry-run
-
-# 5. Commit release
-git add pubspec.yaml CHANGELOG.md
-git commit -m "chore: prepare release vX.Y.Z"
-
-# 6. Create annotated tag and push (CI publishes automatically)
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin main
-git push origin vX.Y.Z
+# From a clean, up-to-date main, after the stage-1 native build has finished:
+make release ARGS="--version 6.1.0"
 ```
 
-## Versioning Rules
+`make release` (`scripts/release.dart`) does the whole stage-2 release in one
+command:
 
-Use [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
+1. **Preconditions** — refuses unless you are on a clean `main`, up to date with
+   `origin/main`, the version is greater than the current `pubspec.yaml` version,
+   and the `vX.Y.Z` tag does not already exist (local or remote).
+2. **Verifies the stage-1 native release exists** — checks that the GitHub
+   Release `libsignal_frb-<version in rust/Cargo.toml>` is published (via `gh`).
+   Fails closed if it is missing or can't be verified — the published build hook
+   downloads it, so releasing without it would break consumers.
+3. **Bumps** the `version:` in `pubspec.yaml`.
+4. **Finalizes the CHANGELOG** — renames `## [Unreleased]` to `## [X.Y.Z] -
+   <today>`, opens a fresh empty `## [Unreleased]`, and updates the bottom
+   compare links (`[Unreleased]` → `vX.Y.Z...HEAD` and a new `[X.Y.Z]` →
+   `vPREV...vX.Y.Z`).
+5. **Validates** the package with `make publish-dry-run` (reverts the file
+   changes and aborts if it reports errors).
+6. Shows the diff and asks for confirmation (skip with `--yes`).
+7. Creates a **signed commit** and a **signed tag** `vX.Y.Z`.
+8. **Pushes** `main` and the tag (skip with `--no-push`), which triggers
+   `publish.yml` → pub.dev.
+
+### Signing passphrase
+
+The commit, tag, and push run with an inherited terminal, so **you enter your
+signing passphrase interactively during the command** — there is no separate
+manual commit/tag step. Run it from a terminal (not an IDE task runner) so both
+the passphrase prompt and the pre-commit hook (`make format-check` + `rust-check`
++ `analyze`) work.
+
+### Options
+
+- `--version <X.Y.Z>` — new package version (required)
+- `--no-push` — commit and tag locally only (push later yourself)
+- `--yes`, `-y` — skip the confirmation prompt
+- `--skip-frb-check` — skip the stage-1 native-binary existence check (only if
+  you have verified the `libsignal_frb-<crate>` release exists manually)
+- `--date <Y-M-D>` — CHANGELOG date to stamp (default: today)
+
+## Choosing the version (SemVer for the Dart package)
+
+The pub.dev package version follows [Semantic Versioning](https://semver.org/)
+for the **public Dart API**, independent of the `libsignal_frb` crate version and
+of upstream libsignal's version.
 
 | Change Type | Version Bump | Examples |
 |-------------|--------------|----------|
@@ -43,141 +75,75 @@ Use [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`
 | New features | MINOR | New public APIs, new platform support |
 | Bug fixes | PATCH | Bug fixes, dependency updates, documentation |
 
-**Pre-1.0.0 convention:**
-- `0.Y.Z` — initial development, anything may change
-- `0.1.0` → `0.2.0` — breaking changes during initial development
-- `0.1.0` → `0.1.1` — bug fixes during initial development
+The CHANGELOG (`[Unreleased]` section) is the source of truth for what changed —
+review it and pick the bump that matches. See the changelog format in
+`CLAUDE.md` → Changelog Format.
 
-## CHANGELOG.md Format
+## Prerequisite: stage 1 must exist
 
-Follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/):
-
-```markdown
-## [Unreleased]
-
-## [X.Y.Z] - YYYY-MM-DD
-
-### Added
-- New features
-
-### Changed
-- Changes in existing functionality
-
-### Fixed
-- Bug fixes
-
-### Security
-- Security-related changes
-```
-
-### CHANGELOG Rules
-
-1. **Keep `[Unreleased]` at the top** — all in-progress changes go here
-2. **Use today's date** when releasing (format: `YYYY-MM-DD`)
-3. **Only include sections that have entries** (don't add empty sections)
-4. **Released versions are immutable** — never edit entries for versions that already have a git tag
-
-### Comparison Links
-
-Every version entry needs a comparison link at the bottom of `CHANGELOG.md`:
-
-```markdown
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/vX.Y.Z...HEAD
-[X.Y.Z]: https://github.com/djx-y-z/libsignal_dart/compare/vX.Y-1.Z...vX.Y.Z
-```
-
-- `[Unreleased]` compares from the latest tag to HEAD
-- Each version compares from the previous version tag to the current one
-- The first version uses `/releases/tag/vX.Y.Z` (no comparison)
-
-## Pre-Release Validation
-
-### 1. Quality Checks
+`make release` checks this for you, but to confirm manually: `make version` shows
+the crate version from `rust/Cargo.toml`, and a GitHub Release named
+`libsignal_frb-<that version>` must be published. If it is not, run stage 1
+first:
 
 ```bash
-make analyze                  # Dart static analysis
-make test                     # Run all tests
-make format-check             # Check formatting
-make rust-check               # Rust type check
-make rust-audit               # Security audit
+make release-frb ARGS="--version <crate X.Y.Z>"   # then let the build finish
 ```
 
-### 2. Dry Run
+## Publishing flow
+
+This project uses **tag-triggered CI** for publishing — you do NOT run `dart pub
+publish` manually:
+
+1. `make release` pushes a git tag matching `vX.Y.Z`.
+2. The `publish.yml` workflow triggers automatically on the tag.
+3. It validates the tag matches `pubspec.yaml`, runs tests, and publishes to
+   pub.dev via OIDC (gated by the `pub.dev` environment's required reviewers).
+4. It creates a GitHub Release with the extracted changelog section.
+
+## Manual fallback
+
+If you cannot use `make release` (e.g. `make`/`gh` unavailable, or you are not an
+Admin and must land the version bump through a PR instead of pushing to `main`):
 
 ```bash
-make publish-dry-run          # Validate pub.dev publishing
-```
+# 1. Quality checks
+make analyze && make test && make format-check && make rust-check && make rust-audit
 
-This checks:
-- `pubspec.yaml` is valid
-- All required files are present
-- Package meets pub.dev requirements
-- No oversized files
-
-### 3. Verify Versions Match
-
-Ensure consistency across:
-- `pubspec.yaml` — `version:` field
-- `CHANGELOG.md` — latest version entry
-- Git tag — `vX.Y.Z` (created after commit)
-
-## Publishing Flow
-
-This project uses **tag-triggered CI** for publishing:
-
-1. Push a git tag matching `vX.Y.Z`
-2. The `publish.yml` workflow triggers automatically
-3. CI publishes to pub.dev using OIDC authentication
-4. CI creates a GitHub Release with the tag
-
-**You do NOT run `dart pub publish` manually.** The CI handles it.
-
-### Step-by-Step
-
-```bash
-# 1. Update pubspec.yaml version
-# 2. Update CHANGELOG.md
+# 2. Bump pubspec.yaml `version:` and finalize CHANGELOG.md:
+#    - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
+#    - add a fresh empty `## [Unreleased]` above it
+#    - rewrite `[Unreleased]: .../compare/vX.Y.Z...HEAD` and add
+#      `[X.Y.Z]: .../compare/vPREV...vX.Y.Z` at the bottom
 
 # 3. Validate
 make publish-dry-run
 
-# 4. Commit
-git add pubspec.yaml CHANGELOG.md
-git commit -m "chore: prepare release vX.Y.Z"
-
-# 5. Create annotated tag
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-
-# 6. Push commit and tag
-git push origin main
-git push origin vX.Y.Z
+# 4. Commit (signed), tag (signed, annotated), push
+git commit -am "chore: prepare release vX.Y.Z"
+git tag -s vX.Y.Z -m "Release vX.Y.Z"
+git push origin main && git push origin vX.Y.Z
 ```
 
-### Annotated Tags
+Non-admins: open a PR for the bump commit, merge it, then push the `vX.Y.Z` tag
+(tag creation is not gated by the pull-request rule).
 
-Always use **annotated tags** (`git tag -a`) instead of lightweight tags (`git tag`):
+### If CI fails
 
-- Annotated tags store the tagger name, date, and message
-- GitHub Releases show the tag message
-- `git describe` works correctly with annotated tags
-- The tag message should be `"Release vX.Y.Z"` (or include a brief summary)
-
-### If CI Fails
-
-- Check GitHub Actions logs for the `publish.yml` workflow
-- Common issues: missing OIDC permissions, pub.dev authentication
-- Fix the issue, delete the tag, re-tag, and push again:
+Fix the issue, then delete and re-create the tag:
 
 ```bash
 git tag -d vX.Y.Z
 git push origin :refs/tags/vX.Y.Z
-# Fix the issue, commit
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin vX.Y.Z
+# fix + commit on main, then re-run:
+make release ARGS="--version X.Y.Z"
 ```
 
 ## Resources
 
+- Publish workflow: `.github/workflows/publish.yml`
+- Release script: `scripts/release.dart` (logic in `scripts/src/release.dart`)
+- Stage 1: [release-frb-crate](../release-frb-crate/SKILL.md) / `make release-frb`
+- Two-stage flow overview: `CLAUDE.md` → Release Flow
 - [pub.dev Publishing Guide](https://dart.dev/tools/pub/publishing)
-- [Semantic Versioning](https://semver.org/)
-- [Keep a Changelog](https://keepachangelog.com/)
+- [Semantic Versioning](https://semver.org/) · [Keep a Changelog](https://keepachangelog.com/)

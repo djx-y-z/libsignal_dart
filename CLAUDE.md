@@ -175,6 +175,10 @@ make codegen                                  # Regenerate FRB bindings
 make update-changelog ARGS="--version vX.Y.Z" # Update CHANGELOG with AI (requires AI_MODELS_TOKEN)
 ```
 
+> This updates the **libsignal dependency** only. It does **not** bump the
+> `libsignal_frb` crate version — that happens at release time via
+> `make release-frb` (see [Release Flow](#release-flow-two-stages)).
+
 ### AI-Powered Changelog
 
 The `update-changelog` command uses GitHub Models API to analyze release notes and generate changelog entries. Requires `AI_MODELS_TOKEN` environment variable:
@@ -227,20 +231,71 @@ make build ARGS="--target aarch64-apple-darwin"
 make test
 ```
 
-## Update Crate Version
+## Release Flow (two stages)
 
-Version is stored in `rust/Cargo.toml`.
+Releasing is **two independent stages**, each with its own command and tag. The
+`libsignal_frb` native crate (`rust/Cargo.toml` version) and the `libsignal` Dart
+package (`pubspec.yaml` version) are versioned and released separately.
+
+```
+libsignal dep-update PRs  ──►  merge to main  ──►  (accumulate, no binary)
+                                                        │
+   Stage 1: native crate ── make release-frb ARGS="--version X.Y.Z"
+     bumps rust/Cargo.toml, stamps CHANGELOG frb Highlight, signs commit +
+     tag `libsignal_frb-X.Y.Z`, pushes  ──►  build-libsignal.yml builds &
+     publishes the native binaries (GitHub Release `libsignal_frb-X.Y.Z`)
+                                                        │
+   Stage 2: Dart package ── make release ARGS="--version X.Y.Z"
+     verifies the stage-1 binary exists, bumps pubspec, finalizes CHANGELOG,
+     signs commit + tag `vX.Y.Z`, pushes  ──►  publish.yml publishes to pub.dev
+     (the build hook downloads the stage-1 binary, which already exists)
+```
+
+**Key rules:**
+
+- **Automated libsignal update PRs do NOT bump the `libsignal_frb` crate version
+  and do NOT build binaries.** They only update the dependency + CHANGELOG.
+  Dependency updates accumulate on `main` (CI still builds from source and tests
+  them); no throwaway native binary is produced.
+- **The native build is triggered by pushing a `libsignal_frb-<version>` tag**
+  (created by `make release-frb`), not by pushing to `main`. The tag must equal
+  the `rust/Cargo.toml` crate version (the workflow validates this).
+- **Stage 1 must finish before stage 2** — the published Dart package's build
+  hook downloads the precompiled `libsignal_frb-<crate>` binary, so it must
+  already exist before you tag the pub.dev release.
+- Skills: [`release-frb-crate`] (stage 1) and [`release-package`] (stage 2).
+
+### Stage 1 — release the native crate
 
 ```bash
-# 1. Edit rust/Cargo.toml - update version
-# 2. Run tests
-make test
-
-# 3. Commit and push (CI will build native libraries)
-git add rust/Cargo.toml
-git commit -m "Bump crate version to X.Y.Z"
-git push
+# From a clean, up-to-date main. You enter your signing passphrase during the
+# command (commit + tag are signed; the terminal is inherited).
+make release-frb ARGS="--version X.Y.Z"      # bump + commit + tag + push
+make release-frb ARGS="--version X.Y.Z --no-push"   # local only
 ```
+
+Choose `X.Y.Z` by SemVer of the FFI surface (see the `release-frb-crate` skill):
+a non-empty `lib/src/rust/` codegen diff since the last frb release means the
+wire signature moved (≥ minor; major if breaking).
+
+### Stage 2 — release the Dart package
+
+```bash
+# After the stage-1 native build has finished. Same interactive signing flow.
+make release ARGS="--version X.Y.Z"                # verify frb binary + bump +
+                                                   # finalize CHANGELOG + dry-run
+                                                   # + signed commit/tag/push
+make release ARGS="--version X.Y.Z --no-push"      # local only
+```
+
+`make release` refuses to proceed until the stage-1 GitHub Release
+`libsignal_frb-<rust/Cargo.toml version>` exists (the published build hook
+downloads it; pass `--skip-frb-check` only if you verified it manually). It bumps
+`pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z] - <today>`,
+opens a fresh `[Unreleased]`, updates the bottom compare links), runs `make
+publish-dry-run`, then signs a commit + tag `vX.Y.Z` and pushes — `publish.yml`
+publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart API**
+(independent of the crate version).
 
 ## Supported Platforms
 
@@ -437,5 +492,6 @@ Claude Code skills available in this project (invoke with `/<skill>` or used aut
 
 | Skill | Description |
 |-------|-------------|
-| `release-package` | Prepare a new version for publication to pub.dev |
+| `release-frb-crate` | Release the `libsignal_frb` native crate (stage 1): bump, tag `libsignal_frb-*`, build binaries |
+| `release-package` | Prepare a new version for publication to pub.dev (stage 2) |
 | `update-template` | Update copier template to latest version |

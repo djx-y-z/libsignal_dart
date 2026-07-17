@@ -138,6 +138,15 @@ jobs:
         run: make format-check
         shell: bash
 
+      # Deployment-target consistency (iOS/macOS/Android min versions across the
+      # podspecs, Info.plists, xcconfigs and gradle). Platform-independent, so it
+      # runs once on Linux x86_64 (like clippy). Fails on drift (exit 1); fix with
+      # `make check-targets ARGS="--ios --set X.Y"` (or --macos/--android).
+      - name: Check deployment targets
+        if: matrix.name == 'Linux x86_64'
+        run: make check-targets
+        shell: bash
+
       # Run tests without coverage (non-Linux or coverage disabled)
       - name: Run tests
         if: matrix.coverage == false || !inputs.run-coverage

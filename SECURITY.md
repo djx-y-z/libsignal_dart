@@ -298,6 +298,24 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
   (`actions/attest-build-provenance`), is the recommended next step and is
   tracked as future work.
 
+### Release & build-trigger protection
+
+The native binaries above are published by `build-libsignal.yml`, triggered by a
+`libsignal_frb-*` tag push or by manual dispatch. Two controls restrict who can
+cause a publish, mirroring the `pub.dev` environment that gates the pub.dev
+publish:
+
+- **Tag protection** — a repository ruleset restricts creating, moving, and
+  deleting `libsignal_frb-*` and `v*` tags to Admins/Maintainers (and requires
+  them signed), so a plain `write` collaborator cannot mint a release tag.
+- **Approval gate** — the publishing job runs in the `native-build` environment,
+  whose required reviewers must approve before any binary is released. Unlike the
+  tag ruleset, this also covers the `workflow_dispatch` path.
+
+Rationale, exact `gh` commands to apply/verify/roll back, the current ruleset
+inventory, and residual risks are in
+[`.github/rulesets/README.md`](.github/rulesets/README.md).
+
 ### Dependency Auditing
 
 Two complementary checks run in CI (on pushes to `main` and on pull requests

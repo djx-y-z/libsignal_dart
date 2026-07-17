@@ -114,16 +114,16 @@ jobs:
             echo "::error::Failed to update rust/Cargo.toml"
           fi
 
-      # Runs before Cargo.lock is updated: the AI may raise the crate version
-      # above the SemVer-mirror bump (0.x upstreams ship breaking changes in
-      # minor releases), and the lock file must be generated afterwards.
+      # Records the libsignal dependency change (libsignal Highlight + Changed).
+      # Does NOT touch the libsignal_frb crate version — that is bumped later at
+      # release time (`make release-frb`), which also stamps the frb Highlight.
       - name: Update CHANGELOG.md
         id: changelog
         if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
         env:
           AI_MODELS_TOKEN: ${{ secrets.AI_MODELS_TOKEN }}
         run: |
-          if make update-changelog ARGS="--version ${{ steps.check.outputs.latest_version }} --from ${{ steps.check.outputs.current_version }} --crate-version-before ${{ steps.cargo-toml.outputs.crate_version_before }} --ci"; then
+          if make update-changelog ARGS="--version ${{ steps.check.outputs.latest_version }} --from ${{ steps.check.outputs.current_version }} --ci"; then
             echo "success=true" >> $GITHUB_OUTPUT
           else
             echo "success=false" >> $GITHUB_OUTPUT
@@ -207,11 +207,11 @@ jobs:
 
             ${{ steps.changelog.outputs.success == 'false' && '> **Warning**: AI changelog update failed. Please update CHANGELOG.md manually.' || '' }}
 
-            ${{ (steps.changelog.outputs.success == 'false' || steps.changelog.outputs.bump_verified == 'false') && '> ⚠️ **Crate version bump is UNVERIFIED** — the AI severity check did not run, so the bump only mirrors the upstream SemVer delta. 0.x upstreams often ship BREAKING changes in minor releases: review the upstream changes and raise the `libsignal_frb` major version manually if needed.' || '' }}
+            > **Note**: This PR does NOT bump the `libsignal_frb` crate version and does NOT build native binaries. It only updates the libsignal dependency. Cut a native release later with `make release-frb` (stage 1), then the Dart release (stage 2). See CLAUDE.md → Release Flow.
 
             ### Files Updated Automatically
 
-            - `rust/Cargo.toml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'libsignal dependency tags + `libsignal_frb` version bump (mirrors upstream SemVer delta)' || '**NOT UPDATED** (update failed)' }}
+            - `rust/Cargo.toml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'libsignal dependency tags only (the `libsignal_frb` crate version is intentionally NOT bumped here)' || '**NOT UPDATED** (update failed)' }}
             - `rust/Cargo.lock` — ${{ steps.cargo-lock.outputs.success == 'true' && 'updated dependencies' || '**NOT UPDATED** (cargo update failed)' }}
             - `lib/src/rust/` — ${{ steps.codegen.outputs.success == 'true' && 'regenerated FRB bindings' || '**NOT UPDATED** (codegen failed, manual update required)' }}
             - `CHANGELOG.md` — ${{ steps.changelog.outputs.success == 'true' && 'AI-generated entry (GitHub Models)' || '**NOT UPDATED** (AI failed, manual update required)' }}
@@ -237,9 +237,12 @@ jobs:
                make test
                ```
 
-            2. **Bump Dart package version** (if releasing to pub.dev):
-               - Update `version` in `pubspec.yaml`
-               - Move CHANGELOG `[Unreleased]` to version number
+            2. This update accumulates on `main` with no new native binary. When
+               you are ready to ship, run the two-stage release:
+               - **Stage 1 — native crate:** `make release-frb ARGS="--version X.Y.Z"`
+                 (bumps `libsignal_frb`, tags `libsignal_frb-X.Y.Z`, builds binaries)
+               - **Stage 2 — Dart package:** bump `pubspec.yaml`, move CHANGELOG
+                 `[Unreleased]` → version, tag `vX.Y.Z` (release-package skill)
 
             ---
             *This PR was created automatically by the libsignal update checker.*
@@ -253,7 +256,6 @@ jobs:
             ${{ steps.cargo-lock.outputs.success == 'false' && 'cargo-lock-failed' || '' }}
             ${{ steps.codegen.outputs.success == 'false' && 'codegen-failed' || '' }}
             ${{ steps.changelog.outputs.success == 'false' && 'changelog-needed' || '' }}
-            ${{ (steps.changelog.outputs.success == 'false' || steps.changelog.outputs.bump_verified == 'false') && 'bump-unverified' || '' }}
 
       - name: Summary
         run: |
@@ -274,8 +276,6 @@ jobs:
             echo "| Cargo.lock | ${{ steps.cargo-lock.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
             echo "| FRB Codegen | ${{ steps.codegen.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
             echo "| AI Changelog | ${{ steps.changelog.outputs.success }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Bump AI-verified | ${{ steps.changelog.outputs.bump_verified }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Crate version | ${{ steps.changelog.outputs.crate_version }} |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "A pull request has been created for review." >> $GITHUB_STEP_SUMMARY
             if [ "${{ steps.cargo-toml.outputs.success }}" = "false" ]; then

@@ -12,20 +12,27 @@
 # - Web (WASM)
 #
 # Trigger:
-# - Manual dispatch (workflow_dispatch) - for first run or force rebuild
-# - Push to main when rust/Cargo.toml changes (contains version)
+# - Push of a `libsignal_frb-<version>` tag (created by `make release-frb`) -
+#   this is the normal path: a libsignal dependency update merges to main WITHOUT
+#   bumping the crate, then a deliberate release bumps rust/Cargo.toml and pushes
+#   the matching tag, which builds and publishes the native binaries.
+# - Manual dispatch (workflow_dispatch) - for first run or a forced rebuild
+#   (reads the crate version from rust/Cargo.toml on the default branch).
 #
-# After successful build, creates/updates GitHub Release with native library archives.
+# The tag name must equal `libsignal_frb-<crate version in rust/Cargo.toml>`
+# (validated below). The GitHub Release is created on that same tag, so the tag
+# you push IS the release tag (no duplicate tags).
+#
+# After a successful build, creates/updates the GitHub Release with native
+# library archives.
 
 name: Build libsignal FRB Libraries
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
-    paths:
-      - 'rust/Cargo.toml'
-      - 'rust/src/**'
+    tags:
+      - 'libsignal_frb-*'
 
 concurrency:
   group: build-libsignal_frb-${{ github.ref }}
@@ -55,6 +62,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: make check-exists-libsignal-frb-release ARGS="--ci"
+
+      # On a tag push, the tag must equal `libsignal_frb-<crate version>`. This
+      # guards against tagging a commit whose rust/Cargo.toml wasn't bumped to
+      # match (mirrors publish.yml's tag/pubspec validation).
+      - name: Validate tag matches crate version
+        if: github.ref_type == 'tag'
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#libsignal_frb-}"
+          CRATE_VERSION="${{ steps.check.outputs.version }}"
+          if [ "$TAG_VERSION" != "$CRATE_VERSION" ]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' (version '$TAG_VERSION') does not match rust/Cargo.toml crate version '$CRATE_VERSION'. Bump rust/Cargo.toml and tag 'libsignal_frb-$CRATE_VERSION', or use 'make release-frb'."
+            exit 1
+          fi
+          echo "Tag matches crate version: $CRATE_VERSION"
 
   # ============================================
   # Linux (x86_64 + arm64 on separate runners)
@@ -322,6 +343,15 @@ jobs:
       - build-wasm
     if: needs.check-release.outputs.skip != 'true'
     runs-on: ubuntu-latest
+    # Supply-chain gate: publishing the consumer-downloaded native binaries
+    # requires a human to approve the `native-build` environment deployment.
+    # This mirrors publish.yml's `pub.dev` environment and is the ONLY control
+    # that also covers the workflow_dispatch trigger — a tag ruleset cannot gate
+    # a dispatch-triggered run. Configure required reviewers at
+    # Settings → Environments → native-build; until then the gate is inactive
+    # (the environment auto-creates with no protection and does not block).
+    # See .github/rulesets/README.md.
+    environment: native-build
     env:
       VERSION: ${{ needs.check-release.outputs.version }}
       NATIVE_VERSION: ${{ needs.check-release.outputs.libsignal_version }}

@@ -1,0 +1,15 @@
+{
+  "name": "Signing commit",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [
+    { "actor_id": 2611117, "actor_type": "Integration", "bypass_mode": "always" }
+  ],
+  "conditions": {
+    "ref_name": { "include": ["~ALL"], "exclude": [] }
+  },
+  "rules": [
+    { "type": "non_fast_forward" },
+    { "type": "required_signatures" }
+  ]
+}
