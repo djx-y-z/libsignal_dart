@@ -396,9 +396,9 @@ published without the right people and review:
 - **Signed commits** are required on all branches — configure commit signing
   (SSH or GPG) before you push.
 - **`main`** is protected (changes land via PR; force-push and deletion blocked).
-- **Release tags** (`libsignal_frb-*`, `v*`) can only be created by
-  Admins/Maintainers and must be signed — this is what triggers native/pub.dev
-  publishing.
+- **Tags** — all tags can only be created by Admins/Maintainers and must be
+  signed; the release-triggering `libsignal_frb-*` / `v*` are the critical subset
+  (they start native/pub.dev publishing).
 - The **native-build publish** waits on a required reviewer (the `native-build`
   environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
 
