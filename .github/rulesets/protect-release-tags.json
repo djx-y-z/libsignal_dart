@@ -8,7 +8,7 @@
   ],
   "conditions": {
     "ref_name": {
-      "include": ["refs/tags/libsignal_frb-*", "refs/tags/v*"],
+      "include": ["~ALL"],
       "exclude": []
     }
   },

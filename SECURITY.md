@@ -306,8 +306,9 @@ cause a publish, mirroring the `pub.dev` environment that gates the pub.dev
 publish:
 
 - **Tag protection** — a repository ruleset restricts creating, moving, and
-  deleting `libsignal_frb-*` and `v*` tags to Admins/Maintainers (and requires
-  them signed), so a plain `write` collaborator cannot mint a release tag.
+  deleting **all tags** to Admins/Maintainers (and requires them signed), so a
+  plain `write` collaborator cannot mint a release tag (`libsignal_frb-*` / `v*`)
+  or any other tag.
 - **Approval gate** — the publishing job runs in the `native-build` environment,
   whose required reviewers must approve before any binary is released. Unlike the
   tag ruleset, this also covers the `workflow_dispatch` path.

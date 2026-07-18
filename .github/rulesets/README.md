@@ -43,11 +43,15 @@ Maintain = 4, **Admin = 5**.
 | `protect-main.json` | Protect main branch | `~DEFAULT_BRANCH` | pull_request (0 approvals), non_fast_forward, deletion | Admin (5) |
 | `signing-commit.json` | Signing commit | `~ALL` branches | required_signatures, non_fast_forward | the update GitHub App (Integration) |
 | `delete-branches.json` | Delete branches | `~ALL` branches | deletion | Admin (5) |
-| `protect-release-tags.json` | Protect release tags | `libsignal_frb-*` + `v*` tags | creation, update, deletion, required_signatures | Admin (5), Maintain (4) |
+| `protect-release-tags.json` | Protect release tags | all tags (`~ALL`) | creation, update, deletion, required_signatures | Admin (5), Maintain (4) |
 
-The load-bearing new one is **Protect release tags**: `creation` restricts who
-can mint a release tag to Admin/Maintain (the trigger for native/pub.dev
-publishing); `update`+`deletion` make tags immutable; `required_signatures` is
+The load-bearing new one is **Protect release tags**. It targets **all tags**
+(`~ALL`), so `creation` restricts creating *any* tag to Admin/Maintain — which
+covers the release-triggering `libsignal_frb-*` (native build) and `v*` (pub.dev)
+tags and every other tag, so no `write` collaborator can mint a tag that starts a
+publish. (Only `libsignal_frb-*`/`v*` actually trigger a workflow; the `~ALL`
+scope is defense-in-depth so the rule never lags behind a new trigger pattern.)
+`update`+`deletion` make tags immutable; `required_signatures` is
 belt-and-suspenders (`make release-frb` / `make release` already sign tags). If
 GitHub ever rejects `required_signatures` on a tag target, drop that one rule —
 `creation`/`update`/`deletion` carry the protection.
