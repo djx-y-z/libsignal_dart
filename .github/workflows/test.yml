@@ -32,6 +32,12 @@ on:
     types:
       - completed
 
+# Least-privilege default. The reusable test workflow declares its own
+# contents: read; the coverage-badge job authenticates with GIST_TOKEN (a PAT),
+# not GITHUB_TOKEN, so no write scope is needed here.
+permissions:
+  contents: read
+
 jobs:
   test:
     # Skip tests for:

@@ -22,6 +22,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'src/common.dart';
+import 'src/release_common.dart';
 
 void main(List<String> args) async {
   if (args.contains('--help') || args.contains('-h')) {
@@ -57,7 +58,7 @@ void main(List<String> args) async {
     logInfo(
       'Environment: ${skipEnv ? 'native-build (skipped)' : 'native-build (reviewer: you)'}',
     );
-    if (!assumeYes && !_confirm('Apply to $slug?')) {
+    if (!assumeYes && !confirm('Apply to $slug?')) {
       logWarn('Aborted.');
       return;
     }
@@ -221,13 +222,6 @@ Future<void> _setupNativeBuildEnvironment(String slug) async {
 }
 
 String _basename(String path) => path.split(Platform.pathSeparator).last;
-
-/// Prompts a yes/no question on the terminal; defaults to no.
-bool _confirm(String prompt) {
-  stdout.write('$prompt [y/N] ');
-  final answer = (stdin.readLineSync() ?? '').trim().toLowerCase();
-  return answer == 'y' || answer == 'yes';
-}
 
 void _printUsage() {
   print('''

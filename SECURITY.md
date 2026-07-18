@@ -1,5 +1,60 @@
 # Security
 
+## Reporting a Vulnerability
+
+**Please do not report security vulnerabilities through public GitHub issues.**
+
+### How to Report
+
+Use [GitHub Security Advisories](https://github.com/djx-y-z/libsignal_dart/security/advisories/new) to report vulnerabilities privately, so the risk can be assessed and a fix prepared before public disclosure.
+
+Please include:
+
+- A description of the vulnerability
+- Steps to reproduce
+- Potential impact
+- A suggested fix (if any)
+
+### Response Timeline
+
+- **Acknowledgment**: within 48 hours
+- **Initial assessment**: within 7 days
+- **Fix timeline**: depends on severity, typically 30–90 days
+
+### Coordinated Disclosure
+
+We follow coordinated disclosure. Once a fix is available we will (1) release a patched version, (2) publish a security advisory, and (3) credit the reporter unless anonymity is requested.
+
+## Security Scope
+
+### In Scope
+
+This package provides Dart bindings to [libsignal](https://github.com/signalapp/libsignal) via Flutter Rust Bridge. The security scope covers:
+
+- **Memory safety** of the FRB wrapper and the hand-written Rust in `rust/src/api/`
+- **Correct API usage** of the underlying libsignal primitives (session handling, identity-trust enforcement, key management)
+- **Secret handling** across the FFI boundary (deterministic `dispose()`, `zeroize()`, keeping secrets in Rust where possible)
+- **Supply-chain integrity** of the prebuilt native binaries (build pipeline, fail-closed download verification, release/tag protections)
+
+### Out of Scope
+
+The cryptography itself is implemented and maintained by the upstream **libsignal** project (Signal Foundation):
+
+- The Signal Protocol / Double Ratchet / X3DH / PQXDH algorithm implementations
+- Constant-time / side-channel resistance of the cryptographic code
+- Cryptographic protocol design and proofs
+
+Report vulnerabilities in the underlying protocol or cryptography to the [libsignal project](https://github.com/signalapp/libsignal/security).
+
+### Threat Model Limitations
+
+This library inherits libsignal's threat model. Out of scope:
+
+- **Physical side-channels** (power analysis, electromagnetic emissions)
+- **Fault injection** (Rowhammer, voltage/clock glitching)
+- **Hardware vulnerabilities**
+- **Compromised host** — an OS/runtime/memory an attacker controls; secrets that cross into Dart's GC heap cannot be reliably erased (see [A: Memory Safety](#a-memory-safety-rust-handled))
+
 ## Architecture Overview
 
 This library uses **Flutter Rust Bridge (FRB)** with the **libsignal-protocol** Rust crate.
@@ -415,7 +470,3 @@ After decryption, plaintext is intentionally NOT zeroized because:
 3. **Keys ARE zeroized** - identity key pairs and session keys are properly zeroized after use
 
 If your application requires plaintext zeroization, implement it at the Dart layer after processing.
-
-## Reporting Security Issues
-
-If you discover a security vulnerability, please report it privately rather than opening a public issue. Contact the maintainers directly.
