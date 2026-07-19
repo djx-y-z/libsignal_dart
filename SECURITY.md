@@ -345,13 +345,40 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
   build **aborts** rather than loading an unverified binary. The escape hatch
   `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD=1` exists only for building against older
   releases with no checksums file and should not be used in production.
-- **Authenticity (not yet implemented):** the checksums file is served from the
-  same release as the archive, so SHA256 alone does not defend against a release
-  or maintainer-token compromise (an attacker who replaces the archive can also
-  replace its checksum). A detached signature (e.g. minisign/cosign) with a
-  public key pinned in `hook/build.dart`, plus SLSA build provenance
-  (`actions/attest-build-provenance`), is the recommended next step and is
-  tracked as future work.
+- **Authenticity (build provenance attestation):** the checksums file is served
+  from the same release as the archive, so SHA256 alone does not defend against
+  a release or maintainer-token compromise (an attacker who replaces the archive
+  can also replace its checksum). To break that self-trust, every release
+  archive is attested with [GitHub Artifact
+  Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations)
+  (Sigstore, SLSA Build L2): CI signs a provenance statement proving each
+  archive was built by this repository's tag-triggered `build-libsignal.yml`
+  workflow from a specific commit. Verify any downloaded archive with the
+  GitHub CLI:
+
+  ```bash
+  gh attestation verify libsignal_frb-<version>-<platform>.tar.gz \
+    --repo djx-y-z/libsignal_dart
+  ```
+
+  For fully offline verification, each release also attaches the Sigstore
+  bundle as `libsignal_frb-<version>.sigstore.jsonl`:
+
+  ```bash
+  gh attestation trusted-root > trusted_root.jsonl   # once, from a trusted machine
+  gh attestation verify libsignal_frb-<version>-<platform>.tar.gz \
+    --repo djx-y-z/libsignal_dart \
+    --bundle libsignal_frb-<version>.sigstore.jsonl \
+    --custom-trusted-root trusted_root.jsonl
+  ```
+
+  **Known limitation:** verification is manual — the build hook itself does not
+  verify attestations automatically. There is currently no Sigstore/DSSE
+  implementation for Dart, so an in-hook verifier would mean hand-rolling
+  X.509 path validation and transparency-log checks (weeks of security-critical
+  code); no package ecosystem verifies Sigstore attestations client-side by
+  default today. Automatic (opt-in) verification via an installed `gh` CLI is
+  tracked as a possible future hardening step.
 
 ### Release & build-trigger protection
 

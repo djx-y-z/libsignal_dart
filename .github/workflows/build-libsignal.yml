@@ -369,6 +369,8 @@ jobs:
       NATIVE_VERSION: ${{ needs.check-release.outputs.libsignal_version }}
     permissions:
       contents: write
+      id-token: write       # Sigstore OIDC identity for build provenance
+      attestations: write   # store the attestation in the repo
     steps:
       - uses: actions/checkout@v4
 
@@ -431,6 +433,24 @@ jobs:
 
           ls -lh release-archives/
 
+      # Sigstore build-provenance attestation (SLSA Build L2) for every release
+      # archive. subject-checksums reuses the just-generated SHA256 file, so the
+      # attested digests are exactly the ones the build hook verifies. The
+      # resulting bundle is attached to the release below so consumers can
+      # verify fully offline (see SECURITY.md → Authenticity).
+      - name: Attest build provenance
+        id: attest
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-checksums: release-archives/libsignal_frb-${{ env.VERSION }}-checksums.sha256
+
+      - name: Attach attestation bundle to release assets
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          cp "$BUNDLE_PATH" "release-archives/libsignal_frb-${VERSION}.sigstore.jsonl"
+          ls -lh "release-archives/libsignal_frb-${VERSION}.sigstore.jsonl"
+
       - name: Create Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -473,6 +493,13 @@ jobs:
 
           ### Checksums
           SHA256 checksums are available in \`libsignal_frb-${VERSION}-checksums.sha256\`
+
+          ### Build Provenance
+          Every archive is attested with [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) (Sigstore). Verify:
+          \`\`\`bash
+          gh attestation verify libsignal_frb-${VERSION}-<platform>.tar.gz --repo ${GITHUB_REPOSITORY}
+          \`\`\`
+          Offline verification: use the attached \`libsignal_frb-${VERSION}.sigstore.jsonl\` bundle with \`--bundle\` (see SECURITY.md).
           EOF
           )" \
             release-archives/libsignal_frb-${VERSION}-linux-x86_64.tar.gz \
@@ -487,4 +514,5 @@ jobs:
             release-archives/libsignal_frb-${VERSION}-ios-simulator-arm64.tar.gz \
             release-archives/libsignal_frb-${VERSION}-ios-simulator-x86_64.tar.gz \
             release-archives/libsignal_frb-${VERSION}-wasm32.tar.gz \
-            release-archives/libsignal_frb-${VERSION}-checksums.sha256
+            release-archives/libsignal_frb-${VERSION}-checksums.sha256 \
+            release-archives/libsignal_frb-${VERSION}.sigstore.jsonl

@@ -16,6 +16,10 @@
   - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings; `make codegen` produces no binding diff
   - Note: These changes do not affect this library's public API
 
+#### Security
+
+- **Build provenance attestation (Sigstore, SLSA Build L2)** — every native-release archive is now attested with GitHub Artifact Attestations: CI signs a provenance statement proving the archive was built by this repository's tag-triggered `build-libsignal.yml` from a specific commit, closing the previously documented authenticity gap (the SHA256 checksums file ships in the same release as the archives). Verify with `gh attestation verify <archive> --repo djx-y-z/libsignal_dart`; a Sigstore bundle (`libsignal_frb-<version>.sigstore.jsonl`) is attached to each release for fully offline verification. See SECURITY.md → Authenticity (the build hook itself still verifies SHA256 only — attestation verification is manual)
+
 #### Fixed
 
 - **Stale web WASM after a package upgrade** — the web build hook (`hook/build.dart`) now records the provisioned crate version in `web/pkg/.wasm-version` and re-downloads when it changes, instead of skipping whenever the two WASM files merely exist. Previously, upgrading the package kept the prior version's WASM in the consuming app's `web/pkg/` (it survives `flutter clean`), so on web any FRB entry that calls Dart store callbacks — `SessionBuilder.processPreKeyBundle`, `SessionCipher`, `SealedSenderCipher`, group messaging — panicked with an argument-count mismatch (`called Option::unwrap() on a None value`) once the wire signature had changed between versions. The download cache is now version-keyed and `rust/Cargo.toml` is a declared web-build dependency, both mirroring the native path (which was unaffected)
