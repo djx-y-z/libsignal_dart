@@ -1,0 +1,30 @@
+# Keeps GitHub Actions pins current. Third-party actions are pinned to commit
+# SHAs with a `# vX.Y.Z` comment (see SECURITY.md); Dependabot bumps both the
+# SHA and the comment.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    # "/" only scans .github/workflows/; the composite actions each live in
+    # their own directory, so they are matched explicitly via the glob.
+    directories:
+      - "/"
+      - "/.github/actions/*"
+    schedule:
+      # Monday 06:00 UTC — before the daily update checks (09:00/10:00 UTC)
+      # and after the weekly fuzz run (Monday 04:00 UTC).
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      # One PR for all action bumps (grouping spans all `directories` above).
+      github-actions:
+        patterns:
+          - "*"
+    ignore:
+      # dtolnay/rust-toolchain has no versioned releases — it is pinned to a
+      # master SHA and the toolchain is selected via the `toolchain:` input.
+      # Bumped manually during security backports.
+      - dependency-name: "dtolnay/rust-toolchain"
