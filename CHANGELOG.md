@@ -35,6 +35,11 @@
 - **CI enforces deployment-target consistency** — `test-reusable.yml` now runs `make check-targets` (Linux leg) so the build fails if the iOS / macOS / Android minimum deployment targets drift out of sync across the CI build env vars, the example Xcode projects and the README platform table. Previously the check existed (`make check-targets`) but was never run automatically
 - **Deployment-target sources consolidated** — `.copier-answers.yml` remains the single source of truth; with the platform scaffolding removed, `make check-targets` and `scripts/get_android_min_sdk.dart` no longer read the podspecs/`build.gradle` but verify the CI workflow (`IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET`, cargo-ndk `--platform`) instead
 
+- **Upstream tag names validated before reaching the shell** — `check_updates.dart` / `check_template_updates.dart` reject a release `tag_name` that is not a plain semver-ish tag before it lands in `GITHUB_OUTPUT`, and the update workflows pass step outputs/inputs into `run:` blocks via `env:` instead of inline `${{ }}` interpolation — closing a shell-injection path from upstream release names (backport of the liboqs audit)
+- **Least-privilege `GITHUB_TOKEN` everywhere** — `publish.yml` and `build-libsignal.yml` now default to `contents: read` with job-level opt-ups (`id-token: write` on the pub.dev publish job, `contents: write` on the release jobs); the two update-checker workflows drop `contents/pull-requests: write` entirely (all writes go through the App token)
+- **Third-party actions pinned to commit SHAs** — `dart-lang/setup-dart`, `peter-evans/create-pull-request`, `android-actions/setup-android`, `ilammy/msvc-dev-cmd`, `schneegans/dynamic-badges-action`, `Swatinem/rust-cache`, `dtolnay/rust-toolchain` (toolchain now passed via the `toolchain` input since the ref no longer selects it)
+- **`setup-make` verifies gnumake.exe by SHA256** — release assets are mutable, so the size check alone did not lock the Windows make binary; a hardcoded SHA256 (updated together with the version) now does
+
 ## [6.0.0] - 2026-07-14
 
 ### For Users

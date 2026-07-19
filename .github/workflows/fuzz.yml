@@ -54,10 +54,14 @@ jobs:
         uses: ./.github/actions/setup-protoc
 
       - name: Setup nightly Rust
-        uses: dtolnay/rust-toolchain@nightly
+        # SHA-pinned; the tag normally selects the toolchain, so it is passed
+        # explicitly via the `toolchain` input instead.
+        uses: dtolnay/rust-toolchain@2c7215f132e9ebf062739d9130488b56d53c060c # master 2026-07
+        with:
+          toolchain: nightly
 
       - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2.9.1
         with:
           workspaces: |
             rust -> target

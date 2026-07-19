@@ -25,9 +25,10 @@ on:
 jobs:
   check-template:
     runs-on: ubuntu-latest
+    # All writes (checkout push, PR creation, branch push) go through the App
+    # token; the default GITHUB_TOKEN needs no write access here.
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
 
     steps:
       - name: Generate GitHub App Token
@@ -46,12 +47,14 @@ jobs:
 
       - name: Check for template updates
         id: check
+        env:
+          TARGET_VERSION: ${{ inputs.target_version }}
         run: |
           # Build arguments
           ARGS="--ci-output $GITHUB_OUTPUT"
 
-          if [ -n "${{ inputs.target_version }}" ]; then
-            ARGS="$ARGS --version ${{ inputs.target_version }}"
+          if [ -n "$TARGET_VERSION" ]; then
+            ARGS="$ARGS --version $TARGET_VERSION"
           fi
 
           echo "Running: make check-template-updates ARGS=\"$ARGS\""
@@ -62,7 +65,7 @@ jobs:
 
       - name: Create Notification PR
         if: steps.check.outputs.needs_update == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           sign-commits: true
@@ -120,19 +123,24 @@ jobs:
             automated
 
       - name: Summary
+        env:
+          NEEDS_UPDATE: ${{ steps.check.outputs.needs_update }}
+          TEMPLATE_REPO: ${{ steps.check.outputs.template_repo }}
+          CURRENT_VERSION: ${{ steps.check.outputs.current_version }}
+          LATEST_VERSION: ${{ steps.check.outputs.latest_version }}
         run: |
-          if [ "${{ steps.check.outputs.needs_update }}" = "true" ]; then
+          if [ "$NEEDS_UPDATE" = "true" ]; then
             echo "## Template Update Available" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
             echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Template | ${{ steps.check.outputs.template_repo }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Current | ${{ steps.check.outputs.current_version }} |" >> $GITHUB_STEP_SUMMARY
-            echo "| Latest | ${{ steps.check.outputs.latest_version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Template | ${TEMPLATE_REPO} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Current | ${CURRENT_VERSION} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Latest | ${LATEST_VERSION} |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "A notification PR has been created." >> $GITHUB_STEP_SUMMARY
           else
             echo "## Template Up to Date" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Current template version **${{ steps.check.outputs.current_version }}** is the latest." >> $GITHUB_STEP_SUMMARY
+            echo "Current template version **${CURRENT_VERSION}** is the latest." >> $GITHUB_STEP_SUMMARY
           fi

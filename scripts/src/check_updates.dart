@@ -110,6 +110,16 @@ Future<UpdateCheckResult> checkForUpdates({
     }
     final release = await _fetchLatestRelease();
     latestVersion = release['tag_name'] as String;
+    // The tag name is attacker-controlled upstream data that ends up in
+    // GITHUB_OUTPUT and, from there, in workflow shell commands and branch
+    // names. Reject anything that is not a plain semver-ish tag.
+    if (!RegExp(
+      r'^v?\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$',
+    ).hasMatch(latestVersion)) {
+      throw Exception(
+        'Refusing unexpected upstream tag_name format: "$latestVersion"',
+      );
+    }
     isPrerelease = release['prerelease'] as bool? ?? false;
     releaseUrl =
         release['html_url'] as String? ??

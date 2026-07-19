@@ -372,6 +372,11 @@ Rationale, exact `gh` commands to apply/verify/roll back, the current ruleset
 inventory, and residual risks are in
 [`.github/rulesets/README.md`](.github/rulesets/README.md).
 
+CI workflows run with a least-privilege `GITHUB_TOKEN` (`contents: read` by
+default; only the release-publishing jobs get the specific writes they need),
+third-party actions are pinned to commit SHAs, and pub.dev publishing uses
+OIDC — no long-lived publishing tokens exist.
+
 ### Dependency Auditing
 
 Two complementary checks run in CI (on pushes to `main` and on pull requests

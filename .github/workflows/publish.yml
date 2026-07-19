@@ -30,10 +30,10 @@ on:
         type: boolean
         default: true
 
-# Required for OIDC authentication with pub.dev
+# Least privilege by default; the publish job opts up to id-token: write
+# (OIDC for pub.dev) and the release job to contents: write (GitHub Release).
 permissions:
-  contents: write      # Create tags and releases
-  id-token: write      # OIDC token for pub.dev
+  contents: read
 
 jobs:
   # ============================================
@@ -163,6 +163,9 @@ jobs:
     needs: [validate, test, validate-package]
     runs-on: ubuntu-latest
     environment: pub.dev
+    permissions:
+      contents: read
+      id-token: write      # OIDC token for pub.dev
     steps:
       - uses: actions/checkout@v4
 
@@ -192,6 +195,8 @@ jobs:
     needs: [validate, publish]
     if: github.ref_type == 'tag' && !inputs.dry-run
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # gh release create
     steps:
       - uses: actions/checkout@v4
 

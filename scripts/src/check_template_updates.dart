@@ -139,6 +139,16 @@ Future<TemplateCheckResult> checkForTemplateUpdates({
     }
     final release = await _fetchLatestRelease(templateRepo);
     latestVersion = release['tag_name'] as String;
+    // The tag name ends up in GITHUB_OUTPUT and, from there, in workflow
+    // shell commands and branch names. Reject anything that is not a plain
+    // semver-ish tag.
+    if (!RegExp(
+      r'^v?\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$',
+    ).hasMatch(latestVersion)) {
+      throw Exception(
+        'Refusing unexpected template tag_name format: "$latestVersion"',
+      );
+    }
     releaseUrl =
         release['html_url'] as String? ??
         'https://github.com/$templateRepo/releases';

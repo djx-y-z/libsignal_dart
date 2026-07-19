@@ -6,6 +6,10 @@ inputs:
     description: 'Version of gnumake to install (from dcvdh/make-for-windows releases)'
     required: false
     default: '4.4.1'
+  sha256:
+    description: 'Expected SHA256 of gnumake.exe. Must be updated together with version — release assets are mutable, so the pin is what actually locks the binary.'
+    required: false
+    default: '921ac729e86d73b9a090b3c2480c629d67ad296e8c8a7675e81398654afa4311'
 
 runs:
   using: composite
@@ -48,6 +52,14 @@ runs:
           $fileSize = (Get-Item $makeExe).Length
           if ($fileSize -lt 1000) {
             throw "Downloaded file is too small ($fileSize bytes), likely corrupted"
+          }
+
+          # Verify SHA256 (release assets are mutable; the pin locks the binary)
+          $expectedHash = "${{ inputs.sha256 }}".ToLowerInvariant()
+          $actualHash = (Get-FileHash -Algorithm SHA256 -Path $makeExe).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) {
+            Remove-Item -Force $makeExe
+            throw "SHA256 mismatch for gnumake.exe: expected $expectedHash, got $actualHash"
           }
 
           # Add to PATH
