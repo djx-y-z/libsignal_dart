@@ -139,7 +139,7 @@ jobs:
         shell: bash
 
       # Deployment-target consistency (iOS/macOS/Android min versions across the
-      # podspecs, Info.plists, xcconfigs and gradle). Platform-independent, so it
+      # CI build env vars, example Xcode projects and README). Platform-independent, so it
       # runs once on Linux x86_64 (like clippy). Fails on drift (exit 1); fix with
       # `make check-targets ARGS="--ios --set X.Y"` (or --macos/--android).
       - name: Check deployment targets

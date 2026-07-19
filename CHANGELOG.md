@@ -9,6 +9,8 @@
 
 #### Changed
 
+- **Platform-plugin scaffolding removed from the published package** — the vestigial `ios/`, `macos/`, `android/`, `linux/`, `windows/` directories (podspecs, Gradle project, CMakeLists, plugin stubs) are gone. The package has never declared a `flutter: plugin:` section, so flutter_tools never consumed them; native delivery is (and remains) via the `hook/build.dart` build hook. No consumer action required — the published archive just gets smaller
+- **Explicit minimum OS versions for the prebuilt binaries** — CI now builds the macOS dylibs with `MACOSX_DEPLOYMENT_TARGET: '10.15'` (previously rustc's per-target default, 10.12 for x86_64) and links the Android `.so`s against API level 24 via cargo-ndk `--platform 24` (previously cargo-ndk's default, 21), matching the documented platform-support table
 - Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))
   - Upstream changes are limited to `AuthUsernamesService.deleteUsernameHash()`/`deleteUsernameLink()` (username services), reclassifying an established chat connection's transport errors as retryable (`.ioError`, Swift binding), and increasing the key-transparency clock-skew tolerance interval — none of which this library exposes
   - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings; `make codegen` produces no binding diff
@@ -30,7 +32,8 @@
 
 - **Decoupled the `libsignal_frb` native release from libsignal dependency updates** — automated update PRs no longer bump the crate version or build binaries; dependency updates accumulate on `main` (tested from source in CI), and the native build is now triggered by pushing a `libsignal_frb-<version>` tag instead of by pushing to `main`. The crate-version bump is now a deliberate release decision (`make release-frb`). See CLAUDE.md → Release Flow
 - **AI changelog generator classifies upstream changes against the bound-crate surface** — the prompt now states which crates/APIs this wrapper actually binds, so out-of-scope upstream changes (net / chat / keytrans / username services / zkgroup / …) are framed as "none of which this library exposes", and it links to a version `compare` instead of the (often incomplete) release notes
-- **CI enforces deployment-target consistency** — `test-reusable.yml` now runs `make check-targets` (Linux leg) so the build fails if the iOS / macOS / Android minimum deployment targets drift out of sync across the podspecs, `Info.plist`s, xcconfigs and gradle. Previously the check existed (`make check-targets`) but was never run automatically
+- **CI enforces deployment-target consistency** — `test-reusable.yml` now runs `make check-targets` (Linux leg) so the build fails if the iOS / macOS / Android minimum deployment targets drift out of sync across the CI build env vars, the example Xcode projects and the README platform table. Previously the check existed (`make check-targets`) but was never run automatically
+- **Deployment-target sources consolidated** — `.copier-answers.yml` remains the single source of truth; with the platform scaffolding removed, `make check-targets` and `scripts/get_android_min_sdk.dart` no longer read the podspecs/`build.gradle` but verify the CI workflow (`IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET`, cargo-ndk `--platform`) instead
 
 ## [6.0.0] - 2026-07-14
 

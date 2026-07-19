@@ -98,7 +98,7 @@ Dart bindings for libsignal using Flutter Rust Bridge (FRB) - Signal Protocol im
 - Signal Protocol (Double Ratchet, X3DH)
 - Sealed Sender (anonymous messaging)
 - Group Messaging (SenderKey)
-- Native libraries built via Cargokit/Flutter Rust Bridge
+- Native libraries delivered via Dart build hooks (`hook/build.dart` + `code_assets`)
 - Automated security updates via GitHub Actions
 
 ### Upstream Repository
@@ -121,9 +121,8 @@ libsignal/
 │   └── src/
 │       ├── api/                    # Public FRB API (Dart-callable functions)
 │       └── lib.rs                  # Library root
-├── rust_builder/                   # Flutter FFI plugin (Cargokit)
-│   ├── cargokit/                   # Cargokit build system
-│   └── pubspec.yaml                # Plugin configuration
+├── hook/                           # Dart build hook (hooks/code_assets)
+│   └── build.dart                  # Downloads precompiled native libraries
 ├── scripts/                        # Development scripts (use via Makefile!)
 ├── test/                           # Tests
 ├── Makefile                        # Entry point for all commands
@@ -134,20 +133,38 @@ libsignal/
 
 ## Build System
 
-This project uses **Cargokit** (via Flutter Rust Bridge) for native libraries.
+This is a **plain Dart FFI package** — no `flutter: plugin:` section and no
+platform scaffolding (`ios/`, `macos/`, `android/`, `linux/`, `windows/` dirs
+do not exist). Native libraries are delivered via Dart **build hooks**
+(`hook/build.dart`, using the `hooks`/`code_assets` packages).
 
 ### How It Works
 
-1. **End users**: Precompiled binaries downloaded from GitHub Releases (no Rust needed)
-2. **Developers**: Cargokit builds from source (requires Rust + protoc)
-3. **CI**: `build-precompiled.yml` workflow builds and uploads binaries when Rust code changes
+1. **End users**: `hook/build.dart` downloads the precompiled binary for the
+   target platform from the GitHub Release `libsignal_frb-<version>` (no Rust
+   needed) and registers it as a code asset
+2. **Developers**: build from source via `make build` / `make build-android` /
+   `make build-web`; a `.skip_libsignal_hook` marker file makes the hook use
+   locally built libraries instead of downloading
+3. **CI**: `build-libsignal.yml` builds and uploads binaries when a
+   `libsignal_frb-<version>` tag is pushed (stage 1 of the release flow)
 
 ### Precompiled Binaries
 
-Configuration in `rust/cargokit.yaml`:
-- Binaries uploaded to GitHub Releases with tag `precompiled_<hash>`
-- Ed25519 signatures for verification
-- Private key stored as GitHub Secret: `CARGOKIT_PRIVATE_KEY`
+- Uploaded to a GitHub Release tagged `libsignal_frb-<version>` (must equal the
+  `rust/Cargo.toml` crate version)
+- SHA256 checksums are resolved before download; the hook fails closed if a
+  trusted checksum cannot be obtained
+
+### Deployment Targets
+
+Source of truth is `.copier-answers.yml` (`ios_min_version`,
+`macos_min_version`, `android_min_sdk`). `make check-targets` verifies (or with
+`--update`/`--set` fixes) every copy: the CI build env vars
+(`IPHONEOS_DEPLOYMENT_TARGET`, `MACOSX_DEPLOYMENT_TARGET`, cargo-ndk
+`--platform`), the example Xcode projects, and the README platform table.
+`make build-android` reads the minSdk from it via
+`scripts/get_android_min_sdk.dart`.
 
 ### Build Requirements (for source builds)
 

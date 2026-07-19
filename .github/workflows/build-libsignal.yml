@@ -143,6 +143,11 @@ jobs:
         uses: ./.github/actions/setup-protoc
 
       - name: Build for macOS ${{ matrix.arch }}
+        env:
+          # Make the shipped dylib's minimum macOS version explicit instead of
+          # relying on rustc's per-target default (10.12 for x86_64). rustc
+          # clamps arm64 to 11.0 (first Apple-silicon macOS) automatically.
+          MACOSX_DEPLOYMENT_TARGET: '10.15'
         run: |
           cd rust
           cargo build --release --target ${{ matrix.rust_target }}
@@ -242,8 +247,11 @@ jobs:
 
       - name: Build for Android ${{ matrix.abi }}
         run: |
+          # --platform pins the Android API level the .so links against
+          # (matches the package's documented minSdk; cargo-ndk would
+          # otherwise use its own default).
           cd rust
-          cargo ndk -t ${{ matrix.rust_target }} build --release
+          cargo ndk -t ${{ matrix.rust_target }} --platform 24 build --release
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

@@ -56,9 +56,12 @@ example/web/pkg/
 # Hook build cache
 hook/.dart_tool/
 
-# Generated plugin files (not needed for plugin distribution)
-android/app/
-ios/Flutter/ephemeral/
-ios/Runner/
-macos/Flutter/ephemeral/
-linux/flutter/generated_*
+# The package ships no platform-plugin scaffolding; native delivery is via
+# hook/build.dart, so nothing from the old platform dirs belongs in the
+# published package (they may reappear locally as stale IDE/Xcode artifacts).
+# Anchored with a leading slash so example/ios etc. are unaffected.
+/android/
+/ios/
+/macos/
+/linux/
+/windows/

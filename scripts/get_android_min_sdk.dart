@@ -1,20 +1,25 @@
 import 'dart:io';
 
-/// Reads Android minSdk from android/build.gradle file.
+/// Prints the Android minSdk from `.copier-answers.yml` (source of truth,
+/// key `android_min_sdk`). Used by `make build-android` for cargo-ndk's
+/// `--platform` flag.
 ///
 /// Usage: dart scripts/get_android_min_sdk.dart
 void main() {
-  final file = File('android/build.gradle');
+  final file = File('.copier-answers.yml');
   if (!file.existsSync()) {
-    stderr.writeln('Error: android/build.gradle not found');
+    stderr.writeln('Error: .copier-answers.yml not found');
     exit(1);
   }
 
   final content = file.readAsStringSync();
-  final match = RegExp(r'minSdk\s*=\s*(\d+)').firstMatch(content);
+  final match = RegExp(
+    r"^android_min_sdk:\s*'?(\d+)'?",
+    multiLine: true,
+  ).firstMatch(content);
 
   if (match == null) {
-    stderr.writeln('Error: minSdk not found in android/build.gradle');
+    stderr.writeln('Error: android_min_sdk not found in .copier-answers.yml');
     exit(1);
   }
 

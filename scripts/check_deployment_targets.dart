@@ -282,12 +282,6 @@ List<_FileCheck> _buildChecks(Platform platform, String expected) {
 List<_FileCheck> _buildIosChecks(String expected) {
   return [
     _FileCheck(
-      label: 'iOS podspec',
-      relativePath: 'ios/libsignal.podspec',
-      pattern: RegExp(r"s\.platform\s*=\s*:ios,\s*'([^']+)'"),
-      replacement: (v) => "s.platform = :ios, '$v'",
-    ),
-    _FileCheck(
       label: 'iOS CI workflow',
       relativePath: '.github/workflows/build-libsignal.yml',
       pattern: RegExp(r"IPHONEOS_DEPLOYMENT_TARGET:\s*'([^']+)'"),
@@ -321,10 +315,10 @@ List<_FileCheck> _buildIosChecks(String expected) {
 List<_FileCheck> _buildMacosChecks() {
   return [
     _FileCheck(
-      label: 'macOS podspec',
-      relativePath: 'macos/libsignal.podspec',
-      pattern: RegExp(r"s\.platform\s*=\s*:osx,\s*'([^']+)'"),
-      replacement: (v) => "s.platform = :osx, '$v'",
+      label: 'macOS CI workflow',
+      relativePath: '.github/workflows/build-libsignal.yml',
+      pattern: RegExp(r"MACOSX_DEPLOYMENT_TARGET:\s*'([^']+)'"),
+      replacement: (v) => "MACOSX_DEPLOYMENT_TARGET: '$v'",
     ),
     _FileCheck(
       label: 'macOS Xcode project',
@@ -348,10 +342,10 @@ List<_FileCheck> _buildMacosChecks() {
 List<_FileCheck> _buildAndroidChecks(String expected) {
   return [
     _FileCheck(
-      label: 'Android build.gradle',
-      relativePath: 'android/build.gradle',
-      pattern: RegExp(r'minSdk\s*=\s*(\d+)'),
-      replacement: (v) => 'minSdk = $v',
+      label: 'Android CI workflow',
+      relativePath: '.github/workflows/build-libsignal.yml',
+      pattern: RegExp(r'--platform\s+(\d+)'),
+      replacement: (v) => '--platform $v',
     ),
     _FileCheck(
       label: 'README Android version',
@@ -465,19 +459,18 @@ Examples:
 
 Files checked:
   iOS (ios_min_version):
-    1. ios/libsignal.podspec
-    2. .github/workflows/build-libsignal.yml
-    3. example/ios/Runner.xcodeproj/project.pbxproj
-    4. example/ios/Flutter/AppFrameworkInfo.plist
-    5. README.md platform table
+    1. .github/workflows/build-libsignal.yml (IPHONEOS_DEPLOYMENT_TARGET)
+    2. example/ios/Runner.xcodeproj/project.pbxproj
+    3. example/ios/Flutter/AppFrameworkInfo.plist
+    4. README.md platform table
 
   macOS (macos_min_version):
-    1. macos/libsignal.podspec
+    1. .github/workflows/build-libsignal.yml (MACOSX_DEPLOYMENT_TARGET)
     2. example/macos/Runner.xcodeproj/project.pbxproj
     3. README.md platform table
 
   Android (android_min_sdk):
-    1. android/build.gradle
+    1. .github/workflows/build-libsignal.yml (cargo ndk --platform)
     2. README.md platform table
 
 Exit codes:

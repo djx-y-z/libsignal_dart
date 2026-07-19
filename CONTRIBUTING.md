@@ -92,7 +92,7 @@ libsignal/
 ├── rust/                   # Rust source code
 │   ├── Cargo.toml          # Rust dependencies (libsignal version here)
 │   └── src/api/            # FRB API functions
-├── rust_builder/           # Flutter FFI plugin (Cargokit)
+├── hook/                   # Dart build hook (downloads native libraries)
 ├── test/                   # Test files
 ├── example/                # Example application
 ├── scripts/                # Build scripts (use via Makefile!)
@@ -348,9 +348,9 @@ make test
 
 ### Building Native Libraries
 
-Native libraries are built automatically by **Cargokit** during `flutter build`. You don't need to build them manually for most development work.
+Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
 
-For development, Cargokit builds from source when you run tests or the example app:
+For development, you can build from source and make the hook use the local build (see `.skip_libsignal_hook` in `hook/build.dart`):
 
 ### Releasing (two stages)
 
@@ -447,7 +447,7 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 > The `pub.dev` environment is required by the publish workflow. Protection rules ensure that every publish requires manual approval, preventing accidental releases.
 
 ```bash
-# Run tests (Cargokit builds the native library automatically)
+# Run tests (the build hook fetches the native library automatically)
 make test
 ```
 
