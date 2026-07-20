@@ -8,7 +8,7 @@
 - **Web: stale-WASM-after-upgrade fixed** — the web build hook now refreshes `web/pkg/` on a version change instead of serving the previous version's WASM, which could crash Dart-store-callback paths (`processPreKeyBundle`, `SessionCipher`, sealed sender, group messaging) after an upgrade
 - **Smaller package & explicit minimum OS versions** — the vestigial platform-plugin scaffolding is removed (smaller published archive) and the prebuilt binaries are now built against the documented macOS 10.15 / Android API 24 minimums
 - **libsignal v0.97.4** — internal/dependency update, no public-API impact
-- **libsignal_frb v5.1.0** — Rust FFI bindings
+- **libsignal_frb v5.1.1** — Rust FFI bindings
 
 #### Changed
 
