@@ -56,7 +56,7 @@ flutter run -d chrome
 ## Requirements
 
 - Flutter 3.38.4 or later
-- Native library (automatically built via Cargokit)
+- Native library (downloaded and registered automatically by the package's Dart build hook, `hook/build.dart`)
 
 ## Platform Support
 

@@ -13,18 +13,26 @@
 #
 # Trigger:
 # - Push of a `libsignal_frb-<version>` tag (created by `make release-frb`) -
-#   this is the normal path: a libsignal dependency update merges to main WITHOUT
-#   bumping the crate, then a deliberate release bumps rust/Cargo.toml and pushes
-#   the matching tag, which builds and publishes the native binaries.
-# - Manual dispatch (workflow_dispatch) - for first run or a forced rebuild
-#   (reads the crate version from rust/Cargo.toml on the default branch).
+#   this is the normal path: a libsignal dependency update merges
+#   to main WITHOUT bumping the crate, then a deliberate release bumps
+#   rust/Cargo.toml and pushes the matching tag, which builds and publishes the
+#   native binaries.
+# - Manual dispatch (workflow_dispatch) - a retry path for a build that failed
+#   AFTER its tag was already pushed. It reads the crate version from
+#   rust/Cargo.toml on the DISPATCHED ref (whatever ref you dispatch on, not
+#   necessarily the default branch). Note: dispatch cannot bootstrap a brand-new
+#   release — `check-release` skips the whole run once the release for that crate
+#   version exists, and the `protect-release-tags` ruleset blocks this workflow
+#   from creating the tag itself. To (re)build a version, push the signed tag via
+#   `make release-frb`; to rebuild an already-released version, delete its
+#   GitHub Release and tag first.
 #
 # The tag name must equal `libsignal_frb-<crate version in rust/Cargo.toml>`
 # (validated below). The GitHub Release is created on that same tag, so the tag
 # you push IS the release tag (no duplicate tags).
 #
-# After a successful build, creates/updates the GitHub Release with native
-# library archives.
+# After a successful build, creates the GitHub Release with native library
+# archives (fail-loud: it never deletes/overwrites an existing release).
 
 name: Build libsignal FRB Libraries
 
@@ -459,8 +467,12 @@ jobs:
           TAG="libsignal_frb-${VERSION}"
           TITLE="libsignal_frb ${VERSION} - Native Libraries"
 
-          # Delete existing release if it exists (for rebuild scenarios)
-          gh release delete "$TAG" --yes 2>/dev/null || true
+          # No delete-then-recreate: check-release skips the whole run when the
+          # release for this crate version already exists, and if a dispatch/tag
+          # race slips past that check the slower `gh release create` fails
+          # loudly instead of silently clobbering already-published binaries
+          # that consumers' build hooks download. To intentionally rebuild the
+          # same version, delete the release and its tag manually first.
 
           # Create release with all assets
           gh release create "$TAG" \
@@ -471,7 +483,6 @@ jobs:
 
           Pre-built Flutter Rust Bridge native libraries for all supported platforms.
           **These archives are downloaded automatically by \`hook/build.dart\` during Dart/Flutter builds.**
-          
           **Based on [libsignal ${NATIVE_VERSION}](https://github.com/signalapp/libsignal/releases/tag/${NATIVE_VERSION})**
 
           ### Platforms

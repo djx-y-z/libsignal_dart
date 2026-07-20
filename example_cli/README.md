@@ -62,11 +62,12 @@ The library is automatically located via `package_config.json`.
 
 ## How Library Loading Works
 
-`LibSignal.init()` automatically searches for the native library in this order:
+`LibSignal.init()` searches for the native library in this order:
 
 1. Custom path (if provided via `libraryPath` parameter)
-2. libsignal package's `rust/target/release/` directory (found via `package_config.json`)
-3. Current working directory's `rust/target/release/`
-4. FRB's default loading mechanism (for Flutter apps with Cargokit)
+2. Build hook locations (JIT: `.dart_tool/lib/`, AOT: `../lib/`)
+3. FRB's default loader (flutter_rust_bridge)
 
-This means pure Dart CLI apps work correctly as long as the library is built in the libsignal package.
+For a pure Dart CLI, run `dart pub get` so the package's build hook downloads and
+registers the native library; alternatively build it locally with `make build`
+in the libsignal package and the hook picks up the `rust/target/` build.

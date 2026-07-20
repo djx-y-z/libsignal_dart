@@ -20,15 +20,19 @@
 ///
 /// ## For development
 ///
-/// If you have Rust installed and want to build from source instead:
+/// A locally built library is picked up automatically — no marker needed. The
+/// hook prefers a host-matching `rust/target/` build over downloading:
 /// ```bash
-/// # Native platforms
+/// # Native platforms → rust/target/release/lib<crate>.<ext>
 /// make build
 ///
-/// # Web/WASM
+/// # Web/WASM → rust/target/wasm32/
 /// make build-web
 /// ```
-/// Then create `.skip_libsignal_hook` file to skip downloading.
+///
+/// `.skip_libsignal_hook` is an INTERNAL escape used by the Makefile while it
+/// wraps pub-get/codegen/doc: when present the hook returns immediately and
+/// registers NO native asset. It is not the way to select a local build.
 library;
 
 import 'dart:io';
@@ -63,6 +67,12 @@ const _wasmVersionMarkerName = '.wasm-version';
 /// so a later switch back to released binaries always forces a refresh.
 const _localWasmMarker = 'local-dev';
 
+/// Marker written into a version-keyed download cache directory as the LAST
+/// step of a successful download+verify+extract. Its absence means the cache
+/// entry is incomplete (e.g. an interrupted extraction left a truncated file),
+/// so the entry must be re-provisioned rather than reused unverified.
+const _cacheCompleteMarker = '.download-complete';
+
 /// Entry point for the build hook.
 void main(List<String> args) async {
   await build(args, (input, output) async {
@@ -89,7 +99,7 @@ void main(List<String> args) async {
       // web/pkg/). Without this the build system can reuse a cached hook result
       // and keep serving the previous version's WASM after an upgrade.
       output.dependencies.add(packageRoot.resolve('rust/Cargo.toml'));
-      await _handleWebBuild(input, packageRoot);
+      await _handleWebBuild(input, output, packageRoot);
       return;
     }
 
@@ -103,7 +113,7 @@ void main(List<String> args) async {
 
     // Check for local build first (development mode)
     // This allows developers to use locally built libraries without downloading
-    final localLib = _findLocalBuild(packageRoot, targetOS);
+    final localLib = _findLocalBuild(packageRoot, targetOS, targetArch);
     if (localLib != null) {
       output.assets.code.add(
         CodeAsset(
@@ -135,8 +145,12 @@ void main(List<String> args) async {
     final cacheDir = input.outputDirectoryShared.resolve('$archSubdir/');
     final libFile = File.fromUri(cacheDir.resolve(assetInfo.fileName));
 
-    // Download if not cached
-    if (!libFile.existsSync()) {
+    // Download unless the cache entry is COMPLETE. Existence alone is not
+    // enough: an interrupted extraction can leave a truncated library that
+    // would then be reused (and registered) forever. The completeness marker is
+    // written only after a fully verified extraction, so a missing marker
+    // re-provisions and heals the entry.
+    if (!_isCacheComplete(cacheDir) || !libFile.existsSync()) {
       final baseUrl =
           'https://github.com/$_githubRepo/releases/download/$_crateName-$version';
 
@@ -271,7 +285,21 @@ Directory? _findLocalWasmBuild(Uri packageRoot) {
 /// 2. Otherwise downloads WASM files from GitHub Releases to a shared cache
 /// 3. Finds the Flutter app root (the consuming application)
 /// 4. Copies WASM files to `{app_root}/web/pkg/` where Flutter web expects them
-Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
+Future<void> _handleWebBuild(
+  BuildInput input,
+  BuildOutputBuilder output,
+  Uri packageRoot,
+) async {
+  // Declare the local WASM build outputs and the web/pkg version marker as
+  // dependencies so a `make build-web` rebuild (which only changes
+  // rust/target/wasm32/*) or a manual web/pkg/ wipe (which removes the marker)
+  // invalidates a cached hook result instead of keeping web/pkg/ stale.
+  for (final fileName in _wasmFiles) {
+    output.dependencies.add(
+      packageRoot.resolve('rust/target/wasm32/$fileName'),
+    );
+  }
+
   // Find the Flutter app root first
   final appRoot = _findAppRoot(input.outputDirectoryShared);
   if (appRoot == null) {
@@ -281,6 +309,7 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
   }
 
   final webPkgDir = Directory.fromUri(appRoot.resolve('web/pkg/'));
+  output.dependencies.add(webPkgDir.uri.resolve('$_wasmVersionMarkerName'));
 
   // Read version from rust/Cargo.toml up front — it keys both the download
   // cache and the freshness check below.
@@ -319,30 +348,40 @@ Future<void> _handleWebBuild(BuildInput input, Uri packageRoot) async {
   // Download WASM files to cache
   final archiveFileName = '$_crateName-$version-wasm32.tar.gz';
 
-  // SECURITY: resolve the expected SHA256 up front (fail-closed, see the
-  // native path above). The WASM assets are shipped in a single archive, so
-  // one checksum covers every file extracted from it.
-  final expectedChecksum = await _resolveExpectedChecksum(
-    baseUrl,
-    version,
-    archiveFileName,
-  );
+  final cacheReady =
+      _isCacheComplete(cacheDir) &&
+      _wasmFiles.every((f) => File.fromUri(cacheDir.resolve(f)).existsSync());
 
-  for (final fileName in _wasmFiles) {
-    final file = File.fromUri(cacheDir.resolve(fileName));
+  // Only touch the network when the version-keyed cache is not already a
+  // complete, verified provisioning. This lets an offline re-provision of
+  // web/pkg/ (e.g. after a manual wipe) reuse the warm cache instead of failing
+  // on an unreachable checksums file.
+  if (!cacheReady) {
+    // SECURITY: resolve the expected SHA256 up front (fail-closed, see the
+    // native path above). The WASM assets are shipped in a single archive, so
+    // one checksum covers every file extracted from it.
+    final expectedChecksum = await _resolveExpectedChecksum(
+      baseUrl,
+      version,
+      archiveFileName,
+    );
 
-    if (!file.existsSync()) {
-      await _downloadAndExtract(
-        '$baseUrl/$archiveFileName',
-        cacheDir,
-        archiveFileName,
-        fileName,
-        expectedChecksum: expectedChecksum,
-      );
-    }
+    for (final fileName in _wasmFiles) {
+      final file = File.fromUri(cacheDir.resolve(fileName));
 
-    if (!file.existsSync()) {
-      throw HookException('Failed to download WASM file: $fileName');
+      if (!file.existsSync()) {
+        await _downloadAndExtract(
+          '$baseUrl/$archiveFileName',
+          cacheDir,
+          archiveFileName,
+          fileName,
+          expectedChecksum: expectedChecksum,
+        );
+      }
+
+      if (!file.existsSync()) {
+        throw HookException('Failed to download WASM file: $fileName');
+      }
     }
   }
 
@@ -432,20 +471,34 @@ Future<void> _copyWasmFilesToAppRoot(Uri cacheDir, Directory webPkgDir) async {
 // Native Build Support
 // =============================================================================
 
-/// Looks for locally built library in rust/target/.
+/// Looks for a locally built library in `rust/target/<profile>/`.
 ///
-/// This function enables development mode where developers can use
-/// locally built libraries instead of downloading from GitHub Releases.
-/// Checks release profile first, then debug.
+/// This enables development mode where developers use a locally built library
+/// instead of downloading from GitHub Releases. Checks release profile first,
+/// then debug.
 ///
-/// Returns the Uri to the local library if found, null otherwise.
-Uri? _findLocalBuild(Uri packageRoot, OS targetOS) {
+/// A plain `rust/target/<profile>/` build is always a HOST build, so it is only
+/// valid when the target OS AND architecture match the host — otherwise we would
+/// bundle e.g. a macOS dylib into an iOS app (dyld rejects it at launch) or a
+/// wrong-arch `.so`. For any cross-target build this returns null and the hook
+/// downloads the correct released binary instead (cross-compiled outputs land in
+/// `rust/target/<triple>/release/`, which this intentionally does not read).
+///
+/// Returns the Uri to the local library if a host-matching build is found, null
+/// otherwise.
+Uri? _findLocalBuild(Uri packageRoot, OS targetOS, Architecture targetArch) {
+  if (targetOS != OS.current || targetArch != Architecture.current) {
+    return null;
+  }
+
   final fileName = _getLibraryFileName(targetOS);
 
   // Try release first, then debug
   for (final profile in ['release', 'debug']) {
     final path = packageRoot.resolve('rust/target/$profile/$fileName');
     if (File.fromUri(path).existsSync()) {
+      // ignore: avoid_print
+      print('Using local $targetOS-$targetArch build: ${path.toFilePath()}');
       return path;
     }
   }
@@ -622,6 +675,28 @@ Future<void> _downloadAndExtract(
       'Extraction failed: $libFileName not found in archive from $url',
     );
   }
+
+  // Mark the cache entry complete only now — after a verified, fully extracted
+  // archive. A crash before this point leaves the marker absent, so the next
+  // build re-provisions instead of reusing a truncated file.
+  _markCacheComplete(outputDir);
+}
+
+/// Whether [cacheDir] holds a fully provisioned download (see
+/// [_cacheCompleteMarker]).
+bool _isCacheComplete(Uri cacheDir) =>
+    File.fromUri(cacheDir.resolve(_cacheCompleteMarker)).existsSync();
+
+/// Records that [cacheDir] was fully provisioned. Best-effort: a write failure
+/// must not fail the build (the next run simply re-provisions).
+void _markCacheComplete(Uri cacheDir) {
+  try {
+    File.fromUri(
+      cacheDir.resolve(_cacheCompleteMarker),
+    ).writeAsStringSync('ok\n');
+  } catch (_) {
+    // Non-fatal.
+  }
 }
 
 /// Downloads a file with retry logic.
@@ -649,6 +724,12 @@ Future<void> _downloadWithRetry(
             'Native library not found at $url (HTTP 404). '
             'Ensure GitHub Release exists with the correct version.',
           );
+        } else if (response.statusCode >= 500 || response.statusCode == 429) {
+          // Transient server-side/rate-limit response — let the retry loop
+          // below handle it (plain Exception is caught and retried; a
+          // HookException would be rethrown immediately and skip the retries).
+          await response.drain<void>();
+          throw Exception('Transient HTTP ${response.statusCode} from $url');
         } else {
           throw HookException(
             'Failed to download from $url: HTTP ${response.statusCode}',
@@ -785,26 +866,55 @@ Future<String?> _resolveExpectedChecksum(
 /// Returns a map of filename -> expected SHA256 hash.
 Future<Map<String, String>> _downloadChecksums(
   String baseUrl,
-  String version,
-) async {
+  String version, {
+  int maxRetries = 3,
+  Duration retryDelay = const Duration(seconds: 2),
+}) async {
   final checksumsUrl = '$baseUrl/$_crateName-$version-checksums.sha256';
   final client = HttpClient();
+  Object? lastError;
 
   try {
-    final request = await client.getUrl(Uri.parse(checksumsUrl));
-    final response = await request.close();
+    for (var attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        final request = await client.getUrl(Uri.parse(checksumsUrl));
+        final response = await request.close();
 
-    if (response.statusCode != 200) {
-      throw HookException(
-        'Failed to download checksums from $checksumsUrl: HTTP ${response.statusCode}',
-      );
+        if (response.statusCode == 200) {
+          final content = await response
+              .transform(systemEncoding.decoder)
+              .join();
+          return _parseChecksums(content);
+        }
+
+        await response.drain<void>();
+        // 5xx/429 are transient — fall through to retry. Other codes (404, 4xx)
+        // are permanent, so fail fast without burning retries.
+        if (response.statusCode < 500 && response.statusCode != 429) {
+          throw HookException(
+            'Failed to download checksums from $checksumsUrl: '
+            'HTTP ${response.statusCode}',
+          );
+        }
+        lastError = 'HTTP ${response.statusCode}';
+      } on HookException {
+        rethrow;
+      } catch (e) {
+        lastError = e;
+      }
+
+      if (attempt < maxRetries) {
+        await Future<void>.delayed(retryDelay * attempt);
+      }
     }
-
-    final content = await response.transform(systemEncoding.decoder).join();
-    return _parseChecksums(content);
   } finally {
     client.close();
   }
+
+  throw HookException(
+    'Failed to download checksums from $checksumsUrl after $maxRetries '
+    'attempts. Last error: $lastError',
+  );
 }
 
 /// Parses SHA256 checksums file content.

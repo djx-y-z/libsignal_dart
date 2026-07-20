@@ -366,17 +366,32 @@ _CheckResult _checkFile(_FileCheck check, String expected) {
   final packageDir = getPackageDir();
   final file = File('${packageDir.path}/${check.relativePath}');
 
+  // Fail closed: every configured location is expected to exist and match.
+  // Treating a missing file or a vanished pattern as "skipped/ok" would let the
+  // drift gate go green after a rename/removal (e.g. the CI deployment-target
+  // env var being refactored away), silently reverting the binaries to rustc's
+  // per-target defaults — exactly the regression this check exists to catch.
   if (!file.existsSync()) {
-    logWarn('File not found: ${check.relativePath} (skipped)');
-    return _CheckResult(check: check, ok: true, expectedVersion: expected);
+    logError('File not found: ${check.relativePath}');
+    return _CheckResult(
+      check: check,
+      ok: false,
+      expectedVersion: expected,
+      foundVersion: '<file not found>',
+    );
   }
 
   final content = file.readAsStringSync();
   final matches = check.pattern.allMatches(content).toList();
 
   if (matches.isEmpty) {
-    logWarn('Pattern not found in ${check.relativePath} (skipped)');
-    return _CheckResult(check: check, ok: true, expectedVersion: expected);
+    logError('Pattern not found in ${check.relativePath}');
+    return _CheckResult(
+      check: check,
+      ok: false,
+      expectedVersion: expected,
+      foundVersion: '<pattern not found>',
+    );
   }
 
   for (final match in matches) {

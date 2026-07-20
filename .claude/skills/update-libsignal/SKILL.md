@@ -173,7 +173,7 @@ This will:
 Check `rust/Cargo.toml`:
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.87.1" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.97.3" }
 ```
 
 ### Step 2: Update Version
@@ -219,7 +219,7 @@ make check-new-libsignal-version
 make check-new-libsignal-version ARGS="--update"
 
 # Update to specific version
-make check-new-libsignal-version ARGS="--update --version v0.87.0"
+make check-new-libsignal-version ARGS="--update --version v0.97.3"
 
 # Force update even if versions match
 make check-new-libsignal-version ARGS="--update --force"

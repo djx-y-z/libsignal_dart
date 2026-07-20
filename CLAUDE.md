@@ -21,10 +21,12 @@ make test test/keys/  # make interprets test/keys/ as target!
 ```bash
 make setup                        # Full setup (FVM + Rust tools + protoc)
 make setup-fvm                    # Install FVM + Flutter only
-make setup-rust-tools             # Install Rust tools (cargo-audit, frb_codegen)
+make setup-rust-tools             # Install Rust tools (cargo-audit, cargo-deny, frb_codegen)
+make setup-frb-codegen            # Install the pinned flutter_rust_bridge_codegen
 make setup-protoc                 # Install protoc (Protocol Buffers compiler)
 make setup-web                    # Install web build tools (wasm-pack)
 make setup-android                # Install Android build tools (cargo-ndk)
+make setup-repo-protections       # Apply the GitHub repo rulesets (.github/rulesets/)
 ```
 
 ### Code Generation
@@ -143,9 +145,14 @@ do not exist). Native libraries are delivered via Dart **build hooks**
 1. **End users**: `hook/build.dart` downloads the precompiled binary for the
    target platform from the GitHub Release `libsignal_frb-<version>` (no Rust
    needed) and registers it as a code asset
-2. **Developers**: build from source via `make build` / `make build-android` /
-   `make build-web`; a `.skip_libsignal_hook` marker file makes the hook use
-   locally built libraries instead of downloading
+2. **Developers**: build from source via `make build` (or `make build-web`); the
+   hook then picks up the host-matching `rust/target/` build automatically (no
+   marker needed). Cross-target builds (`make build-android`, `make build
+   --target <triple>`, iOS) land in `rust/target/<triple>/` and are **not**
+   picked up — those targets always download the released binary.
+   `.skip_libsignal_hook` is only an
+   internal escape the Makefile uses while wrapping pub-get/codegen/doc — when
+   present the hook returns immediately and registers **no** asset
 3. **CI**: `build-libsignal.yml` builds and uploads binaries when a
    `libsignal_frb-<version>` tag is pushed (stage 1 of the release flow)
 
@@ -485,22 +492,21 @@ Rules:
 
 ## Publishing Checklist
 
+**Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
+existence check, the CHANGELOG finalization, and the publish dry-run. Use the
+two-stage flow documented above (see [Release Flow](#release-flow-two-stages)):
+
 ```bash
-# 1. Run quality checks
-make analyze
-make test
-make format-check
+# 0. (optional) quality gates — the release scripts also run these
+make analyze && make test && make format-check
 
-# 2. Update version in pubspec.yaml
-# 3. Update CHANGELOG.md
+# Stage 1 — native crate (bumps rust/Cargo.toml, tags libsignal_frb-X.Y.Z):
+make release-frb ARGS="--version X.Y.Z"
+# …wait for build-libsignal.yml to publish the native binaries…
 
-# 4. Dry run
-make publish-dry-run
-
-# 5. Create annotated tag and push (CI will publish)
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin main
-git push origin vX.Y.Z
+# Stage 2 — Dart package (verifies the stage-1 binary, finalizes CHANGELOG,
+# bumps pubspec, dry-runs, tags vX.Y.Z → publish.yml publishes to pub.dev):
+make release ARGS="--version X.Y.Z"
 ```
 
 ## Claude Skills

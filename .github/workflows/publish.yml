@@ -203,17 +203,21 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.validate.outputs.version }}
+          CHANGELOG: ${{ needs.validate.outputs.changelog }}
         run: |
-          gh release create "v${{ needs.validate.outputs.version }}" \
-            --title "v${{ needs.validate.outputs.version }}" \
-            --notes "$(cat <<'EOF'
-          ## Changes
-
-          ${{ needs.validate.outputs.changelog }}
-
-          ---
-
-          **pub.dev:** https://pub.dev/packages/libsignal/versions/${{ needs.validate.outputs.version }}
-          EOF
-          )"
+          # Write the notes via env + printf (no shell re-parsing of the
+          # changelog body: a literal `EOF` line in it can't break out).
+          {
+            echo "## Changes"
+            echo
+            printf '%s\n' "$CHANGELOG"
+            echo
+            echo "---"
+            echo
+            echo "**pub.dev:** https://pub.dev/packages/libsignal/versions/$VERSION"
+          } > release-notes.md
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --notes-file release-notes.md
         shell: bash

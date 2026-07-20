@@ -91,6 +91,14 @@ Future<void> releaseFrb({
   logStep('Bumping rust/Cargo.toml crate version: $current -> $version');
   _bumpCargoVersion(packageDir, version);
 
+  // Keep rust/Cargo.lock's own crate stanza in sync. The pre-commit hook runs
+  // `cargo check`, which rewrites this line whether we do or not — doing it here
+  // first means the lock change is previewed, staged, and committed instead of
+  // being silently left as a dirty, unstaged edit that blocks the stage-2
+  // clean-tree preflight.
+  logStep('Syncing rust/Cargo.lock crate version...');
+  _bumpCargoLockVersion(packageDir, getCrateName(), version);
+
   logStep('Stamping libsignal_frb highlight into CHANGELOG [Unreleased]...');
   _stampFrbHighlight(packageDir, version);
 
@@ -100,6 +108,7 @@ Future<void> releaseFrb({
     'diff',
     '--stat',
     'rust/Cargo.toml',
+    'rust/Cargo.lock',
     'CHANGELOG.md',
   ]);
 
@@ -108,19 +117,37 @@ Future<void> releaseFrb({
       ? 'commit + tag $tag + PUSH (this triggers the native build)'
       : 'commit + tag $tag (no push)';
   if (!assumeYes && !confirm('Proceed to $action?')) {
-    await git(['checkout', '--', 'rust/Cargo.toml', 'CHANGELOG.md']);
-    logWarn('Aborted. Reverted rust/Cargo.toml and CHANGELOG.md.');
+    await git([
+      'checkout',
+      '--',
+      'rust/Cargo.toml',
+      'rust/Cargo.lock',
+      'CHANGELOG.md',
+    ]);
+    logWarn(
+      'Aborted. Reverted rust/Cargo.toml, rust/Cargo.lock and '
+      'CHANGELOG.md.',
+    );
     return;
   }
 
   // ---- Commit + tag (signed; may prompt for your passphrase) ---------------
   logStep('Committing (you may be prompted for your signing passphrase)...');
-  await runInherit('git', ['add', 'rust/Cargo.toml', 'CHANGELOG.md']);
   await runInherit('git', [
-    'commit',
-    '-m',
-    'chore(libsignal_frb): release v$version',
-  ], failMessage: 'git commit failed (pre-commit checks or signing).');
+    'add',
+    'rust/Cargo.toml',
+    'rust/Cargo.lock',
+    'CHANGELOG.md',
+  ]);
+  await runInherit(
+    'git',
+    ['commit', '-m', 'chore(libsignal_frb): release v$version'],
+    failMessage:
+        'git commit failed (pre-commit checks or signing). The version bump is '
+        'still staged — fix the issue and re-run `git commit`/`git tag` '
+        'manually, or discard it with `git restore --staged --worktree '
+        'rust/Cargo.toml rust/Cargo.lock CHANGELOG.md` and re-run the release.',
+  );
 
   logStep('Creating signed tag $tag...');
   await runInherit(
@@ -180,6 +207,43 @@ void _bumpCargoVersion(Directory packageDir, String version) {
       pattern,
       (m) => '${m.group(1)}$version${m.group(3)}',
     ),
+  );
+}
+
+/// Rewrites the `[[package]]` version stanza named [crateName] in
+/// rust/Cargo.lock to [version] (reads and writes rust/Cargo.lock). No-op if the
+/// lock does not exist.
+void _bumpCargoLockVersion(
+  Directory packageDir,
+  String crateName,
+  String version,
+) {
+  final file = File('${packageDir.path}/rust/Cargo.lock');
+  if (!file.existsSync()) return;
+  file.writeAsStringSync(
+    bumpCargoLockVersion(file.readAsStringSync(), crateName, version),
+  );
+}
+
+/// Pure form of [_bumpCargoLockVersion]: returns [content] (a Cargo.lock) with
+/// the `version` of the `[[package]]` stanza named [crateName] set to [version].
+/// Cargo rewrites this line whenever a workspace member's own version changes,
+/// so the release stages the lock alongside Cargo.toml. Exposed for testing.
+String bumpCargoLockVersion(String content, String crateName, String version) {
+  final pattern = RegExp(
+    '(name\\s*=\\s*"${RegExp.escape(crateName)}"\\r?\\nversion\\s*=\\s*")'
+    r'(\d+\.\d+\.\d+)'
+    '(")',
+  );
+  if (!pattern.hasMatch(content)) {
+    throw Exception(
+      'Could not find the [[package]] stanza for "$crateName" in '
+      'rust/Cargo.lock.',
+    );
+  }
+  return content.replaceFirstMapped(
+    pattern,
+    (m) => '${m.group(1)}$version${m.group(3)}',
   );
 }
 
@@ -257,15 +321,27 @@ String stampFrbHighlight(String content, String version) {
   }
 
   if (highlights == -1) {
-    // No Highlights subsection — add one (after `### For Users` if present).
+    // No Highlights subsection — add one under `### For Users`. If the section
+    // has no `### For Users` audience heading yet (e.g. a fresh empty
+    // [Unreleased] left by a package release), create it too, so the stamped
+    // Highlights block never ends up parentless (the CLAUDE.md changelog
+    // contract requires every subsection to sit under an audience heading).
     var insertAt = start + 1;
+    var hasForUsers = false;
     for (var i = start + 1; i < end; i++) {
       if (lines[i].startsWith('### For Users')) {
         insertAt = i + 1;
+        hasForUsers = true;
         break;
       }
     }
-    lines.insertAll(insertAt, ['', '#### ✨ Highlights', '', frbLine]);
+    lines.insertAll(insertAt, [
+      '',
+      if (!hasForUsers) ...['### For Users', ''],
+      '#### ✨ Highlights',
+      '',
+      frbLine,
+    ]);
     return lines.join('\n');
   }
 

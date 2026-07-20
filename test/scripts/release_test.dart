@@ -178,7 +178,11 @@ void main() {
 [6.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v5.0.9...v6.0.0
 ''';
       expect(
-        () => finalizeChangelog(noUnreleased, version: '6.1.0', date: 'x'),
+        () => finalizeChangelog(
+          noUnreleased,
+          version: '6.1.0',
+          date: '2026-07-16',
+        ),
         throwsA(isA<Exception>()),
       );
     });
@@ -216,9 +220,22 @@ void main() {
 
     test('throws on a non X.Y.Z version', () {
       expect(
-        () => finalizeChangelog(_changelog, version: 'v6.1', date: 'x'),
+        () =>
+            finalizeChangelog(_changelog, version: 'v6.1', date: '2026-07-16'),
         throwsA(isA<Exception>()),
       );
+    });
+
+    test('throws on a malformed date (not YYYY-MM-DD)', () {
+      // A typo or a flag accidentally consumed as the value must not be stamped
+      // into the immutable released heading.
+      for (final bad in ['19/07/2026', '--yes', '2026-7-1', 'today']) {
+        expect(
+          () => finalizeChangelog(_changelog, version: '6.1.0', date: bad),
+          throwsA(isA<Exception>()),
+          reason: 'date "$bad" should be rejected',
+        );
+      }
     });
   });
 }

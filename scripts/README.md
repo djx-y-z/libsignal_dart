@@ -25,7 +25,7 @@ make check-new-libsignal-version
 make check-new-libsignal-version ARGS="--update"
 
 # Update to specific version
-make check-new-libsignal-version ARGS="--update --version v0.87.0"
+make check-new-libsignal-version ARGS="--update --version v0.97.3"
 
 # Force update even if versions match
 make check-new-libsignal-version ARGS="--update --force"

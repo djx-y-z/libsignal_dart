@@ -33,11 +33,9 @@ const _nativeAssetId = 'package:libsignal/libsignal';
 ///
 /// ### For Native Platforms (iOS, Android, macOS, Linux, Windows)
 ///
-/// 1. **Native Assets** (Dart 3.10+): If the build hook registered the library
-/// 2. **Custom path**: If provided via [libraryPath] parameter
-/// 3. **Package directory**: Found via `package_config.json`
-/// 4. **CWD**: `rust/target/release/` relative to current directory
-/// 5. **FRB default**: flutter_rust_bridge's default loader
+/// 1. **Custom path**: If provided via [libraryPath] parameter
+/// 2. **Build hook locations** (JIT: `.dart_tool/lib/`, AOT: `../lib/`)
+/// 3. **FRB default**: flutter_rust_bridge's default loader
 ///
 /// ### For Web
 ///

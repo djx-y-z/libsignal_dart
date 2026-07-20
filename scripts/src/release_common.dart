@@ -33,7 +33,11 @@ Future<String> git(List<String> args) async {
 }
 
 /// Runs a command with inherited stdio (so interactive prompts — e.g. the
-/// signing passphrase — work), throwing [failMessage] if it exits non-zero.
+/// signing passphrase — work), throwing on a non-zero exit.
+///
+/// Always fails loud: a non-zero exit throws even when [failMessage] is null
+/// (with a generic message), so a failed step — e.g. `git add` hitting a stale
+/// `.git/index.lock` — cannot silently fall through into the next command.
 Future<void> runInherit(
   String command,
   List<String> args, {
@@ -45,8 +49,9 @@ Future<void> runInherit(
     mode: ProcessStartMode.inheritStdio,
   );
   final code = await process.exitCode;
-  if (code != 0 && failMessage != null) {
-    throw Exception('$failMessage (exit $code)');
+  if (code != 0) {
+    final message = failMessage ?? '`$command ${args.join(' ')}` failed';
+    throw Exception('$message (exit $code)');
   }
 }
 

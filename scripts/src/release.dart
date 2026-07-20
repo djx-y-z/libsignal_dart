@@ -173,11 +173,15 @@ Future<void> releasePackage({
   // ---- Commit + tag (signed; may prompt for your passphrase) ---------------
   logStep('Committing (you may be prompted for your signing passphrase)...');
   await runInherit('git', ['add', 'pubspec.yaml', 'CHANGELOG.md']);
-  await runInherit('git', [
-    'commit',
-    '-m',
-    'chore: prepare release v$version',
-  ], failMessage: 'git commit failed (pre-commit checks or signing).');
+  await runInherit(
+    'git',
+    ['commit', '-m', 'chore: prepare release v$version'],
+    failMessage:
+        'git commit failed (pre-commit checks or signing). The version bump is '
+        'still staged — fix the issue and re-run `git commit`/`git tag` '
+        'manually, or discard it with `git restore --staged --worktree '
+        'pubspec.yaml CHANGELOG.md` and re-run the release.',
+  );
 
   logStep('Creating signed tag $tag...');
   await runInherit(
@@ -255,6 +259,9 @@ String finalizeChangelog(
 }) {
   if (!RegExp(r'^\d+\.\d+\.\d+$').hasMatch(version)) {
     throw Exception('Version must be plain X.Y.Z (got "$version").');
+  }
+  if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(date)) {
+    throw Exception('Date must be YYYY-MM-DD (got "$date").');
   }
 
   final lines = content.split('\n');

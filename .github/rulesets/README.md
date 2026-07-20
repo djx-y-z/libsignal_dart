@@ -121,6 +121,9 @@ it off an arbitrary ref, add a deployment-branch policy allowing only
   branch, their `build.rs` / proc-macros still *execute* in the build runners
   before the `create-release` approval gate. Those jobs carry **no secrets**, so
   the blast radius is CPU, not credential theft — keep it that way.
-- **Binary authenticity.** Consumers still verify downloads by SHA256 only
-  (checksums live in the same release). A detached signature + SLSA provenance is
-  the real authenticity fix — see `SECURITY.md → Supply Chain Security`.
+- **Binary authenticity.** Every native release is now attested with SLSA build
+  provenance (`actions/attest-build-provenance`), with an offline-verifiable
+  Sigstore bundle attached to the release — see `SECURITY.md → Supply Chain
+  Security → Authenticity`. Known limitation: `hook/build.dart` itself still
+  verifies downloads by SHA256 only; attestation verification is manual
+  (`gh attestation verify`).

@@ -39,8 +39,19 @@ void main(List<String> args) async {
 
   logInfo('Release tag: $releaseTag');
 
-  // Check if release already exists on GitHub
-  final releaseExists = await _checkReleaseExists(releaseTag);
+  // Check if release already exists on GitHub. Fail closed: if we cannot tell
+  // (no token, unexpected status, network error), abort rather than reporting
+  // skip=false, which would let a build proceed on a wrong assumption.
+  final status = await _checkReleaseExists(releaseTag);
+  if (status == _ReleaseStatus.inconclusive) {
+    logError(
+      'Could not determine whether $releaseTag exists (GitHub API error, '
+      'missing token, or network failure). Aborting instead of guessing. '
+      'Re-run the workflow, or verify the release manually.',
+    );
+    exit(1);
+  }
+  final releaseExists = status == _ReleaseStatus.exists;
 
   if (isCi) {
     // Output for GitHub Actions
@@ -68,11 +79,15 @@ void main(List<String> args) async {
   }
 }
 
-Future<bool> _checkReleaseExists(String tag) async {
+/// Three-state result of the release-existence probe. `inconclusive` (no token,
+/// unexpected status, network error) is treated as fail-closed by the caller.
+enum _ReleaseStatus { exists, missing, inconclusive }
+
+Future<_ReleaseStatus> _checkReleaseExists(String tag) async {
   final token = Platform.environment['GITHUB_TOKEN'];
   if (token == null || token.isEmpty) {
     logWarn('GITHUB_TOKEN not set. Cannot check release status.');
-    return false;
+    return _ReleaseStatus.inconclusive;
   }
 
   final client = HttpClient();
@@ -87,18 +102,19 @@ Future<bool> _checkReleaseExists(String tag) async {
 
     final response = await request.close();
     await response.drain<void>();
-    client.close();
 
     if (response.statusCode == 200) {
-      return true;
+      return _ReleaseStatus.exists;
     } else if (response.statusCode == 404) {
-      return false;
+      return _ReleaseStatus.missing;
     } else {
       logWarn('Unexpected response from GitHub API: ${response.statusCode}');
-      return false;
+      return _ReleaseStatus.inconclusive;
     }
   } catch (e) {
     logWarn('Failed to check release: $e');
-    return false;
+    return _ReleaseStatus.inconclusive;
+  } finally {
+    client.close();
   }
 }

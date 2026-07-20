@@ -134,7 +134,7 @@ dependencies:
 
 Native libraries are downloaded automatically during build via Dart build hooks.
 
-**No Rust required** for end users - precompiled binaries are downloaded from GitHub Releases. Fallback to source build if Rust is installed.
+**No Rust required** for end users - precompiled binaries are downloaded from GitHub Releases (the build hook verifies each download's SHA256 and fails closed if it can't). Developers can instead build from source with `make build`; the hook then picks up the local `rust/target/` build automatically.
 
 ### Web Support
 
@@ -453,7 +453,7 @@ make build-web          # Build WASM for web (requires wasm-pack)
 make check-new-libsignal-version  # Check for new upstream libsignal version
 make check-template-updates       # Check for new copier template version
 make rust-update        # Update rust/Cargo.lock (cargo update)
-make update-changelog   # Update CHANGELOG.md with AI (requires GITHUB_TOKEN)
+make update-changelog   # Update CHANGELOG.md with AI (requires AI_MODELS_TOKEN)
 
 # Quality Assurance
 make test               # Run tests
@@ -471,7 +471,7 @@ make clean              # Clean build artifacts
 make help               # Show all commands
 ```
 
-It also checks for copier template updates daily and creates notification PRs with changelog and update instructions.
+GitHub Actions automation checks for new upstream libsignal releases and copier template updates daily and opens notification PRs with a changelog and update instructions.
 
 ## Architecture
 

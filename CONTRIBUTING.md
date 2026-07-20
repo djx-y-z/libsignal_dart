@@ -137,7 +137,7 @@ For major changes:
 make test
 
 # Run specific test file
-make test ARGS="test/keys_test.dart"
+make test ARGS="test/keys/private_key_test.dart"
 
 # Run with verbose output
 make test ARGS="--reporter=expanded"
@@ -258,8 +258,11 @@ make analyze
 This library uses Flutter Rust Bridge (FRB) with libsignal-protocol (pure Rust):
 
 - **Memory is managed automatically** by Rust's ownership system
-- **No manual cleanup needed** - FRB handles all resource deallocation
-- **No `dispose()` calls** - Rust drops resources when they go out of scope
+- **No `dispose()` calls needed for correctness** - Rust drops resources when the
+  owning Dart object is garbage-collected
+- **But cleanup timing is not deterministic** - security-critical code holding
+  secrets should still call `dispose()` explicitly to bound how long the secret
+  lives in native memory (see `SECURITY.md` → A: Memory Safety)
 
 When adding new Rust API functions:
 
@@ -350,7 +353,25 @@ make test
 
 Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
 
-For development, you can build from source and make the hook use the local build (see `.skip_libsignal_hook` in `hook/build.dart`):
+For development, build the native library from source and the hook picks up the
+host-matching `rust/target/` build automatically — no marker needed:
+
+```bash
+# Native platforms
+make build
+
+# Web/WASM
+make build-web
+```
+
+**Build requirements (for source builds):**
+
+| Platform | Build tooling |
+|----------|---------------|
+| Linux / macOS / Windows | Rust toolchain (rustup, cargo), protoc |
+| Android | + Android NDK, cargo-ndk |
+| iOS | + Xcode |
+| Web | + wasm-pack |
 
 ### Releasing (two stages)
 
@@ -445,21 +466,6 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 4. Click **Save protection rules**
 
 > The `pub.dev` environment is required by the publish workflow. Protection rules ensure that every publish requires manual approval, preventing accidental releases.
-
-```bash
-# Run tests (the build hook fetches the native library automatically)
-make test
-```
-
-**Build requirements (for source builds):**
-
-| Platform | Build OS | Requirements |
-|----------|----------|--------------|
-| Linux | Linux | Rust, protoc |
-| macOS | macOS | Rust, protoc, Xcode CLI |
-| iOS | macOS | Rust, protoc, Xcode |
-| Android | Linux/macOS | Rust, protoc, Android NDK |
-| Windows | Windows | Rust, protoc, Visual Studio |
 
 ## Security Considerations
 
