@@ -25,6 +25,18 @@ ignore = [
     # binary, has no safe upgrade, and is not actionable from this repo.
     # Revisit when libsignal updates its libcrux/hax dependencies.
     "RUSTSEC-2026-0173",
+
+    # Upstream libcrux crypto advisories (published 2026-07-17), all in the
+    # ML-KEM stack that libsignal git-pins via `libcrux-ml-kem = "^0.0.8"`
+    # (locking libcrux-sha3 0.0.8 / libcrux-secrets 0.0.5). The fixes
+    # (sha3 >= 0.0.10, secrets >= 0.0.6) are unreachable from this repo — they
+    # arrive only when libsignal bumps its libcrux constraint (v0.97.4, our
+    # current pin, still ships the old libcrux). Accepted as an interim measure
+    # so CI/release stay green. Remove all three (here and from the Makefile
+    # `rust-audit` --ignore flags) once a fixed libsignal release lands.
+    "RUSTSEC-2026-0207", # libcrux-sha3: incorrect incremental SHAKE output
+    "RUSTSEC-2026-0208", # libcrux-sha3: potential panic in AVX2 SHAKE-256
+    "RUSTSEC-2026-0212", # libcrux-secrets: incorrect const-time swap (aarch64)
 ]
 
 [licenses]

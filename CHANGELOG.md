@@ -4,13 +4,20 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.97.3** — internal/dependency update, no public-API impact
+- **Build provenance attestation (Sigstore, SLSA Build L2)** — every native-release archive is now cryptographically attested to this repository's tag-triggered build, closing the previously documented authenticity gap (verify with `gh attestation verify`)
+- **Web: stale-WASM-after-upgrade fixed** — the web build hook now refreshes `web/pkg/` on a version change instead of serving the previous version's WASM, which could crash Dart-store-callback paths (`processPreKeyBundle`, `SessionCipher`, sealed sender, group messaging) after an upgrade
+- **Smaller package & explicit minimum OS versions** — the vestigial platform-plugin scaffolding is removed (smaller published archive) and the prebuilt binaries are now built against the documented macOS 10.15 / Android API 24 minimums
+- **libsignal v0.97.4** — internal/dependency update, no public-API impact
 - **libsignal_frb v5.1.0** — Rust FFI bindings
 
 #### Changed
 
 - **Platform-plugin scaffolding removed from the published package** — the vestigial `ios/`, `macos/`, `android/`, `linux/`, `windows/` directories (podspecs, Gradle project, CMakeLists, plugin stubs) are gone. The package has never declared a `flutter: plugin:` section, so flutter_tools never consumed them; native delivery is (and remains) via the `hook/build.dart` build hook. No consumer action required — the published archive just gets smaller
 - **Explicit minimum OS versions for the prebuilt binaries** — CI now builds the macOS dylibs with `MACOSX_DEPLOYMENT_TARGET: '10.15'` (previously rustc's per-target default, 10.12 for x86_64) and links the Android `.so`s against API level 24 via cargo-ndk `--platform 24` (previously cargo-ndk's default, 21), matching the documented platform-support table
+- **libsignal v0.97.4 update** — bump the bound native library ([compare](https://github.com/signalapp/libsignal/compare/v0.97.3...v0.97.4))
+  - Upstream changes are limited to `AuthAccountsService` (registration-lock set/clear, discoverable-by-phone-number, registration-recovery-password), `UnauthBackupsService.copyMedia`/`copyBackupMedia`, SVR2 node APIs, and language-binding / bridge tooling (node/java/swift/ts) — none of which this library exposes
+  - The only change to the crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) is the `libsignal-core` version string (`rust/core/src/version.rs`); `make codegen` produces no binding diff
+  - Note: These changes do not affect this library's public API
 - **libsignal v0.97.3 update** — bump the bound native library ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))
   - Upstream changes are limited to `AuthUsernamesService.deleteUsernameHash()`/`deleteUsernameLink()` (username services), reclassifying an established chat connection's transport errors as retryable (`.ioError`, Swift binding), and increasing the key-transparency clock-skew tolerance interval — none of which this library exposes
   - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings; `make codegen` produces no binding diff
@@ -36,6 +43,7 @@
 
 #### Changed
 
+- **Accept unremediable upstream libcrux crypto advisories in cargo-deny / cargo-audit** — three RustSec advisories published 2026-07-17 (`RUSTSEC-2026-0207` / `-0208`, incorrect / panicking SHAKE in `libcrux-sha3` 0.0.8; `RUSTSEC-2026-0212`, incorrect aarch64 constant-time swap in `libcrux-secrets` 0.0.5) live in libsignal's git-pinned ML-KEM stack and are not fixable from this repo — the fix requires a libsignal release that bumps `libcrux-ml-kem` (v0.97.4 still ships the old libcrux). Added to `rust/deny.toml` `[advisories].ignore` and the `rust-audit` `--ignore` flags as a tracked interim suppression so the `cargo-deny` / `cargo-audit` CI jobs pass — to be removed once a fixed libsignal release lands
 - **Decoupled the `libsignal_frb` native release from libsignal dependency updates** — automated update PRs no longer bump the crate version or build binaries; dependency updates accumulate on `main` (tested from source in CI), and the native build is now triggered by pushing a `libsignal_frb-<version>` tag instead of by pushing to `main`. The crate-version bump is now a deliberate release decision (`make release-frb`). See CLAUDE.md → Release Flow
 - **AI changelog generator classifies upstream changes against the bound-crate surface** — the prompt now states which crates/APIs this wrapper actually binds, so out-of-scope upstream changes (net / chat / keytrans / username services / zkgroup / …) are framed as "none of which this library exposes", and it links to a version `compare` instead of the (often incomplete) release notes
 - **CI enforces deployment-target consistency** — `test-reusable.yml` now runs `make check-targets` (Linux leg) so the build fails if the iOS / macOS / Android minimum deployment targets drift out of sync across the CI build env vars, the example Xcode projects and the README platform table. Previously the check existed (`make check-targets`) but was never run automatically
