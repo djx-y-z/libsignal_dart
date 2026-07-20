@@ -467,6 +467,58 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 
 > The `pub.dev` environment is required by the publish workflow. Protection rules ensure that every publish requires manual approval, preventing accidental releases.
 
+## Releasing (two stages)
+
+Releasing happens in **two independent stages**, each with its own command and git
+tag — the `libsignal_frb` native crate and the `libsignal` Dart package
+are versioned and released separately.
+
+1. **Native crate (stage 1)** — from a clean, up-to-date `main`:
+   ```bash
+   make release-frb ARGS="--version X.Y.Z"
+   ```
+   Bumps `rust/Cargo.toml`, stamps the CHANGELOG highlight, and creates a
+   **signed** commit + tag `libsignal_frb-X.Y.Z`, then pushes. The tag triggers
+   the native build workflow, which builds and publishes the platform binaries.
+   The commit/tag/push inherit your terminal, so you enter your signing passphrase
+   interactively during the command.
+
+2. **Dart package (stage 2)** — after the native build succeeds:
+   ```bash
+   make release ARGS="--version X.Y.Z"
+   ```
+   Verifies the stage-1 `libsignal_frb-<crate>` release exists, bumps
+   `pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + a fresh
+   `[Unreleased]` + compare links), validates with a publish dry-run, then creates
+   a **signed** commit + tag `vX.Y.Z` and pushes. `publish.yml` publishes to
+   pub.dev.
+
+**Order matters:** stage 1 must finish first — the published package's build hook
+downloads the precompiled `libsignal_frb-<crate>` binary, so it must already
+exist before you tag the pub.dev release.
+
+> Automated libsignal update PRs **do not** bump the `libsignal_frb`
+> crate or build binaries — dependency updates accumulate on `main` (tested from
+> source in CI), and you cut a native release deliberately with `make release-frb`.
+
+## Repository rulesets & tag protection
+
+This repository should be guarded by GitHub **repository rulesets** and a
+required-reviewer **environment**, so the native/crypto library's releases can't
+be published without the right people and review:
+
+- **Signed commits** required on all branches (configure SSH or GPG signing).
+- **`main`** protected (changes land via PR; force-push and deletion blocked).
+- **Tags** — all tags creatable only by Admins/Maintainers and must be signed;
+  the release-triggering `libsignal_frb-*` / `v*` are the critical subset (they
+  start native / pub.dev publishing).
+- The **native-build publish** waits on a required reviewer (the `native-build`
+  environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
+
+The maintainer runbook — what each ruleset does, exact `gh` commands to apply /
+verify / roll back, and how to configure the `native-build` environment — is in
+[`.github/rulesets/README.md`](.github/rulesets/README.md).
+
 ## Security Considerations
 
 This is a **cryptographic library**. Security is paramount.

@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-fuzz setup-android setup-protoc setup-web codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-seed fuzz-list doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm

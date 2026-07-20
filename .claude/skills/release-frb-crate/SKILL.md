@@ -82,7 +82,7 @@ release**, not from the upstream version numbers:
 for any dependency update since the last frb release, the wire signature moved —
 bump at least minor, and major if the change is breaking. (This is the same
 codegen-diff signal that decides whether a stale binary is safe.) When unsure,
-prefer the more severe bump. See [[feedback_semver_libsignal_frb]].
+prefer the more severe bump.
 
 ## After the native build succeeds
 
