@@ -74,7 +74,10 @@ Future<void> releasePackage({
   }
 
   logStep('Fetching origin...');
-  await git(['fetch', 'origin', '--tags', '--quiet']);
+  // Fetch only origin/main (all the behind/ahead check below needs). Not tags:
+  // the "tag already on origin?" check uses `git ls-remote` directly, so `--tags`
+  // adds nothing — but one diverged tag in the namespace would abort the release.
+  await git(['fetch', 'origin', 'main', '--no-tags', '--quiet']);
   if ((await git(['ls-remote', '--tags', 'origin', tag])).isNotEmpty) {
     throw Exception('Tag $tag already exists on origin.');
   }
