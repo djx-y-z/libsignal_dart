@@ -487,11 +487,18 @@ are versioned and released separately.
    ```bash
    make release ARGS="--version X.Y.Z"
    ```
-   Verifies the stage-1 `libsignal_frb-<crate>` release exists, bumps
-   `pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + a fresh
-   `[Unreleased]` + compare links), validates with a publish dry-run, then creates
-   a **signed** commit + tag `vX.Y.Z` and pushes. `publish.yml` publishes to
-   pub.dev.
+   Verifies the stage-1 `libsignal_frb-<crate>` release exists, validates with
+   a publish dry-run (on the clean, pre-bump tree), bumps `pubspec.yaml`,
+   finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + compare links; no empty
+   `[Unreleased]` is left behind — the next unreleased change recreates it), then
+   creates a **signed** commit + tag `vX.Y.Z` and pushes. `publish.yml` publishes
+   to pub.dev.
+
+   > **Do not delete the footer `[Unreleased]:` compare link** even when no
+   > `## [Unreleased]` heading is present between releases — it is load-bearing
+   > (the release scripts read it for the base URL and previous version, and the
+   > next unreleased change re-references it). It is intentionally retained, not
+   > stale.
 
 **Order matters:** stage 1 must finish first — the published package's build hook
 downloads the precompiled `libsignal_frb-<crate>` binary, so it must already

@@ -322,9 +322,9 @@ String stampFrbHighlight(String content, String version) {
 
   if (highlights == -1) {
     // No Highlights subsection — add one under `### For Users`. If the section
-    // has no `### For Users` audience heading yet (e.g. a fresh empty
-    // [Unreleased] left by a package release), create it too, so the stamped
-    // Highlights block never ends up parentless (the CLAUDE.md changelog
+    // has no `### For Users` audience heading yet (e.g. a bare `## [Unreleased]`
+    // heading added by hand with no audience sections), create it too, so the
+    // stamped Highlights block never ends up parentless (the CLAUDE.md changelog
     // contract requires every subsection to sit under an audience heading).
     var insertAt = start + 1;
     var hasForUsers = false;

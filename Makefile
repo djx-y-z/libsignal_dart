@@ -364,10 +364,10 @@ release-frb:
 	@$(FVM) dart scripts/release_frb.dart $(ARGS)
 
 # Stage 2: release the Dart package to pub.dev. Verifies the stage-1 native
-# binary exists, bumps pubspec.yaml, finalizes the CHANGELOG, validates with a
-# publish dry-run, then signs a commit + `vX.Y.Z` tag and pushes (triggers
-# publish.yml). You enter your signing passphrase interactively during the
-# command.
+# binary exists, validates with a publish dry-run (clean pre-bump tree), bumps
+# pubspec.yaml, finalizes the CHANGELOG, then signs a commit + `vX.Y.Z` tag and
+# pushes (triggers publish.yml). You enter your signing passphrase interactively
+# during the command.
 #   Example: make release ARGS="--version 6.1.0"
 release:
 	@$(FVM) dart scripts/release.dart $(ARGS)

@@ -22,9 +22,10 @@ import 'release_common.dart';
 
 /// Cut a Dart package release for [version] (plain `X.Y.Z`).
 ///
-/// Verifies the stage-1 native release exists, bumps `pubspec.yaml`, finalizes
-/// the CHANGELOG, runs `make publish-dry-run`, creates a signed commit + signed
-/// tag `vX.Y.Z`, and (unless [push] is false) pushes `main` and the tag. Prompts
+/// Verifies the stage-1 native release exists, runs `make publish-dry-run` (on
+/// the clean, pre-bump tree), bumps `pubspec.yaml`, finalizes the CHANGELOG,
+/// creates a signed commit + signed tag `vX.Y.Z`, and (unless [push] is false)
+/// pushes `main` and the tag. Prompts
 /// for confirmation before committing unless [assumeYes]. Set [skipFrbCheck]
 /// only if you have manually verified the native binary exists. [date] defaults
 /// to today (YYYY-MM-DD) and is used for the CHANGELOG heading.
@@ -129,6 +130,19 @@ Future<void> releasePackage({
     }
   }
 
+  // ---- Validate (pub.dev dry-run) ------------------------------------------
+  // Runs on the CLEAN, pre-bump tree. `dart pub publish --dry-run` exits non-zero
+  // (65) on ANY warning, and dry-running the bumped-but-uncommitted tree would
+  // itself raise a "checked-in files are modified in git" warning — a
+  // self-inflicted failure. The dry-run only validates package structure (files
+  // present, archive size, pubspec validity), which a version bump / CHANGELOG
+  // edit cannot change, so validating before the bump has identical catching
+  // power. Nothing is modified yet, so there is nothing to revert on failure.
+  logStep('Validating the package (make publish-dry-run)...');
+  await runInherit('make', [
+    'publish-dry-run',
+  ], failMessage: 'publish-dry-run reported errors');
+
   // ---- Prepare files -------------------------------------------------------
   logStep('Bumping pubspec.yaml version: $current -> $version');
   _bumpPubspecVersion(packageDir, version);
@@ -144,21 +158,6 @@ Future<void> releasePackage({
     'pubspec.yaml',
     'CHANGELOG.md',
   ]);
-
-  // ---- Validate (pub.dev dry-run) ------------------------------------------
-  // Runs on the bumped-but-uncommitted tree. pub warns about the not-yet-tracked
-  // release-tooling files but exits 0 on warnings; only a real error (invalid
-  // pubspec, missing files, oversized package) exits non-zero and aborts here.
-  logStep('Validating the package (make publish-dry-run)...');
-  try {
-    await runInherit('make', [
-      'publish-dry-run',
-    ], failMessage: 'publish-dry-run reported errors');
-  } catch (e) {
-    await git(['checkout', '--', 'pubspec.yaml', 'CHANGELOG.md']);
-    logWarn('Reverted pubspec.yaml and CHANGELOG.md.');
-    rethrow;
-  }
 
   // ---- Confirm -------------------------------------------------------------
   final action = push
@@ -240,18 +239,22 @@ void _finalizeChangelogFile(Directory packageDir, String version, String date) {
 /// [date] (YYYY-MM-DD). Pure; exposed for testing.
 ///
 /// Three edits:
-///  1. Renames the `## [Unreleased]` heading to `## [version] - date`, leaving
-///     a fresh empty `## [Unreleased]` above it (in-progress content becomes the
-///     released section).
+///  1. Renames the `## [Unreleased]` heading to `## [version] - date` in place
+///     (in-progress content becomes the released section). No empty
+///     `## [Unreleased]` is left behind — the next unreleased change recreates it
+///     (`stampFrbHighlight` / the native-update PR both create it when absent).
 ///  2. Rewrites the bottom `[Unreleased]:` compare link to span
 ///     `v<version>...HEAD`.
 ///  3. Inserts a `[version]:` compare link spanning `v<previous>...v<version>`.
 ///
 /// The previous version and the repo base URL are read from the existing
 /// `[Unreleased]:` link — the single source of truth for the compare range — so
-/// the function needs no repo slug. Throws if the CHANGELOG lacks a
-/// `## [Unreleased]` heading or an `[Unreleased]:` compare link, or already has a
-/// `## [version]` section.
+/// the function needs no repo slug. That footer `[Unreleased]:` link is
+/// intentionally retained even though no `## [Unreleased]` heading references it
+/// between releases: it is load-bearing (this function and the section-creating
+/// scripts read it), so do NOT delete it as "stale". Throws if the CHANGELOG
+/// lacks a `## [Unreleased]` heading or an `[Unreleased]:` compare link, or
+/// already has a `## [version]` section.
 String finalizeChangelog(
   String content, {
   required String version,
@@ -308,13 +311,10 @@ String finalizeChangelog(
   lines[linkIdx] = '[Unreleased]: $base/compare/v$version...HEAD';
   lines.insert(linkIdx + 1, '[$version]: $base/compare/v$previous...v$version');
 
-  // Then split the single `## [Unreleased]` heading into a fresh empty
-  // [Unreleased] followed by the finalized `## [version] - date` heading.
-  lines.replaceRange(unreleasedIdx, unreleasedIdx + 1, [
-    '## [Unreleased]',
-    '',
-    '## [$version] - $date',
-  ]);
+  // Rename the `## [Unreleased]` heading to the finalized `## [version] - date`
+  // heading in place. No fresh empty [Unreleased] is emitted — the next
+  // unreleased change recreates it (the footer `[Unreleased]:` link stays).
+  lines[unreleasedIdx] = '## [$version] - $date';
 
   return lines.join('\n');
 }

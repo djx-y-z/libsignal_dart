@@ -105,7 +105,8 @@ void main() {
 
     test('creates the ### For Users parent when stamping into an empty '
         '[Unreleased] (no orphan Highlights block)', () {
-      // A fresh [Unreleased] left by a package release: heading + blank only.
+      // A bare [Unreleased] heading with no audience sections (e.g. added by
+      // hand): heading + blank only.
       const changelog = '''
 ## [Unreleased]
 

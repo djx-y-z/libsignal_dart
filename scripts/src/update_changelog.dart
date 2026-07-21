@@ -69,7 +69,7 @@ Future<void> updateChangelog({
 
   // Step 5: Update CHANGELOG.
   logStep('Updating CHANGELOG.md...');
-  final updatedChangelog = _insertChangelogEntry(
+  final updatedChangelog = insertChangelogEntry(
     currentChangelog: currentChangelog,
     nativeHighlight: nativeHighlight,
     changed: changed,
@@ -305,13 +305,15 @@ Return ONLY valid JSON, no markdown code blocks.
   }
 }
 
-/// Insert the new changelog entry in the correct location.
+/// Insert the new changelog entry in the correct location. Pure; exposed for
+/// testing.
 ///
 /// Strategy:
-/// 1. If an [Unreleased] section exists, add the entry to Highlights and
-///    Changed.
-/// 2. If no [Unreleased] section exists, create one before the first version.
-String _insertChangelogEntry({
+/// 1. If [Unreleased] section exists, add entry to Highlights and Changed
+/// 2. If no [Unreleased] section, create it before first version (this is the
+///    normal path after a release, which no longer leaves an empty
+///    `## [Unreleased]` behind).
+String insertChangelogEntry({
   required String currentChangelog,
   required String nativeHighlight,
   required String changed,

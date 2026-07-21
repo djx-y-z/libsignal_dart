@@ -51,27 +51,26 @@ void main() {
       expect(result, contains('## [6.1.0] - 2026-07-16'));
     });
 
-    test('leaves a fresh empty [Unreleased] above the new version', () {
+    test('leaves NO empty [Unreleased] heading; the version is topmost', () {
       final result = finalizeChangelog(
         _changelog,
         version: '6.1.0',
         date: '2026-07-16',
       );
 
-      // Exactly one Unreleased heading remains.
-      expect('## [Unreleased]'.allMatches(result).length, equals(1));
-
-      final lines = result.split('\n');
-      final unreleasedIdx = lines.indexWhere(
-        (l) => l.startsWith('## [Unreleased]'),
+      // The `## [Unreleased]` *heading* is gone (the next unreleased change
+      // recreates it). Note: the footer `[Unreleased]:` compare link stays, so
+      // match the heading form specifically, not a bare `[Unreleased]`.
+      expect(
+        '## [Unreleased]'.allMatches(result).length,
+        equals(0),
+        reason: 'no empty [Unreleased] section should remain after a release',
       );
-      final versionIdx = lines.indexWhere((l) => l.startsWith('## [6.1.0]'));
-      // Unreleased comes first and is empty (only blank lines up to [6.1.0]).
-      expect(unreleasedIdx, lessThan(versionIdx));
-      final between = lines
-          .sublist(unreleasedIdx + 1, versionIdx)
-          .where((l) => l.trim().isNotEmpty);
-      expect(between, isEmpty, reason: 'the new [Unreleased] must be empty');
+
+      // The dated version heading is now the topmost `## [` section heading.
+      final lines = result.split('\n');
+      final firstSection = lines.firstWhere((l) => l.startsWith('## ['));
+      expect(firstSection, equals('## [6.1.0] - 2026-07-16'));
     });
 
     test('moves in-progress content under the released heading', () {
@@ -154,8 +153,9 @@ void main() {
     test('keeps the version heading awk-extractable and the [Unreleased] '
         'heading skipped', () {
       // publish.yml extracts the release notes with an awk pattern that keys on
-      // `^## \\[?[0-9]...`: the dated version heading must match, and the fresh
-      // empty [Unreleased] must NOT (else it would swallow the extraction).
+      // `^## \\[?[0-9]...`: the dated version heading must match, and no
+      // `## [Unreleased]` heading must match (there no longer is one after a
+      // release — this guards against a regression that reintroduces it).
       final result = finalizeChangelog(
         _changelog,
         version: '6.1.0',

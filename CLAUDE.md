@@ -270,8 +270,8 @@ libsignal dep-update PRs  ──►  merge to main  ──►  (accumulate, no b
      publishes the native binaries (GitHub Release `libsignal_frb-X.Y.Z`)
                                                         │
    Stage 2: Dart package ── make release ARGS="--version X.Y.Z"
-     verifies the stage-1 binary exists, bumps pubspec, finalizes CHANGELOG,
-     signs commit + tag `vX.Y.Z`, pushes  ──►  publish.yml publishes to pub.dev
+     verifies the stage-1 binary exists, dry-runs, bumps pubspec, finalizes
+     CHANGELOG, signs commit + tag `vX.Y.Z`, pushes  ──►  publish.yml → pub.dev
      (the build hook downloads the stage-1 binary, which already exists)
 ```
 
@@ -306,20 +306,21 @@ wire signature moved (≥ minor; major if breaking).
 
 ```bash
 # After the stage-1 native build has finished. Same interactive signing flow.
-make release ARGS="--version X.Y.Z"                # verify frb binary + bump +
-                                                   # finalize CHANGELOG + dry-run
+make release ARGS="--version X.Y.Z"                # verify frb binary + dry-run +
+                                                   # bump + finalize CHANGELOG
                                                    # + signed commit/tag/push
 make release ARGS="--version X.Y.Z --no-push"      # local only
 ```
 
 `make release` refuses to proceed until the stage-1 GitHub Release
 `libsignal_frb-<rust/Cargo.toml version>` exists (the published build hook
-downloads it; pass `--skip-frb-check` only if you verified it manually). It bumps
-`pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z] - <today>`,
-opens a fresh `[Unreleased]`, updates the bottom compare links), runs `make
-publish-dry-run`, then signs a commit + tag `vX.Y.Z` and pushes — `publish.yml`
-publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart API**
-(independent of the crate version).
+downloads it; pass `--skip-frb-check` only if you verified it manually). It runs
+`make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`, then
+finalizes the CHANGELOG (renames `[Unreleased]` → `[X.Y.Z] - <today>` in place —
+no empty `[Unreleased]` is left behind — and rewrites the bottom `[Unreleased]:`
+compare link to `vX.Y.Z...HEAD`), then signs a commit + tag `vX.Y.Z` and pushes —
+`publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
+API** (independent of the crate version).
 
 ## Supported Platforms
 
@@ -504,8 +505,8 @@ make analyze && make test && make format-check
 make release-frb ARGS="--version X.Y.Z"
 # …wait for build-libsignal.yml to publish the native binaries…
 
-# Stage 2 — Dart package (verifies the stage-1 binary, finalizes CHANGELOG,
-# bumps pubspec, dry-runs, tags vX.Y.Z → publish.yml publishes to pub.dev):
+# Stage 2 — Dart package (verifies the stage-1 binary, dry-runs, bumps pubspec,
+# finalizes CHANGELOG, tags vX.Y.Z → publish.yml publishes to pub.dev):
 make release ARGS="--version X.Y.Z"
 ```
 

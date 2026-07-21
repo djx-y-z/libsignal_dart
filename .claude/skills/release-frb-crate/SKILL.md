@@ -45,7 +45,8 @@ The script (`scripts/release_frb.dart`) does all of this in one command:
    `libsignal_frb-<version>` tag does not already exist (local or remote).
 2. **Bumps** the `[package]` version in `rust/Cargo.toml`.
 3. **Stamps** `- **libsignal_frb vX.Y.Z** — Rust FFI bindings` into the CHANGELOG
-   `[Unreleased]` Highlights (inserts, or replaces an existing frb line).
+   `[Unreleased]` Highlights (inserts, or replaces an existing frb line; creates
+   the `## [Unreleased]` section if the previous release removed it).
 4. Shows the diff and asks for confirmation (skip with `--yes`).
 5. Creates a **signed commit** and a **signed tag** `libsignal_frb-X.Y.Z`.
 6. **Pushes** `main` and the tag (skip with `--no-push`), which triggers the

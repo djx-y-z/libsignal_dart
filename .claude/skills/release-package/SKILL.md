@@ -34,13 +34,16 @@ command:
    Release `libsignal_frb-<version in rust/Cargo.toml>` is published (via `gh`).
    Fails closed if it is missing or can't be verified — the published build hook
    downloads it, so releasing without it would break consumers.
-3. **Bumps** the `version:` in `pubspec.yaml`.
-4. **Finalizes the CHANGELOG** — renames `## [Unreleased]` to `## [X.Y.Z] -
-   <today>`, opens a fresh empty `## [Unreleased]`, and updates the bottom
-   compare links (`[Unreleased]` → `vX.Y.Z...HEAD` and a new `[X.Y.Z]` →
+3. **Validates** the package with `make publish-dry-run` on the clean, pre-bump
+   tree, aborting if it reports errors. (Runs before the bump because
+   `dart pub publish --dry-run` exits non-zero on any warning, and dry-running a
+   bumped-but-uncommitted tree would warn about the modified files.)
+4. **Bumps** the `version:` in `pubspec.yaml`.
+5. **Finalizes the CHANGELOG** — renames `## [Unreleased]` to `## [X.Y.Z] -
+   <today>` in place (no empty `## [Unreleased]` is left behind — the next
+   unreleased change recreates it), and updates the bottom compare links
+   (`[Unreleased]` → `vX.Y.Z...HEAD`, retained, and a new `[X.Y.Z]` →
    `vPREV...vX.Y.Z`).
-5. **Validates** the package with `make publish-dry-run` (reverts the file
-   changes and aborts if it reports errors).
 6. Shows the diff and asks for confirmation (skip with `--yes`).
 7. Creates a **signed commit** and a **signed tag** `vX.Y.Z`.
 8. **Pushes** `main` and the tag (skip with `--no-push`), which triggers
@@ -111,10 +114,11 @@ Admin and must land the version bump through a PR instead of pushing to `main`):
 make analyze && make test && make format-check && make rust-check && make rust-audit
 
 # 2. Bump pubspec.yaml `version:` and finalize CHANGELOG.md:
-#    - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`
-#    - add a fresh empty `## [Unreleased]` above it
-#    - rewrite `[Unreleased]: .../compare/vX.Y.Z...HEAD` and add
-#      `[X.Y.Z]: .../compare/vPREV...vX.Y.Z` at the bottom
+#    - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` in place
+#      (do NOT add a fresh empty `## [Unreleased]` — the next unreleased
+#      change recreates it)
+#    - rewrite `[Unreleased]: .../compare/vX.Y.Z...HEAD` (kept at the bottom)
+#      and add `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 
 # 3. Validate
 make publish-dry-run
