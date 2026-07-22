@@ -1,3 +1,18 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.98.0** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- Update libsignal native library to v0.98.0 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.4...v0.98.0))
+  - Upstream changes are limited to networking, registration, and tooling updates — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings
+  - Note: These changes do not affect this library's public API
+
 ## [6.1.0] - 2026-07-21
 
 ### For Users
