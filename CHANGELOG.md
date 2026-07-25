@@ -1,3 +1,21 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.99.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **libsignal native library → v0.99.1** ([compare](https://github.com/signalapp/libsignal/compare/v0.97.4...v0.99.1))
+  - Upstream user-facing changes target the chat/backup/registration services and logging — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) saw internal refactors to track the updated RustCrypto / curve25519-dalek / spqr dependencies, with no change to behaviour or the FFI surface (FRB bindings regenerate byte-for-byte identical)
+
+#### Security
+
+- **Upstream libcrux advisories resolved** — v0.99.1 pulls in `libcrux-sha3` 0.0.10 and `libcrux-secrets` 0.0.6, which fix RUSTSEC-2026-0207, RUSTSEC-2026-0208 (incremental/AVX2 SHAKE) and RUSTSEC-2026-0212 (aarch64 const-time swap). The interim `cargo-audit` / `cargo-deny` suppressions for these three have been removed
+
 ## [6.1.0] - 2026-07-21
 
 ### For Users
