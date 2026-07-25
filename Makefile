@@ -294,10 +294,7 @@ rust-clippy:
 	cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings
 
 rust-audit:
-	cargo audit --file rust/Cargo.lock \
-		--ignore RUSTSEC-2026-0207 \
-		--ignore RUSTSEC-2026-0208 \
-		--ignore RUSTSEC-2026-0212
+	cargo audit --file rust/Cargo.lock
 
 rust-deny:
 	cargo deny --manifest-path rust/Cargo.toml check $(ARGS)
