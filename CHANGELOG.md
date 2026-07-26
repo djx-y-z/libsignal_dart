@@ -1,3 +1,26 @@
+## [Unreleased]
+
+### For Users
+
+#### Security
+
+- **Store durability, write ordering and rollback are now a documented contract** — storage is delegated to the application, and libsignal derives message keys deterministically (the Double Ratchet has no per-message nonce guard), so a store write that is lost to a crash or rolled back by a restore makes the next send reuse a message key and IV. The contract is now stated where implementers read it: on every store interface (`SessionStore`, `IdentityKeyStore`, `PreKeyStore`, `SignedPreKeyStore`, `KyberPreKeyStore`, `SenderKeyStore`), on `SessionCipher` / `SessionBuilder` / `SealedSenderCipher` / `GroupCipher`, and in a new [`SECURITY.md` section](SECURITY.md#store-durability-write-ordering-and-rollback). No behaviour change — the library already awaited every store-write callback before returning a ciphertext or plaintext (verified against the Rust bridge for every entry point); what was missing was the requirement that *your* callback not complete until the write is durable
+  - **Durable before release** — a store write must reach stable storage before the operation's output leaves the device or is acted upon, either inside the callback (`fsync`, SQLite `synchronous = FULL`) or via a transaction committed before sending. Deletes and pre-key consumption (`removePreKey`, `markKyberPreKeyUsed`) count as writes
+  - **Serialize per address** — corrects the previous guidance in `SECURITY.md` §H, which suggested a lock *inside* the store: that leaves the `load → ratchet → store` window unprotected, so two concurrent `encrypt` calls for one address derive the same message key with no crash involved. The lock must span the whole cipher call
+  - **Rollback** — at-rest encryption gives confidentiality, not rollback protection; documents the achievable mitigation (bind the store to a marker in non-backed-up storage and treat a restored copy as a session reset) plus the platform limits of `fsync` on Apple platforms and of IndexedDB durability on the web
+
+- **Documented: `markKyberPreKeyUsed` is not called on the sealed-sender path** — `SealedSenderCipher.decrypt` removes the one-time EC pre-key a pre-key message consumed but never marks the Kyber pre-key it consumed, unlike `SessionCipher.decrypt`. A store that retires marked one-time Kyber pre-keys will therefore keep serving one that sealed sender already consumed. **Action required:** retire one-time Kyber pre-keys from the application side when publishing a new bundle. Closing the gap needs a new store callback (an FFI change), so it is tracked as a limitation in `SECURITY.md` and on `KyberPreKeyStore.markKyberPreKeyUsed` rather than fixed here
+
+### For Contributors
+
+#### Added
+
+- **Reference durable store in `example_cli`** (repository only — `example_cli/` is not part of the published archive) — `lib/stores/durable_file_stores.dart` implements all six stores on an append-only journal that flushes before each write's future completes and replays on open, truncating a torn tail — which, without per-frame checksums, it cannot tell apart from a corrupt header, a limitation the file documents. It ships an `AddressLocks` helper for call-site serialization. `lib/demos/durable_store_demo.dart` proves the round trip: it establishes a session, exchanges messages, closes the stores, reopens them from disk and continues the same conversation
+
+#### Changed
+
+- **`stores-implementation` and `security-review` skills, plus the `CONTRIBUTING.md` review checklist, corrected** — they recommended a lock *inside* the store, which does not cover `load → ratchet → store`, and are now aligned with the durability/serialization contract. Both transaction examples also note that the store's writes must be routed through the ambient transaction (`sqflite` deadlocks if the `db` handle is used inside `db.transaction(...)`)
+
 ## [6.1.1] - 2026-07-25
 
 ### For Users

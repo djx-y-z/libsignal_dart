@@ -65,6 +65,23 @@ final class SenderKeyName {
 ///   // ... other methods
 /// }
 /// ```
+///
+/// ## Durability, ordering and rollback (critical)
+///
+/// A sender key record holds a symmetric chain key plus its iteration counter,
+/// and the message key for each group message is derived from them
+/// deterministically. This store therefore carries exactly the same risk as
+/// [SessionStore]: if a record is **lost or rolled back**, the next
+/// `GroupCipher.encrypt` re-derives a message key and IV that were already
+/// used, so two different group messages are encrypted in the same slot — see
+/// [SessionStore] for what that costs.
+///
+/// The same three requirements apply — persist durably before the ciphertext
+/// leaves the device (the library awaits [storeSenderKey] before returning it),
+/// keep deletes as durable as writes, and serialize `GroupCipher` operations
+/// per (sender, distribution ID) so that two concurrent sends cannot both
+/// consume the same iteration. See [SessionStore] and `SECURITY.md` for the
+/// full contract.
 abstract interface class SenderKeyStore {
   /// Loads a sender key record.
   ///
@@ -74,5 +91,10 @@ abstract interface class SenderKeyStore {
   /// Stores a sender key record.
   ///
   /// The [record] is the serialized sender key record.
+  ///
+  /// **Do not complete the returned future until the record is durably
+  /// persisted** (or until it is part of a transaction you commit durably
+  /// before the ciphertext is sent). Losing this write rewinds the sender-key
+  /// chain and causes message-key reuse — see the class documentation.
   Future<void> storeSenderKey(SenderKeyName senderKeyName, Uint8List record);
 }

@@ -12,6 +12,9 @@ import '../sender_key_store.dart';
 /// store backed by secure storage.
 ///
 /// Note: This implementation does NOT persist data across app restarts.
+/// It therefore meets none of the durability requirements in [SenderKeyStore] —
+/// every restart rewinds the sender-key chain, which is why it must not be used
+/// for real groups.
 class InMemorySenderKeyStore implements SenderKeyStore {
   final Map<String, Uint8List> _senderKeys = {};
 

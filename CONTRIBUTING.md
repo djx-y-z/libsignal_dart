@@ -546,7 +546,8 @@ For cryptographic code changes:
 - [ ] No key material in logs or error messages
 - [ ] Cryptographic comparisons done via library methods (avoid raw byte comparison in Dart)
 - [ ] `DateTime.now().toUtc()` used for timestamps
-- [ ] Store operations properly synchronized
+- [ ] Store writes durable before the ciphertext is sent / the plaintext is acted on
+- [ ] Cipher operations serialized per address at the call site (a store-internal lock does not cover `load → ratchet → store`)
 - [ ] Error handling doesn't leak sensitive information
 - [ ] In-memory stores used only for testing (not production)
 

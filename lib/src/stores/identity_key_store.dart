@@ -47,6 +47,21 @@ enum Direction {
 ///   // ... other methods
 /// }
 /// ```
+///
+/// ## Durability (critical)
+///
+/// Writes to this store must be **durably persisted before the returned future
+/// completes**, or be part of a transaction committed durably before the
+/// ciphertext is sent / the plaintext is acted upon. The failure mode differs
+/// from [SessionStore]: losing a [saveIdentity] write does not rewind the
+/// ratchet, it silently downgrades MITM detection, because an address with no
+/// stored identity is trusted on first use. A remote key substituted while the
+/// write was missing is then accepted instead of raising `UntrustedIdentity`.
+///
+/// Note that the library stores the session and the remote identity through two
+/// separate callbacks, so a crash between them leaves the pair inconsistent.
+/// Wrapping the whole `SessionCipher`/`SessionBuilder` call in one transaction
+/// avoids that; see [SessionStore] and `SECURITY.md` for the full contract.
 abstract interface class IdentityKeyStore {
   /// Gets our own identity key pair.
   Future<IdentityKeyPair> getIdentityKeyPair();
@@ -61,6 +76,10 @@ abstract interface class IdentityKeyStore {
   ///
   /// Returns `true` if this is a new identity or the identity changed,
   /// `false` if the identity was already known and unchanged.
+  ///
+  /// **Do not complete the returned future until the identity is durably
+  /// persisted.** A lost write leaves the address in the trust-on-first-use
+  /// state, which disables safety-number-change detection for it.
   Future<bool> saveIdentity(ProtocolAddress address, PublicKey identityKey);
 
   /// Gets the stored identity key for a remote user.

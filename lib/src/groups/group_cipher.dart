@@ -43,6 +43,17 @@ import '../stores/sender_key_store.dart';
 /// // Decrypt a message from a group member
 /// final plaintext = await cipher.decrypt(senderAddress, distributionId, encrypted);
 /// ```
+///
+/// ## Sender-key state
+///
+/// A sender key is a symmetric chain: each message consumes one iteration, and
+/// the message key is derived from (chain key, iteration) deterministically.
+/// The library persists the advanced record through [SenderKeyStore] before
+/// returning the ciphertext or plaintext, but you must make that write
+/// **durable** and **serialize** operations per (sender address, distribution
+/// ID) — two concurrent [encrypt] calls, or a lost write, make two group
+/// messages reuse one message key and IV. See [SenderKeyStore] and
+/// `SECURITY.md`.
 class GroupCipher {
   /// Creates a new group cipher with the given stores.
   ///

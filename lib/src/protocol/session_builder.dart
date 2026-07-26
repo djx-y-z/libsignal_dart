@@ -33,6 +33,15 @@ import '../stores/session_store.dart';
 ///
 /// // Now we can encrypt messages to Bob using SessionCipher
 /// ```
+///
+/// ## Ratchet state
+///
+/// [processPreKeyBundle] creates the session and persists it (and the remote
+/// identity) through your stores before it returns. As with [SessionCipher],
+/// the store writes must be durable and operations for one address must be
+/// serialized — establishing a session concurrently with sending on it can
+/// overwrite an already-advanced session with the freshly built one, which
+/// rewinds the ratchet. See [SessionStore] and `SECURITY.md`.
 class SessionBuilder {
   /// Creates a new SessionBuilder with the given stores.
   ///

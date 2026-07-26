@@ -17,6 +17,13 @@
 /// - [InMemorySignedPreKeyStore]
 /// - [InMemoryKyberPreKeyStore]
 /// - [InMemorySenderKeyStore]
+///
+/// Every store write is part of the protocol's correctness, not a cache: a
+/// write that is lost or rolled back rewinds ratchet state and causes
+/// message-key reuse. [SessionStore] documents the contract each
+/// implementation must honour (durable before the operation's output is
+/// released, deletes included, operations serialized per address); `SECURITY.md`
+/// has the deployment-level detail.
 library;
 
 export 'identity_key_store.dart';

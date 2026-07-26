@@ -37,6 +37,44 @@ import 'ciphertext_message.dart';
 /// // Decrypt a message from Alice
 /// final plaintext = await cipher.decrypt(aliceAddress, ciphertext);
 /// ```
+///
+/// ## Ratchet state: what the library guarantees, and what you must do
+///
+/// Every operation here advances the Double Ratchet, and the library persists
+/// the advanced state through your stores **before** it hands back the
+/// ciphertext or plaintext: `storeSession` — plus `saveIdentity`,
+/// `removePreKey` and `markKyberPreKeyUsed` where they apply — are awaited
+/// first. The ordering "persist, then release the output" therefore holds by
+/// construction, on this and every other entry point in this package.
+///
+/// Two things are still yours to get right, and both are silent failures:
+///
+/// - **Durability.** Your store callbacks must not complete their futures
+///   until the write is durable, or you must commit a transaction opened
+///   around this call before you send the ciphertext / act on the plaintext.
+///   Otherwise a crash after the callback returned but before the bytes reached
+///   stable storage rewinds the ratchet, and the next send re-derives a message
+///   key and IV that were already used.
+/// - **Serialization.** Never run two operations for the same remote address
+///   concurrently. [encrypt] loads the session, advances it and stores it back;
+///   two overlapping calls both start from the same record and derive the same
+///   message key, with no crash needed. A lock inside the store does not help,
+///   because the whole load → ratchet → store cycle is the critical section:
+///
+///   ```dart
+///   // One map per store instance — it is the store that needs serializing,
+///   // so do not scope it to a single (possibly short-lived) SessionCipher.
+///   final locks = <String, Lock>{}; // package:synchronized
+///
+///   Future<CiphertextMessage> send(ProtocolAddress to, Uint8List body) {
+///     final key = '${to.name()}:${to.deviceId()}';
+///     return locks
+///         .putIfAbsent(key, Lock.new)
+///         .synchronized(() => cipher.encrypt(to, body));
+///   }
+///   ```
+///
+/// See [SessionStore] and `SECURITY.md` for the full contract.
 class SessionCipher {
   /// Creates a new SessionCipher with the given stores.
   ///

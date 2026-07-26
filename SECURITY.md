@@ -187,6 +187,12 @@ final sessionStore = SecureSqliteSessionStore();  // Implement yourself
 5. **KyberPreKeyStore** - Post-quantum keys
 6. **SenderKeyStore** - Group session keys
 
+Confidentiality of the stored data is only half of it: because message keys are
+derived deterministically, a write that is lost or rolled back causes key reuse.
+[Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback)
+states the contract your implementations must satisfy — read it before writing a
+production store.
+
 ### E: Key Material Handling
 
 Never expose key material in logs or errors:
@@ -228,26 +234,40 @@ if (deviceId < 1 || deviceId > 127) {
 
 ### H: Concurrency Safety
 
-Store operations should be properly synchronized:
+Synchronize at the **call site**, not inside the store. A lock inside
+`storeSession` serializes writes but leaves the dangerous window wide open: the
+`load → ratchet → store` cycle spans the whole cipher call, so two concurrent
+`encrypt` calls for one address both load the same session and derive the same
+message key.
 
 ```dart
 import 'package:synchronized/synchronized.dart';
 
+// WRONG (necessary, not sufficient) - the lock is inside the store
 class MySessionStore implements SessionStore {
   final _lock = Lock();
-  final Database _db;
 
   @override
-  Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
-    await _lock.synchronized(() async {
-      await _db.insert('sessions', {
-        'address': '${address.name()}:${address.deviceId()}',
-        'record': record.serialize(),
-      });
-    });
-  }
+  Future<void> storeSession(ProtocolAddress address, SessionRecord record) =>
+      _lock.synchronized(() => _db.upsertSession(address, record));
+}
+
+// CORRECT - the lock spans the whole operation, keyed per address
+final _sessionLocks = <String, Lock>{};
+
+Future<CiphertextMessage> sendTo(ProtocolAddress to, Uint8List body) {
+  final key = '${to.name()}:${to.deviceId()}';
+  return _sessionLocks
+      .putIfAbsent(key, Lock.new)
+      .synchronized(() => cipher.encrypt(to, body));
 }
 ```
+
+Thread-safety inside the store is still worth having (it protects the store's own
+invariants), but it is the call-site lock that prevents key reuse. See
+[Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback)
+for the scope rules (`SessionCipher`, `SealedSenderCipher` and `SessionBuilder`
+share one lock per address; group messaging locks per sender key).
 
 ### I: Initialization
 
@@ -306,7 +326,10 @@ When reviewing code changes, verify:
 - [ ] `DateTime.fromMillisecondsSinceEpoch()` uses `isUtc: true`
 - [ ] Cryptographic comparisons done via library methods (not raw byte comparison)
 - [ ] Certificates validated before use
-- [ ] Store operations properly synchronized
+- [ ] Store writes durable before the ciphertext is sent / the plaintext is acted on
+- [ ] Cipher operations serialized per address (call-site lock, not a store-internal one)
+- [ ] Deletes and pre-key consumption as durable as writes; no state rolled back on failure
+- [ ] Store bound to a non-backed-up marker, restored copies reset instead of resumed
 - [ ] `LibSignal.init()` called before any operations
 - [ ] Sensitive data in Dart uses `SecureBytes` or `zeroize()` extension
 
@@ -458,6 +481,254 @@ make fuzz ARGS="keys -- -max_total_time=60"
 A dedicated `Fuzz` workflow runs a short smoke pass on every PR that touches
 `rust/**` and a longer weekly pass, uploading any crash reproducer as an artifact.
 
+## Store Durability, Write Ordering and Rollback
+
+Storage is **delegated to the application**: this library holds no database, and
+every piece of protocol state it advances is handed to your store
+implementations. Those writes are part of the protocol's correctness, not cache
+updates.
+
+The reason is specific to the Signal Protocol. Message keys are derived
+deterministically from stored state — a session record's chain key plus a
+counter, or a sender key's chain key plus its iteration — and, unlike MLS, the
+Double Ratchet has **no per-message random nonce guard**. Feed libsignal the
+same session record twice and it produces the same message key and the same IV.
+So a store write that is **lost** (crash, power loss, an unflushed buffer) or a
+store that is **rolled back** (restored backup, cloned image, reverted snapshot)
+makes the next operation reuse a message key and IV that were already used.
+
+Concretely — libsignal encrypts messages with AES-256-CBC plus HMAC-SHA256
+(`signal_crypto::aes_256_cbc_encrypt` over the derived `cipher_key`/`iv`), so a
+reused slot means:
+
+- **Encryption becomes deterministic there.** Two different messages sent in the
+  same slot leak their relationship: identical plaintexts — or identical leading
+  blocks — produce visibly identical ciphertext blocks. (This is CBC, so it is
+  not the total plaintext recovery that reusing a stream cipher's keystream would
+  give; it is a real confidentiality leak, not a cosmetic one.)
+- **Forward secrecy stops working for those messages.** The ratchet's guarantee
+  rests on used message keys being deleted; a rewound state can derive them
+  again, so a later device compromise recovers messages that should have been
+  unrecoverable.
+- **Replay protection is rewound with it.** Receive-chain keys are consumed on
+  use; restoring them makes the session accept a message it already accepted.
+
+Those are precisely the guarantees the Double Ratchet exists to provide, and
+losing them is deterministic here rather than a probabilistic near-miss: unlike
+MLS, the Double Ratchet has **no per-message random nonce guard**, so the
+collision is certain, not a ~2⁻³² event. Everything below follows from that.
+
+### The rule: durable before release
+
+> State that a cryptographic operation advanced must be **durably persisted
+> before that operation's output is released** — before a ciphertext leaves the
+> device, and before a plaintext is displayed, acted on or acknowledged.
+
+**What this library already guarantees.** Every store-write callback is awaited
+before the operation returns its result, on all entry points:
+
+| Entry point | Awaited writes, in order, before the result is returned |
+|---|---|
+| `SessionBuilder.processPreKeyBundle` | `storeSession`, `saveIdentity` |
+| `SessionCipher.encrypt` | `storeSession` |
+| `SessionCipher.decrypt` (Whisper) | `storeSession`, `saveIdentity` |
+| `SessionCipher.decrypt` (pre-key) | `storeSession`, `saveIdentity`, `removePreKey`, `markKyberPreKeyUsed` |
+| `SealedSenderCipher.encrypt` | `storeSession` |
+| `SealedSenderCipher.decrypt` | `storeSession`, `saveIdentity`, `removePreKey` |
+| `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
+
+There is no fire-and-forget write anywhere in the bridge, so the *ordering* half
+of the rule holds by construction. What the library cannot do for you is decide
+when your write became durable, or stop you from running two operations on one
+session at the same time.
+
+> **Known gap on the sealed-sender path.** The row above is exhaustive:
+> `markKyberPreKeyUsed` is **not** called when a pre-key message arrives through
+> `SealedSenderCipher.decrypt`, even though the one-time EC pre-key on that same
+> path *is* removed. A one-time Kyber pre-key consumed via sealed sender is
+> therefore never marked, so a store that retires marked keys (as
+> `KyberPreKeyStore.markKyberPreKeyUsed` tells it to) will keep serving that
+> one. Until this is fixed, do not treat the mark as the only thing that retires
+> a one-time Kyber pre-key — retire it from the application side when you
+> publish a new bundle. Tracked as a limitation below.
+
+**Two conforming implementations.** Pick one:
+
+1. **Durable inside the callback** — the write is on stable storage before the
+   future completes.
+
+   ```dart
+   @override
+   Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
+     await _lock.synchronized(() async {
+       await _appendRecord(address, record);
+       await _file.flush(); // fsync — see platform limits below
+     });
+   }
+   ```
+
+   Simple, and correct even if the caller forgets everything else. Costs one
+   `fsync` per message.
+
+2. **A transaction around the call, committed before release** — cheaper, and it
+   also makes the multiple writes of one operation atomic (the table above shows
+   that a single `decrypt` can issue four separate callbacks; a crash between
+   them otherwise leaves session and identity inconsistent).
+
+   ```dart
+   final ciphertext = await db.transaction((txn) {
+     // The stores must write through *this* transaction — see the note below.
+     return cipherWithStoresOn(txn).encrypt(bob, body);
+   });
+   // commit has returned durably here — only now may the ciphertext be sent
+   await transport.send(ciphertext);
+   ```
+
+   The invariant is **commit, then release**. If the commit fails, do not
+   release the output: rolling back is safe precisely because nothing was
+   released. The converse is not — once a ciphertext has been sent, that
+   transaction must never be rolled back.
+
+   > **Route the store's writes through the ambient transaction.** A store that
+   > holds its own database handle writes *outside* the transaction, which
+   > silently defeats both the atomicity and the commit barrier — and with
+   > `sqflite` it does worse: using the `db` object inside `db.transaction(...)`
+   > [deadlocks](https://github.com/tekartik/sqflite/blob/master/sqflite/doc/troubleshooting.md),
+   > so the whole operation hangs. Pass the transaction object into the stores
+   > for the duration of the call (`drift` does this for you: its transactions
+   > are zone-scoped, so inner queries are routed automatically).
+
+**Non-conforming**, however convenient: returning from a store callback once the
+record is in a `Map`, an unflushed file, a write-behind cache or a background
+queue; `unawaited(...)` inside a store method; SQLite with
+`synchronous = OFF`/`NORMAL` while relying on option 1.
+
+### Deletes and consumption are writes too
+
+- A non-durable `deleteSession` / `deleteAllSessions` resurrects the deleted
+  session after a crash. Resuming a session whose keys were already used is the
+  same failure as a rollback.
+- `removePreKey` and `markKyberPreKeyUsed` consume a one-time key. If that write
+  is lost, the key is offered again as unused: forward secrecy for the initial
+  message is weakened (it still exists on the device for a later attacker), and a
+  replayed pre-key message can re-establish a session whose message keys have
+  already been used. Note that `markKyberPreKeyUsed` only protects anything if
+  your `loadKyberPreKey` then **refuses to serve a marked one-time key** —
+  last-resort Kyber keys are meant to be reused and the record does not say which
+  kind it is, so the store must remember that from the moment it generated the
+  key. A durable mark that nothing consults buys nothing.
+- On failure, **never roll state backwards**. If an operation throws after some
+  writes already landed, the safe recovery is to keep the persisted state and
+  drop the message — losing a message is recoverable, rewinding a ratchet is
+  not. Make store writes idempotent so retries are harmless.
+
+### Serialize operations per address
+
+The `load → ratchet → store` cycle is a critical section, and **a lock inside
+the store does not protect it**. Two concurrent `SessionCipher.encrypt` calls for
+the same address both load the same session record, both derive the same message
+key, and the second `storeSession` overwrites the first — deterministic key
+reuse, with no crash involved. This is the failure mode most likely to be hit in
+practice: one stray `unawaited(cipher.encrypt(...))`, or two sends triggered from
+a UI, is enough.
+
+Hold the lock around the **whole** cipher call:
+
+```dart
+import 'package:synchronized/synchronized.dart';
+
+// One map per store instance. What needs serializing is access to the store, so
+// do not scope this to a single (possibly short-lived) SessionCipher object.
+final _sessionLocks = <String, Lock>{};
+
+Future<CiphertextMessage> sendTo(ProtocolAddress to, Uint8List body) {
+  final key = '${to.name()}:${to.deviceId()}';
+  return _sessionLocks
+      .putIfAbsent(key, Lock.new)
+      .synchronized(() => cipher.encrypt(to, body));
+}
+```
+
+Scope notes:
+
+- One address is one critical section. `SessionCipher`, `SealedSenderCipher` and
+  `SessionBuilder` all advance the *same* session, so they must share the lock
+  for that address.
+- Group messaging serializes per `(sender address, distribution ID)` — the
+  identity of a sender key.
+- If your store is shared across isolates or processes, the lock must be too
+  (a database transaction with row locking, or a single owning isolate).
+
+### Rollback protection is a deployment property
+
+At-rest encryption — Keychain, Keystore, SQLCipher, a sealed key — provides
+**confidentiality, not rollback protection**. An attacker (or a well-meaning
+restore) that replaces the whole encrypted store with an earlier copy of itself
+does not need to decrypt anything to rewind your ratchets.
+
+Realistic rollback vectors, in rough order of likelihood: restoring a device or
+app backup, migrating to a new device, reverting a VM/container image or a
+filesystem snapshot, and — for anything server-side or desktop — restoring from
+an ordinary backup.
+
+Neither iOS nor ordinary Android app storage exposes a monotonic counter or
+rollback-resistant data facility an app can use to *detect* this, so treat
+anti-rollback as a deployment obligation, and implement the achievable form:
+
+- **Bind the store to a non-backed-up marker.** Store a random installation ID
+  in storage that does not travel with backups — an iOS Keychain item with a
+  `…ThisDeviceOnly` accessibility class, Android's `no_backup` directory or
+  `android:allowBackup="false"` — and record it inside the store as well. If the
+  two disagree (or the marker is gone), the store you are holding is a restored
+  copy: treat it as a **session reset**. Discard/archive the sessions and sender
+  keys and let fresh ones be established, instead of resuming ratchet state whose
+  keys may already have been used.
+- **Treat an unclean shutdown the same way** when you cannot prove your writes
+  were durable (see the web note below): clear a "clean shutdown" flag on start,
+  set it on graceful exit, and on a start that finds it missing, reset sessions
+  rather than resuming them. A session reset is visible to the user and costs a
+  re-handshake; a reused message key is not visible at all.
+- Identity keys are the exception: they are *meant* to survive, and rotating them
+  triggers safety-number changes for every contact. Persist those durably, and
+  scope the reset above to session / sender-key state.
+
+Residual risk to state plainly in your own threat model: an attacker with
+repeated write access to the device's storage can roll back a store between
+sends, and no application-level measure fully prevents that.
+
+### Platform limits worth knowing
+
+- **Apple platforms.** `dart:io`'s `RandomAccessFile.flush()` / `File.flush()`
+  calls `fsync(2)`, which on macOS and iOS hands the data to the drive but does
+  **not** force its write cache to stable media; Apple's full barrier
+  (`F_FULLFSYNC`) is not exposed through `dart:io`. Process and OS crashes are
+  covered; sudden power loss is not. SQLite can request the barrier —
+  `PRAGMA fullfsync = ON` (with `synchronous = FULL`) — which is the main reason
+  to prefer SQLite over hand-rolled files on Apple platforms.
+- **Newly created files.** `fsync` on a file does not make its *directory entry*
+  durable, and `dart:io` cannot `fsync` a directory. A file created and then
+  flushed can still vanish on power loss. Prefer appending to / overwriting a
+  file created once (as the reference store does), or let a database handle it.
+- **Web.** IndexedDB provides no power-loss durability guarantee: browsers
+  default to relaxed durability, flushing lazily, and a strict mode is only
+  available in newer APIs and not on every engine. The strongest available
+  signal is to resolve the store callback on the transaction's `complete` event
+  (not on request success), and to ask for strict durability where the engine
+  supports it. Because that still is not a barrier, web deployments should use
+  the clean-shutdown/session-reset mitigation above, and their threat model
+  should state that ratchet durability is best-effort on this platform. This is
+  a property of the platform, not of the callback design — a Rust-owned store
+  compiled to WASM would face exactly the same IndexedDB semantics.
+- **A working reference** lives in the repository (it is not part of the
+  published archive):
+  [`example_cli/lib/stores/durable_file_stores.dart`](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/stores/durable_file_stores.dart)
+  is an append-only journal that flushes before returning from every write,
+  serializes writes internally, replays on open and tolerates a torn tail, with
+  all six stores on top of it.
+  [`example_cli/lib/demos/durable_store_demo.dart`](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/demos/durable_store_demo.dart)
+  proves the round trip by reopening the stores from disk and continuing an
+  established conversation.
+
 ## Identity Trust (MITM / safety-number-change detection)
 
 Identity-trust is **enforced on every session operation**, matching upstream
@@ -492,6 +763,10 @@ provided in-memory store does). A store that always returns `null` from
 2. **Timing side channels:** All cryptographic operations use constant-time implementations in libsignal-protocol (Rust). Avoid comparing cryptographic data directly in Dart.
 
 3. **Store persistence:** In-memory stores lose all state on app restart. Production apps must implement persistent stores.
+
+4. **Durability and rollback are delegated:** the library cannot verify that your store writes reached stable storage, cannot serialize your calls for you, and cannot detect that the store it was handed is a restored copy. `fsync` is not a full barrier on Apple platforms and IndexedDB gives no power-loss guarantee on the web. See [Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback) for the contract and the achievable mitigations.
+
+5. **Kyber pre-keys are not marked used on the sealed-sender path:** `SealedSenderCipher.decrypt` removes the one-time EC pre-key a pre-key message consumed, but never calls `markKyberPreKeyUsed` for the Kyber pre-key it consumed (`SessionCipher.decrypt` does both). A store that retires marked one-time Kyber pre-keys will therefore keep serving one that sealed sender already consumed. Retire one-time Kyber pre-keys from the application side when you publish a new bundle; closing the gap requires a new store callback and so a native-crate release.
 
 ### Plaintext Handling After Decryption
 

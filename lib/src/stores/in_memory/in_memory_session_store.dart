@@ -14,6 +14,11 @@ import '../session_store.dart';
 /// store backed by a database or secure storage.
 ///
 /// Note: This implementation does NOT persist data across app restarts.
+/// It therefore meets none of the durability requirements in [SessionStore] —
+/// every restart is a full rollback of the ratchet, which is why it must not be
+/// used for real conversations.
+/// [durable_file_stores.dart](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/stores/durable_file_stores.dart)
+/// shows a persistent store that does meet them.
 class InMemorySessionStore implements SessionStore {
   final Map<String, Uint8List> _sessions = {};
 

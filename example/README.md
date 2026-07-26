@@ -72,5 +72,10 @@ flutter run -d chrome
 ## Notes
 
 - In-memory stores are used for demonstration purposes only
-- For production, implement persistent stores with secure storage
+- For production, implement persistent stores with secure storage. Store writes
+  must be **durable before the ciphertext is sent / the plaintext is acted on**,
+  and cipher calls must be serialized per address — see
+  [`SECURITY.md`](../SECURITY.md#store-durability-write-ordering-and-rollback)
+  and the reference implementation in
+  [`example_cli/lib/stores/durable_file_stores.dart`](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/stores/durable_file_stores.dart)
 - FRB handles memory management automatically (no manual disposal needed)

@@ -1,5 +1,6 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:libsignal_example_cli/demos/crypto_demo.dart';
+import 'package:libsignal_example_cli/demos/durable_store_demo.dart';
 import 'package:libsignal_example_cli/demos/fingerprint_demo.dart';
 import 'package:libsignal_example_cli/demos/groups_demo.dart';
 import 'package:libsignal_example_cli/demos/keys_demo.dart';
@@ -19,6 +20,7 @@ void main() async {
     await runGroupsDemo();
     await runSessionDemo();
     await runFingerprintDemo();
+    await runDurableStoreDemo();
 
     print('');
     print('✓ All demos completed successfully!');

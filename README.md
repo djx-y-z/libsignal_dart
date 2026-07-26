@@ -340,6 +340,7 @@ void main() async {
 
 **Best Practices:**
 - Keep the library updated to the latest version
+- Make store writes durable before sending a ciphertext or acting on a plaintext, and serialize cipher calls per address — see [Durability and serialization](#durability-and-serialization-read-before-writing-a-store)
 - Use UTC timestamps for certificate validation to avoid timezone issues
 - Let the library handle cryptographic comparisons — avoid comparing secrets in Dart code
 - Use `SecureBytes.wrap()` or `zeroize()` for sensitive data (serialized keys, shared secrets) — see [SECURITY.md](SECURITY.md)
@@ -359,7 +360,9 @@ final kyberPreKeyStore = InMemoryKyberPreKeyStore();
 final senderKeyStore = InMemorySenderKeyStore();
 ```
 
-> **Warning:** In-memory stores lose all data on app restart. Use only for:
+> **Warning:** In-memory stores lose all data on app restart — for the Double
+> Ratchet that is a full rollback, which is why they must not carry real
+> conversations. Use only for:
 > - Unit tests
 > - Development/debugging
 > - Demo applications
@@ -376,6 +379,43 @@ For production apps, implement the store interfaces with secure storage:
 | `SignedPreKeyStore` | Signed pre-keys | High |
 | `KyberPreKeyStore` | Post-quantum pre-keys | High |
 | `SenderKeyStore` | Group messaging keys | High |
+
+#### Durability and serialization (read before writing a store)
+
+Storing the state securely is only half the job. libsignal derives message keys
+deterministically from the stored session, and the Double Ratchet has no
+per-message random nonce guard, so a write that is **lost** (crash, unflushed
+buffer) or **rolled back** (restored backup, cloned image) makes the next send
+reuse a message key and IV it has already used — which costs confidentiality,
+forward secrecy and replay protection for the affected messages (see
+[SECURITY.md](SECURITY.md#store-durability-write-ordering-and-rollback) for
+exactly what breaks). Two requirements follow:
+
+1. **Durable before release.** A store write must be on stable storage before the
+   operation's output is released — before a ciphertext is sent, before a
+   plaintext is acted on. The library always awaits your store callbacks before
+   returning that output, so either make the write durable inside the callback
+   (`fsync`, SQLite `synchronous = FULL`) or wrap the whole `encrypt`/`decrypt`
+   call in a transaction you commit before sending. Deletes and pre-key
+   consumption (`removePreKey`, `markKyberPreKeyUsed`) count as writes.
+2. **Serialize per address.** Never run two operations for one remote address
+   concurrently: `load → ratchet → store` is a critical section that spans the
+   whole cipher call, so a lock *inside* the store does not protect it.
+
+```dart
+// Serialize at the call site, one lock per address
+final ciphertext = await locks
+    .putIfAbsent('${bob.name()}:${bob.deviceId()}', Lock.new)
+    .synchronized(() => cipher.encrypt(bob, body));
+```
+
+[`SECURITY.md`](SECURITY.md#store-durability-write-ordering-and-rollback) has the
+full contract, including rollback mitigation and the platform limits of `fsync`
+and of durability on the web.
+[`example_cli/lib/stores/durable_file_stores.dart`](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/stores/durable_file_stores.dart)
+in the repository is a copyable reference implementation of all six stores, and
+its [demo](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/demos/durable_store_demo.dart)
+continues a conversation after closing and reopening the stores.
 
 ## Known Limitations
 

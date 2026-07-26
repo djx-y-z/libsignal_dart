@@ -160,12 +160,18 @@ abstract class SenderKeyStore {
 
 | Backend | Pros | Cons |
 |---------|------|------|
-| SQLite (sqflite/drift) | Fast, reliable, ACID | More complex setup |
-| Hive | Simple, fast | No ACID guarantees |
-| flutter_secure_storage | Encrypted at rest | Slower, size limits |
-| SharedPreferences | Simple | Not for large data |
+| SQLite (sqflite/drift) | Fast, reliable, ACID, `synchronous = FULL` gives real durability | More complex setup |
+| Hive | Simple, fast | No ACID guarantees — do not use for session/sender-key state |
+| flutter_secure_storage | Encrypted at rest | Slower, size limits, no durability guarantee |
+| SharedPreferences | Simple | Not for large data, no durability guarantee |
 
-**Recommendation:** SQLite for session data, flutter_secure_storage for identity keys.
+**Recommendation:** SQLite (with `synchronous = FULL`, plus `PRAGMA fullfsync = ON`
+on Apple platforms) for session, sender-key and pre-key state;
+flutter_secure_storage for identity keys.
+
+A backend without a durability guarantee is not merely slower to persist — see
+step 3. Session and sender-key records must be flushed before the operation's
+output is released.
 
 ### 2. Implement Serialization
 
@@ -184,26 +190,77 @@ if (bytes != null) {
 return null;
 ```
 
-### 3. Handle Concurrency
+### 3. Durability and Concurrency (the part that breaks crypto if wrong)
+
+libsignal derives message keys deterministically from stored state and the Double
+Ratchet has **no per-message random nonce guard**. A session write that is lost to
+a crash, or a session that is rolled back, makes the next send encrypt a
+different plaintext under an already-used key and IV. Two rules follow — see
+`SECURITY.md` → *Store Durability, Write Ordering and Rollback* for the full
+contract.
+
+**Rule 1 — durable before release.** The write must be on stable storage before
+the operation's output is released. The library awaits every store callback
+before returning a ciphertext/plaintext, so satisfy this either inside the
+callback or with a transaction around the cipher call:
+
+```dart
+// (a) durable inside the callback
+@override
+Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
+  await _db.insert('sessions', {          // db opened with synchronous = FULL
+    'address': '${address.name()}:${address.deviceId()}',
+    'record': record.serialize(),
+  }, conflictAlgorithm: ConflictAlgorithm.replace);
+}
+
+// (b) one transaction per operation — faster, and atomic across the
+//     session + identity + pre-key writes a single decrypt performs
+final plaintext = await _db.transaction((txn) {
+  // The stores must write through `txn`, not through the outer `_db` handle.
+  return cipherWithStoresOn(txn).decrypt(alice, message);
+});
+await handle(plaintext); // only after the commit returned
+```
+
+⚠️ **Route store writes through the ambient transaction.** A store holding its
+own handle writes outside the transaction (losing atomicity *and* the commit
+barrier), and in `sqflite` using `db` inside `db.transaction(...)`
+[deadlocks](https://github.com/tekartik/sqflite/blob/master/sqflite/doc/troubleshooting.md)
+— the operation hangs. So with sqflite, pass the `Transaction` into the stores
+for the duration of the call; `drift` routes inner queries automatically because
+its transactions are zone-scoped.
+
+Deletes (`deleteSession`) and consumption (`removePreKey`,
+`markKyberPreKeyUsed`) are writes with the same requirement. On failure, never
+roll state backwards — drop the message instead.
+
+**Rule 2 — serialize per address at the call site.** A lock inside the store is
+not enough: `load → ratchet → store` spans the whole cipher call, so two
+concurrent `encrypt` calls for one address derive the same message key with no
+crash involved.
 
 ```dart
 import 'package:synchronized/synchronized.dart';
 
-class MySessionStore implements SessionStore {
-  final _lock = Lock();
-  final Database _db;
+// One map per store instance, not per SessionCipher.
+final _locks = <String, Lock>{};
 
-  @override
-  Future<void> storeSession(ProtocolAddress address, SessionRecord record) async {
-    await _lock.synchronized(() async {
-      await _db.insert('sessions', {
-        'address': '${address.name()}:${address.deviceId()}',
-        'record': record.serialize(),
-      });
-    });
-  }
+Future<CiphertextMessage> sendTo(ProtocolAddress to, Uint8List body) {
+  return _locks
+      .putIfAbsent('${to.name()}:${to.deviceId()}', Lock.new)
+      .synchronized(() => cipher.encrypt(to, body));
 }
 ```
+
+`SessionCipher`, `SealedSenderCipher` and `SessionBuilder` advance the same
+session, so they share one lock per address; group messaging locks per
+`(sender address, distribution ID)`.
+
+**Reference implementation:** `example_cli/lib/stores/durable_file_stores.dart`
+(all six stores on a flush-before-return journal, plus `AddressLocks`) and
+`example_cli/lib/demos/durable_store_demo.dart` (a conversation that survives
+closing and reopening the stores).
 
 ### 4. Secure Key Storage
 
@@ -366,6 +423,22 @@ void main() {
 
       expect(loaded, isNull);
     });
+
+    // The test that actually catches a broken store: state must survive being
+    // closed and reopened, with no in-memory carry-over.
+    test('session survives a restart', () async {
+      final address = ProtocolAddress(name: 'bob', deviceId: 1);
+      final path = '${Directory.systemTemp.path}/store_test.db';
+
+      var store = await MySessionStore.create(path);
+      await store.storeSession(address, session);
+      await store.close();
+
+      store = await MySessionStore.create(path);
+      expect(await store.containsSession(address), isTrue);
+      // Best done end-to-end: reopen and decrypt a message encrypted with the
+      // reopened session, as durable_store_demo.dart does.
+    });
   });
 }
 ```
@@ -400,3 +473,11 @@ final senderKeyStore = InMemorySenderKeyStore();
 | SignedPreKey | `lib/src/stores/signed_pre_key_store.dart` | `in_memory/in_memory_signed_pre_key_store.dart` |
 | KyberPreKey | `lib/src/stores/kyber_pre_key_store.dart` | `in_memory/in_memory_kyber_pre_key_store.dart` |
 | SenderKey | `lib/src/stores/sender_key_store.dart` | `in_memory/in_memory_sender_key_store.dart` |
+
+Durable reference (all six stores, flush-before-return, plus per-address locks):
+
+| File | Contents |
+|------|----------|
+| `example_cli/lib/stores/durable_file_stores.dart` | Append-only journal + the six stores + `AddressLocks` |
+| `example_cli/lib/demos/durable_store_demo.dart` | Conversation continued after closing and reopening the stores |
+| `SECURITY.md` → *Store Durability, Write Ordering and Rollback* | The contract, rollback mitigation, platform limits |

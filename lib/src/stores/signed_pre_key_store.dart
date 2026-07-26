@@ -25,6 +25,15 @@ import '../rust/api/signed_prekey.dart';
 ///   // ... other methods
 /// }
 /// ```
+///
+/// ## Durability
+///
+/// Writes to this store must be **durably persisted before the returned future
+/// completes** (see [SessionStore] for the full contract). Signed pre-keys are
+/// reusable, so losing a write here does not cause key reuse; it costs
+/// availability — a signed pre-key that was published but not persisted makes
+/// every pre-key message referring to it undecryptable, and a lost
+/// [removeSignedPreKey] merely delays cleanup.
 abstract interface class SignedPreKeyStore {
   /// Loads a signed pre-key by its ID.
   ///

@@ -123,23 +123,35 @@ try {
 }
 ```
 
-### H: Concurrency Safety
+### H: Durability and Concurrency
 
-- [ ] Store operations properly synchronized
-- [ ] No race conditions in session updates
+- [ ] Store writes durable before the ciphertext is sent / the plaintext is acted on
+- [ ] Cipher operations serialized **per address at the call site**
+- [ ] Deletes and pre-key consumption as durable as writes; no state rolled back on failure
+
+Message keys are derived deterministically and the Double Ratchet has no
+per-message nonce guard, so a lost write or a concurrent operation on one session
+causes key reuse. Full contract: `SECURITY.md` →
+*Store Durability, Write Ordering and Rollback*.
 
 ```dart
-// ✅ CORRECT - synchronized store access
+// ❌ NOT SUFFICIENT - the lock is inside the store, so it does not cover
+//    load → ratchet → store; two concurrent encrypt calls still collide
 class MySessionStore implements SessionStore {
   final _lock = Lock();
 
   @override
   Future<void> storeSession(ProtocolAddress addr, SessionRecord record) async {
-    await _lock.synchronized(() async {
-      await _db.insert('sessions', record.serialize());
-    });
+    await _lock.synchronized(() => _db.insert('sessions', record.serialize()));
   }
 }
+
+// ✅ CORRECT - the lock spans the whole cipher call, keyed per address, and the
+//    store write is durable before the ciphertext is released
+final ciphertext = await _locks
+    .putIfAbsent('${to.name()}:${to.deviceId()}', Lock.new)
+    .synchronized(() => cipher.encrypt(to, body));
+await transport.send(ciphertext);
 ```
 
 ### I: Input Validation
@@ -176,7 +188,8 @@ void main() async {
 [ ] Cryptographic comparisons via library methods (not raw bytes)
 [ ] Proper async/await for store operations
 [ ] LibSignal.init() called at startup
-[ ] Store operations synchronized
+[ ] Store writes durable before output is released (fsync / committed transaction)
+[ ] Cipher calls serialized per address at the call site (not a store-internal lock)
 ```
 
 ## Red Flags
@@ -186,6 +199,10 @@ void main() async {
 - `DateTime.now()` without `.toUtc()`
 - Comparing serialized cryptographic data with `==` in Dart
 - Missing `await` on store operations
+- A store write that returns before it is flushed (in-memory buffer, write-behind
+  cache, `unawaited(...)`, SQLite `synchronous = OFF`/`NORMAL`)
+- Concurrent cipher calls for one address (`unawaited(cipher.encrypt(...))`, a
+  lock placed inside the store instead of around the call)
 - Certificate validation without timestamp check
 
 ## Example Review Output
