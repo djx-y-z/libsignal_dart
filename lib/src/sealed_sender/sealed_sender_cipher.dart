@@ -219,9 +219,19 @@ class SealedSenderCipher {
         final preKey = await _preKeyStore.loadPreKey(id);
         return preKey?.serialize();
       },
+      removePreKey: (id) async {
+        await _preKeyStore.removePreKey(id);
+      },
       loadKyberPreKey: (id) async {
         final preKey = await _kyberPreKeyStore.loadKyberPreKey(id);
         return preKey?.serialize();
+      },
+      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
+        await _kyberPreKeyStore.markKyberPreKeyUsed(
+          id,
+          signedPreKeyId,
+          PublicKey.deserialize(bytes: baseKey),
+        );
       },
       // Enforces identity-trust for the sender: the Rust layer pre-seeds this
       // known identity so a changed sender key is rejected with UntrustedIdentity
@@ -232,11 +242,6 @@ class SealedSenderCipher {
         return identity?.serialize();
       },
     );
-
-    // Remove used one-time pre-key if specified
-    if (result.preKeyToRemove != null) {
-      await _preKeyStore.removePreKey(result.preKeyToRemove!);
-    }
 
     final senderAddress = ProtocolAddress(
       name: result.senderName,

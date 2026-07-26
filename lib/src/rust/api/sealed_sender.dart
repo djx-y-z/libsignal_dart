@@ -7,6 +7,7 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `sealed_sender_decrypt_inner`, `sealed_sender_encrypt_inner`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SealedSenderDecryptOutcome`
 
 /// Validate a sender certificate.
 ///
@@ -142,7 +143,16 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
 /// PreKeyStores:
 /// - `load_signed_pre_key(id)` - Load signed pre-key
 /// - `load_pre_key(id)` - Load one-time pre-key
+/// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load Kyber pre-key
+/// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
+///   Kyber pre-key as used. Same three arguments as on the `SessionCipher`
+///   path, mirroring libsignal's `KyberPreKeyStore::mark_kyber_pre_key_used`.
+///
+/// # Write ordering
+/// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, so a
+/// crash cannot persist the session while leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -163,7 +173,9 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
   required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
   required FutureOr<Uint8List?> Function(int) loadPreKey,
+  required FutureOr<void> Function(int) removePreKey,
   required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+  required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
   required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSealedSenderSealedSenderDecryptWithCallbacks(
   ciphertext: ciphertext,
@@ -178,7 +190,9 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   saveIdentity: saveIdentity,
   loadSignedPreKey: loadSignedPreKey,
   loadPreKey: loadPreKey,
+  removePreKey: removePreKey,
   loadKyberPreKey: loadKyberPreKey,
+  markKyberPreKeyUsed: markKyberPreKeyUsed,
   getIdentity: getIdentity,
 );
 
@@ -199,16 +213,12 @@ class SealedSenderDecryptResult {
   /// The updated or new session record.
   final Uint8List sessionRecord;
 
-  /// Pre-key ID to remove (if a one-time pre-key was used).
-  final int? preKeyToRemove;
-
   const SealedSenderDecryptResult({
     required this.plaintext,
     required this.senderName,
     required this.senderDeviceId,
     required this.senderIdentityKey,
     required this.sessionRecord,
-    this.preKeyToRemove,
   });
 
   @override
@@ -217,8 +227,7 @@ class SealedSenderDecryptResult {
       senderName.hashCode ^
       senderDeviceId.hashCode ^
       senderIdentityKey.hashCode ^
-      sessionRecord.hashCode ^
-      preKeyToRemove.hashCode;
+      sessionRecord.hashCode;
 
   @override
   bool operator ==(Object other) =>
@@ -229,8 +238,7 @@ class SealedSenderDecryptResult {
           senderName == other.senderName &&
           senderDeviceId == other.senderDeviceId &&
           senderIdentityKey == other.senderIdentityKey &&
-          sessionRecord == other.sessionRecord &&
-          preKeyToRemove == other.preKeyToRemove;
+          sessionRecord == other.sessionRecord;
 }
 
 /// Result of sealed sender encryption.

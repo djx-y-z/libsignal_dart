@@ -343,6 +343,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(dynamic raw);
 
   @protected
+  FutureOr<void> Function(int, int, Uint8List)
+  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    dynamic raw,
+  );
+
+  @protected
   Object dco_decode_DartOpaque(dynamic raw);
 
   @protected
@@ -988,7 +994,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       cst_encode_u_32(raw.senderDeviceId),
       cst_encode_list_prim_u_8_strict(raw.senderIdentityKey),
       cst_encode_list_prim_u_8_strict(raw.sessionRecord),
-      cst_encode_opt_box_autoadd_u_32(raw.preKeyToRemove),
     ].jsify()!;
   }
 
@@ -1255,6 +1260,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PlatformPointer cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
     FutureOr<void> Function(int) raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) raw,
   );
 
   @protected
@@ -1658,6 +1669,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
     FutureOr<void> Function(int) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) self,
     SseSerializer serializer,
   );
 
@@ -2775,7 +2793,9 @@ class RustLibWire implements BaseWire {
     PlatformPointer save_identity,
     PlatformPointer load_signed_pre_key,
     PlatformPointer load_pre_key,
+    PlatformPointer remove_pre_key,
     PlatformPointer load_kyber_pre_key,
+    PlatformPointer mark_kyber_pre_key_used,
     PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
@@ -2792,7 +2812,9 @@ class RustLibWire implements BaseWire {
         save_identity,
         load_signed_pre_key,
         load_pre_key,
+        remove_pre_key,
         load_kyber_pre_key,
+        mark_kyber_pre_key_used,
         get_identity,
       );
 
@@ -3690,7 +3712,9 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer save_identity,
     PlatformPointer load_signed_pre_key,
     PlatformPointer load_pre_key,
+    PlatformPointer remove_pre_key,
     PlatformPointer load_kyber_pre_key,
+    PlatformPointer mark_kyber_pre_key_used,
     PlatformPointer get_identity,
   );
 

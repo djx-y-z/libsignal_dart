@@ -504,11 +504,17 @@ class DurableSignedPreKeyStore implements SignedPreKeyStore {
 /// [markKyberPreKeyUsed] is a durable write that buys nothing, because nothing
 /// ever refuses to serve the key again.
 ///
-/// This only covers keys consumed through `SessionCipher.decrypt`:
-/// `SealedSenderCipher.decrypt` never calls [markKyberPreKeyUsed], so a
-/// one-time Kyber pre-key consumed via sealed sender is still served here. See
-/// `SECURITY.md` → Known Limitations; a production store retires such keys from
-/// the application side when it publishes a new bundle.
+/// The two flavours need different handling, and this store implements both:
+///
+/// - **One-time:** retired on the first mark — [loadKyberPreKey] stops serving
+///   it, so a replayed pre-key message no longer decrypts.
+/// - **Last-resort:** kept in service, but every
+///   `(kyberPreKeyId, signedPreKeyId, baseKey)` agreement is recorded. A repeat
+///   is the replay libsignal's own trait documents, surfaced through
+///   [replayedAgreements] rather than thrown — see [markKyberPreKeyUsed].
+///
+/// Both `SessionCipher.decrypt` and `SealedSenderCipher.decrypt` mark through
+/// this store, so neither path can consume a key without it being recorded.
 class DurableKyberPreKeyStore implements KyberPreKeyStore {
   DurableKyberPreKeyStore(this._journal);
 
@@ -517,12 +523,23 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
   static const String _prefix = 'kyber_prekey/';
   static const String _usedPrefix = 'kyber_prekey_used/';
   static const String _lastResortPrefix = 'kyber_prekey_last_resort/';
+  static const String _agreementPrefix = 'kyber_prekey_agreement/';
 
   static final Uint8List _marker = Uint8List.fromList(const [1]);
+
+  /// Agreements seen twice, for the application to inspect after a decrypt.
+  ///
+  /// Kept in memory on purpose: it is a report about this run, not state the
+  /// protocol depends on. The journal holds the durable record.
+  final List<({int kyberPreKeyId, int signedPreKeyId, String baseKey})>
+  replayedAgreements = [];
 
   String _key(int id) => '$_prefix$id';
   String _usedKey(int id) => '$_usedPrefix$id';
   String _lastResortKey(int id) => '$_lastResortPrefix$id';
+
+  String _agreementKey(int kyberPreKeyId, int signedPreKeyId, String baseKey) =>
+      '$_agreementPrefix$kyberPreKeyId/$signedPreKeyId/$baseKey';
 
   @override
   Future<KyberPreKeyRecord?> loadKyberPreKey(int kyberPreKeyId) async {
@@ -560,16 +577,56 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
   Future<bool> containsKyberPreKey(int kyberPreKeyId) async =>
       _journal.get(_key(kyberPreKeyId)) != null;
 
+  /// Records that [kyberPreKeyId] was consumed in one PQXDH agreement.
+  ///
+  /// For a one-time key the durable `used` mark is the whole story: it retires
+  /// the key, and [loadKyberPreKey] enforces that. A last-resort key stays in
+  /// service, so the defence has to be narrower — the exact
+  /// `(kyberPreKeyId, signedPreKeyId, baseKey)` triple identifies one
+  /// agreement, and seeing it twice means one pre-key message was processed
+  /// twice.
+  ///
+  /// A repeat is appended to [replayedAgreements] rather than thrown: this
+  /// callback runs after libsignal produced the plaintext, so throwing cannot
+  /// prevent the decryption — and the bridge treats the callback as infallible,
+  /// so an exception panics the Rust worker instead of surfacing cleanly. The
+  /// caller checks the list and drops the message.
   @override
-  Future<void> markKyberPreKeyUsed(int kyberPreKeyId) =>
-      // Same reasoning as `removePreKey`: consumption must be durable.
-      _journal.put(_usedKey(kyberPreKeyId), _marker);
+  Future<void> markKyberPreKeyUsed(
+    int kyberPreKeyId,
+    int signedPreKeyId,
+    PublicKey baseKey,
+  ) async {
+    // Same reasoning as `removePreKey`: consumption must be durable.
+    await _journal.put(_usedKey(kyberPreKeyId), _marker);
+
+    final encodedBaseKey = base64Encode(baseKey.serialize());
+    final agreement = _agreementKey(
+      kyberPreKeyId,
+      signedPreKeyId,
+      encodedBaseKey,
+    );
+    if (_journal.get(agreement) != null) {
+      replayedAgreements.add((
+        kyberPreKeyId: kyberPreKeyId,
+        signedPreKeyId: signedPreKeyId,
+        baseKey: encodedBaseKey,
+      ));
+      return;
+    }
+    await _journal.put(agreement, _marker);
+  }
 
   @override
   Future<void> removeKyberPreKey(int kyberPreKeyId) async {
     await _journal.put(_key(kyberPreKeyId), null);
     await _journal.put(_usedKey(kyberPreKeyId), null);
     await _journal.put(_lastResortKey(kyberPreKeyId), null);
+    for (final key in _journal.keysWithPrefix(
+      '$_agreementPrefix$kyberPreKeyId/',
+    )) {
+      await _journal.put(key, null);
+    }
   }
 
   @override

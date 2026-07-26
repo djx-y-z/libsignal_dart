@@ -188,9 +188,17 @@ class PartyState {
     preKeyStorage.remove(id);
   }
 
-  void markKyberPreKeyUsed(int id) {
-    // For testing, we don't need to do anything special here
-    // In production, you might track which keys have been used
+  /// Records the full `(kyberId, signedPreKeyId, baseKey)` triple libsignal
+  /// passed, so tests can assert the bridge forwards all three.
+  final markedKyberPreKeys =
+      <({int kyberId, int signedPreKeyId, String baseKey})>[];
+
+  void markKyberPreKeyUsed(int id, int signedPreKeyId, Uint8List baseKey) {
+    markedKyberPreKeys.add((
+      kyberId: id,
+      signedPreKeyId: signedPreKeyId,
+      baseKey: base64Encode(baseKey),
+    ));
   }
 }
 
@@ -349,6 +357,14 @@ void main() {
       // Bob should have a session with Alice now
       expect(bob.sessionStorage.containsKey('alice:1'), isTrue);
       expect(bob.identityStorage.containsKey('alice:1'), isTrue);
+
+      // The raw callback receives all three of libsignal's arguments, not just
+      // the Kyber ID. Bob published kyberPreKeyId 1 and signedPreKeyId 7, so
+      // the distinct values also show the two IDs are not transposed.
+      expect(bob.markedKyberPreKeys, hasLength(1));
+      expect(bob.markedKyberPreKeys.single.kyberId, equals(1));
+      expect(bob.markedKyberPreKeys.single.signedPreKeyId, equals(7));
+      expect(bob.markedKyberPreKeys.single.baseKey, isNotEmpty);
 
       // Step 4: Bob sends a reply to Alice
       const message2 = 'Hi Alice! Nice to hear from you.';

@@ -532,9 +532,10 @@ before the operation returns its result, on all entry points:
 | `SessionBuilder.processPreKeyBundle` | `storeSession`, `saveIdentity` |
 | `SessionCipher.encrypt` | `storeSession` |
 | `SessionCipher.decrypt` (Whisper) | `storeSession`, `saveIdentity` |
-| `SessionCipher.decrypt` (pre-key) | `storeSession`, `saveIdentity`, `removePreKey`, `markKyberPreKeyUsed` |
+| `SessionCipher.decrypt` (pre-key) | `saveIdentity`, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `SealedSenderCipher.encrypt` | `storeSession` |
-| `SealedSenderCipher.decrypt` | `storeSession`, `saveIdentity`, `removePreKey` |
+| `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`, `storeSession` |
+| `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
 
 There is no fire-and-forget write anywhere in the bridge, so the *ordering* half
@@ -542,15 +543,24 @@ of the rule holds by construction. What the library cannot do for you is decide
 when your write became durable, or stop you from running two operations on one
 session at the same time.
 
-> **Known gap on the sealed-sender path.** The row above is exhaustive:
-> `markKyberPreKeyUsed` is **not** called when a pre-key message arrives through
-> `SealedSenderCipher.decrypt`, even though the one-time EC pre-key on that same
-> path *is* removed. A one-time Kyber pre-key consumed via sealed sender is
-> therefore never marked, so a store that retires marked keys (as
-> `KyberPreKeyStore.markKyberPreKeyUsed` tells it to) will keep serving that
-> one. Until this is fixed, do not treat the mark as the only thing that retires
-> a one-time Kyber pre-key — retire it from the application side when you
-> publish a new bundle. Tracked as a limitation below.
+> **Why `storeSession` is last on the pre-key rows.** The two consumption
+> writes fire only when the pre-key message actually establishes a new session —
+> that is libsignal's own rule, and the bridge reports what libsignal did rather
+> than what the message referenced. A redelivered pre-key message that matches
+> the session it already created consumes nothing the second time. That makes
+> the order load-bearing: if the session were persisted first and the process
+> died before `removePreKey`, the redelivered message would match the persisted
+> session, consume nothing, and leave a one-time pre-key usable forever.
+>
+> Writing the session last does **not** make every crash recoverable — it picks
+> the safer failure. Crash after a durable `markKyberPreKeyUsed` but before
+> `storeSession` and there is no session, while the one-time Kyber key is
+> already retired; the redelivered message then fails to decrypt at all
+> (`loadKyberPreKey` correctly refuses to serve it) and is lost. That is the
+> trade this order makes: **one message lost rather than a one-time pre-key
+> reusable forever**, consistent with "never roll state backwards" below.
+> Implementation 2 — a transaction around the whole call — removes the window
+> instead of choosing a side, which is one more reason to prefer it.
 
 **Two conforming implementations.** Pick one:
 
@@ -616,7 +626,11 @@ queue; `unawaited(...)` inside a store method; SQLite with
   your `loadKyberPreKey` then **refuses to serve a marked one-time key** —
   last-resort Kyber keys are meant to be reused and the record does not say which
   kind it is, so the store must remember that from the moment it generated the
-  key. A durable mark that nothing consults buys nothing.
+  key. A durable mark that nothing consults buys nothing. For a last-resort key,
+  which by design stays in service, the defence is instead the
+  `(kyberPreKeyId, signedPreKeyId, baseKey)` triple the callback carries: record
+  it durably, and treat a repeat as a replayed pre-key message (limitation 5
+  below covers what you can and cannot do about it).
 - On failure, **never roll state backwards**. If an operation throws after some
   writes already landed, the safe recovery is to keep the persisted state and
   drop the message — losing a message is recoverable, rewinding a ratchet is
@@ -766,7 +780,7 @@ provided in-memory store does). A store that always returns `null` from
 
 4. **Durability and rollback are delegated:** the library cannot verify that your store writes reached stable storage, cannot serialize your calls for you, and cannot detect that the store it was handed is a restored copy. `fsync` is not a full barrier on Apple platforms and IndexedDB gives no power-loss guarantee on the web. See [Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback) for the contract and the achievable mitigations.
 
-5. **Kyber pre-keys are not marked used on the sealed-sender path:** `SealedSenderCipher.decrypt` removes the one-time EC pre-key a pre-key message consumed, but never calls `markKyberPreKeyUsed` for the Kyber pre-key it consumed (`SessionCipher.decrypt` does both). A store that retires marked one-time Kyber pre-keys will therefore keep serving one that sealed sender already consumed. Retire one-time Kyber pre-keys from the application side when you publish a new bundle; closing the gap requires a new store callback and so a native-crate release.
+5. **Last-resort Kyber replay is detected after the fact, and the callback cannot fail:** `markKyberPreKeyUsed` receives the full `(kyberPreKeyId, signedPreKeyId, baseKey)` triple libsignal's own store trait receives, so a store can detect a repeated PQXDH agreement against a *last-resort* key. Upstream libsignal fails the decryption when its store rejects such a repeat; this library cannot, because the callback runs after libsignal has produced the plaintext. The callback is also not failable — throwing from it panics the Rust worker instead of surfacing a clean error. Record the repeat and let your application drop the message; do not treat the callback as a decryption barrier. One-time keys are unaffected: retiring them in `loadKyberPreKey` blocks the replay before decryption, on both entry points.
 
 ### Plaintext Handling After Decryption
 

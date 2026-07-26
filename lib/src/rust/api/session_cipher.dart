@@ -7,7 +7,7 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `message_decrypt_prekey_inner`, `message_decrypt_signal_inner`, `message_encrypt_inner`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `DecryptResult`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `PreKeyDecryptOutcome`
 
 /// Extract pre-key IDs from a serialized pre-key message.
 PreKeyMessageIds extractPrekeyMessageIds({required List<int> message}) =>
@@ -101,7 +101,17 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
 /// - `load_pre_key(id)` - Load a one-time pre-key by ID (may return None)
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load a Kyber pre-key by ID (may return None)
-/// - `mark_kyber_pre_key_used(id)` - Mark a Kyber pre-key as used
+/// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
+///   Kyber pre-key as used. The three arguments mirror libsignal's
+///   `KyberPreKeyStore::mark_kyber_pre_key_used`, so a store can implement the
+///   last-resort anti-replay check that trait documents.
+///
+/// # Write ordering
+/// The write-back callbacks run in libsignal's own order — `save_identity`,
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last. The
+/// session must land after the consumption writes: if it landed first and the
+/// process died before them, the redelivered message would match the
+/// now-persisted session, consume nothing, and leave the pre-keys usable.
 ///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
@@ -121,7 +131,7 @@ Future<Uint8List> messageDecryptPrekeyWithCallbacks({
   required FutureOr<Uint8List?> Function(int) loadPreKey,
   required FutureOr<void> Function(int) removePreKey,
   required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-  required FutureOr<void> Function(int) markKyberPreKeyUsed,
+  required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
   required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) =>
     RustLib.instance.api.crateApiSessionCipherMessageDecryptPrekeyWithCallbacks(

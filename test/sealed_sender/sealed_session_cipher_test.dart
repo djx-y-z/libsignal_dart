@@ -279,9 +279,17 @@ void main() {
             final preKey = await bobPreKeyStore.loadPreKey(id);
             return preKey?.serialize();
           },
+          removePreKey: bobPreKeyStore.removePreKey,
           loadKyberPreKey: (id) async {
             final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
             return preKey?.serialize();
+          },
+          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
+            await bobKyberPreKeyStore.markKyberPreKeyUsed(
+              id,
+              signedPreKeyId,
+              PublicKey.deserialize(bytes: baseKey),
+            );
           },
         );
 
@@ -367,9 +375,17 @@ void main() {
             final preKey = await bobPreKeyStore.loadPreKey(id);
             return preKey?.serialize();
           },
+          removePreKey: bobPreKeyStore.removePreKey,
           loadKyberPreKey: (id) async {
             final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
             return preKey?.serialize();
+          },
+          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
+            await bobKyberPreKeyStore.markKyberPreKeyUsed(
+              id,
+              signedPreKeyId,
+              PublicKey.deserialize(bytes: baseKey),
+            );
           },
         );
 
@@ -622,7 +638,6 @@ void main() {
           senderDeviceId: 1,
           senderIdentityKey: identityKey,
           sessionRecord: sessionRecord,
-          preKeyToRemove: 42,
         );
         final result2 = ss.SealedSenderDecryptResult(
           plaintext: plaintext,
@@ -630,7 +645,6 @@ void main() {
           senderDeviceId: 1,
           senderIdentityKey: identityKey,
           sessionRecord: sessionRecord,
-          preKeyToRemove: 42,
         );
 
         expect(result1, equals(result2));
@@ -643,22 +657,21 @@ void main() {
           senderDeviceId: 1,
           senderIdentityKey: identityKey,
           sessionRecord: sessionRecord,
-          preKeyToRemove: 42,
         );
         expect(result1, isNot(equals(result3)));
 
         // Test self-equality
         expect(result1, equals(result1));
 
-        // Test with null preKeyToRemove
+        // Test inequality with a different session record
         final result4 = ss.SealedSenderDecryptResult(
           plaintext: plaintext,
           senderName: 'alice',
           senderDeviceId: 1,
           senderIdentityKey: identityKey,
-          sessionRecord: sessionRecord,
+          sessionRecord: Uint8List.fromList([9, 9, 9]),
         );
-        expect(result4.preKeyToRemove, isNull);
+        expect(result1, isNot(equals(result4)));
         expect(result4.hashCode, isA<int>());
       });
 

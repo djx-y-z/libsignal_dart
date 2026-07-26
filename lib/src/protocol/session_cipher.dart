@@ -311,8 +311,12 @@ class SessionCipher {
         final record = await _kyberPreKeyStore.loadKyberPreKey(id);
         return record != null ? Uint8List.fromList(record.serialize()) : null;
       },
-      markKyberPreKeyUsed: (id) async {
-        await _kyberPreKeyStore.markKyberPreKeyUsed(id);
+      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
+        await _kyberPreKeyStore.markKyberPreKeyUsed(
+          id,
+          signedPreKeyId,
+          PublicKey.deserialize(bytes: baseKey),
+        );
       },
       // Enforces identity-trust for the new session: the Rust layer pre-seeds
       // this known identity so libsignal rejects a changed sender key with

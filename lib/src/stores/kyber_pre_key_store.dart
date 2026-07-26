@@ -1,6 +1,7 @@
 /// Kyber pre-key store interface for Signal Protocol.
 library;
 
+import '../rust/api/keys.dart';
 import '../rust/api/kyber.dart';
 
 /// Abstract interface for storing Kyber (post-quantum) pre-keys.
@@ -47,28 +48,46 @@ abstract interface class KyberPreKeyStore {
   /// Checks if a Kyber pre-key exists with the given ID.
   Future<bool> containsKyberPreKey(int kyberPreKeyId);
 
-  /// Marks a Kyber pre-key as used.
+  /// Marks the Kyber pre-key [kyberPreKeyId] as used.
   ///
-  /// For one-time Kyber pre-keys, this typically means they should
-  /// not be used again. The implementation may choose to remove
-  /// the key or just mark it as used.
+  /// Called whenever a pre-key message establishes a new session — from both
+  /// `SessionCipher.decrypt` and `SealedSenderCipher.decrypt` — and only then.
+  /// A redelivered pre-key message that matches a session you already have
+  /// consumes nothing and does not call this.
   ///
-  /// **The mark must be durable before the decrypted plaintext is acted
+  /// The arguments are the ones libsignal's own `KyberPreKeyStore` receives:
+  /// [signedPreKeyId] is the signed EC pre-key this Kyber key was used with,
+  /// and [baseKey] is the sender's ephemeral base key for this agreement.
+  /// Together they identify one PQXDH agreement, which is what makes the
+  /// last-resort check below possible.
+  ///
+  /// **What to do depends on which kind of key it is** — and the record does
+  /// not say, so your store must remember that from the moment it generated
+  /// the key (see [storeKyberPreKey]):
+  ///
+  /// - **One-time key:** retire it. The mark only protects anything if
+  ///   [loadKyberPreKey] then refuses to serve it; persisting the mark and
+  ///   still serving the key protects nothing.
+  /// - **Last-resort key:** keep serving it — it is designed to be reused —
+  ///   but record the `(kyberPreKeyId, signedPreKeyId, baseKey)` triple. Seeing
+  ///   the same triple twice means the same pre-key message was processed
+  ///   twice, which is the replay this argument list exists to let you detect.
+  ///
+  /// **The write must be durable before the decrypted plaintext is acted
   /// upon** — the library awaits this call before returning that plaintext.
   ///
-  /// The mark only protects anything if [loadKyberPreKey] actually refuses to
-  /// serve a marked **one-time** key (a last-resort key is meant to be reused,
-  /// and the record does not say which it is — your store must remember that
-  /// from the moment it generated the key). Persisting the mark and still
-  /// serving the key, or losing the write, both leave the key usable again.
-  ///
-  /// **Known gap:** this callback is invoked by `SessionCipher.decrypt` only.
-  /// `SealedSenderCipher.decrypt` consumes a Kyber pre-key without marking it
-  /// (it does remove the one-time EC pre-key), so a store that retires marked
-  /// keys will keep serving one that arrived through sealed sender. Retire
-  /// one-time Kyber pre-keys from the application side when you publish a new
-  /// bundle; see `SECURITY.md` → Known Limitations.
-  Future<void> markKyberPreKeyUsed(int kyberPreKeyId);
+  /// **Detection here is after the fact, and must not throw.** Upstream
+  /// libsignal fails the decryption when its store rejects a repeated triple.
+  /// This library cannot: the callback runs after libsignal has already
+  /// produced the plaintext. It is also not a failable callback — throwing from
+  /// it panics the Rust worker thread rather than returning a clean error.
+  /// Record the repeat and report it to your application instead, and let it
+  /// drop the message; do not treat this callback as a decryption barrier.
+  Future<void> markKyberPreKeyUsed(
+    int kyberPreKeyId,
+    int signedPreKeyId,
+    PublicKey baseKey,
+  );
 
   /// Removes a Kyber pre-key by its ID.
   Future<void> removeKyberPreKey(int kyberPreKeyId);

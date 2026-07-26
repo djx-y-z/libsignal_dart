@@ -12,6 +12,9 @@
 // everything hand-written is covered by `unsafe_code = "deny"` in Cargo.toml.
 #[allow(unsafe_code)]
 mod frb_generated;
+// Deliberately outside `api/`: these are internal store wrappers, and anything
+// under `api/` is scanned by FRB codegen.
+mod recording_stores;
 mod utils;
 
 pub mod api;

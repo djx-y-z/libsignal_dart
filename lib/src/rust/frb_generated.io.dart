@@ -341,6 +341,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(dynamic raw);
 
   @protected
+  FutureOr<void> Function(int, int, Uint8List)
+  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    dynamic raw,
+  );
+
+  @protected
   Object dco_decode_DartOpaque(dynamic raw);
 
   @protected
@@ -1022,9 +1028,6 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.session_record = cst_encode_list_prim_u_8_strict(
       apiObj.sessionRecord,
     );
-    wireObj.pre_key_to_remove = cst_encode_opt_box_autoadd_u_32(
-      apiObj.preKeyToRemove,
-    );
   }
 
   @protected
@@ -1280,6 +1283,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PlatformPointer cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
     FutureOr<void> Function(int) raw,
+  );
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) raw,
   );
 
   @protected
@@ -1683,6 +1692,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
     FutureOr<void> Function(int) self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) self,
     SseSerializer serializer,
   );
 
@@ -4565,7 +4581,9 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> save_identity,
     ffi.Pointer<ffi.Void> load_signed_pre_key,
     ffi.Pointer<ffi.Void> load_pre_key,
+    ffi.Pointer<ffi.Void> remove_pre_key,
     ffi.Pointer<ffi.Void> load_kyber_pre_key,
+    ffi.Pointer<ffi.Void> mark_kyber_pre_key_used,
     ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
@@ -4582,7 +4600,9 @@ class RustLibWire implements BaseWire {
       save_identity,
       load_signed_pre_key,
       load_pre_key,
+      remove_pre_key,
       load_kyber_pre_key,
+      mark_kyber_pre_key_used,
       get_identity,
     );
   }
@@ -4597,6 +4617,8 @@ class RustLibWire implements BaseWire {
             ffi.Uint64,
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -4621,6 +4643,8 @@ class RustLibWire implements BaseWire {
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
@@ -5503,8 +5527,6 @@ final class wire_cst_sealed_sender_decrypt_result extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sender_identity_key;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> session_record;
-
-  external ffi.Pointer<ffi.Uint32> pre_key_to_remove;
 }
 
 final class wire_cst_sealed_sender_encrypt_result extends ffi.Struct {

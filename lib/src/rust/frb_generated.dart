@@ -588,7 +588,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int) markKyberPreKeyUsed,
+    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -658,7 +658,9 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
     required FutureOr<Uint8List?> Function(int) loadPreKey,
+    required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -4790,7 +4792,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int) markKyberPreKeyUsed,
+    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -4835,9 +4837,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadKyberPreKey,
               );
-          var arg14 = cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
-            markKyberPreKeyUsed,
-          );
+          var arg14 =
+              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                markKyberPreKeyUsed,
+              );
           var arg15 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
@@ -5307,7 +5310,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(int) loadSignedPreKey,
     required FutureOr<Uint8List?> Function(int) loadPreKey,
+    required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
+    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -5345,11 +5350,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadPreKey,
               );
-          var arg12 =
+          var arg12 = cst_encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
+            removePreKey,
+          );
+          var arg13 =
               cst_encode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 loadKyberPreKey,
               );
-          var arg13 =
+          var arg14 =
+              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                markKyberPreKeyUsed,
+              );
+          var arg15 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
               );
@@ -5370,6 +5382,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg11,
                 arg12,
                 arg13,
+                arg14,
+                arg15,
               );
         },
         codec: DcoCodec(
@@ -5391,7 +5405,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           saveIdentity,
           loadSignedPreKey,
           loadPreKey,
+          removePreKey,
           loadKyberPreKey,
+          markKyberPreKeyUsed,
           getIdentity,
         ],
         apiImpl: this,
@@ -5416,7 +5432,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "saveIdentity",
           "loadSignedPreKey",
           "loadPreKey",
+          "removePreKey",
           "loadKyberPreKey",
+          "markKyberPreKeyUsed",
           "getIdentity",
         ],
       );
@@ -5956,6 +5974,43 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     };
   }
 
+  Future<void> Function(int, dynamic, dynamic, dynamic)
+  encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) raw,
+  ) {
+    return (callId, rawArg0, rawArg1, rawArg2) async {
+      final arg0 = dco_decode_u_32(rawArg0);
+      final arg1 = dco_decode_u_32(rawArg1);
+      final arg2 = dco_decode_list_prim_u_8_strict(rawArg2);
+
+      Box<void>? rawOutput;
+      Box<AnyhowException>? rawError;
+      try {
+        rawOutput = Box(await raw(arg0, arg1, arg2));
+      } catch (e, s) {
+        rawError = Box(AnyhowException("$e\n\n$s"));
+      }
+
+      final serializer = SseSerializer(generalizedFrbRustBinding);
+      assert((rawOutput != null) ^ (rawError != null));
+      if (rawOutput != null) {
+        serializer.buffer.putUint8(0);
+        sse_encode_unit(rawOutput.value, serializer);
+      } else {
+        serializer.buffer.putUint8(1);
+        sse_encode_AnyhowException(rawError!.value, serializer);
+      }
+      final output = serializer.intoRaw();
+
+      generalizedFrbRustBinding.dartFnDeliverOutput(
+        callId: callId,
+        ptr: output.ptr,
+        rustVecLen: output.rustVecLen,
+        dataLen: output.dataLen,
+      );
+    };
+  }
+
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_Aes256GcmSiv => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes256GcmSiv;
@@ -6460,6 +6515,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  FutureOr<void> Function(int, int, Uint8List)
+  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    throw UnimplementedError('');
+  }
+
+  @protected
   Object dco_decode_DartOpaque(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return decodeDartOpaque(raw, generalizedFrbRustBinding);
@@ -6733,15 +6797,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 6)
-      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return SealedSenderDecryptResult(
       plaintext: dco_decode_list_prim_u_8_strict(arr[0]),
       senderName: dco_decode_String(arr[1]),
       senderDeviceId: dco_decode_u_32(arr[2]),
       senderIdentityKey: dco_decode_list_prim_u_8_strict(arr[3]),
       sessionRecord: dco_decode_list_prim_u_8_strict(arr[4]),
-      preKeyToRemove: dco_decode_opt_box_autoadd_u_32(arr[5]),
     );
   }
 
@@ -7534,14 +7597,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_senderDeviceId = sse_decode_u_32(deserializer);
     var var_senderIdentityKey = sse_decode_list_prim_u_8_strict(deserializer);
     var var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
-    var var_preKeyToRemove = sse_decode_opt_box_autoadd_u_32(deserializer);
     return SealedSenderDecryptResult(
       plaintext: var_plaintext,
       senderName: var_senderName,
       senderDeviceId: var_senderDeviceId,
       senderIdentityKey: var_senderIdentityKey,
       sessionRecord: var_sessionRecord,
-      preKeyToRemove: var_preKeyToRemove,
     );
   }
 
@@ -8012,6 +8073,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_DartOpaque(
       encode_DartFn_Inputs_u_32_Output_unit_AnyhowException(raw),
+    );
+  }
+
+  @protected
+  PlatformPointer
+  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_DartOpaque(
+      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+        raw,
+      ),
     );
   }
 
@@ -8765,6 +8839,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void
+  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    FutureOr<void> Function(int, int, Uint8List) self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_DartOpaque(
+      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+        self,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
   void sse_encode_DartOpaque(Object self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_isize(
@@ -9121,7 +9210,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_u_32(self.senderDeviceId, serializer);
     sse_encode_list_prim_u_8_strict(self.senderIdentityKey, serializer);
     sse_encode_list_prim_u_8_strict(self.sessionRecord, serializer);
-    sse_encode_opt_box_autoadd_u_32(self.preKeyToRemove, serializer);
   }
 
   @protected

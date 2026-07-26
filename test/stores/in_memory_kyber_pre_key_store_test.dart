@@ -11,6 +11,13 @@ void main() {
     late KyberPreKeyRecord record1;
     late KyberPreKeyRecord record2;
 
+    /// Stand-in for the sender's ephemeral base key of a PQXDH agreement.
+    late PublicKey baseKey;
+    late PublicKey otherBaseKey;
+
+    /// The signed EC pre-key ID a Kyber key is marked used together with.
+    const signedPreKeyId = 7;
+
     /// Helper to create a Kyber pre-key record with valid signature
     KyberPreKeyRecord createKyberPreKey({
       required int id,
@@ -34,6 +41,8 @@ void main() {
     setUp(() {
       store = InMemoryKyberPreKeyStore();
       signingKey = PrivateKey.generate();
+      baseKey = PrivateKey.generate().getPublicKey();
+      otherBaseKey = PrivateKey.generate().getPublicKey();
 
       final timestamp = BigInt.from(
         DateTime.now().toUtc().millisecondsSinceEpoch,
@@ -130,13 +139,16 @@ void main() {
     group('markKyberPreKeyUsed()', () {
       test('marks key as used', () async {
         await store.storeKyberPreKey(1, record1);
-        await store.markKyberPreKeyUsed(1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
 
         expect(store.isKyberPreKeyUsed(1), isTrue);
       });
 
       test('marking non-existent key is safe', () async {
-        await expectLater(store.markKyberPreKeyUsed(999), completes);
+        await expectLater(
+          store.markKyberPreKeyUsed(999, signedPreKeyId, baseKey),
+          completes,
+        );
       });
 
       test('key is not used before marking', () async {
@@ -147,10 +159,44 @@ void main() {
 
       test('used status is cleared when key is removed', () async {
         await store.storeKyberPreKey(1, record1);
-        await store.markKyberPreKeyUsed(1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
         await store.removeKyberPreKey(1);
 
         expect(store.isKyberPreKeyUsed(1), isFalse);
+      });
+
+      test('records the agreement it was marked with', () async {
+        await store.storeKyberPreKey(1, record1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
+
+        expect(store.wasAgreementSeen(1, signedPreKeyId, baseKey), isTrue);
+      });
+
+      test('a different base key is a different agreement', () async {
+        await store.storeKyberPreKey(1, record1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
+
+        // Same Kyber and signed pre-key, fresh base key: a new session, not a
+        // replay. Only the exact triple repeating means the same message twice.
+        expect(
+          store.wasAgreementSeen(1, signedPreKeyId, otherBaseKey),
+          isFalse,
+        );
+      });
+
+      test('a different signed pre-key is a different agreement', () async {
+        await store.storeKyberPreKey(1, record1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
+
+        expect(store.wasAgreementSeen(1, signedPreKeyId + 1, baseKey), isFalse);
+      });
+
+      test('agreements are cleared when the key is removed', () async {
+        await store.storeKyberPreKey(1, record1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
+        await store.removeKyberPreKey(1);
+
+        expect(store.wasAgreementSeen(1, signedPreKeyId, baseKey), isFalse);
       });
     });
 
@@ -213,11 +259,12 @@ void main() {
 
       test('clears used status tracking', () async {
         await store.storeKyberPreKey(1, record1);
-        await store.markKyberPreKeyUsed(1);
+        await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey);
 
         store.clear();
 
         expect(store.isKyberPreKeyUsed(1), isFalse);
+        expect(store.wasAgreementSeen(1, signedPreKeyId, baseKey), isFalse);
       });
 
       test('clear on empty store is safe', () {

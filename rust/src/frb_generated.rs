@@ -3925,9 +3925,10 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
                 decode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     load_kyber_pre_key.cst_decode(),
                 );
-            let api_mark_kyber_pre_key_used = decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
-                mark_kyber_pre_key_used.cst_decode(),
-            );
+            let api_mark_kyber_pre_key_used =
+                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                    mark_kyber_pre_key_used.cst_decode(),
+                );
             let api_get_identity =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     get_identity.cst_decode(),
@@ -4231,7 +4232,9 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
     save_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_signed_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    remove_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     load_kyber_pre_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    mark_kyber_pre_key_used: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec, _, _, _>(
@@ -4273,9 +4276,15 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                 decode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     load_pre_key.cst_decode(),
                 );
+            let api_remove_pre_key =
+                decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(remove_pre_key.cst_decode());
             let api_load_kyber_pre_key =
                 decode_DartFn_Inputs_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                     load_kyber_pre_key.cst_decode(),
+                );
+            let api_mark_kyber_pre_key_used =
+                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                    mark_kyber_pre_key_used.cst_decode(),
                 );
             let api_get_identity =
                 decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
@@ -4298,7 +4307,9 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                                 api_save_identity,
                                 api_load_signed_pre_key,
                                 api_load_pre_key,
+                                api_remove_pre_key,
                                 api_load_kyber_pre_key,
+                                api_mark_kyber_pre_key_used,
                                 api_get_identity,
                             )
                             .await?;
@@ -4773,6 +4784,49 @@ fn decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
         flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
             dart_opaque.clone(),
             arg0,
+        ))
+    }
+}
+fn decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+    dart_opaque: flutter_rust_bridge::DartOpaque,
+) -> impl Fn(u32, u32, Vec<u8>) -> flutter_rust_bridge::DartFnFuture<()> {
+    use flutter_rust_bridge::IntoDart;
+
+    async fn body(
+        dart_opaque: flutter_rust_bridge::DartOpaque,
+        arg0: u32,
+        arg1: u32,
+        arg2: Vec<u8>,
+    ) -> () {
+        let args = vec![
+            arg0.into_into_dart().into_dart(),
+            arg1.into_into_dart().into_dart(),
+            arg2.into_into_dart().into_dart(),
+        ];
+        let message = FLUTTER_RUST_BRIDGE_HANDLER
+            .dart_fn_invoke(dart_opaque, args)
+            .await;
+
+        let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+        let action = deserializer.cursor.read_u8().unwrap();
+        let ans = match action {
+            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
+            1 => std::result::Result::Err(
+                <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
+            ),
+            _ => unreachable!(),
+        };
+        deserializer.end();
+        let ans = ans.expect("Dart throws exception but Rust side assume it is not failable");
+        ans
+    }
+
+    move |arg0: u32, arg1: u32, arg2: Vec<u8>| {
+        flutter_rust_bridge::for_generated::convert_into_dart_fn_future(body(
+            dart_opaque.clone(),
+            arg0,
+            arg1,
+            arg2,
         ))
     }
 }
@@ -5292,14 +5346,12 @@ impl SseDecode for crate::api::sealed_sender::SealedSenderDecryptResult {
         let mut var_senderDeviceId = <u32>::sse_decode(deserializer);
         let mut var_senderIdentityKey = <Vec<u8>>::sse_decode(deserializer);
         let mut var_sessionRecord = <Vec<u8>>::sse_decode(deserializer);
-        let mut var_preKeyToRemove = <Option<u32>>::sse_decode(deserializer);
         return crate::api::sealed_sender::SealedSenderDecryptResult {
             plaintext: var_plaintext,
             sender_name: var_senderName,
             sender_device_id: var_senderDeviceId,
             sender_identity_key: var_senderIdentityKey,
             session_record: var_sessionRecord,
-            pre_key_to_remove: var_preKeyToRemove,
         };
     }
 }
@@ -5741,7 +5793,6 @@ impl flutter_rust_bridge::IntoDart for crate::api::sealed_sender::SealedSenderDe
             self.sender_device_id.into_into_dart().into_dart(),
             self.sender_identity_key.into_into_dart().into_dart(),
             self.session_record.into_into_dart().into_dart(),
-            self.pre_key_to_remove.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -6198,7 +6249,6 @@ impl SseEncode for crate::api::sealed_sender::SealedSenderDecryptResult {
         <u32>::sse_encode(self.sender_device_id, serializer);
         <Vec<u8>>::sse_encode(self.sender_identity_key, serializer);
         <Vec<u8>>::sse_encode(self.session_record, serializer);
-        <Option<u32>>::sse_encode(self.pre_key_to_remove, serializer);
     }
 }
 
@@ -6780,7 +6830,6 @@ mod io {
                 sender_device_id: self.sender_device_id.cst_decode(),
                 sender_identity_key: self.sender_identity_key.cst_decode(),
                 session_record: self.session_record.cst_decode(),
-                pre_key_to_remove: self.pre_key_to_remove.cst_decode(),
             }
         }
     }
@@ -6869,7 +6918,6 @@ mod io {
                 sender_device_id: Default::default(),
                 sender_identity_key: core::ptr::null_mut(),
                 session_record: core::ptr::null_mut(),
-                pre_key_to_remove: core::ptr::null_mut(),
             }
         }
     }
@@ -8032,7 +8080,9 @@ mod io {
         save_identity: *const std::ffi::c_void,
         load_signed_pre_key: *const std::ffi::c_void,
         load_pre_key: *const std::ffi::c_void,
+        remove_pre_key: *const std::ffi::c_void,
         load_kyber_pre_key: *const std::ffi::c_void,
+        mark_kyber_pre_key_used: *const std::ffi::c_void,
         get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
@@ -8049,7 +8099,9 @@ mod io {
             save_identity,
             load_signed_pre_key,
             load_pre_key,
+            remove_pre_key,
             load_kyber_pre_key,
+            mark_kyber_pre_key_used,
             get_identity,
         )
     }
@@ -8488,7 +8540,6 @@ mod io {
         sender_device_id: u32,
         sender_identity_key: *mut wire_cst_list_prim_u_8_strict,
         session_record: *mut wire_cst_list_prim_u_8_strict,
-        pre_key_to_remove: *mut u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
@@ -8675,8 +8726,8 @@ mod web {
                 .unwrap();
             assert_eq!(
                 self_.length(),
-                6,
-                "Expected 6 elements, got {}",
+                5,
+                "Expected 5 elements, got {}",
                 self_.length()
             );
             crate::api::sealed_sender::SealedSenderDecryptResult {
@@ -8685,7 +8736,6 @@ mod web {
                 sender_device_id: self_.get(2).cst_decode(),
                 sender_identity_key: self_.get(3).cst_decode(),
                 session_record: self_.get(4).cst_decode(),
-                pre_key_to_remove: self_.get(5).cst_decode(),
             }
         }
     }
@@ -10381,7 +10431,9 @@ mod web {
         save_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_signed_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        remove_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         load_kyber_pre_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        mark_kyber_pre_key_used: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
@@ -10398,7 +10450,9 @@ mod web {
             save_identity,
             load_signed_pre_key,
             load_pre_key,
+            remove_pre_key,
             load_kyber_pre_key,
+            mark_kyber_pre_key_used,
             get_identity,
         )
     }

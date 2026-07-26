@@ -3,15 +3,15 @@
 //! This module provides message encryption and decryption functions using
 //! DartFn callbacks for store operations.
 
+use crate::recording_stores::{KyberPreKeyUsed, RecordingKyberPreKeyStore, RecordingPreKeyStore};
 use flutter_rust_bridge::DartFnFuture;
 use futures::executor::block_on;
 use libsignal_protocol::{
     CiphertextMessageType, GenericSignedPreKey, IdentityKeyPair, InMemIdentityKeyStore,
-    InMemKyberPreKeyStore, InMemPreKeyStore, InMemSessionStore, InMemSignedPreKeyStore,
-    KyberPreKeyId, KyberPreKeyRecord, KyberPreKeyStore, PreKeyId, PreKeyRecord,
-    PreKeySignalMessage, PreKeyStore, ProtocolAddress, SessionRecord as NativeSessionRecord,
-    SessionStore, SignalMessage, SignalProtocolError, SignedPreKeyId, SignedPreKeyRecord,
-    SignedPreKeyStore,
+    InMemSessionStore, InMemSignedPreKeyStore, KyberPreKeyId, KyberPreKeyRecord, KyberPreKeyStore,
+    PreKeyId, PreKeyRecord, PreKeySignalMessage, PreKeyStore, ProtocolAddress,
+    SessionRecord as NativeSessionRecord, SessionStore, SignalMessage, SignalProtocolError,
+    SignedPreKeyId, SignedPreKeyRecord, SignedPreKeyStore,
 };
 use rand::{rngs::OsRng, TryRngCore as _};
 use zeroize::Zeroize;
@@ -24,14 +24,18 @@ pub struct EncryptResult {
     pub ciphertext: Vec<u8>,
 }
 
-/// Result of decrypting a message.
-pub struct DecryptResult {
-    /// The decrypted plaintext.
-    pub plaintext: Vec<u8>,
-    /// Pre-key ID to remove (if a one-time pre-key was used).
-    pub pre_key_to_remove: Option<u32>,
-    /// Kyber pre-key ID to mark as used (if applicable).
-    pub kyber_pre_key_to_mark_used: Option<u32>,
+/// Everything a pre-key decryption produced, for the async wrapper to write back.
+///
+/// The two consumption fields are what libsignal *actually* did, as observed by
+/// [`RecordingPreKeyStore`] / [`RecordingKyberPreKeyStore`] — not what the
+/// message happened to reference. A redelivered pre-key message that matches an
+/// already-established session consumes nothing, and this reports nothing.
+struct PreKeyDecryptOutcome {
+    plaintext: Vec<u8>,
+    updated_session: Vec<u8>,
+    remote_identity_key: Vec<u8>,
+    pre_key_to_remove: Option<u32>,
+    kyber_pre_key_used: Option<KyberPreKeyUsed>,
 }
 
 /// Pre-key IDs extracted from a pre-key message.
@@ -381,7 +385,17 @@ fn message_decrypt_signal_inner(
 /// - `load_pre_key(id)` - Load a one-time pre-key by ID (may return None)
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load a Kyber pre-key by ID (may return None)
-/// - `mark_kyber_pre_key_used(id)` - Mark a Kyber pre-key as used
+/// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
+///   Kyber pre-key as used. The three arguments mirror libsignal's
+///   `KyberPreKeyStore::mark_kyber_pre_key_used`, so a store can implement the
+///   last-resort anti-replay check that trait documents.
+///
+/// # Write ordering
+/// The write-back callbacks run in libsignal's own order — `save_identity`,
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last. The
+/// session must land after the consumption writes: if it landed first and the
+/// process died before them, the redelivered message would match the
+/// now-persisted session, consume nothing, and leave the pre-keys usable.
 ///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
@@ -405,7 +419,7 @@ pub async fn message_decrypt_prekey_with_callbacks(
     load_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     remove_pre_key: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-    mark_kyber_pre_key_used: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
+    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, String> {
     // Extract pre-key IDs from the message first
@@ -461,29 +475,39 @@ pub async fn message_decrypt_prekey_with_callbacks(
     // SECURITY: Zeroize sensitive data
     identity_key_pair_bytes.zeroize();
 
-    let (plaintext, updated_session, remote_identity_key, decrypt_result) = result?;
+    let outcome = result?;
 
-    // Step 3: Store results and cleanup via callbacks
-    store_session(remote_name.clone(), remote_device_id, updated_session).await;
-    save_identity(remote_name, remote_device_id, remote_identity_key).await;
+    // Step 3: Store results and cleanup via callbacks, in libsignal's order.
+    // `store_session` goes last on purpose — see "Write ordering" above.
+    save_identity(
+        remote_name.clone(),
+        remote_device_id,
+        outcome.remote_identity_key,
+    )
+    .await;
 
-    // Remove used one-time pre-key
-    if let Some(pk_id) = decrypt_result.pre_key_to_remove {
+    // Mark the Kyber pre-key libsignal consumed, with the full argument triple.
+    if let Some(used) = outcome.kyber_pre_key_used {
+        mark_kyber_pre_key_used(
+            used.kyber_pre_key_id,
+            used.signed_pre_key_id,
+            used.base_key,
+        )
+        .await;
+    }
+
+    // Remove the one-time pre-key libsignal consumed.
+    if let Some(pk_id) = outcome.pre_key_to_remove {
         remove_pre_key(pk_id).await;
     }
 
-    // Mark Kyber pre-key as used
-    if let Some(kpk_id) = decrypt_result.kyber_pre_key_to_mark_used {
-        mark_kyber_pre_key_used(kpk_id).await;
-    }
+    store_session(remote_name, remote_device_id, outcome.updated_session).await;
 
-    Ok(plaintext)
+    Ok(outcome.plaintext)
 }
 
-// too_many_arguments: mirrors the store-callback surface above. type_complexity:
-// the returned tuple bundles the serialized outputs handed back to the async
-// wrapper (plaintext + updated session + identity + decrypt result).
-#[allow(clippy::too_many_arguments, clippy::type_complexity)]
+// too_many_arguments: mirrors the store-callback surface above.
+#[allow(clippy::too_many_arguments)]
 fn message_decrypt_prekey_inner(
     remote_name: &str,
     remote_device_id: u32,
@@ -500,7 +524,7 @@ fn message_decrypt_prekey_inner(
     kyber_pre_key_id: Option<u32>,
     kyber_pre_key_bytes: &Option<Vec<u8>>,
     known_remote_identity: &Option<Vec<u8>>,
-) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>, DecryptResult), String> {
+) -> Result<PreKeyDecryptOutcome, String> {
     // Parse the message
     let message = PreKeySignalMessage::try_from(ciphertext).map_err(|e| e.to_string())?;
 
@@ -531,9 +555,11 @@ fn message_decrypt_prekey_inner(
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
-    let mut prekey_store = InMemPreKeyStore::new();
     let mut signed_prekey_store = InMemSignedPreKeyStore::new();
-    let mut kyber_prekey_store = InMemKyberPreKeyStore::new();
+    // Recording variants: they report what libsignal consumed rather than what
+    // the message referenced. See `crate::recording_stores`.
+    let mut prekey_store = RecordingPreKeyStore::new();
+    let mut kyber_prekey_store = RecordingKyberPreKeyStore::new();
 
     // SECURITY: enforce identity-trust for the new session (see preseed_identity).
     super::preseed_identity(&mut identity_store, &remote_address, known_remote_identity)?;
@@ -571,10 +597,6 @@ fn message_decrypt_prekey_inner(
         .map_err(|e: SignalProtocolError| e.to_string())?;
     }
 
-    // Get the pre-key ID from the message for tracking
-    let msg_pre_key_id = message.pre_key_id();
-    let msg_kyber_pre_key_id = message.kyber_pre_key_id();
-
     // Decrypt using the library's function
     let plaintext = block_on(async {
         libsignal_protocol::message_decrypt_prekey(
@@ -605,17 +627,12 @@ fn message_decrypt_prekey_inner(
         .serialize()
         .map_err(|e: libsignal_protocol::error::SignalProtocolError| e.to_string())?;
 
-    // Build result
-    let decrypt_result = DecryptResult {
-        plaintext: plaintext.clone(),
-        pre_key_to_remove: msg_pre_key_id.map(|id| id.into()),
-        kyber_pre_key_to_mark_used: msg_kyber_pre_key_id.map(|id| id.into()),
-    };
-
-    Ok((
+    Ok(PreKeyDecryptOutcome {
         plaintext,
-        updated_session_bytes,
-        their_identity_key,
-        decrypt_result,
-    ))
+        updated_session: updated_session_bytes,
+        remote_identity_key: their_identity_key,
+        // What libsignal actually consumed, straight from the stores it used.
+        pre_key_to_remove: prekey_store.take_removed(),
+        kyber_pre_key_used: kyber_prekey_store.take_used(),
+    })
 }

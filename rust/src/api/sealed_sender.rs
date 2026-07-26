@@ -8,11 +8,12 @@
 //!
 //! All sensitive cryptographic data is explicitly zeroed after use via the `zeroize` crate.
 
+use crate::recording_stores::{KyberPreKeyUsed, RecordingKyberPreKeyStore, RecordingPreKeyStore};
 use flutter_rust_bridge::DartFnFuture;
 use futures::executor::block_on;
 use libsignal_protocol::{
-    IdentityKeyPair, InMemIdentityKeyStore, InMemSessionStore, InMemPreKeyStore,
-    InMemSignedPreKeyStore, InMemKyberPreKeyStore, ProtocolAddress, PublicKey,
+    IdentityKeyPair, InMemIdentityKeyStore, InMemSessionStore,
+    InMemSignedPreKeyStore, ProtocolAddress, PublicKey,
     SenderCertificate, SessionStore as SessionStoreTrait,
     PreKeyStore, SignedPreKeyStore, KyberPreKeyStore,
     PreKeyId, SignedPreKeyId, KyberPreKeyId,
@@ -311,8 +312,20 @@ pub struct SealedSenderDecryptResult {
     pub sender_identity_key: Vec<u8>,
     /// The updated or new session record.
     pub session_record: Vec<u8>,
-    /// Pre-key ID to remove (if a one-time pre-key was used).
-    pub pre_key_to_remove: Option<u32>,
+}
+
+/// Everything the inner decryption produced, for the wrapper to write back.
+///
+/// The two consumption fields report what libsignal *actually* did, as observed
+/// by the recording stores — see [`crate::recording_stores`].
+struct SealedSenderDecryptOutcome {
+    plaintext: Vec<u8>,
+    sender_name: String,
+    sender_device_id: u32,
+    sender_identity_key: Vec<u8>,
+    session_record: Vec<u8>,
+    pre_key_to_remove: Option<u32>,
+    kyber_pre_key_used: Option<KyberPreKeyUsed>,
 }
 
 /// Decrypt a Sealed Sender message.
@@ -330,7 +343,16 @@ pub struct SealedSenderDecryptResult {
 /// PreKeyStores:
 /// - `load_signed_pre_key(id)` - Load signed pre-key
 /// - `load_pre_key(id)` - Load one-time pre-key
+/// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load Kyber pre-key
+/// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
+///   Kyber pre-key as used. Same three arguments as on the `SessionCipher`
+///   path, mirroring libsignal's `KyberPreKeyStore::mark_kyber_pre_key_used`.
+///
+/// # Write ordering
+/// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, so a
+/// crash cannot persist the session while leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -355,7 +377,9 @@ pub async fn sealed_sender_decrypt_with_callbacks(
     // PreKeyStore callbacks
     load_signed_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     load_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
+    remove_pre_key: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
+    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<SealedSenderDecryptResult, String> {
     // Step 1: Load identity data
@@ -381,19 +405,43 @@ pub async fn sealed_sender_decrypt_with_callbacks(
     // SECURITY: Zeroize identity key bytes
     identity_key_pair_bytes.zeroize();
 
-    let (plaintext, sender_name, sender_device_id, sender_identity_key, session_bytes, pre_key_to_remove) = result?;
+    let outcome = result?;
 
-    // Step 3: Store results
-    store_session(sender_name.clone(), sender_device_id, session_bytes.clone()).await;
-    save_identity(sender_name.clone(), sender_device_id, sender_identity_key.clone()).await;
+    // Step 3: Store results, in libsignal's order — `store_session` last, so a
+    // crash cannot leave a persisted session next to unconsumed pre-keys.
+    save_identity(
+        outcome.sender_name.clone(),
+        outcome.sender_device_id,
+        outcome.sender_identity_key.clone(),
+    )
+    .await;
+
+    if let Some(used) = outcome.kyber_pre_key_used {
+        mark_kyber_pre_key_used(
+            used.kyber_pre_key_id,
+            used.signed_pre_key_id,
+            used.base_key,
+        )
+        .await;
+    }
+
+    if let Some(pk_id) = outcome.pre_key_to_remove {
+        remove_pre_key(pk_id).await;
+    }
+
+    store_session(
+        outcome.sender_name.clone(),
+        outcome.sender_device_id,
+        outcome.session_record.clone(),
+    )
+    .await;
 
     Ok(SealedSenderDecryptResult {
-        plaintext,
-        sender_name,
-        sender_device_id,
-        sender_identity_key,
-        session_record: session_bytes,
-        pre_key_to_remove,
+        plaintext: outcome.plaintext,
+        sender_name: outcome.sender_name,
+        sender_device_id: outcome.sender_device_id,
+        sender_identity_key: outcome.sender_identity_key,
+        session_record: outcome.session_record,
     })
 }
 
@@ -417,7 +465,7 @@ async fn sealed_sender_decrypt_inner<
     load_pre_key: &LoadPreKeyFn,
     load_kyber_pre_key: &LoadKyberPreKeyFn,
     get_identity: &GetIdentityFn,
-) -> Result<(Vec<u8>, String, u32, Vec<u8>, Vec<u8>, Option<u32>), String>
+) -> Result<SealedSenderDecryptOutcome, String>
 where
     LoadSessionFn: Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
     LoadSignedPreKeyFn: Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync,
@@ -436,9 +484,11 @@ where
     // Create in-memory stores
     let mut session_store = InMemSessionStore::new();
     let mut identity_store = InMemIdentityKeyStore::new(our_identity, local_registration_id);
-    let mut prekey_store = InMemPreKeyStore::new();
     let mut signed_prekey_store = InMemSignedPreKeyStore::new();
-    let mut kyber_prekey_store = InMemKyberPreKeyStore::new();
+    // Recording variants: they report what libsignal consumed rather than what
+    // the message referenced. See `crate::recording_stores`.
+    let mut prekey_store = RecordingPreKeyStore::new();
+    let mut kyber_prekey_store = RecordingKyberPreKeyStore::new();
 
     // Use sealed_sender_decrypt_to_usmc to get the message content info
     let usmc = block_on(async {
@@ -492,8 +542,6 @@ where
         local_device_id.try_into().map_err(|_| "Invalid local device ID")?,
     );
 
-    let mut pre_key_to_remove: Option<u32> = None;
-
     let plaintext = if msg_type == CiphertextMessageType::PreKey {
         // Parse as pre-key message to get key IDs
         let prekey_message = libsignal_protocol::PreKeySignalMessage::try_from(message_bytes)
@@ -523,7 +571,6 @@ where
                 prekey_store.save_pre_key(PreKeyId::from(id), &prekey_record).await
             }).map_err(|e| e.to_string())?;
             bytes.zeroize();
-            pre_key_to_remove = Some(id);
         }
 
         if let Some(id) = kyber_pre_key_id
@@ -578,5 +625,15 @@ where
 
     let session_bytes = updated_session.serialize().map_err(|e| e.to_string())?;
 
-    Ok((plaintext, sender_name, sender_device_id, sender_identity_key, session_bytes, pre_key_to_remove))
+    Ok(SealedSenderDecryptOutcome {
+        plaintext,
+        sender_name,
+        sender_device_id,
+        sender_identity_key,
+        session_record: session_bytes,
+        // What libsignal actually consumed, straight from the stores it used.
+        // The Whisper branch touches neither, so both stay `None` there.
+        pre_key_to_remove: prekey_store.take_removed(),
+        kyber_pre_key_used: kyber_prekey_store.take_used(),
+    })
 }

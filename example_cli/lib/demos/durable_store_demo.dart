@@ -264,6 +264,110 @@ Future<void> runDurableStoreDemo() async {
     ]);
     print('');
 
+    // 10. What a *last-resort* Kyber key can still catch. The one-time key from
+    //     step 2 is retired once used, so a replay of that message simply fails
+    //     to decrypt. A last-resort key is designed to be reused and therefore
+    //     cannot be retired — its only defence is the (kyberPreKeyId,
+    //     signedPreKeyId, baseKey) triple `markKyberPreKeyUsed` now carries.
+    //     Seeing that triple twice means one pre-key message was processed
+    //     twice, which is exactly what the missing rollback protection above
+    //     makes possible.
+    const lastResortKyberId = 2;
+    const davePreKeyId = 43;
+    final daveAddress = ProtocolAddress(name: 'dave', deviceId: 1);
+    final dave = await DurableFileStores.open('${root.path}/dave');
+
+    final davePreKeyPrivate = PrivateKey.generate();
+    final davePreKeyPublic = davePreKeyPrivate.getPublicKey();
+    await bob.preKey.storePreKey(
+      davePreKeyId,
+      PreKeyRecord(
+        id: davePreKeyId,
+        publicKey: davePreKeyPublic,
+        privateKey: davePreKeyPrivate,
+      ),
+    );
+
+    final lastResortKeyPair = KyberKeyPair.generate();
+    final lastResortPublic = lastResortKeyPair.getPublicKey();
+    final lastResortSignature = bobPrivate.sign(
+      message: lastResortPublic.serialize().toList(),
+    );
+    // The flag lives here, not in the record: libsignal does not carry it, so
+    // the store that generated the key is the only place that knows.
+    await bob.kyberPreKey.storeKyberPreKey(
+      lastResortKyberId,
+      KyberPreKeyRecord.create(
+        id: lastResortKyberId,
+        keyPair: lastResortKeyPair,
+        signature: lastResortSignature.toList(),
+        timestamp: timestamp,
+      ),
+      lastResort: true,
+    );
+
+    await dave.locks.synchronized(
+      AddressLocks.forAddress(bobAddress),
+      () =>
+          SessionBuilder(
+            localAddress: daveAddress,
+            sessionStore: dave.session,
+            identityKeyStore: dave.identity,
+          ).processPreKeyBundle(
+            bobAddress,
+            PreKeyBundle(
+              registrationId: bobRegistrationId,
+              deviceId: bobAddress.deviceId(),
+              preKeyId: davePreKeyId,
+              preKeyPublic: davePreKeyPublic.serialize(),
+              signedPreKeyId: signedPreKeyId,
+              signedPreKeyPublic: signedPreKeyPublic.serialize().toList(),
+              signedPreKeySignature: signedPreKeySignature.toList(),
+              identityKey: bobIdentity.publicKey.toList(),
+              kyberPreKeyId: lastResortKyberId,
+              kyberPreKeyPublic: lastResortPublic.serialize().toList(),
+              kyberPreKeySignature: lastResortSignature.toList(),
+            ),
+          ),
+    );
+
+    const message5 = 'Hello Bob, this one used your last-resort Kyber key.';
+    final encrypted5 = await send(dave, daveAddress, bobAddress, message5);
+    final decrypted5 = await receive(bob, bobAddress, daveAddress, encrypted5);
+    final marksAfterFirst = bob.kyberPreKey.replayedAgreements.length;
+
+    // Simulate the rollback this example does not protect against: Bob's state
+    // is restored from a backup taken before the message arrived.
+    await bob.session.deleteSession(daveAddress);
+    await bob.preKey.storePreKey(
+      davePreKeyId,
+      PreKeyRecord(
+        id: davePreKeyId,
+        publicKey: davePreKeyPublic,
+        privateKey: davePreKeyPrivate,
+      ),
+    );
+
+    // The very same ciphertext now establishes a session all over again — the
+    // last-resort key is still served, as intended.
+    final replayed = await receive(bob, bobAddress, daveAddress, encrypted5);
+
+    printStep(10, 'Rollback + replay against a last-resort Kyber key', [
+      'Dave → Bob decrypted: "$decrypted5"',
+      'Match: ${decrypted5 == message5}',
+      'Last-resort key still served after use: '
+          '${await bob.kyberPreKey.loadKyberPreKey(lastResortKyberId) != null}',
+      'Replays detected before the rollback: $marksAfterFirst',
+      'Same message decrypted again after the rollback: '
+          '${replayed == message5}',
+      'Replays detected now: ${bob.kyberPreKey.replayedAgreements.length} '
+          '(the identical PQXDH agreement was marked twice)',
+      'Nothing in the library rejected it — the store reports the repeat and',
+      'the application decides to drop the message.',
+    ]);
+    print('');
+
+    await dave.close();
     await alice.close();
     await bob.close();
 
