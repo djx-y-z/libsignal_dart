@@ -47,7 +47,7 @@ jobs:
           - crypto_primitives
           - session_decrypt
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # libsignal's spqr dependency needs protoc to build.
       - name: Setup Protoc
@@ -116,7 +116,7 @@ jobs:
       # fails; capture it so the exact input can be replayed.
       - name: Upload crash artifacts
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: fuzz-artifacts-${{ matrix.target }}
           path: rust/fuzz/artifacts/${{ matrix.target }}/
