@@ -419,60 +419,6 @@ Note that cargo-about resolves build-dependencies for the host exactly as a
 per-target `cargo tree` does, so it validates the *contents*, not the
 reproducibility.
 
-## Releasing (two stages)
-
-Releasing happens in **two independent stages**, each with its own command and
-git tag. The `libsignal_frb` native crate and the `libsignal` Dart package are
-versioned and released separately.
-
-1. **Native crate (stage 1)** — from a clean, up-to-date `main`:
-   ```bash
-   make release-frb ARGS="--version X.Y.Z"
-   ```
-   Bumps `rust/Cargo.toml`, stamps the CHANGELOG `libsignal_frb` highlight, and
-   creates a **signed** commit + tag `libsignal_frb-X.Y.Z`, then pushes. The tag
-   triggers `build-libsignal.yml`, which builds and publishes the native
-   binaries. The commit/tag/push inherit your terminal, so you enter your signing
-   passphrase interactively during the command.
-
-2. **Dart package (stage 2)** — after the native build succeeds:
-   ```bash
-   make release ARGS="--version X.Y.Z"
-   ```
-   Verifies the stage-1 native release `libsignal_frb-<crate>` exists, bumps
-   `pubspec.yaml`, finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + a fresh
-   `[Unreleased]` + the bottom compare links), validates with a publish dry-run,
-   then creates a **signed** commit + tag `vX.Y.Z` and pushes. `publish.yml`
-   publishes to pub.dev. Same interactive signing flow as stage 1.
-
-**Order matters:** stage 1 must finish first — the published package's build hook
-downloads the precompiled `libsignal_frb-<crate>` binary, so it must already
-exist before you tag the pub.dev release.
-
-> Automated libsignal update PRs **do not** bump the `libsignal_frb` crate or
-> build binaries — dependency updates accumulate on `main` (tested from source in
-> CI), and you cut a native release deliberately with `make release-frb`. See
-> `CLAUDE.md` → Release Flow for the full picture.
-
-### Repository rulesets & branch/tag protection
-
-This repository is guarded by GitHub **repository rulesets** and a
-required-reviewer **environment**, so that the crypto library's releases can't be
-published without the right people and review:
-
-- **Signed commits** are required on all branches — configure commit signing
-  (SSH or GPG) before you push.
-- **`main`** is protected (changes land via PR; force-push and deletion blocked).
-- **Tags** — all tags can only be created by Admins/Maintainers and must be
-  signed; the release-triggering `libsignal_frb-*` / `v*` are the critical subset
-  (they start native/pub.dev publishing).
-- The **native-build publish** waits on a required reviewer (the `native-build`
-  environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
-
-The maintainer runbook — what each ruleset does, the exact `gh` commands to
-apply / verify / roll them back, and how to configure the `native-build`
-environment — is in [`.github/rulesets/README.md`](.github/rulesets/README.md).
-
 ### Setting up Coverage Badge
 
 The CI automatically measures test coverage and can update a badge in your README. To enable this:
