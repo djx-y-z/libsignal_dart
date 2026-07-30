@@ -9,6 +9,7 @@
 - **Store durability, write ordering and rollback are a documented contract** — every store interface and cipher, plus a new `SECURITY.md` section, now state what your implementation has to guarantee. This corrects rather than extends the previous advice: a lock *inside* the store leaves `load → ratchet → store` unprotected, so two concurrent `encrypt` calls for one address derive the same message key
 - **`THIRD_PARTY_NOTICES.txt` ships with the package** — the prebuilt native library is statically linked against its Rust dependency tree, and those licences require the notices to travel with a binary, including an application that embeds it. Signal's own AGPL-3.0-only crates are named there alongside the permissive majority
 - **libsignal v0.99.1** — unchanged this release
+- **libsignal_frb v6.0.0** — Rust FFI bindings
 
 #### Changed (Breaking)
 
