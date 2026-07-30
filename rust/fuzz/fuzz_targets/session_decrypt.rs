@@ -146,7 +146,7 @@ fuzz_target!(|input: SessionInput| {
             let bytes = kyber_prekey.clone();
             Box::pin(async move { Some(bytes) })
         },
-        |_id| Box::pin(async {}),
+        |_id, _signed_id, _base_key| Box::pin(async {}),
         move |_name, _dev| {
             let known = known_identity.clone();
             Box::pin(async move { known })
