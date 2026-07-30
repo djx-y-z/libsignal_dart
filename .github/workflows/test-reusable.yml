@@ -99,6 +99,12 @@ jobs:
         with:
           toolchain: ${{ steps.msrv.outputs.version }}
 
+      # `make rust-check` compiles build scripts, and a prost-based one shells
+      # out to protoc — without it the job fails on tooling rather than on the
+      # MSRV it exists to check.
+      - name: Setup Protoc
+        uses: ./.github/actions/setup-protoc
+
       - name: Type-check on the declared MSRV
         run: make rust-check
 
