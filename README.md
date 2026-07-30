@@ -544,6 +544,48 @@ channel without those restrictive terms and conditions. See
 
 The bundled libsignal library is also licensed under AGPL-3.0 - see [LICENSE.libsignal](LICENSE.libsignal) for the Signal license. **Note:** the app store permission above covers only the code in this repository; it does not extend to Signal's `libsignal` contained in the precompiled binaries (an equivalent upstream permission is tracked in [signalapp/libsignal#684](https://github.com/signalapp/libsignal/issues/684)).
 
+### Third-party notices
+
+The prebuilt native library is statically linked against its Rust dependency
+tree: Signal's own crates under AGPL-3.0 (see the note above and
+[LICENSE.libsignal](LICENSE.libsignal)), everything else under MIT,
+Apache-2.0, BSD, ISC and similar. Those licenses require their notices to
+travel with any binary distribution — including an application that embeds the
+library — and Flutter's `LicenseRegistry` does not cover them, because it
+aggregates `LICENSE` files of pub packages and Rust crates are not pub
+packages.
+
+[`THIRD_PARTY_NOTICES.txt`](THIRD_PARTY_NOTICES.txt) ships at the root of this
+package and inside every native release archive. It is generated from the
+resolved dependency graph across all released targets — build edges included,
+because that is how vendored native code reaches the binary: a `*-src` crate
+carrying C sources is a build-dependency of its `*-sys` wrapper — and CI
+verifies it stays in sync with `Cargo.lock`. Where a crate ships no licence
+file of its own, the canonical text of the licence it declares is supplied in
+its place, so the file delivers the licences and not just their names.
+
+Regenerate it with `make third-party-notices` after a dependency change;
+`make rust-update` already does that for you.
+
+The file is deliberately **not** declared under `flutter: assets:` — a
+package-declared asset is bundled into every consuming application whether or
+not it is used, and most applications never display these notices. To surface
+them at runtime, copy the file into your own assets and register it:
+
+```yaml
+# your app's pubspec.yaml
+flutter:
+  assets:
+    - assets/THIRD_PARTY_NOTICES.txt
+```
+
+```dart
+LicenseRegistry.addLicense(() async* {
+  final text = await rootBundle.loadString('assets/THIRD_PARTY_NOTICES.txt');
+  yield LicenseEntryWithLineBreaks(const ['libsignal'], text);
+});
+```
+
 ## Related Projects
 
 - [libsignal](https://github.com/signalapp/libsignal) - The underlying Rust library

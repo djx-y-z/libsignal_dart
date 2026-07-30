@@ -54,11 +54,31 @@ jobs:
           ARGS="--ci-output $GITHUB_OUTPUT"
 
           if [ -n "$TARGET_VERSION" ]; then
+            # Manual input is interpolated into ARGS and reaches a shell before
+            # the Dart checker can validate it. The template's own tags are
+            # plain semver, optionally v-prefixed.
+            if [[ ! "$TARGET_VERSION" =~ ^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+              echo "::error::target_version must use the vX.Y.Z or X.Y.Z form."
+              exit 2
+            fi
             ARGS="$ARGS --version $TARGET_VERSION"
           fi
 
           echo "Running: make check-template-updates ARGS=\"$ARGS\""
+          # `|| true` is unavoidable, and the exit code is unusable as a signal:
+          # the checker exits 1 for "update available", and GNU make collapses any
+          # non-zero recipe status into its own exit 2 (verified: a recipe exiting
+          # 1 makes `make` exit 2), so 2 cannot be told apart from a crash.
           make check-template-updates ARGS="$ARGS" || true
+
+          # What can tell them apart is the outputs file: the checker writes it
+          # before signalling, and not at all when it throws. Without this gate a
+          # broken checker looks exactly like "already up to date" and the workflow
+          # stays green forever while silently never opening another notification.
+          if ! grep -q '^needs_update=' "$GITHUB_OUTPUT"; then
+            echo "::error::Template update checker wrote no result — it failed before reporting. Check the step log above; do NOT read this as 'up to date'."
+            exit 1
+          fi
 
           echo "Check completed. Outputs:"
           cat $GITHUB_OUTPUT || true

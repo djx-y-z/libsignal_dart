@@ -306,12 +306,15 @@ All development tasks should be done via Makefile:
 | `make analyze` | Run static analysis |
 | `make rust-audit` | Check Rust dependencies for vulnerabilities |
 | `make rust-check` | Quick Rust type check (updates Cargo.lock) |
+| `make rust-test` | Run the crate's own Rust unit tests |
 | `make format` | Format code |
 | `make format-check` | Check formatting |
 | `make codegen` | Regenerate FRB bindings |
 | `make check-new-libsignal-version` | Check for libsignal updates |
 | `make check-template-updates` | Check for copier template updates |
-| `make rust-update` | Update rust/Cargo.lock |
+| `make rust-update` | Update rust/Cargo.lock (also regenerates THIRD_PARTY_NOTICES.txt) |
+| `make third-party-notices` | Regenerate THIRD_PARTY_NOTICES.txt from the dependency graph |
+| `make verify-third-party-notices` | Verify THIRD_PARTY_NOTICES.txt matches the dependency graph |
 | `make update-changelog` | Update CHANGELOG.md with AI (requires `AI_MODELS_TOKEN`) |
 | `make release-frb` | Release the `libsignal_frb` native crate (stage 1) — see [Releasing](#releasing-two-stages) |
 | `make release` | Release the Dart package to pub.dev (stage 2) — see [Releasing](#releasing-two-stages) |
@@ -564,7 +567,8 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
    ```bash
    make check-new-libsignal-version ARGS="--update"
    ```
-3. Update Cargo.lock:
+3. Update Cargo.lock — this also regenerates `THIRD_PARTY_NOTICES.txt`, which
+   is derived from the dependency graph and verified against it in CI:
    ```bash
    make rust-update
    ```

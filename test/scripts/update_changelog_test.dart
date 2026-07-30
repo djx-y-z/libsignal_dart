@@ -106,5 +106,157 @@ void main() {
       expect(result, contains('**libsignal v0.8.2** — protocol update'));
       expect(result, contains('**libsignal_frb v1.5.2**'));
     });
+
+    test('creates For Users at the top of an [Unreleased] that only has For '
+        'Contributors', () {
+      // The shape [Unreleased] has whenever the accumulated changes are CI or
+      // tooling only. Appending at the end of the section would file the
+      // user-facing entry below For Contributors, which no released section does.
+      const contributorsOnly = '''
+# Changelog
+
+## [Unreleased]
+
+### For Contributors
+
+#### Fixed
+
+- Something in CI
+
+## [1.4.2] - 2026-07-20
+
+- Prior release
+
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v1.4.2...HEAD
+[1.4.2]: https://github.com/djx-y-z/libsignal_dart/compare/v1.4.1...v1.4.2
+''';
+      final result = insertChangelogEntry(
+        currentChangelog: contributorsOnly,
+        nativeHighlight: '**libsignal v0.8.2** — protocol update',
+        changed: '- Update libsignal native library to v0.8.2',
+      );
+
+      final lines = result.split('\n');
+      final unreleasedIdx = lines.indexWhere(
+        (l) => l.startsWith('## [Unreleased]'),
+      );
+      final forUsersIdx = lines.indexWhere(
+        (l) => l.startsWith('### For Users'),
+      );
+      final contributorsIdx = lines.indexWhere(
+        (l) => l.startsWith('### For Contributors'),
+      );
+      final highlightIdx = lines.indexWhere(
+        (l) => l.contains('libsignal v0.8.2'),
+      );
+
+      expect(
+        lines.where((l) => l.startsWith('### For Users')).length,
+        equals(1),
+        reason: 'no duplicate For Users heading',
+      );
+      expect(forUsersIdx, greaterThan(unreleasedIdx));
+      expect(forUsersIdx, lessThan(contributorsIdx));
+      expect(highlightIdx, lessThan(contributorsIdx));
+      // The pre-existing subsection survives intact.
+      expect(result, contains('- Something in CI'));
+    });
+
+    test('files the bump under #### Changed, never under the breaking one', () {
+      // `#### Changed (Breaking)` starts with `#### Changed`, so a prefix match
+      // files a routine native-library bump as a breaking change — and, because
+      // the branch fires per heading, files it a second time under the real
+      // `#### Changed` as well.
+      const withBreaking = '''
+# Changelog
+
+## [Unreleased]
+
+### For Users
+
+#### Changed (Breaking)
+
+- Something breaking
+
+#### Changed
+
+- Existing change
+
+#### Fixed
+
+- Bug fix
+
+## [1.4.2] - 2026-07-20
+
+- Prior release
+''';
+      final result = insertChangelogEntry(
+        currentChangelog: withBreaking,
+        nativeHighlight: '**libsignal v0.8.2** — protocol update',
+        changed: '- Update libsignal native library to v0.8.2',
+      );
+
+      final lines = result.split('\n');
+      const bump = '- Update libsignal native library to v0.8.2';
+      final bumpIdx = lines.indexOf(bump);
+      final breakingIdx = lines.indexOf('#### Changed (Breaking)');
+      final changedIdx = lines.indexOf('#### Changed');
+      final highlightsIdx = lines.indexWhere(
+        (l) => l.startsWith('#### ✨ Highlights'),
+      );
+
+      // Exactly once, and under the plain `#### Changed`.
+      expect(lines.where((l) => l == bump).length, equals(1));
+      expect(bumpIdx, greaterThan(changedIdx));
+      expect(changedIdx, greaterThan(breakingIdx));
+      // The created Highlights block leads the section, ahead of the breaking
+      // subsection — the order every released section uses.
+      expect(highlightsIdx, lessThan(breakingIdx));
+      expect(
+        lines.where((l) => l.startsWith('#### ✨ Highlights')).length,
+        equals(1),
+      );
+      // Pre-existing content is untouched.
+      expect(result, contains('- Something breaking'));
+      expect(result, contains('- Existing change'));
+    });
+
+    test('creates #### Changed after the breaking one, before #### Fixed', () {
+      // Only the breaking variant exists, so `#### Changed` has to be created.
+      // It belongs between them, per the documented subsection order.
+      const breakingOnly = '''
+# Changelog
+
+## [Unreleased]
+
+### For Users
+
+#### Changed (Breaking)
+
+- Something breaking
+
+#### Fixed
+
+- Bug fix
+
+## [1.4.2] - 2026-07-20
+
+- Prior release
+''';
+      final result = insertChangelogEntry(
+        currentChangelog: breakingOnly,
+        nativeHighlight: '**libsignal v0.8.2** — protocol update',
+        changed: '- Update libsignal native library to v0.8.2',
+      );
+
+      final lines = result.split('\n');
+      final breakingIdx = lines.indexOf('#### Changed (Breaking)');
+      final changedIdx = lines.indexOf('#### Changed');
+      final fixedIdx = lines.indexOf('#### Fixed');
+
+      expect(changedIdx, greaterThan(breakingIdx));
+      expect(changedIdx, lessThan(fixedIdx));
+      expect(result, contains('- Bug fix'));
+    });
   });
 }

@@ -89,6 +89,20 @@ jobs:
           fi
           echo "Tag matches crate version: $CRATE_VERSION"
 
+      # Every archive built below embeds THIRD_PARTY_NOTICES.txt, so the
+      # committed copy must match the dependency graph these binaries are built
+      # from. `make release-frb` checks this too, but a tag pushed by hand does
+      # not go through it — and a published release cannot be taken back.
+      # Checked here rather than at archive time so a stale inventory fails in
+      # a minute instead of after the whole build matrix.
+      - name: Setup Rust
+        if: steps.check.outputs.skip != 'true'
+        uses: ./.github/actions/setup-rust
+
+      - name: Verify third-party notices
+        if: steps.check.outputs.skip != 'true'
+        run: make verify-third-party-notices
+
   # ============================================
   # Linux (x86_64 + arm64 on separate runners)
   # ============================================
@@ -392,47 +406,57 @@ jobs:
           VERSION=${{ env.VERSION }}
           mkdir -p release-archives
 
+          # Every archive distributes the native binary, so it must carry the
+          # licence of this package plus the attribution for the Rust crates
+          # statically linked into it. THIRD_PARTY_NOTICES.txt was verified
+          # against the dependency graph by the check-release job before any of
+          # these binaries were built, so the committed copy is authoritative
+          # here.
+          for dir in artifacts/*/; do
+            cp LICENSE THIRD_PARTY_NOTICES.txt "$dir"
+          done
+
           # Linux x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-linux-x86_64.tar.gz \
-            -C artifacts/libsignal-linux-x86_64 liblibsignal_frb.so
+            -C artifacts/libsignal-linux-x86_64 liblibsignal_frb.so LICENSE THIRD_PARTY_NOTICES.txt
 
           # Linux arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-linux-arm64.tar.gz \
-            -C artifacts/libsignal-linux-arm64 liblibsignal_frb.so
+            -C artifacts/libsignal-linux-arm64 liblibsignal_frb.so LICENSE THIRD_PARTY_NOTICES.txt
 
           # macOS arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-macos-arm64.tar.gz \
-            -C artifacts/libsignal-macos-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-macos-arm64 liblibsignal_frb.dylib LICENSE THIRD_PARTY_NOTICES.txt
 
           # macOS x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-macos-x86_64.tar.gz \
-            -C artifacts/libsignal-macos-x86_64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-macos-x86_64 liblibsignal_frb.dylib LICENSE THIRD_PARTY_NOTICES.txt
 
           # Windows x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-windows-x86_64.tar.gz \
-            -C artifacts/libsignal-windows-x86_64 libsignal_frb.dll
+            -C artifacts/libsignal-windows-x86_64 libsignal_frb.dll LICENSE THIRD_PARTY_NOTICES.txt
 
           # Android ABIs
           for abi in arm64-v8a armeabi-v7a x86_64; do
             tar -czvf release-archives/libsignal_frb-${VERSION}-android-${abi}.tar.gz \
-              -C artifacts/libsignal-android-${abi} liblibsignal_frb.so
+              -C artifacts/libsignal-android-${abi} liblibsignal_frb.so LICENSE THIRD_PARTY_NOTICES.txt
           done
 
           # iOS device arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-device-arm64.tar.gz \
-            -C artifacts/libsignal-ios-device-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-device-arm64 liblibsignal_frb.dylib LICENSE THIRD_PARTY_NOTICES.txt
 
           # iOS simulator arm64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-simulator-arm64.tar.gz \
-            -C artifacts/libsignal-ios-simulator-arm64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-simulator-arm64 liblibsignal_frb.dylib LICENSE THIRD_PARTY_NOTICES.txt
 
           # iOS simulator x86_64
           tar -czvf release-archives/libsignal_frb-${VERSION}-ios-simulator-x86_64.tar.gz \
-            -C artifacts/libsignal-ios-simulator-x86_64 liblibsignal_frb.dylib
+            -C artifacts/libsignal-ios-simulator-x86_64 liblibsignal_frb.dylib LICENSE THIRD_PARTY_NOTICES.txt
 
           # WebAssembly
           tar -czvf release-archives/libsignal_frb-${VERSION}-wasm32.tar.gz \
-            -C artifacts/libsignal-wasm32 libsignal_frb.js libsignal_frb_bg.wasm
+            -C artifacts/libsignal-wasm32 libsignal_frb.js libsignal_frb_bg.wasm LICENSE THIRD_PARTY_NOTICES.txt
 
           # Generate SHA256 checksums
           cd release-archives

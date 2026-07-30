@@ -15,6 +15,32 @@ const _upstreamRepo = 'signalapp/libsignal';
 /// Tag prefix used by the upstream repo for libsignal releases.
 const _tagPrefix = 'v';
 
+/// Accepts exactly `<_tagPrefix>X.Y.Z` with optional semver prerelease
+/// identifiers. Built from [_tagPrefix] rather than hardcoded: a repo whose
+/// upstream uses a non-default prefix must still validate its own tags, and a
+/// hardcoded `v?` silently rejects every one of them.
+final _upstreamTagPattern = RegExp(
+  '^${RegExp.escape(_tagPrefix)}'
+  r'(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)'
+  r'(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
+);
+
+/// Validates an upstream release tag before it is used or exported.
+///
+/// Tag values reach `GITHUB_OUTPUT` and from there workflow shell commands and
+/// branch names, so anything that is not the exact expected tag form is
+/// rejected. Applies to upstream API data, manual workflow input, and the tag
+/// recorded in `rust/Cargo.toml` alike — [source] names which of them was
+/// rejected, because the three fail for different reasons and the fix differs
+/// (a typo in a dispatch input, a stale pin, or upstream changing its tag
+/// scheme).
+String validateUpstreamTag(String tag, {String source = 'upstream tag'}) {
+  if (!_upstreamTagPattern.hasMatch(tag)) {
+    throw FormatException('Refusing unexpected $source format: "$tag"');
+  }
+  return tag;
+}
+
 /// Result of checking for updates.
 class UpdateCheckResult {
   const UpdateCheckResult({
@@ -85,7 +111,12 @@ Future<UpdateCheckResult> checkForUpdates({
   bool silent = false,
 }) async {
   // Read current version from rust/Cargo.toml
-  final currentVersion = getUpstreamVersion();
+  // The recorded dependency pin is an upstream tag, so it must satisfy the
+  // same shape as anything fetched from the API.
+  final currentVersion = validateUpstreamTag(
+    getUpstreamVersion(),
+    source: 'tag recorded in rust/Cargo.toml',
+  );
 
   if (!silent) {
     logInfo('Current libsignal version: $currentVersion');
@@ -97,7 +128,11 @@ Future<UpdateCheckResult> checkForUpdates({
   String releaseUrl;
 
   if (targetVersion != null) {
-    latestVersion = targetVersion;
+    // Manual workflow input is as untrusted as the upstream API response.
+    latestVersion = validateUpstreamTag(
+      targetVersion,
+      source: '--version argument',
+    );
     isPrerelease = _isPrerelease(latestVersion);
     releaseUrl =
         'https://github.com/$_upstreamRepo/releases/tag/$targetVersion';
@@ -109,17 +144,13 @@ Future<UpdateCheckResult> checkForUpdates({
       logStep('Fetching latest release from GitHub...');
     }
     final release = await _fetchLatestRelease();
-    latestVersion = release['tag_name'] as String;
     // The tag name is attacker-controlled upstream data that ends up in
     // GITHUB_OUTPUT and, from there, in workflow shell commands and branch
-    // names. Reject anything that is not a plain semver-ish tag.
-    if (!RegExp(
-      r'^v?\d+\.\d+\.\d+(-[A-Za-z0-9.]+)?$',
-    ).hasMatch(latestVersion)) {
-      throw Exception(
-        'Refusing unexpected upstream tag_name format: "$latestVersion"',
-      );
-    }
+    // names. validateUpstreamTag rejects unexpected prefixes and characters.
+    latestVersion = validateUpstreamTag(
+      release['tag_name'] as String,
+      source: 'tag_name from the GitHub API',
+    );
     isPrerelease = release['prerelease'] as bool? ?? false;
     releaseUrl =
         release['html_url'] as String? ??

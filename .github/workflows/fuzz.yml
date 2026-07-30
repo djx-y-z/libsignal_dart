@@ -5,8 +5,14 @@
 # - Weekly schedule: a longer run per target for deeper exploration.
 # - Manual dispatch: choose the per-target duration.
 #
-# Any crash is uploaded as an artifact (the reproducing input) so it can be
-# replayed locally with `cargo +nightly fuzz run <target> <artifact>`.
+# Targets are discovered from the `[[bin]]` entries in rust/fuzz/Cargo.toml and
+# fanned out into a matrix, one job per target. Adding a fuzz target therefore
+# needs no change to this workflow, and `fail-fast: false` means a crash in one
+# target still lets every other target finish — running them sequentially in a
+# single job would stop at the first crash and silently skip the rest.
+#
+# Any crash is uploaded as a per-target artifact (the reproducing input) so it
+# can be replayed locally with `cargo +nightly fuzz run <target> <artifact>`.
 
 name: Fuzz
 
@@ -33,19 +39,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  discover:
+    name: Discover fuzz targets
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.list.outputs.targets }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # cargo-fuzz derives its target list from the `[[bin]]` entries of
+      # rust/fuzz/Cargo.toml, so reading them here is equivalent to
+      # `cargo fuzz list` while needing neither a Rust toolchain nor a build —
+      # which keeps this job to a few seconds.
+      - name: List fuzz targets
+        id: list
+        run: |
+          targets=$(awk '
+            /^\[\[bin\]\]/ { inbin = 1; next }
+            /^\[/          { inbin = 0 }
+            inbin && match($0, /^name[[:space:]]*=[[:space:]]*"[^"]+"/) {
+              s = substr($0, RSTART, RLENGTH)
+              sub(/^[^"]*"/, "", s)
+              sub(/"$/, "", s)
+              print s
+            }
+          ' rust/fuzz/Cargo.toml | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+          echo "Discovered fuzz targets: $targets"
+
   fuzz:
     name: Fuzz ${{ matrix.target }}
+    needs: discover
+    # An empty list is a valid state (every target deleted); GitHub errors on an
+    # empty matrix, so skip the fan-out instead of failing the workflow.
+    if: needs.discover.outputs.targets != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        target:
-          - keys
-          - messages
-          - records
-          - certificates
-          - crypto_primitives
-          - session_decrypt
+        target: ${{ fromJson(needs.discover.outputs.targets) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -103,10 +135,9 @@ jobs:
           SECONDS_TOTAL: ${{ steps.duration.outputs.seconds }}
         run: |
           cd rust
-          # -timeout gives libFuzzer a per-input watchdog: a pathological input
-          # that hangs a single execution is aborted and reported, instead of
-          # making the job run until GitHub's hard timeout (-max_total_time only
-          # bounds the loop between executions, not a single stuck one).
+          # -timeout gives libFuzzer a per-input watchdog so a single hanging
+          # input is aborted and reported rather than running until the job's
+          # hard timeout (-max_total_time only bounds the loop between inputs).
           cargo +nightly fuzz run "$TARGET" -- \
             -max_total_time="$SECONDS_TOTAL" \
             -timeout=30 \

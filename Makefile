@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets rust-audit rust-deny rust-check rust-clippy fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web test coverage analyze format format-check get clean version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates check-targets third-party-notices verify-third-party-notices rust-audit rust-deny rust-check rust-test rust-clippy fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -58,6 +58,8 @@ help:
 	@echo "                                        Example: make check-new-libsignal-version ARGS=\"--update\""
 	@echo "    make check-exists-libsignal-frb-release - Check if FRB release exists on GitHub"
 	@echo "    make check-template-updates       - Check for new copier template version"
+	@echo "    make third-party-notices          - Regenerate THIRD_PARTY_NOTICES.txt from the dep graph"
+	@echo "    make verify-third-party-notices   - Verify THIRD_PARTY_NOTICES.txt is up to date"
 	@echo "    make check-targets                - Check deployment target consistency (iOS/macOS/Android)"
 	@echo "                                        Example: make check-targets ARGS=\"--ios --set 14.0\""
 	@echo "    make rust-update                  - Update Cargo.lock (cargo update)"
@@ -66,6 +68,7 @@ help:
 	@echo ""
 	@echo "  RUST QUALITY"
 	@echo "    make rust-check                   - Check Rust code compiles"
+	@echo "    make rust-test                    - Run Rust unit tests"
 	@echo "    make rust-clippy                  - Lint Rust code with clippy (warnings = errors)"
 	@echo "    make rust-audit                   - Audit Rust dependencies for vulnerabilities"
 	@echo "    make rust-deny                    - Check licenses, bans, sources, advisories (cargo-deny)"
@@ -286,6 +289,13 @@ build-web:
 rust-check:
 	cargo check --manifest-path rust/Cargo.toml
 
+# Run the crate's own `#[cfg(test)]` unit tests. These cover invariants the Dart
+# suite cannot reach — in particular any test cited as the justification for an
+# advisory ignore in .cargo/audit.toml or rust/deny.toml. Without this in CI
+# those justifications go unverified.
+rust-test:
+	cargo test --manifest-path rust/Cargo.toml $(ARGS)
+
 # Lint hand-written Rust with clippy; warnings are errors so CI fails on any lint.
 # --all-targets covers the lib, its tests, and examples of this crate. The fuzz
 # crate (rust/fuzz) is separate and nightly-only; lint it with
@@ -339,11 +349,26 @@ check-template-updates:
 check-targets:
 	@$(FVM) dart scripts/check_deployment_targets.dart $(ARGS)
 
+# Regenerate the third-party notice inventory for the shipped native library.
+# Run after any dependency change; CI verifies the committed file matches.
+third-party-notices:
+	@$(FVM) dart scripts/generate_third_party_notices.dart $(ARGS)
+
+verify-third-party-notices:
+	@$(FVM) dart scripts/generate_third_party_notices.dart --check
+
+# Updating the lockfile changes the dependency graph, which invalidates the
+# third-party notice inventory. Regenerating here keeps the two in lockstep
+# both locally and in the scheduled update workflow (which calls this target),
+# so nobody has to remember a second command before CI rejects the branch.
 rust-update:
 	@echo "Updating Cargo.lock..."
 	@cd rust && cargo update
 	@echo ""
-	@echo "Cargo.lock updated!"
+	@echo "Regenerating third-party notices for the new dependency graph..."
+	@$(MAKE) third-party-notices
+	@echo ""
+	@echo "Cargo.lock and THIRD_PARTY_NOTICES.txt updated!"
 
 update-changelog:
 	@$(FVM) dart scripts/update_changelog.dart $(ARGS)

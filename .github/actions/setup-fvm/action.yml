@@ -1,6 +1,18 @@
 name: Setup FVM and Flutter
 description: Setup Dart SDK, FVM, and install Flutter version from .fvmrc
 
+inputs:
+  fvm-version:
+    description: >-
+      Exact fvm version to install. Pinned rather than floating because this
+      action hardcodes where fvm stores SDKs (see FVM_CACHE_PATH below): an
+      unpinned major that relocates the cache would break every job at once,
+      including a release in progress. Bumping is deliberate — confirm the new
+      version still resolves its cache to $FVM_CACHE_PATH/versions first.
+      Dependabot cannot see this pin; it is not a manifest it scans.
+    default: '4.1.2'
+    required: false
+
 runs:
   using: composite
   steps:
@@ -12,14 +24,14 @@ runs:
     - name: Install FVM (Unix)
       if: runner.os != 'Windows'
       run: |
-        dart pub global activate fvm
+        dart pub global activate fvm ${{ inputs.fvm-version }}
         echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
       shell: bash
 
     - name: Install FVM (Windows)
       if: runner.os == 'Windows'
       run: |
-        dart pub global activate fvm
+        dart pub global activate fvm ${{ inputs.fvm-version }}
         # Determine pub-cache bin path (use PUB_CACHE if set, otherwise default)
         $pubCacheBin = if ($env:PUB_CACHE) { "$env:PUB_CACHE\bin" } else { "$env:USERPROFILE\.pub-cache\bin" }
         # Add pub-cache bin to PATH
@@ -31,23 +43,54 @@ runs:
         [System.IO.File]::WriteAllText($wrapperPath, $wrapperContent)
       shell: pwsh
 
+    # Pin where fvm keeps its SDKs instead of inheriting the default, so the
+    # `path:` below is a contract rather than a guess. This is the second half of
+    # the version pin above: that one stops fvm from changing under us at all,
+    # this one keeps a deliberate bump from silently relocating the SDKs.
+    # FVM_CACHE_PATH sets `fvmDir`; SDKs land in `$fvmDir/versions`. The value
+    # matches fvm's own default (`$HOME/fvm`), so nothing moves today.
+    # Windows uses forward slashes so the same value works in pwsh and Git Bash.
+    # `path:` below names the same directory through `~`, which actions/cache
+    # resolves against the same home — keep the two in sync.
+    - name: Set FVM cache path (Unix)
+      if: runner.os != 'Windows'
+      run: echo "FVM_CACHE_PATH=$HOME/fvm" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Set FVM cache path (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        $fvmHome = "$($env:USERPROFILE -replace '\\', '/')/fvm"
+        echo "FVM_CACHE_PATH=$fvmHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+      shell: pwsh
+
+    # Cache the installed SDKs (~2.5 GB per version uncompressed). Note the path
+    # is NOT `~/.fvm` — that name belongs to the per-project directory fvm
+    # symlinks inside a checkout, and pointing the cache there meant the path
+    # never existed on a runner, so actions/cache warned and saved nothing on
+    # every job.
+    #
+    # runner.arch is part of the key because Linux x86_64 and Linux ARM64 both
+    # report runner.os == 'Linux'. Sharing one key across them would let a leg
+    # restore the other architecture's `bin/cache/dart-sdk`, which Flutter keeps
+    # (its revision stamp matches) and then fails to execute.
+    #
+    # No restore-keys: a near-miss would restore the previous SDK and then
+    # install the new one alongside it, so the entry would grow by a full SDK on
+    # every Flutter bump. Missing outright costs one reinstall instead.
     - name: Cache FVM (Unix)
       if: runner.os != 'Windows'
       uses: actions/cache@v6
       with:
-        path: ~/.fvm
-        key: fvm-${{ runner.os }}-${{ hashFiles('.fvmrc') }}
-        restore-keys: |
-          fvm-${{ runner.os }}-
+        path: ~/fvm/versions
+        key: fvm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.fvmrc') }}
 
     - name: Cache FVM (Windows)
       if: runner.os == 'Windows'
       uses: actions/cache@v6
       with:
-        path: ~\.fvm
-        key: fvm-${{ runner.os }}-${{ hashFiles('.fvmrc') }}
-        restore-keys: |
-          fvm-${{ runner.os }}-
+        path: ~\fvm\versions
+        key: fvm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.fvmrc') }}
 
     - name: Install Flutter via FVM (Unix)
       if: runner.os != 'Windows'
@@ -58,6 +101,33 @@ runs:
       if: runner.os == 'Windows'
       run: fvm install
       shell: pwsh
+
+    # A cache whose `path` does not exist is not an error to actions/cache: it
+    # warns in the post step and reports success, so a cache that never saves
+    # anything is indistinguishable from a healthy one in the job summary. That
+    # is how the `~/.fvm` typo survived unnoticed. Assert the layout here so the
+    # day fvm relocates its SDKs we get a failing job pointing at this file,
+    # rather than every platform quietly reinstalling the SDK on every run.
+    #
+    # Failing rather than annotating is deliberate. Annotate-and-continue is the
+    # mode that hid this bug for months, so it is not the safe option — it is the
+    # broken one with a louder log line. It is also cheap here: the version is
+    # pinned, so fvm cannot move on its own, and a bump that did relocate the
+    # SDKs would fail on the branch that raised it. Nothing irreversible sits
+    # behind this step either — setup-fvm runs before the release archives, the
+    # tag and the pub.dev publish, so a release is just re-run after the fix.
+    #
+    # The size print is the cheapest way to keep the cache budget visible: the
+    # repository-wide 10 GB limit is shared with the Rust caches, and eviction is
+    # LRU across all of them.
+    - name: Verify FVM cache layout
+      run: |
+        if [ -z "$(ls -A "$FVM_CACHE_PATH/versions" 2>/dev/null)" ]; then
+          echo "::error::fvm did not populate \$FVM_CACHE_PATH/versions ($FVM_CACHE_PATH/versions) — its cache layout moved, so the cache step in this action saves nothing. Update FVM_CACHE_PATH and path: in .github/actions/setup-fvm/action.yml."
+          exit 1
+        fi
+        du -sh "$FVM_CACHE_PATH/versions"/* 2>/dev/null || true
+      shell: bash
 
     - name: Discard FVM config changes
       run: git checkout -- .fvmrc .vscode/settings.json 2>/dev/null || true

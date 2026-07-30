@@ -1,5 +1,5 @@
 name: libsignal
-description: Dart wrapper for libsignal. Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
+description: "Dart wrapper for libsignal. Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations."
 
 version: 6.1.1
 license: AGPL-3.0

@@ -202,6 +202,7 @@ This is expected. Copier does a 3-way merge. If your customizations conflict wit
 
 ## Resources
 
-- [Template Repository](https://github.com/djx-y-z/copier-dart-frb-wrapper)
+- [Template repository](https://github.com/djx-y-z/copier-dart-frb-wrapper)
+- [Template CHANGELOG](https://github.com/djx-y-z/copier-dart-frb-wrapper/blob/main/CHANGELOG.md) — read this before running `copier update`
 - [Copier Documentation](https://copier.readthedocs.io/)
 - [Template CHANGELOG](https://github.com/djx-y-z/copier-dart-frb-wrapper/blob/main/CHANGELOG.md)
