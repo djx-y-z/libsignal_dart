@@ -569,7 +569,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T109]
 
-libsignal-debug 0.99.2
+libsignal-debug 0.99.3
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T109]
 
@@ -8765,7 +8765,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.99.2
+  libsignal-debug@0.99.3
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3
