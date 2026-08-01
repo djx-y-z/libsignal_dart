@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.99.3** — dependency update only: nothing in the libsignal crates this package links changed beyond added tests and version strings, and the FFI surface regenerates byte-for-byte identical
+
+#### Changed
+
+- **libsignal native library → v0.99.3** ([compare](https://github.com/signalapp/libsignal/compare/v0.99.1...v0.99.3))
+  - Upstream work across v0.99.2 and v0.99.3 targets the chat/backup transport, key transparency, the SVR2 enclaves and their attestation, a PNI-less zkgroup `AuthCredential` API, and the Node/Java/TypeScript bindings — none of which this library exposes
+  - Of the crates from that repository which reach the binary — the three this package binds (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) plus the transitive `libsignal-debug` — the only source change in either release is two added `#[test]` functions covering HPKE invalid inputs in `signal-crypto`; everything else is the `VERSION` constant. The FRB bindings regenerate byte-for-byte identical, so the FFI surface is unchanged
+  - Neither upstream release published release notes, so this entry is derived from the commit range rather than from a changelog
+  - Transitively, the shipped binary picks up `aes` 0.9.1 → 0.9.2 and `hybrid-array` 0.4.13 → 0.4.14 (the RustCrypto array crate `aes` is built on). `cc`, `clang-sys`, `displaydoc`, `either` and `toml_parser` also move, but reach this crate only as build-dependencies or through proc-macro subtrees, so none of them ship. `THIRD_PARTY_NOTICES.txt` is regenerated to match
+
 ## [7.0.0] - 2026-07-30
 
 ### For Users
