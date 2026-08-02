@@ -193,6 +193,12 @@ derived deterministically, a write that is lost or rolled back causes key reuse.
 states the contract your implementations must satisfy — read it before writing a
 production store.
 
+Encrypting what you store is your responsibility too — the library holds no key
+to do it for you.
+[Store Confidentiality at Rest](#store-confidentiality-at-rest-the-sealed-store-pattern)
+gives the pattern, the rules that make it safe rather than merely encrypted, and
+where the key can come from on each platform.
+
 ### E: Key Material Handling
 
 Never expose key material in logs or errors:
@@ -742,6 +748,132 @@ sends, and no application-level measure fully prevents that.
   [`example_cli/lib/demos/durable_store_demo.dart`](https://github.com/djx-y-z/libsignal_dart/blob/main/example_cli/lib/demos/durable_store_demo.dart)
   proves the round trip by reopening the stores from disk and continuing an
   established conversation.
+
+## Store Confidentiality at Rest (the sealed-store pattern)
+
+The section above is about *losing* store writes. This one is about *reading*
+them. Every record your store persists — `PreKeyRecord`, `SignedPreKeyRecord`,
+`KyberPreKeyRecord`, `SessionRecord`, `IdentityKeyPair` — serializes **with its
+private key material included**. Write those bytes to a file, a plain SQLite
+database or IndexedDB and the private keys are on disk in the clear.
+
+The library does not encrypt them for you, and deliberately holds no key to do it
+with. It is a pure Dart package with no platform-channel access, so it cannot
+reach Keychain, Android Keystore, DPAPI or libsecret on any platform — and on the
+web there is no key source at all that does not require the user to type a
+passphrase every session. Confidentiality at rest is yours, the same way
+[durability](#store-durability-write-ordering-and-rollback) is.
+
+What the library does give you is the primitive: `Aes256GcmSiv` and `hkdfDerive`
+are part of the public API and execute entirely in Rust.
+
+### The pattern
+
+Install the key-encryption key **once**, then keep only the opaque cipher handle:
+
+```dart
+// Once per app launch. loadKekFromPlatform() is yours — see the table below.
+final kek = SecureBytes.wrap(await loadKekFromPlatform());
+final cipher = Aes256GcmSiv(key: kek.bytes); // Rust zeroizes the key immediately
+kek.dispose();                               // and so do you, on the Dart side
+
+// _randomBytes and _bind are your helpers; _bind is described under rule 2.
+Uint8List seal(int kind, int id, Uint8List plaintext) {
+  final nonce = _randomBytes(12);
+  return Uint8List.fromList([
+    _formatVersion,
+    ...nonce,
+    ...cipher.encrypt(
+      plaintext: plaintext,
+      nonce: nonce,
+      associatedData: _bind(_formatVersion, kind, id),
+    ),
+  ]);
+}
+
+Uint8List unseal(int kind, int id, Uint8List blob) {
+  if (blob[0] != _formatVersion) throw StateError('unknown blob version');
+  return cipher.decrypt(
+    ciphertext: blob.sublist(13),
+    nonce: blob.sublist(1, 13),
+    // Bound to the slot being read — never to anything inside the blob.
+    associatedData: _bind(_formatVersion, kind, id),
+  );
+}
+```
+
+Four rules. Breaking any of them turns this from hardening into a security
+regression:
+
+1. **Install the KEK once, as a handle.** `Aes256GcmSiv(key:)` zeroizes the key
+   after constructing the cipher, so the master secret crosses into Dart exactly
+   once per launch. Never take a raw KEK per operation — that would put the
+   master secret in the Dart heap on *every* store write, which is strictly worse
+   than storing records in the clear with the KEK never present at all.
+2. **Bind every blob to its slot via AAD, and rebuild that AAD from the slot you
+   are reading.** Set `associatedData` to (format version, record kind, record
+   id). Without it, an attacker who can write to your store can substitute blobs:
+   pre-key 5's blob into pre-key 7's slot, or a session blob into a
+   signed-pre-key slot — the AEAD will happily authenticate a blob that decrypts
+   correctly but belongs somewhere else. Deriving the AAD from fields carried
+   *inside* the blob defeats the whole mechanism, because the attacker controls
+   those too.
+3. **Get the nonce right.** 12 bytes, freshly random per write, or derived from
+   (kind, id, counter). This is why AES-GCM-**SIV** is the right primitive here
+   and plain AES-GCM is not. The Double Ratchet rewrites a session record on
+   every single message, so a repeated nonce is a realistic outcome of an
+   ordinary bug — and under nonce reuse plain GCM leaks its GHASH authentication
+   key, which lets an attacker forge blobs your store will accept. AES-GCM-SIV is
+   nonce-misuse resistant: confidentiality and authenticity survive, and the only
+   thing that leaks is that two writes had identical plaintext under the same
+   nonce and AAD.
+4. **Prefix a format version byte.** You will want to change the AAD layout or
+   rotate the KEK eventually; a blob you cannot identify is a blob you cannot
+   migrate.
+
+Sealing does not change the durability contract. A sealed write must still be
+durable before the future completes, and the ordering rules above still apply.
+
+### What this defends against, and what it does not
+
+**Does defend:** an attacker who reads your storage without executing code in
+your process — a stolen disk or device image, a file backup, another application
+reading your files, a store implementation that has no encryption of its own.
+That is the realistic threat for a messaging client's key material, and it is
+worth closing.
+
+**Does not defend:** an attacker executing code inside your process. Dart and
+Rust share one address space on native platforms, on the web an attacker on your
+origin reaches the WebAssembly module's memory, and any code running as Dart has
+`dart:ffi` and `Pointer.fromAddress` — so it can read process memory directly, or
+simply call the same `decrypt` you do. This is the "compromised host" case
+already listed in [Threat Model Limitations](#threat-model-limitations), and no
+arrangement of keys inside this library changes it.
+
+### Where the KEK comes from
+
+The KEK is the application's responsibility, and the honest answer differs sharply
+by platform:
+
+| Platform | Source | Notes |
+|---|---|---|
+| **Android** | Keystore (TEE/StrongBox) seals a 32-byte KEK your app unseals at launch | Keystore can also hold an AES key that never leaves the TEE, but using it means doing the record encryption in Java through `AndroidKeyStore` — outside this library, and not the pattern above |
+| **iOS / macOS** | Keychain, `kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly` | The KEK bytes are returned into process memory. The Secure Enclave stores only P-256 keys, so it cannot hold this KEK directly |
+| **Windows** | DPAPI, user scope | Protects against another user and against an offline disk; not against malware running as the same user |
+| **Linux (desktop)** | Secret Service / libsecret | Typically unlocked together with the login session and usually without hardware backing |
+| **Linux (headless)** | *nothing* | File permissions are the only boundary. Say so in your own threat model |
+| **Web** | *nothing without user input* | See below |
+
+On the web there is no satisfying answer. A non-extractable `CryptoKey` in
+IndexedDB keeps the key material out of the JS and WASM heaps, but it gives any
+code running on your origin an unlimited decryption oracle, and it cannot be used
+with `Aes256GcmSiv` at all — SubtleCrypto is asynchronous and holds the key
+itself, so you would be writing a second, differently-formatted sealing path. A
+passphrase stretched with Argon2id is the only option that genuinely protects
+data at rest, and it costs a prompt every session, which is incompatible with
+receiving messages in the background. Storing a raw key in IndexedDB or
+`localStorage` protects against nothing at all. Choose deliberately and document
+the choice.
 
 ## Identity Trust (MITM / safety-number-change detection)
 

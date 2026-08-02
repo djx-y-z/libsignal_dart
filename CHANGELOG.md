@@ -14,6 +14,8 @@
   - Neither upstream release published release notes, so this entry is derived from the commit range rather than from a changelog
   - Transitively, the shipped binary picks up `aes` 0.9.1 → 0.9.2 and `hybrid-array` 0.4.13 → 0.4.14 (the RustCrypto array crate `aes` is built on). `cc`, `clang-sys`, `displaydoc`, `either` and `toml_parser` also move, but reach this crate only as build-dependencies or through proc-macro subtrees, so none of them ship. `THIRD_PARTY_NOTICES.txt` is regenerated to match
 
+- **Encryption of store contents at rest is documented** — every record a store persists serializes with its private key material included, and the library holds no key to encrypt it with: it is a pure Dart package with no platform-channel access, so it cannot reach Keychain, Android Keystore, DPAPI or libsecret, and on the web no key source exists that does not require a passphrase each session. A new `SECURITY.md` section gives the sealed-store pattern on the already-public `Aes256GcmSiv` + `hkdfDerive` — KEK installed once as an opaque handle, AAD bound to the slot being read, nonce rules and why GCM-SIV rather than GCM, a format version byte — plus a per-platform table of where the KEK comes from and an explicit statement that this protects against an attacker who reads your storage, not one executing code in your process
+
 ### For Contributors
 
 #### Changed
