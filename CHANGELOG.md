@@ -26,6 +26,8 @@
 
 - **`Discard FVM config changes` in `setup-fvm` is documented as a guard, not a fix** — a step in a composite action can only clean up after that action, while `fvm install` also runs later in the job from inside `make codegen`, so its position was never the defect. Comment only; the config change above is the actual fix
 
+- **`make setup-repo-protections` now turns on automatic head-branch deletion** — the script applied rulesets and the `native-build` environment but never touched repo settings, so `delete_branch_on_merge` sat at GitHub's default of off and every merged branch stayed forever; 42 `update-libsignal-*` branches had accumulated since v0.86.10 (deleted, and each is still reachable through its pull request's `refs/pull/<n>/head`). `delete-branch: true` on `peter-evans/create-pull-request` does not cover this — it only removes branches the action itself closes as obsolete. The script now also sends `PATCH repos/<slug>` with `delete_branch_on_merge=true`, warning rather than failing when it cannot. Note that GitHub performs the deletion as whoever merged the pull request, so the `Delete branches` ruleset confines it to that ruleset's bypass actors (repository admins here); for anyone else it quietly does nothing, which leaves the branch exactly where the setting being off would have left it
+
 ## [7.0.0] - 2026-07-30
 
 ### For Users
