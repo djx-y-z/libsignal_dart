@@ -5,6 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.99.3** — dependency update only: nothing in the libsignal crates this package links changed beyond added tests and version strings, and the FFI surface regenerates byte-for-byte identical
+- **libsignal_frb v6.0.1** — Rust FFI bindings
 
 #### Changed
 
