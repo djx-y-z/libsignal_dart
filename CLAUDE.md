@@ -190,7 +190,7 @@ The libsignal version is specified in `rust/Cargo.toml`:
 
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.99.3" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.99.4" }
 ```
 
 To check/update the version:
