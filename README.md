@@ -493,7 +493,7 @@ make build-web          # Build WASM for web (requires wasm-pack)
 make check-new-libsignal-version  # Check for new upstream libsignal version
 make check-template-updates       # Check for new copier template version
 make rust-update        # Update rust/Cargo.lock (cargo update)
-make update-changelog   # Update CHANGELOG.md with AI (requires AI_MODELS_TOKEN)
+make update-changelog   # Update CHANGELOG.md with AI (requires AI_MODELS + a key)
 
 # Quality Assurance
 make test               # Run tests

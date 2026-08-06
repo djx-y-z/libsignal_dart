@@ -350,7 +350,8 @@ check-template-updates:
 
 # Applies a template update: runs copier, reports what it could not merge, and
 # records the adoption in the CHANGELOG. Needs `copier` on PATH (see
-# CONTRIBUTING) and AI_MODELS_TOKEN for the CHANGELOG entry.
+# CONTRIBUTING); the CHANGELOG entry needs AI_MODELS plus the key for each
+# provider it names, and is skipped — without failing the update — without them.
 update-template:
 	@$(FVM) dart scripts/update_template.dart $(ARGS)
 

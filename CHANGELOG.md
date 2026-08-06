@@ -1,3 +1,119 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **AI changelog: configurable provider list, replacing the retired GitHub
+  Models** — GitHub Models was retired on 2026-07-30, taking `make
+  update-changelog` and the CHANGELOG entry of `make update-template` with it.
+  The replacement makes the model **operational configuration rather than
+  code**: `AI_MODELS` holds an ordered `provider/model` list and the first
+  entry that has a key and answers wins, so the next provider change is a
+  repository-variable edit instead of a code change rolled out to every
+  generated project through a template release — the exact cost this
+  retirement imposed. **There is no default list**: with `AI_MODELS` unset
+  nothing is called and the entry is simply not written, because a model that
+  writes into this repository's CHANGELOG should be one somebody named rather
+  than one the template picked. Keys without a list is a misconfiguration, not
+  an opt-out, so that case warns instead of going quiet. Keys live one per
+  provider (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `OPENROUTER_API_KEY`),
+  forwarded step-scoped in both workflows so an org-level secret is not handed
+  to the third-party actions in the same job.
+  **`AI_MODELS_TOKEN` is gone.** It named no provider, so with one variable per
+  provider there was nothing left for it to mean; it is removed from the
+  scripts and from both workflows, and the secret can be deleted.
+  **Action required:** set `AI_MODELS` and the per-provider keys before the
+  next automated update runs — the old secret alone no longer writes anything.
+  That case does not go quiet: keys present with no list is reported as a
+  misconfiguration. `AI_EFFORT` tunes the cost/quality trade-off the same way.
+- **The AI answer is now a provider-enforced JSON contract, and a partial one
+  is never salvaged** — every provider is called through its own API
+  (`scripts/src/ai_client.dart`) with a JSON schema it enforces, via
+  `dart:io` rather than a `curl` subprocess: the HTTP status is what decides
+  whether the next model is tried, and the key no longer sits in process
+  arguments. A response that stops at the token limit or is refused is
+  rejected *before* its content is read. Previously an unparseable answer was
+  written into the `changed` field verbatim, which turned a malformed answer
+  into a malformed CHANGELOG — a truncated response still contains a
+  brace-delimited fragment that looks extractable. The next list entry is
+  tried only when a model produced no answer at all (network, auth,
+  rate-limit, server error, refusal, truncation); never on the *content* of
+  an answer, which would make entries silently inconsistent, and never on a
+  malformed request, so a bug in what is sent stays visible. Authentication is
+  classified by response body as well as status — Google answers an invalid
+  key with `400 API_KEY_INVALID` where Anthropic uses `401`, and reading that
+  as a malformed request would halt the walk at a misconfigured first entry
+  instead of falling through to the second.
+- **OpenRouter is available as a third provider** — one key for many models, so
+  trying a different model costs neither a code change nor a new secret. Because
+  it is an aggregator its model half carries its own slash, which the entry
+  parser already handled: `openrouter/anthropic/claude-opus-5`. Its API is
+  OpenAI-shaped, which elsewhere is a deprecated side-door but here is the only
+  interface it has, and it does support structured outputs. Two costs are worth
+  knowing before putting it first: a third party sits on the path, and the
+  schema guarantee is weaker — support is per model *and* per backing provider,
+  and `strict` is enforced exactly by some and treated as guidance by others.
+  There being no default list, nothing selects it implicitly: it enters the
+  priority order only through an `AI_MODELS` edit.
+  A route whose model cannot do structured outputs is rejected outright rather
+  than silently downgraded, and OpenRouter's habit of reporting upstream
+  failures as an `error` object inside an HTTP 200 is checked before the answer
+  is read.
+- **The API key cannot reach a log** — it is read from the environment and
+  goes out in one request header per provider, never in a URL, in process
+  arguments (the reason this moved off a `curl` subprocess), or in the prompt.
+  Nothing logs it: the priority line prints model ids and variable *names*
+  only. The one indirect path was the provider's own error body, which is
+  quoted into logs and pull-request output — none of the three echo the key
+  back, checked against a live rejection from each, but that is a property of
+  their wording, so the key is now stripped from reported text regardless.
+- **The entry now reports the codegen result instead of being barred from
+  mentioning it** — the CHANGELOG step moved to after `Regenerate FRB
+  bindings`, which records whether `lib/src/rust/` actually changed and passes
+  it in as `--codegen unchanged|changed|not-run`. Given a result the model
+  states it; given none it must stay silent on the subject. The same fact
+  reaches the pull-request body, where it is the input to the stage-1 SemVer
+  call: on a plain dependency bump `changed` is unexpected — codegen reads
+  `rust/src/api`, which a bump does not touch — so it doubles as a tripwire for
+  an upstream type this crate re-exports having moved.
+- **The changelog prompt can no longer inherit a finding along with the style**
+  — it is told to copy the house style but never a build result. Caught on the
+  first live run: the model wrote "FRB bindings regenerate byte-for-byte
+  identical", which it had no way to know — it ran no codegen, and the phrase
+  came from earlier entries in the 150 lines of CHANGELOG it is given as a
+  style reference. It was true this time because a human had checked it back
+  then; on the first update where codegen *does* produce a diff, the same
+  sentence would have been published as a falsehood. Its sibling prompt in
+  `update_template` already forbade inventing verification; this one now does
+  too.
+- **The libsignal update PR is no longer the one PR that skips the test suite**
+  — `test.yml` excluded `update-libsignal-*` branches, so the pull request whose
+  entire payload is new native code was merged without the suite, clippy,
+  `rust-test`, `cargo-deny`, the MSRV check or `verify-third-party-notices`
+  running against it on any of the four platforms. Confirmed on the last real
+  one (#57): fuzzing reported seven passing jobs and `test` reported
+  *skipping*. The stated reason — the bump moves libsignal ahead of the
+  published `libsignal_frb` binary — is already handled by the reusable
+  workflow, which runs `make build` before `make test`; the build hook then
+  finds `rust/target/release` and returns without downloading
+  (`hook/build.dart`), and nothing caches `.dart_tool`, so the first hook run
+  happens after that build. Update pull requests now cost a full matrix run,
+  which is the point of them.
+- **Pull requests now name the model that wrote the entry** — reported through
+  `--ci-output` (`ai_provider=<provider/model>`) by both scripts. Without it a
+  first provider that has quietly started failing shows up only as entries
+  that drift in house style, months later.
+- **Empty upstream release notes are named as such** — libsignal publishes
+  every release with an empty body, so the prompt's release-notes section was
+  blank, which reads to a model as "nothing changed" rather than "look at the
+  commit list". Verified against the GitHub API across the last 15 releases.
+- **`scripts/src/ai_client.dart` is covered by tests** — 48 cases over the
+  list parsing, key resolution, the two schema shapes and all three response
+  parsers, including the four that would otherwise corrupt a CHANGELOG
+  silently: an answer behind a leading thinking block, a truncated response, a
+  refusal, and Gemini reasoning parts flagged `thought`.
+
 ## [7.0.1] - 2026-08-03
 
 ### For Users

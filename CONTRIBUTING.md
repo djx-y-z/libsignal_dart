@@ -335,7 +335,7 @@ All development tasks should be done via Makefile:
 | `make rust-update` | Update rust/Cargo.lock (also regenerates THIRD_PARTY_NOTICES.txt) |
 | `make third-party-notices` | Regenerate THIRD_PARTY_NOTICES.txt from the dependency graph |
 | `make verify-third-party-notices` | Verify THIRD_PARTY_NOTICES.txt matches the dependency graph |
-| `make update-changelog` | Update CHANGELOG.md with AI (requires `AI_MODELS_TOKEN`) |
+| `make update-changelog` | Update CHANGELOG.md with AI (requires `AI_MODELS` + a key) |
 | `make release-frb` | Release the `libsignal_frb` native crate (stage 1) — see [Releasing](#releasing-two-stages) |
 | `make release` | Release the Dart package to pub.dev (stage 2) — see [Releasing](#releasing-two-stages) |
 | `make get` | Get dependencies |
@@ -584,9 +584,11 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
    ```bash
    make codegen
    ```
-5. Update CHANGELOG.md (requires `AI_MODELS_TOKEN` with GitHub Models read access):
+5. Update CHANGELOG.md (requires `AI_MODELS` plus a key for each provider it
+   names — there is no default list):
    ```bash
-   AI_MODELS_TOKEN=your_token make update-changelog ARGS="--version vX.Y.Z"
+   AI_MODELS=anthropic/claude-opus-5 ANTHROPIC_API_KEY=your_key \
+     make update-changelog ARGS="--version vX.Y.Z"
    ```
 6. Test all protocol operations:
    ```bash

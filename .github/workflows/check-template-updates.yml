@@ -7,7 +7,7 @@
 #    - Applies it with `copier update` (make update-template)
 #    - Reports anything copier could not merge, and whether the version bump
 #      actually landed in .copier-answers.yml
-#    - Writes a CHANGELOG entry with AI (GitHub Models)
+#    - Writes a CHANGELOG entry with AI (provider per AI_MODELS)
 #    - Runs the same gates the pre-commit hook runs
 #    - Opens a PR — as a draft when it needs a human to finish it
 #
@@ -145,8 +145,21 @@ jobs:
       - name: Apply template update
         id: update
         if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
+        # Every key is step-scoped, as the single token before them was. These
+        # are org-level secrets shared by unrelated repositories, and a
+        # job-level `env:` would hand each of them to every other step in this
+        # job — including the ones that run third-party actions.
+        #
+        # AI_MODELS is a variable, not a secret: which model writes the entry
+        # is operational configuration, and keeping it out of the code is what
+        # makes a provider switch a settings change rather than a template
+        # release rolled out across every generated project.
         env:
-          AI_MODELS_TOKEN: ${{ secrets.AI_MODELS_TOKEN }}
+          AI_MODELS: ${{ vars.AI_MODELS }}
+          AI_EFFORT: ${{ vars.AI_EFFORT }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           LATEST_VERSION: ${{ steps.check.outputs.latest_version }}
         run: |
           make update-template ARGS="--version $LATEST_VERSION --ci-output $GITHUB_OUTPUT"
@@ -228,7 +241,7 @@ jobs:
             | `make format-check` | ${{ steps.gates.outputs.format == 'true' && 'pass' || '**fail**' }} |
             | `make rust-check` | ${{ steps.gates.outputs.rust == 'true' && 'pass' || '**fail**' }} |
             | `make analyze --fatal-infos` | ${{ steps.gates.outputs.analyze == 'true' && 'pass' || '**fail**' }} |
-            | CHANGELOG entry | ${{ steps.update.outputs.changelog_updated == 'true' && 'written by AI' || format('**not written** ({0})', steps.update.outputs.changelog_error) }} |
+            | CHANGELOG entry | ${{ steps.update.outputs.changelog_updated == 'true' && format('written by `{0}`', steps.update.outputs.ai_provider) || format('**not written** ({0})', steps.update.outputs.changelog_error) }} |
 
             ### Template changelog for this range
 
