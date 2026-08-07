@@ -214,10 +214,68 @@ jobs:
           head -c 400000 .agent-scratch/build-failure.raw > .agent-scratch/build-failure.log
           rm -f .agent-scratch/build-failure.raw
 
+          # A CI log is mostly toolchain noise, and the whole of it is paid for
+          # on every turn of the agent's loop, not once. Measured on a real
+          # failure: 218 KB of log, ~55K tokens, against a context of ~100K read
+          # back 2.2M times over 24 turns — the log, not the model tier, is what
+          # a run costs. The signal is the error lines and what surrounds them,
+          # which came to 13 KB for the same failure: 17x less.
+          #
+          # Both files are written and the summary is only the entry point. A
+          # distillation that silently dropped the cause would be a far more
+          # expensive mistake than a large context, so the full log stays on
+          # disk and the prompt says when to reach for it.
+          #
+          # grep rather than awk: `IGNORECASE` is a GNU extension, and the
+          # runner's awk is mawk.
+          grep -iE -B15 -A15 \
+            '##\[error\]|##\[group\]❌|panicked|Exception|tests passed|[0-9]+ tests? failed' \
+            .agent-scratch/build-failure.log > .agent-scratch/build-failure.summary || true
+
+          # An empty summary means none of the anchors matched — an unfamiliar
+          # failure shape. Fall back to the whole log rather than handing over
+          # nothing, and say so, because a silent empty summary would read to
+          # the agent as "nothing went wrong".
+          if [ ! -s .agent-scratch/build-failure.summary ]; then
+            echo "::warning::No known error markers in the log — the summary is the full log."
+            cp .agent-scratch/build-failure.log .agent-scratch/build-failure.summary
+          fi
+
           {
             echo "RUN_URL=$RUN_URL"
             echo "SHA=$SHA"
           } > .agent-scratch/failure.env
+
+          # Which legs failed, and what this workflow has been doing lately.
+          #
+          # Both rehearsals reached for exactly this and it was decisive: "every
+          # other platform was green on the same SHA, and the timing-out test is
+          # a different one each time" is what separates a flaky runner from a
+          # regression, and neither fact is anywhere in the failing job's log.
+          #
+          # Fetched here rather than granting the agent `gh`. That would mean
+          # putting a token in its environment and trusting a prefix match to
+          # keep `gh` read-only, to obtain something a script gets for free.
+          {
+            echo "# Context for run $RUN_ID (gathered by the workflow, not the agent)"
+            echo
+            echo "## Every job in the failing run"
+            echo
+            echo "A leg that passed on this same commit is evidence the tree is fine."
+            echo
+            gh run view "$RUN_ID" --json jobs \
+              --jq '.jobs[] | "- \(.conclusion // "?")\t\(.name)"'
+            echo
+            echo "## Recent Tests runs on main, newest first"
+            echo
+            echo "The same symptom striking a different test each time is a flaky"
+            echo "runner. A regression does not move between unrelated tests."
+            echo
+            gh run list --workflow=test.yml --branch=main --limit=20 \
+              --json conclusion,headSha,databaseId,createdAt \
+              --jq '.[] | "- \(.conclusion // "running")\t\(.headSha[0:12])\trun \(.databaseId)\t\(.createdAt)"'
+          } > .agent-scratch/run-context.md 2>&1 || \
+            echo "Context could not be gathered." > .agent-scratch/run-context.md
 
           echo "Log bytes: $(wc -c < .agent-scratch/build-failure.log)"
 

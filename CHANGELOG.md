@@ -51,6 +51,20 @@
   request. And the failing run must be judging `main`'s current tip — cutting a
   branch from an older commit would open a pull request that reverts whatever
   landed in between.
+  **What the agent is given is prepared for it, and that is where the cost is.**
+  A rehearsal against a real failure measured 2.19M cached input tokens over 24
+  turns against a ~100K context, of which the 218 KB log was more than half —
+  the log, not the model tier, is what a run costs, and it is paid for on every
+  turn rather than once. The error lines and their surroundings came to 13 KB
+  for the same failure, so a distilled `build-failure.summary` is now the entry
+  point and the full log stays beside it for when the summary leaves a question
+  open. Alongside it, `run-context.md` carries how every other job in the failing
+  run concluded and how `main` has fared lately: both rehearsals reached for
+  exactly that and it was decisive — a leg green on the same commit, and a
+  symptom striking a different test each time — and neither fact is anywhere in
+  the failing job's log. Gathering it in a script rather than granting the agent
+  `gh` avoids putting a token in its environment and avoids trusting a prefix
+  match to keep `gh` read-only.
   The log is third-party text — compiler, package-manager and dependency output
   — so the prompt frames it explicitly as data rather than instructions. Those
   instructions live in `.github/agent-prompts/repair-build.md` rather than in
