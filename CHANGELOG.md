@@ -29,7 +29,21 @@
   after it has bumped `pubspec.yaml` in the working tree — and `pubspec.yaml` is
   *inside* the path allowlist, so a version bump would have ridden along in the
   pull request looking like part of the fix. `cargo` is enumerated for the same
-  reason: `cargo publish` shares a prefix with `cargo check`.
+  reason: `cargo publish` shares a prefix with `cargo check`. `ls` and `rg` were
+  dropped in favour of `Glob` and `Grep`, which do the same work but are scoped
+  to the workspace — `rg` reads any path the process can, `/proc/self/environ`
+  included, which is where this job's secrets live.
+  **Nothing carrying a secret is published.** This repository is public, so its
+  Actions logs and pull-request bodies are too, and the verdict is free text an
+  agent wrote after reading a log that third parties contribute to — copied into
+  a body created through the API, which never passes the log masking that would
+  otherwise catch a key. Before anything leaves the agent's job, the patch and
+  the verdict are scanned for the values of `ANTHROPIC_API_KEY` and the job
+  token, and a hit fails the run rather than redacting: a secret reaching that
+  point means something went wrong earlier, and publishing a censored copy would
+  hide it. The scan names only the variable, never the value. Verdict fields are
+  capped at 4000 characters each, because a rehearsal produced 3500 and an
+  unbounded public write should not be one field away.
   Three states that would otherwise pass for success are made loud. The agent
   must leave a `verdict.json`; its absence means the run exhausted its turns or
   crashed, which is otherwise indistinguishable from "nothing needed fixing".

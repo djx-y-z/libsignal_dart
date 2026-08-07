@@ -265,10 +265,19 @@ jobs:
           # `Write` is granted so the agent can leave its verdict. It can also
           # create source files anywhere, which the path allowlist is what
           # actually contains — the grant does not.
+          #
+          # `ls` and `rg` are deliberately absent. `Glob` and `Grep` do the same
+          # work and are scoped to the workspace, whereas `rg` reads any path
+          # the process can — `/proc/self/environ` included, which is where this
+          # job's secrets live. This raises the bar rather than sealing it: the
+          # agent may edit the Makefile and then run `make`, so treat the
+          # enumeration as one control among several and not as a sandbox. The
+          # ones that actually hold are the absent write credential, the path
+          # allowlist, and the secret scan below.
           claude_args: |
             --model ${{ vars.AGENT_MODEL || 'claude-opus-5' }}
             --max-turns 40
-            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(make get),Bash(make build),Bash(make codegen),Bash(make test),Bash(make test:*),Bash(make analyze),Bash(make analyze:*),Bash(make format),Bash(make format-check),Bash(make rust-check),Bash(make rust-clippy),Bash(make rust-test),Bash(cargo check:*),Bash(cargo build:*),Bash(cargo test:*),Bash(cargo clippy:*),Bash(cargo tree:*),Bash(cargo metadata:*),Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(ls:*),Bash(rg:*)"
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(make get),Bash(make build),Bash(make codegen),Bash(make test),Bash(make test:*),Bash(make analyze),Bash(make analyze:*),Bash(make format),Bash(make format-check),Bash(make rust-check),Bash(make rust-clippy),Bash(make rust-test),Bash(cargo check:*),Bash(cargo build:*),Bash(cargo test:*),Bash(cargo clippy:*),Bash(cargo tree:*),Bash(cargo metadata:*),Bash(git log:*),Bash(git status:*)"
             --disallowedTools "WebFetch,WebSearch"
 
       # Turn exhaustion, a crash and "there was nothing to do" all look
@@ -348,6 +357,43 @@ jobs:
             exit 1
           fi
           echo "All changed paths are inside the allowlist."
+
+      # This repository is public, so its Actions logs and pull-request bodies
+      # are public. The verdict is free text an agent wrote after reading a
+      # build log that third parties contribute to, and it is copied verbatim
+      # into the pull-request body — which is created through the API and so
+      # never passes through the log masking that would otherwise catch a
+      # secret. That is an exfiltration path with a public endpoint, and it is
+      # the one control gh-aw would have supplied and this workflow has to
+      # supply for itself.
+      #
+      # Fails rather than redacts. A secret appearing here at all means
+      # something went wrong upstream of this step, and quietly publishing a
+      # censored version of it would hide that.
+      - name: Refuse to publish anything carrying a secret
+        if: steps.verdict.outputs.status == 'fixed'
+        env:
+          SCAN_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SCAN_GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FOUND=0
+          for name in SCAN_ANTHROPIC_API_KEY SCAN_GITHUB_TOKEN; do
+            value="${!name}"
+            [ -n "$value" ] || continue
+            for file in "$RUNNER_TEMP/verdict.json" "$RUNNER_TEMP/repair.patch"; do
+              # -q and -F: the needle is a secret, so it is matched literally and
+              # never echoed. Only the variable's name is ever printed.
+              if grep -qF -- "$value" "$file"; then
+                echo "::error::$(basename "$file") contains the value of ${name#SCAN_}. Nothing will be uploaded or published."
+                FOUND=1
+              fi
+            done
+          done
+          if [ "$FOUND" != 0 ]; then
+            exit 1
+          fi
+          echo "Neither the patch nor the verdict carries a known secret."
 
       - name: Upload the patch
         if: steps.verdict.outputs.status == 'fixed'
@@ -442,6 +488,19 @@ jobs:
         run: |
           set -euo pipefail
           VERDICT="$RUNNER_TEMP/repair/verdict.json"
+
+          # Bounded. These fields are free text an agent wrote, they are copied
+          # into a body that is public, and a rehearsal produced a `notes` of
+          # ~3500 characters. A cap keeps the pull request readable and keeps an
+          # unbounded public write from being one field away.
+          field() {
+            jq -r --arg f "$1" --arg fallback "$2" '
+              ((.[$f] // "") | tostring) as $v
+              | if ($v | length) == 0 then $fallback
+                elif ($v | length) > 4000 then ($v[0:4000] + "\n\n_(truncated)_")
+                else $v end' "$VERDICT"
+          }
+
           {
             echo "## Automated build repair"
             echo
@@ -455,11 +514,11 @@ jobs:
             echo
             echo "### What the agent says broke"
             echo
-            jq -r '.cause // "(not stated)"' "$VERDICT"
+            field cause "(not stated)"
             echo
             echo "### What it changed"
             echo
-            jq -r '.fix // "(not stated)"' "$VERDICT"
+            field fix "(not stated)"
             echo
             echo "### Verified locally before opening this"
             echo
@@ -470,7 +529,7 @@ jobs:
             echo
             echo "### Notes"
             echo
-            jq -r '.notes // "(none)"' "$VERDICT"
+            field notes "(none)"
             echo
             echo "---"
             echo
