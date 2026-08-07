@@ -2,6 +2,53 @@
 
 ### For Contributors
 
+#### Added
+
+- **An agent proposes a fix when `main` goes red** — `repair-build.yml` runs
+  daily; when the latest completed `Tests` run on `main` failed, it hands that
+  run's log to an agent and opens a pull request with the proposed fix. This
+  task was picked to be first precisely because its oracle is real: the pull
+  request is checked by the same four-platform matrix as any other, so a wrong
+  fix costs a review rather than a merge.
+  **The agent holds no credential that can write to this repository.** The work
+  is split across three jobs — detect, repair, propose — and the GitHub App
+  token is minted in the third, which the agent does not run in. The repair job
+  checks out with `persist-credentials: false`, so no token is left in
+  `.git/config` for its `Bash` tool to find, and its work leaves that job as a
+  patch file rather than as a branch.
+  What it may change is enforced by a path allowlist after the fact, not
+  entrusted to the prompt. `.github/**` is outside it deliberately: the cheapest
+  way to turn a build green is to weaken whatever reported it, and that has to
+  be a human's decision. `.githooks/**` is outside it too — those files carry an
+  executable bit that the signed-commit API cannot represent, so the push would
+  be rejected anyway.
+  The commands it may run are enumerated rather than wildcarded, which is not
+  the same caution repeated. `Bash(make:*)` would have admitted `make release`,
+  `make publish`, `make update-changelog` and `make setup-repo-protections`; the
+  push at the end of `make release` fails for want of a credential, but only
+  after it has bumped `pubspec.yaml` in the working tree — and `pubspec.yaml` is
+  *inside* the path allowlist, so a version bump would have ridden along in the
+  pull request looking like part of the fix. `cargo` is enumerated for the same
+  reason: `cargo publish` shares a prefix with `cargo check`.
+  Three states that would otherwise pass for success are made loud. The agent
+  must leave a `verdict.json`; its absence means the run exhausted its turns or
+  crashed, which is otherwise indistinguishable from "nothing needed fixing".
+  A verdict of `fixed` with an empty diff fails instead of opening an empty pull
+  request. And the failing run must be judging `main`'s current tip — cutting a
+  branch from an older commit would open a pull request that reverts whatever
+  landed in between.
+  The log is third-party text — compiler, package-manager and dependency output
+  — so the prompt frames it explicitly as data rather than instructions. Those
+  instructions live in `.github/agent-prompts/repair-build.md` rather than in
+  the workflow or in `.claude/skills/`: a prompt in a plain file is reviewable
+  on its own, diffable, and portable to another engine.
+  **Configuration:** `ANTHROPIC_API_KEY`, the same secret the CHANGELOG entry
+  uses; `AGENT_MODEL` optionally overrides the model. `workflow_dispatch` takes
+  a `run_id` and a `dry_run` flag so the whole path can be rehearsed against a
+  past failure instead of waiting for `main` to break — and a rehearsal against
+  a commit that is no longer the tip is forced into a dry run, so it cannot open
+  a reverting pull request.
+
 #### Changed
 
 - **AI changelog: configurable provider list, replacing the retired GitHub

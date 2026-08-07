@@ -1,0 +1,498 @@
+# Propose a fix when CI on `main` is red.
+#
+# The shape of this workflow is three jobs rather than one, and that is the
+# security design rather than tidiness:
+#
+#   detect   — decides whether there is anything to do, deterministically
+#   repair   — runs the agent, holds NO write credential of any kind
+#   propose  — mints the App token and opens the pull request
+#
+# The agent job never has a token that can write to this repository. Not in a
+# later step, not in `.git/config` from the checkout, not in the environment.
+# The App token is minted in a job the agent does not run in and cannot reach,
+# after its work has already been reduced to a patch file.
+#
+# Everything the agent needs to know is fetched by a deterministic step before
+# it starts — the failing run, its log — so the agent spends its turns on the
+# problem rather than on discovery.
+#
+# The oracle is real: the pull request this opens is checked by the same
+# four-platform matrix as any other, so a wrong fix fails loudly and cheaply.
+
+name: Repair Build
+
+on:
+  schedule:
+    # Daily, after the nightly window and before the working day.
+    - cron: '0 5 * * *'
+  # Manual runs only. There is deliberately no issue, comment or pull_request
+  # trigger: those carry text written by whoever opened them straight into an
+  # agent's context. `workflow_dispatch` is the one manual trigger that requires
+  # write access to the repository, so its inputs come from someone who could
+  # push the same content directly — they widen no boundary. Do not add a
+  # trigger that anyone else can reach.
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: >-
+          Failing Tests run to repair. Empty means the latest completed run on
+          main. Naming an older run is how this workflow gets exercised without
+          waiting for main to break for real.
+        required: false
+        default: ''
+      dry_run:
+        description: >-
+          Produce the patch as an artifact and open no pull request.
+        required: false
+        default: false
+        type: boolean
+
+# Least privilege for the whole file. `actions: read` is for reading the failing
+# run's log; every write is made by the `propose` job with a GitHub App token.
+permissions:
+  contents: read
+  actions: read
+
+# One repair at a time. A second run starting while the first is mid-flight
+# would race it to the same branch, and neither is urgent enough to cancel the
+# other.
+concurrency:
+  group: repair-build
+  cancel-in-progress: false
+
+jobs:
+  # ==========================================================================
+  # Is main broken, and is this failure new?
+  # ==========================================================================
+  detect:
+    name: Detect a broken main
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      broken: ${{ steps.failure.outputs.broken }}
+      skip: ${{ steps.existing.outputs.skip }}
+      run_id: ${{ steps.failure.outputs.run_id }}
+      run_url: ${{ steps.failure.outputs.run_url }}
+      sha: ${{ steps.failure.outputs.sha }}
+      branch: ${{ steps.failure.outputs.branch }}
+      dry_run: ${{ steps.failure.outputs.dry_run }}
+
+    steps:
+      - name: Find the run to repair
+        id: failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          REQUESTED_RUN: ${{ inputs.run_id }}
+          REQUESTED_DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$REQUESTED_RUN" ]; then
+            RUN=$(gh run view "$REQUESTED_RUN" --json conclusion,databaseId,headSha,url | jq -c '[.]')
+          else
+            # The latest *completed* run, not the latest failure: an older red
+            # run with a green one after it means main was already fixed, and
+            # asking for `--status=failure` would happily return the stale one
+            # and send an agent to repair something nobody broke.
+            RUN=$(gh run list --workflow=test.yml --branch=main --status=completed \
+                    --limit=1 --json conclusion,databaseId,headSha,url)
+          fi
+
+          CONCLUSION=$(jq -r '.[0].conclusion // "none"' <<<"$RUN")
+          echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
+
+          if [ "$CONCLUSION" != "failure" ]; then
+            echo "broken=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Run conclusion is '$CONCLUSION' — nothing to repair."
+            exit 0
+          fi
+
+          SHA=$(jq -r '.[0].headSha' <<<"$RUN")
+          TIP=$(gh api "repos/$GH_REPO/commits/main" --jq '.sha')
+          DRY_RUN="${REQUESTED_DRY_RUN:-false}"
+
+          # The failing run has to be judging main's current tip. If main has
+          # moved on, CI has not yet ruled on what is there now, and repairing
+          # against an older commit is how a pull request ends up quietly
+          # reverting whatever landed in between: the branch would be cut from
+          # the old tree and its diff against main would carry the difference.
+          if [ "$SHA" != "$TIP" ]; then
+            if [ -z "$REQUESTED_RUN" ]; then
+              echo "broken=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::The red run judged ${SHA:0:12} but main is now at ${TIP:0:12} — waiting for CI to rule on the current tip."
+              exit 0
+            fi
+            # Somebody named this run deliberately, which is the rehearsal path.
+            # Let it run, but take the write end off: forcing the dry run is
+            # what stops a rehearsal against an old commit from opening a pull
+            # request that reverts everything since.
+            DRY_RUN=true
+            echo "::warning::Run ${REQUESTED_RUN} judged ${SHA:0:12} but main is at ${TIP:0:12} — forcing a dry run; no pull request will be opened."
+          fi
+
+          {
+            echo "broken=true"
+            echo "dry_run=$DRY_RUN"
+            echo "run_id=$(jq -r '.[0].databaseId' <<<"$RUN")"
+            echo "run_url=$(jq -r '.[0].url' <<<"$RUN")"
+            echo "sha=$SHA"
+            # Keyed by the commit that broke, so one failure gets one attempt.
+            echo "branch=repair-build-${SHA:0:12}"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "::warning::Repairing ${SHA:0:12} — $(jq -r '.[0].url' <<<"$RUN")"
+
+      # Not consulted on a dry run: there is no pull request to collide with, and
+      # skipping would defeat the only way to rehearse this workflow twice.
+      - name: Skip if this exact failure already has a pull request
+        id: existing
+        if: steps.failure.outputs.broken == 'true' && steps.failure.outputs.dry_run != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BRANCH: ${{ steps.failure.outputs.branch }}
+        run: |
+          set -euo pipefail
+          # `--state all`, not just open. An open one must not be force-pushed
+          # over. A closed one means a human has already seen this exact failure
+          # and declined the fix, and re-proposing it every night is how
+          # automation teaches people to stop reading it.
+          COUNT=$(gh pr list --head "$BRANCH" --state all --json number --jq 'length')
+          if [ "$COUNT" != "0" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::A pull request for $BRANCH already exists (open or closed) — skipping."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ==========================================================================
+  # The agent. No write credential exists anywhere in this job.
+  # ==========================================================================
+  repair:
+    name: Attempt a repair
+    needs: detect
+    if: needs.detect.outputs.broken == 'true' && needs.detect.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      status: ${{ steps.verdict.outputs.status }}
+      changed: ${{ steps.patch.outputs.changed }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.detect.outputs.sha }}
+          # Deliberately the default, read-only GITHUB_TOKEN. Checking out with
+          # the App token would leave a credential in .git/config that the
+          # agent's Bash tool can read and push with, which would defeat the
+          # entire job split.
+          persist-credentials: false
+
+      - name: Fetch the failing log
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ needs.detect.outputs.run_id }}
+          RUN_URL: ${{ needs.detect.outputs.run_url }}
+          SHA: ${{ needs.detect.outputs.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .agent-scratch
+          # Belt and braces with the `rm -rf` after the agent runs: if the
+          # directory somehow survives, git still never sees it.
+          echo '.agent-scratch/' >> .git/info/exclude
+
+          # Deterministic, and done here rather than by the agent on purpose.
+          # Reads that a script can do cost an agent turns, and turns spent on
+          # discovery are turns not spent on the problem.
+          gh run view "$RUN_ID" --log-failed > .agent-scratch/build-failure.raw
+
+          # Bounded. A pathological log — a dependency looping on a warning —
+          # would otherwise fill the context with one repeated line and push the
+          # actual error out of it.
+          head -c 400000 .agent-scratch/build-failure.raw > .agent-scratch/build-failure.log
+          rm -f .agent-scratch/build-failure.raw
+
+          {
+            echo "RUN_URL=$RUN_URL"
+            echo "SHA=$SHA"
+          } > .agent-scratch/failure.env
+
+          echo "Log bytes: $(wc -c < .agent-scratch/build-failure.log)"
+
+      # The same toolchain the Tests job sets up, so that `make build` here
+      # means what it means there. Without it the agent cannot verify anything
+      # and its only options are to guess or to give up.
+      - name: Setup Rust
+        uses: ./.github/actions/setup-rust
+
+      - name: Setup Protoc
+        uses: ./.github/actions/setup-protoc
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      - name: Get dependencies
+        run: make get
+
+      - name: Run the agent
+        uses: anthropics/claude-code-action@c038e4dcdedfbbca18dfb17df35a17e40ded4ddc # v1.0.186
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Read-only, and only so the action can resolve repository context.
+          # The job's `permissions:` block is what actually bounds it.
+          github_token: ${{ github.token }}
+          # The instructions live in a plain Markdown file, not in this YAML and
+          # not in `.claude/skills/`: a prompt in a file is reviewable on its
+          # own, diffable, and portable to another engine. This input only
+          # points at it.
+          prompt: |
+            Read `.github/agent-prompts/repair-build.md` and carry out exactly
+            the task it describes. It is the complete specification, including
+            which paths you may change and what counts as done.
+          # Commands are enumerated, never wildcarded on the tool name. This
+          # Makefile's targets include `release`, `release-frb`, `publish`,
+          # `update-changelog` and `setup-repo-protections`, so `Bash(make:*)`
+          # would admit all of them. The push at the end of `make release` would
+          # fail for want of a credential — but only after it had already
+          # bumped `pubspec.yaml` in the working tree, and `pubspec.yaml` is
+          # inside the path allowlist, so a version bump would ride along in the
+          # pull request looking like part of the fix. `cargo` is enumerated for
+          # the same reason: `cargo publish` and `cargo install` live under the
+          # same prefix as `cargo check`.
+          #
+          # `Write` is granted so the agent can leave its verdict. It can also
+          # create source files anywhere, which the path allowlist is what
+          # actually contains — the grant does not.
+          claude_args: |
+            --model ${{ vars.AGENT_MODEL || 'claude-opus-5' }}
+            --max-turns 40
+            --allowedTools "Read,Edit,Write,Glob,Grep,Bash(make get),Bash(make build),Bash(make codegen),Bash(make test),Bash(make test:*),Bash(make analyze),Bash(make analyze:*),Bash(make format),Bash(make format-check),Bash(make rust-check),Bash(make rust-clippy),Bash(make rust-test),Bash(cargo check:*),Bash(cargo build:*),Bash(cargo test:*),Bash(cargo clippy:*),Bash(cargo tree:*),Bash(cargo metadata:*),Bash(git diff:*),Bash(git log:*),Bash(git status:*),Bash(ls:*),Bash(rg:*)"
+            --disallowedTools "WebFetch,WebSearch"
+
+      # Turn exhaustion, a crash and "there was nothing to do" all look
+      # identical from outside: the job ends, the tree is clean, no pull request
+      # appears. Requiring the agent to leave a verdict behind is what separates
+      # them — its absence is a failure, loudly, rather than a quiet success.
+      - name: Read the verdict
+        id: verdict
+        run: |
+          set -euo pipefail
+          VERDICT=.agent-scratch/verdict.json
+
+          if [ ! -f "$VERDICT" ]; then
+            echo "::error::The agent left no verdict at $VERDICT. It ran out of turns, crashed, or stopped early — this is NOT 'nothing to fix'. Check the run log."
+            exit 1
+          fi
+          if ! jq -e . "$VERDICT" > /dev/null 2>&1; then
+            echo "::error::$VERDICT is not valid JSON."
+            cat "$VERDICT"
+            exit 1
+          fi
+
+          STATUS=$(jq -r '.status // "missing"' "$VERDICT")
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+
+          case "$STATUS" in
+            fixed)
+              echo "::notice::Agent reports a fix."
+              ;;
+            cannot-fix)
+              echo "::warning::Agent could not fix this build and said so. No pull request will be opened."
+              jq -r '.cause // ""' "$VERDICT"
+              jq -r '.notes // ""' "$VERDICT"
+              ;;
+            *)
+              echo "::error::Unrecognised verdict status '$STATUS' (expected 'fixed' or 'cannot-fix')."
+              exit 1
+              ;;
+          esac
+
+      - name: Reduce the work to a patch
+        id: patch
+        if: steps.verdict.outputs.status == 'fixed'
+        run: |
+          set -euo pipefail
+          cp .agent-scratch/verdict.json "$RUNNER_TEMP/verdict.json"
+          rm -rf .agent-scratch
+
+          git add -A
+          git diff --cached --binary > "$RUNNER_TEMP/repair.patch"
+
+          if [ ! -s "$RUNNER_TEMP/repair.patch" ]; then
+            echo "::error::The agent reported 'fixed' but changed nothing. One of the two is wrong, and neither is safe to act on."
+            exit 1
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --cached --name-only
+
+      # The allowlist, enforced here rather than trusted to the prompt. Two
+      # exclusions carry their own reason and are not incidental:
+      #
+      #   .github/**   — the cheapest way to turn a red build green is to weaken
+      #                  what reported it. That change has to be a human's.
+      #   .githooks/** — carries an executable bit, which the signed-commit API
+      #                  cannot represent; the push would be rejected anyway.
+      - name: Reject changes outside the allowlist
+        if: steps.verdict.outputs.status == 'fixed'
+        env:
+          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml)$'
+        run: |
+          set -euo pipefail
+          OUTSIDE=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
+          if [ -n "$OUTSIDE" ]; then
+            echo "::error::The agent changed files outside the allowlist:"
+            printf '%s\n' "$OUTSIDE"
+            exit 1
+          fi
+          echo "All changed paths are inside the allowlist."
+
+      - name: Upload the patch
+        if: steps.verdict.outputs.status == 'fixed'
+        uses: actions/upload-artifact@v4
+        with:
+          name: repair-patch
+          path: |
+            ${{ runner.temp }}/repair.patch
+            ${{ runner.temp }}/verdict.json
+          retention-days: 7
+          if-no-files-found: error
+
+  # ==========================================================================
+  # The only job that can write. The agent does not run here.
+  # ==========================================================================
+  propose:
+    name: Open the pull request
+    needs: [detect, repair]
+    if: >-
+      needs.detect.outputs.dry_run != 'true' &&
+      needs.repair.outputs.status == 'fixed' &&
+      needs.repair.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      # Two deliberate choices here.
+      #
+      # The App token, matching the update workflows: a pull request opened by
+      # the default GITHUB_TOKEN does not trigger workflows, which would leave
+      # this one without the four-platform matrix that is its entire oracle —
+      # and a missing oracle looks exactly like a passing one.
+      #
+      # `main`, not the pinned SHA the agent worked on. `detect` established the
+      # two were equal, but a commit can land while the agent runs, and cutting
+      # the branch from the older tree would make this pull request revert it.
+      # If main really did move and the patch no longer applies, `git apply`
+      # below fails loudly — the correct outcome, since the fix was reasoned
+      # about against a tree that no longer exists.
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          ref: main
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: repair-patch
+          path: ${{ runner.temp }}/repair
+
+      - name: Apply the patch
+        run: |
+          set -euo pipefail
+          # Staged, and left staged: `git diff --cached --name-only` is then the
+          # same question the repair job answered, asked the same way. Unstaging
+          # would force the check onto `git status` output, which does not
+          # survive renames or a path with a space in it.
+          git apply --index --whitespace=nowarn "$RUNNER_TEMP/repair/repair.patch"
+          git diff --cached --stat
+
+      # Re-checked after the round trip. The artifact is written and read by
+      # this workflow alone, so this is not a trust boundary — it is a cheap
+      # assertion that the patch that arrived is the patch that was vetted.
+      - name: Re-check the allowlist
+        env:
+          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml)$'
+        run: |
+          set -euo pipefail
+          OUTSIDE=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
+          if [ -n "$OUTSIDE" ]; then
+            echo "::error::Patch touches files outside the allowlist after apply:"
+            printf '%s\n' "$OUTSIDE"
+            exit 1
+          fi
+
+      # Written to a file rather than interpolated into the action's `body:`.
+      # The verdict is text an agent wrote, and text an agent wrote must never
+      # reach a `${{ }}` expression — that is evaluated by the runner before the
+      # shell ever sees it.
+      - name: Compose the pull request body
+        env:
+          RUN_URL: ${{ needs.detect.outputs.run_url }}
+          SHA: ${{ needs.detect.outputs.sha }}
+        run: |
+          set -euo pipefail
+          VERDICT="$RUNNER_TEMP/repair/verdict.json"
+          {
+            echo "## Automated build repair"
+            echo
+            echo "CI on \`main\` was red at \`${SHA:0:12}\`. This pull request is an"
+            echo "agent's proposed fix, and it has not been reviewed by anyone."
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Failing run | $RUN_URL |"
+            echo "| Broken commit | \`$SHA\` |"
+            echo
+            echo "### What the agent says broke"
+            echo
+            jq -r '.cause // "(not stated)"' "$VERDICT"
+            echo
+            echo "### What it changed"
+            echo
+            jq -r '.fix // "(not stated)"' "$VERDICT"
+            echo
+            echo "### Verified locally before opening this"
+            echo
+            # Defensive on shape as well as absence: `verified` is written by a
+            # model, and a bare string where an array belongs would otherwise
+            # abort jq and fail the run at the last step, after the work is done.
+            jq -r '(.verified // []) | if type != "array" or length == 0 then "(nothing reported)" else map("- `" + tostring + "`") | join("\n") end' "$VERDICT"
+            echo
+            echo "### Notes"
+            echo
+            jq -r '.notes // "(none)"' "$VERDICT"
+            echo
+            echo "---"
+            echo
+            echo "**Review this as a proposal, not a result.** The agent ran the gates above on"
+            echo "Linux only; the matrix on this pull request is the real check. Confirm that the"
+            echo "change addresses the cause rather than the symptom, and that no test was"
+            echo "weakened to make it pass."
+          } > "$RUNNER_TEMP/pr-body.md"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          # Required: the Signing commit ruleset applies to ~ALL branches with
+          # no bypass actors, so an unsigned push is rejected.
+          sign-commits: true
+          branch: ${{ needs.detect.outputs.branch }}
+          base: main
+          commit-message: |
+            fix(ci): repair the build broken at ${{ needs.detect.outputs.sha }}
+          title: "Repair the build broken at ${{ needs.detect.outputs.sha }}"
+          body-path: ${{ runner.temp }}/pr-body.md
+          labels: |
+            automated
+          draft: false
