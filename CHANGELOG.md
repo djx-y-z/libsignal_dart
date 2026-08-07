@@ -77,7 +77,7 @@
   a commit that is no longer the tip is forced into a dry run, so it cannot open
   a reverting pull request.
 
-- **A second engine for the repair agent: OpenCode, with any OpenRouter model**
+- **A second engine for the repair agent: OpenCode, on any provider**
   — `vars.AGENT_ENGINE` selects `claude-code` (the default, unchanged) or
   `opencode`. The claim that the prompt was "portable to another engine" is now
   load-bearing rather than aspirational: both engines read the same
@@ -126,15 +126,29 @@
   exhaustion it forces a text-only response, so the agent cannot write a
   verdict, so the run fails loudly — the same outcome as Claude Code running out
   of turns, reached by a different route.
-  **Configuration:** `OPENROUTER_API_KEY` as a secret, plus `AGENT_ENGINE`;
-  `OPENCODE_MODEL` and `OPENCODE_VERSION` override the model and the pinned CLI
-  version. The model default is chosen for context rather than price — the
-  prompt invites the agent to open the full log, which is capped at 400 KB and
-  tokenises to far more than a small window holds, so a cheaper model with a
-  128K context would serve every ordinary run and fail on exactly the unfamiliar
-  failure the full log exists for. The secret scan now covers
-  `OPENROUTER_API_KEY` alongside `ANTHROPIC_API_KEY`, and scans both whichever
-  engine ran, so adding an engine cannot quietly leave a key unscanned.
+  **Which provider is used is configuration, not code.** OpenCode reaches every
+  provider it knows about through that provider's own environment variable, so
+  the *name* of the variable is `OPENCODE_PROVIDER_ENV` (default
+  `OPENROUTER_API_KEY`) and the value is a single `OPENCODE_API_KEY` secret.
+  Pointing a repository at a different provider, a self-hosted gateway or a
+  proxy is then two repository settings rather than a YAML edit repeated in
+  every generated project and shipped through a template release — the same
+  reasoning the `AI_MODELS` list was built on, applied to the engine. A custom
+  or self-hosted endpoint additionally takes a `provider` block with a
+  `baseURL` in the OpenCode config; no workflow change is needed for that
+  either. The name is validated before use, because a typo would otherwise
+  surface as an OpenCode failure rather than as the settings mistake it is.
+  **Configuration:** `AGENT_ENGINE`, the `OPENCODE_API_KEY` secret, and
+  optionally `OPENCODE_PROVIDER_ENV`, `OPENCODE_MODEL` and `OPENCODE_VERSION`.
+  The model default is chosen for context rather than price — the prompt invites
+  the agent to open the full log, which is capped at 400 KB and tokenises to far
+  more than a small window holds, so a cheaper model with a 128K context would
+  serve every ordinary run and fail on exactly the unfamiliar failure the full
+  log exists for. The secret scan covers `OPENCODE_API_KEY` alongside
+  `ANTHROPIC_API_KEY` and scans both whichever engine ran, so adding an engine
+  cannot quietly leave a key unscanned; because it matches the secret's value
+  rather than a variable name, it keeps working whatever provider that value was
+  handed to.
 
 #### Changed
 

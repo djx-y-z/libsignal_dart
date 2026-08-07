@@ -383,7 +383,16 @@ jobs:
       - name: Run the agent (OpenCode)
         if: vars.AGENT_ENGINE == 'opencode'
         env:
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Which provider the key belongs to is configuration, not code. Every
+          # provider OpenCode knows about reads its key from its own environment
+          # variable — `OPENROUTER_API_KEY`, `AI_GATEWAY_API_KEY`,
+          # `ANTHROPIC_API_KEY`, and so on — so the *name* is the variable and
+          # the value is one secret. Pointing this workflow at a different
+          # provider, a self-hosted gateway or a proxy is then two repository
+          # settings rather than a YAML edit repeated in every generated
+          # project and shipped through a template release.
+          OPENCODE_PROVIDER_ENV: ${{ vars.OPENCODE_PROVIDER_ENV || 'OPENROUTER_API_KEY' }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_CONFIG: ${{ github.workspace }}/.github/agent-config/opencode.json
           OPENCODE_DISABLE_AUTOUPDATE: '1'
           # Model is engine-scoped on purpose. `AGENT_MODEL` above names a
@@ -399,10 +408,27 @@ jobs:
           OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL || 'openrouter/deepseek/deepseek-v4-flash' }}
         run: |
           set -euo pipefail
-          if [ -z "${OPENROUTER_API_KEY:-}" ]; then
-            echo "::error::AGENT_ENGINE is 'opencode' but the OPENROUTER_API_KEY secret is not set."
+
+          if [ -z "${OPENCODE_API_KEY:-}" ]; then
+            echo "::error::AGENT_ENGINE is 'opencode' but the OPENCODE_API_KEY secret is not set."
             exit 1
           fi
+
+          # The name comes from a repository variable, so only someone who
+          # could edit this workflow can set it — but a typo would otherwise
+          # produce an export that fails in a way that reads like an OpenCode
+          # bug rather than a settings mistake. Checking it costs one line.
+          if ! printf '%s' "$OPENCODE_PROVIDER_ENV" | grep -qE '^[A-Za-z_][A-Za-z0-9_]*$'; then
+            echo "::error::OPENCODE_PROVIDER_ENV ('${OPENCODE_PROVIDER_ENV}') is not a valid environment variable name."
+            exit 1
+          fi
+
+          # Hand the key to whichever variable this provider reads. `export` is
+          # given a single NAME=VALUE string and never evaluates it, so the
+          # secret cannot be re-parsed as shell here.
+          export "${OPENCODE_PROVIDER_ENV}=${OPENCODE_API_KEY}"
+          echo "Provider key exported as \$${OPENCODE_PROVIDER_ENV}."
+
           opencode run \
             --agent repair-build \
             --model "$OPENCODE_MODEL" \
@@ -504,15 +530,17 @@ jobs:
         if: steps.verdict.outputs.status == 'fixed'
         env:
           SCAN_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          SCAN_OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          SCAN_OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           SCAN_GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           FOUND=0
           # Every engine's key is scanned regardless of which engine ran: the
           # loop skips empty values, so listing both costs nothing and means
-          # adding an engine can never quietly leave a key unscanned.
-          for name in SCAN_ANTHROPIC_API_KEY SCAN_OPENROUTER_API_KEY SCAN_GITHUB_TOKEN; do
+          # adding an engine can never quietly leave a key unscanned. Note this
+          # scans the secret's *value*, so it keeps working whatever provider
+          # `OPENCODE_PROVIDER_ENV` pointed that value at.
+          for name in SCAN_ANTHROPIC_API_KEY SCAN_OPENCODE_API_KEY SCAN_GITHUB_TOKEN; do
             value="${!name}"
             [ -n "$value" ] || continue
             for file in "$RUNNER_TEMP/verdict.json" "$RUNNER_TEMP/repair.patch"; do

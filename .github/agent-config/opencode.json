@@ -12,6 +12,27 @@
 // request. Keeping it out of the root also means it does not silently become
 // the config for anyone running `opencode` in this repository by hand.
 //
+// Which model runs is not set here — it is `vars.OPENCODE_MODEL` in the
+// workflow, in `provider/model` form. Any provider OpenCode knows about works,
+// because the workflow hands the `OPENCODE_API_KEY` secret to whichever
+// environment variable `vars.OPENCODE_PROVIDER_ENV` names.
+//
+// A self-hosted or otherwise custom endpoint is the one case that needs
+// something here rather than in repository settings — a `provider` block
+// alongside `permission`, which the workflow does not need to know about:
+//
+//   "provider": {
+//     "my-gateway": {
+//       "npm": "@ai-sdk/openai-compatible",
+//       "options": { "baseURL": "https://llm.internal.example/v1",
+//                    "apiKey": "{env:MY_GATEWAY_KEY}" },
+//       "models": { "llama-3.3-70b": {} }
+//     }
+//   }
+//
+// ...then set OPENCODE_MODEL=my-gateway/llama-3.3-70b and point
+// OPENCODE_PROVIDER_ENV at MY_GATEWAY_KEY.
+//
 // JSONC: comments and trailing commas are supported by OpenCode's config
 // parser. Verify any edit with `opencode debug config` before pushing.
 {
