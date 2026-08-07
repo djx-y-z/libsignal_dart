@@ -77,6 +77,65 @@
   a commit that is no longer the tip is forced into a dry run, so it cannot open
   a reverting pull request.
 
+- **A second engine for the repair agent: OpenCode, with any OpenRouter model**
+  — `vars.AGENT_ENGINE` selects `claude-code` (the default, unchanged) or
+  `opencode`. The claim that the prompt was "portable to another engine" is now
+  load-bearing rather than aspirational: both engines read the same
+  `.github/agent-prompts/repair-build.md`, work on the same prepared evidence,
+  and are judged by the same path allowlist, secret scan and `verdict.json`
+  contract afterwards. Only the agent call itself differs, which is what keeping
+  it to a single step was for.
+  **The motivation is per-repository cost.** The bill is dominated by cached
+  input replayed on every turn, so it scales with the number of repositories
+  rather than with how often `main` breaks; across three that is the difference
+  between dollars and cents per month. Engines are compared on the whole
+  workload rather than on sticker rates, because a cheap model without prompt
+  caching can cost more than an expensive one with it.
+  **Neither engine's own GitHub Action is used.** OpenCode ships one, but it is
+  driven by `/opencode` comments on issues and pull requests and opens the pull
+  request itself. Both are things this workflow deliberately does not do —
+  comment triggers carry someone else's text straight into an agent's context,
+  and opening the pull request from the agent's job would put a write credential
+  in exactly the job that is kept free of one. Installing the CLI keeps the
+  three-job split intact.
+  **The permission model is translated rather than approximated**, and lands
+  tighter than the Claude Code side. It lives in
+  `.github/agent-config/opencode.json`, outside the path allowlist, so the agent
+  cannot widen its own permissions and have that ride along in the pull request.
+  Commands are enumerated as exact strings with no wildcards at all: OpenCode
+  matches glob patterns, so a trailing `*` would make `make test *` also match
+  `make test && make release` — and `make release` bumps `pubspec.yaml`, which
+  is *inside* the path allowlist. Exact patterns cannot absorb a `&&` clause, so
+  that closes structurally rather than by trying to blacklist shell operators.
+  `cargo` is absent entirely, since CLAUDE.md tells the agent never to call it
+  directly. `ask` is never used: a question in a headless run has nobody to
+  answer it, and `--auto`, which approves everything not explicitly denied, is
+  deliberately not passed.
+  Two things surfaced from testing that config rather than reading about it.
+  `write` is a real tool but is **not** among the permission keys in OpenCode's
+  published schema, so it must be granted explicitly or the agent cannot create
+  the one file the workflow treats as proof it finished. And a `"*": "deny"`
+  catch-all — which looked like obvious hardening — resolved *before* the
+  command rules on one machine and *after* them on another, where last-match-wins
+  would have let it silently override the entire allowlist; pinning the OpenCode
+  version achieves what it was meant to without depending on rule order. The
+  config now resolves identically whether or not a global `~/.config/opencode`
+  config exists, which is the property that makes a local rehearsal mean
+  anything.
+  The turn limit is `steps` in that config; OpenCode has no `--max-turns`. On
+  exhaustion it forces a text-only response, so the agent cannot write a
+  verdict, so the run fails loudly — the same outcome as Claude Code running out
+  of turns, reached by a different route.
+  **Configuration:** `OPENROUTER_API_KEY` as a secret, plus `AGENT_ENGINE`;
+  `OPENCODE_MODEL` and `OPENCODE_VERSION` override the model and the pinned CLI
+  version. The model default is chosen for context rather than price — the
+  prompt invites the agent to open the full log, which is capped at 400 KB and
+  tokenises to far more than a small window holds, so a cheaper model with a
+  128K context would serve every ordinary run and fail on exactly the unfamiliar
+  failure the full log exists for. The secret scan now covers
+  `OPENROUTER_API_KEY` alongside `ANTHROPIC_API_KEY`, and scans both whichever
+  engine ran, so adding an engine cannot quietly leave a key unscanned.
+
 #### Changed
 
 - **AI changelog: configurable provider list, replacing the retired GitHub

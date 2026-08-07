@@ -294,7 +294,21 @@ jobs:
       - name: Get dependencies
         run: make get
 
-      - name: Run the agent
+      # Two engines, one prompt. Which one runs is `vars.AGENT_ENGINE`
+      # (`claude-code`, the default, or `opencode`); everything on either side
+      # of this pair is identical, because the engine only ever sees a working
+      # tree and leaves behind a patch and a verdict. That is the whole reason
+      # the agent call was kept to a single step with the prompt in a file.
+      #
+      # Neither engine's own GitHub Action is used. OpenCode ships one, but it
+      # is driven by `/opencode` comments on issues and pull requests and opens
+      # the pull request itself — both of which this workflow deliberately does
+      # not do: comment triggers carry someone else's text into an agent's
+      # context, and opening the pull request here would put a write credential
+      # in the job the agent runs in. Installing the CLI keeps the three-job
+      # split intact.
+      - name: Run the agent (Claude Code)
+        if: vars.AGENT_ENGINE != 'opencode'
         uses: anthropics/claude-code-action@c038e4dcdedfbbca18dfb17df35a17e40ded4ddc # v1.0.186
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -337,6 +351,64 @@ jobs:
             --max-turns 40
             --allowedTools "Read,Edit,Write,Glob,Grep,Bash(make get),Bash(make build),Bash(make codegen),Bash(make test),Bash(make test:*),Bash(make analyze),Bash(make analyze:*),Bash(make format),Bash(make format-check),Bash(make rust-check),Bash(make rust-clippy),Bash(make rust-test),Bash(cargo check:*),Bash(cargo build:*),Bash(cargo test:*),Bash(cargo clippy:*),Bash(cargo tree:*),Bash(cargo metadata:*),Bash(git log:*),Bash(git status:*)"
             --disallowedTools "WebFetch,WebSearch"
+
+      # Pinned, and `npm` rather than the vendor's curl installer so the version
+      # is a lockable input rather than whatever `latest` resolved to that
+      # morning. `OPENCODE_DISABLE_AUTOUPDATE` matters for the same reason: an
+      # agent that upgrades itself mid-run is not the agent that was reviewed.
+      - name: Install OpenCode
+        if: vars.AGENT_ENGINE == 'opencode'
+        env:
+          OPENCODE_VERSION: ${{ vars.OPENCODE_VERSION || '1.18.15' }}
+        run: |
+          set -euo pipefail
+          npm install -g "opencode-ai@${OPENCODE_VERSION}"
+          opencode --version
+
+      # The permissions live in `.github/agent-config/opencode.json`, which is
+      # outside the path allowlist so the agent cannot widen them and have the
+      # change ride along in the pull request. That file is the counterpart to
+      # the `--allowedTools` line above and carries the reasoning for each rule.
+      #
+      # `--auto` is deliberately absent: it auto-approves everything not
+      # explicitly denied, which is the opposite of an allowlist. The config
+      # denies by default instead, and never uses `ask` — a question in a
+      # headless run has nobody to answer it.
+      #
+      # The turn limit is `steps` in that config, not a flag here; OpenCode has
+      # no `--max-turns`. On exhaustion it forces a text-only response, so the
+      # agent cannot call `write`, so `verdict.json` is missing, so the step
+      # below fails loudly — the same outcome as Claude Code running out of
+      # turns, reached by a different route.
+      - name: Run the agent (OpenCode)
+        if: vars.AGENT_ENGINE == 'opencode'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENCODE_CONFIG: ${{ github.workspace }}/.github/agent-config/opencode.json
+          OPENCODE_DISABLE_AUTOUPDATE: '1'
+          # Model is engine-scoped on purpose. `AGENT_MODEL` above names a
+          # Claude model and means nothing to OpenCode, so flipping the engine
+          # with a stale `AGENT_MODEL` set would otherwise fail at runtime in a
+          # way that reads like a config bug.
+          #
+          # The default is chosen for context, not price: the prompt invites the
+          # agent to open the full log, which this workflow caps at 400 KB —
+          # roughly 130K tokens of CI output, on top of the working context. A
+          # cheaper model with a 128K window would fit every ordinary run and
+          # fail on exactly the unfamiliar failure the full log exists for.
+          OPENCODE_MODEL: ${{ vars.OPENCODE_MODEL || 'openrouter/deepseek/deepseek-v4-flash' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${OPENROUTER_API_KEY:-}" ]; then
+            echo "::error::AGENT_ENGINE is 'opencode' but the OPENROUTER_API_KEY secret is not set."
+            exit 1
+          fi
+          opencode run \
+            --agent repair-build \
+            --model "$OPENCODE_MODEL" \
+            "Read \`.github/agent-prompts/repair-build.md\` and carry out exactly
+             the task it describes. It is the complete specification, including
+             which paths you may change and what counts as done."
 
       # Turn exhaustion, a crash and "there was nothing to do" all look
       # identical from outside: the job ends, the tree is clean, no pull request
@@ -432,11 +504,15 @@ jobs:
         if: steps.verdict.outputs.status == 'fixed'
         env:
           SCAN_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SCAN_OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SCAN_GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           FOUND=0
-          for name in SCAN_ANTHROPIC_API_KEY SCAN_GITHUB_TOKEN; do
+          # Every engine's key is scanned regardless of which engine ran: the
+          # loop skips empty values, so listing both costs nothing and means
+          # adding an engine can never quietly leave a key unscanned.
+          for name in SCAN_ANTHROPIC_API_KEY SCAN_OPENROUTER_API_KEY SCAN_GITHUB_TOKEN; do
             value="${!name}"
             [ -n "$value" ] || continue
             for file in "$RUNNER_TEMP/verdict.json" "$RUNNER_TEMP/repair.patch"; do
