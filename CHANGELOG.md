@@ -5,7 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.100.0** — dependency update only: the single change reaching the crates this package binds removes a helper this library never called, and the FFI surface regenerates byte-for-byte identical
-- **libsignal_frb v6.0.1** — Rust FFI bindings
+- **libsignal_frb v6.0.2** — Rust FFI bindings
 
 #### Changed
 
