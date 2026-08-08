@@ -1,3 +1,23 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.100.0** — dependency update only: the single change reaching the crates this package binds removes a helper this library never called, and the FFI surface regenerates byte-for-byte identical
+- **libsignal_frb v6.0.1** — Rust FFI bindings
+
+#### Changed
+
+- **libsignal native library → v0.100.0** ([compare](https://github.com/signalapp/libsignal/compare/v0.99.3...v0.100.0))
+  - The range covers two upstream releases. **v0.99.4** — upstream's own summary is "SVRB: 2026Q1 to previous", "SGX: Enforce TCB number in evidence" and "Backups: Validate the new `blockedAtTimestamp` field on Contact and Group" — lands entirely in `rust/net`, `rust/attest` and `rust/message-backup`, alongside a `LogSafeDisplay` for `socks::Protocol` and the Java/Kotlin binding generators. None of that is exposed by this library, and in the three crates this package binds (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) its only diff is the `VERSION` constant
+  - **v0.100.0** is the minor bump, and the one release in range that touches a bound crate. Upstream summarises it as "SPQR: Remove requirePqRatio argument for sessions, instead requiring for all sessions". Concretely, `should_use_nonpq_session()` is deleted from `libsignal-protocol` along with its re-export and its test — the helper that decided, from a server-supplied ratio, which non-post-quantum sessions to keep and which to archive during the post-quantum ratchet rollout — and upstream's own `SessionRecord_HasUsableSenderChain` bridge drops the matching `requirePqRatio` argument, so it now always demands `NotStale | EstablishedWithPqxdh | Spqr`
+  - **The removal does not reach this package.** It never called or exposed `should_use_nonpq_session`: choosing a migration ratio is an application's policy question rather than a protocol binding's, and `SessionRecord.hasUsableSenderChain()` here is this package's own FRB binding, which never carried the argument upstream has now dropped. The release build is clean and `make codegen` reproduces `lib/src/rust/` byte-for-byte, so the FFI surface is unchanged and the binding's signature is the same on both sides
+  - Also in range but out of reach: `UnauthBackupsService.listBackupMedia`, a new typed API in the `rust/net` chat layer this package does not bind, and a zkgroup fix that stops invalid curve points being treated as candidate profile keys — `zkgroup` is not in this package's dependency graph at all
+  - Upstream prepared a v0.99.5 that was never tagged, which is why two releases span three version numbers
+  - Both upstream GitHub releases carry an **empty** body; the summaries quoted above come from upstream's in-repo `RELEASE_NOTES.md`, and the per-crate analysis is derived from the commit range
+  - Transitively, the shipped binary picks up `libsignal-debug` 0.99.3 → 0.100.0, `zerocopy` 0.8.55 → 0.8.56, and `data-encoding` 2.11.0 → 2.11.1 with its `data-encoding-macro` 0.1.20 → 0.1.21 wrapper. `zerocopy-derive`, `data-encoding-macro-internal` and `delegate-attr` move as well but are proc-macros, and `aho-corasick` 1.1.4 → 1.1.5 and `regex-automata` 0.4.16 → 0.4.18 enter the graph only through `prost-build`, a build-dependency of `libsignal-protocol` and `spqr` — so none of those five reach the binary. `THIRD_PARTY_NOTICES.txt` is regenerated to match
+
 ## [7.0.1] - 2026-08-03
 
 ### For Users
