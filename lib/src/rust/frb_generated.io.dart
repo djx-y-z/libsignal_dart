@@ -64,12 +64,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKeyPtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PlaintextContentPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContentPtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PreKeyBundlePtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundlePtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PreKeyRecordPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecordPtr;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PreKeySignalMessagePtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessagePtr;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PrivateKeyPtr => wire
@@ -84,6 +92,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKeyPtr;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyDistributionMessagePtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessagePtr;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyMessagePtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessagePtr;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_SessionRecordPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecordPtr;
 
@@ -94,6 +110,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_SignedPreKeyRecordPtr => wire
       ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecordPtr;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_UnidentifiedSenderMessageContentPtr => wire
+      ._rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContentPtr;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -147,6 +167,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -155,6 +181,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -177,6 +209,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -191,6 +235,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -249,6 +299,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -257,6 +313,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -279,6 +341,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -293,6 +367,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -398,6 +478,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -406,6 +492,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -428,6 +520,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -442,6 +546,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -474,10 +584,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<MultiRecipientDestination> dco_decode_list_multi_recipient_destination(
+    dynamic raw,
+  );
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<SealedSenderV2Device> dco_decode_list_sealed_sender_v_2_device(
+    dynamic raw,
+  );
+
+  @protected
+  List<SealedSenderV2Recipient> dco_decode_list_sealed_sender_v_2_recipient(
+    dynamic raw,
+  );
+
+  @protected
+  MultiRecipientDestination dco_decode_multi_recipient_destination(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
@@ -495,6 +626,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SealedSenderEncryptResult dco_decode_sealed_sender_encrypt_result(
+    dynamic raw,
+  );
+
+  @protected
+  SealedSenderV2Device dco_decode_sealed_sender_v_2_device(dynamic raw);
+
+  @protected
+  SealedSenderV2Recipient dco_decode_sealed_sender_v_2_recipient(dynamic raw);
+
+  @protected
+  SealedSenderV2SentMessage dco_decode_sealed_sender_v_2_sent_message(
     dynamic raw,
   );
 
@@ -565,6 +707,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -573,6 +721,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -595,6 +749,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -609,6 +775,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -667,6 +839,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -675,6 +853,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -697,6 +881,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -711,6 +907,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -766,6 +968,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -774,6 +982,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -796,6 +1010,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -810,6 +1036,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -848,10 +1080,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<MultiRecipientDestination> sse_decode_list_multi_recipient_destination(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<SealedSenderV2Device> sse_decode_list_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SealedSenderV2Recipient> sse_decode_list_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MultiRecipientDestination sse_decode_multi_recipient_destination(
+    SseDeserializer deserializer,
+  );
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
@@ -869,6 +1124,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SealedSenderEncryptResult sse_decode_sealed_sender_encrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2Device sse_decode_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2Recipient sse_decode_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2SentMessage sse_decode_sealed_sender_v_2_sent_message(
     SseDeserializer deserializer,
   );
 
@@ -914,6 +1184,29 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  ffi.Pointer<wire_cst_list_String> cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_String(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      ans.ref.ptr[i] = cst_encode_String(raw[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_multi_recipient_destination>
+  cst_encode_list_multi_recipient_destination(
+    List<MultiRecipientDestination> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_multi_recipient_destination(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_multi_recipient_destination(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
   ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_encode_list_prim_u_8_loose(
     List<int> raw,
   ) {
@@ -930,6 +1223,30 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     final ans = wire.cst_new_list_prim_u_8_strict(raw.length);
     ans.ref.ptr.asTypedList(raw.length).setAll(0, raw);
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_sealed_sender_v_2_device>
+  cst_encode_list_sealed_sender_v_2_device(List<SealedSenderV2Device> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_sealed_sender_v_2_device(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_sealed_sender_v_2_device(raw[i], ans.ref.ptr[i]);
+    }
+    return ans;
+  }
+
+  @protected
+  ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient>
+  cst_encode_list_sealed_sender_v_2_recipient(
+    List<SealedSenderV2Recipient> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    final ans = wire.cst_new_list_sealed_sender_v_2_recipient(raw.length);
+    for (var i = 0; i < raw.length; ++i) {
+      cst_api_fill_to_wire_sealed_sender_v_2_recipient(raw[i], ans.ref.ptr[i]);
+    }
     return ans;
   }
 
@@ -1003,6 +1320,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  void cst_api_fill_to_wire_multi_recipient_destination(
+    MultiRecipientDestination apiObj,
+    wire_cst_multi_recipient_destination wireObj,
+  ) {
+    wireObj.name = cst_encode_String(apiObj.name);
+    wireObj.device_id = cst_encode_u_32(apiObj.deviceId);
+    wireObj.session_record = cst_encode_list_prim_u_8_strict(
+      apiObj.sessionRecord,
+    );
+  }
+
+  @protected
   void cst_api_fill_to_wire_pre_key_message_ids(
     PreKeyMessageIds apiObj,
     wire_cst_pre_key_message_ids wireObj,
@@ -1038,6 +1367,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.ciphertext = cst_encode_list_prim_u_8_strict(apiObj.ciphertext);
     wireObj.session_record = cst_encode_list_prim_u_8_strict(
       apiObj.sessionRecord,
+    );
+  }
+
+  @protected
+  void cst_api_fill_to_wire_sealed_sender_v_2_device(
+    SealedSenderV2Device apiObj,
+    wire_cst_sealed_sender_v_2_device wireObj,
+  ) {
+    wireObj.device_id = cst_encode_u_32(apiObj.deviceId);
+    wireObj.registration_id = cst_encode_u_32(apiObj.registrationId);
+  }
+
+  @protected
+  void cst_api_fill_to_wire_sealed_sender_v_2_recipient(
+    SealedSenderV2Recipient apiObj,
+    wire_cst_sealed_sender_v_2_recipient wireObj,
+  ) {
+    wireObj.service_id = cst_encode_String(apiObj.serviceId);
+    wireObj.devices = cst_encode_list_sealed_sender_v_2_device(apiObj.devices);
+    wireObj.received_message = cst_encode_list_prim_u_8_strict(
+      apiObj.receivedMessage,
+    );
+  }
+
+  @protected
+  void cst_api_fill_to_wire_sealed_sender_v_2_sent_message(
+    SealedSenderV2SentMessage apiObj,
+    wire_cst_sealed_sender_v_2_sent_message wireObj,
+  ) {
+    wireObj.version = cst_encode_u_32(apiObj.version);
+    wireObj.recipients = cst_encode_list_sealed_sender_v_2_recipient(
+      apiObj.recipients,
     );
   }
 
@@ -1091,6 +1452,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1099,6 +1466,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1121,6 +1494,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1135,6 +1520,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1193,6 +1584,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1201,6 +1598,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1223,6 +1626,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1237,6 +1652,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1344,6 +1765,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1352,6 +1779,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1374,6 +1807,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1388,6 +1833,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1469,6 +1920,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1478,6 +1936,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1504,6 +1969,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1520,6 +1999,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1588,6 +2074,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1597,6 +2090,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1623,6 +2123,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1639,6 +2153,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1763,6 +2284,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1772,6 +2300,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1798,6 +2333,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1814,6 +2363,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1854,11 +2410,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_multi_recipient_destination(
+    List<MultiRecipientDestination> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_device(
+    List<SealedSenderV2Device> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_recipient(
+    List<SealedSenderV2Recipient> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_multi_recipient_destination(
+    MultiRecipientDestination self,
     SseSerializer serializer,
   );
 
@@ -1886,6 +2469,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sealed_sender_encrypt_result(
     SealedSenderEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_device(
+    SealedSenderV2Device self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_recipient(
+    SealedSenderV2Recipient self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_sent_message(
+    SealedSenderV2SentMessage self,
     SseSerializer serializer,
   );
 
@@ -2740,6 +3341,88 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__kyber__KyberSecretKey_serializePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  WireSyncRust2DartDco wire__crate__api__message__PlaintextContent_body(
+    int that,
+  ) {
+    return _wire__crate__api__message__PlaintextContent_body(that);
+  }
+
+  late final _wire__crate__api__message__PlaintextContent_bodyPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PlaintextContent_body',
+      );
+  late final _wire__crate__api__message__PlaintextContent_body =
+      _wire__crate__api__message__PlaintextContent_bodyPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PlaintextContent_clone_message(int that) {
+    return _wire__crate__api__message__PlaintextContent_clone_message(that);
+  }
+
+  late final _wire__crate__api__message__PlaintextContent_clone_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PlaintextContent_clone_message',
+      );
+  late final _wire__crate__api__message__PlaintextContent_clone_message =
+      _wire__crate__api__message__PlaintextContent_clone_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__PlaintextContent_deserialize(
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__message__PlaintextContent_deserialize(data);
+  }
+
+  late final _wire__crate__api__message__PlaintextContent_deserializePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__message__PlaintextContent_deserialize',
+      );
+  late final _wire__crate__api__message__PlaintextContent_deserialize =
+      _wire__crate__api__message__PlaintextContent_deserializePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+    int message,
+  ) {
+    return _wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+      message,
+    );
+  }
+
+  late final _wire__crate__api__message__PlaintextContent_from_decryption_error_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PlaintextContent_from_decryption_error_message',
+      );
+  late final _wire__crate__api__message__PlaintextContent_from_decryption_error_message =
+      _wire__crate__api__message__PlaintextContent_from_decryption_error_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__PlaintextContent_serialize(
+    int that,
+  ) {
+    return _wire__crate__api__message__PlaintextContent_serialize(that);
+  }
+
+  late final _wire__crate__api__message__PlaintextContent_serializePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PlaintextContent_serialize',
+      );
+  late final _wire__crate__api__message__PlaintextContent_serialize =
+      _wire__crate__api__message__PlaintextContent_serializePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
   WireSyncRust2DartDco wire__crate__api__bundle__PreKeyBundle_device_id(
     int that,
   ) {
@@ -3056,6 +3739,187 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__prekey__PreKeyRecord_serializePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  WireSyncRust2DartDco wire__crate__api__message__PreKeySignalMessage_base_key(
+    int that,
+  ) {
+    return _wire__crate__api__message__PreKeySignalMessage_base_key(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_base_keyPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_base_key',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_base_key =
+      _wire__crate__api__message__PreKeySignalMessage_base_keyPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_clone_message(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_clone_message(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_clone_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_clone_message',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_clone_message =
+      _wire__crate__api__message__PreKeySignalMessage_clone_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_deserialize(
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__message__PreKeySignalMessage_deserialize(data);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_deserializePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_deserialize',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_deserialize =
+      _wire__crate__api__message__PreKeySignalMessage_deserializePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_identity_key(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_identity_key(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_identity_keyPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_identity_key',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_identity_key =
+      _wire__crate__api__message__PreKeySignalMessage_identity_keyPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_kyber_ciphertextPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext =
+      _wire__crate__api__message__PreKeySignalMessage_kyber_ciphertextPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id =
+      _wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__PreKeySignalMessage_message(
+    int that,
+  ) {
+    return _wire__crate__api__message__PreKeySignalMessage_message(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_message',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_message =
+      _wire__crate__api__message__PreKeySignalMessage_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_message_version(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_message_version(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_message_versionPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_message_version',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_message_version =
+      _wire__crate__api__message__PreKeySignalMessage_message_versionPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_pre_key_id(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_pre_key_id(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_pre_key_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_pre_key_id',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_pre_key_id =
+      _wire__crate__api__message__PreKeySignalMessage_pre_key_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_registration_id(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_registration_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_registration_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_registration_id',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_registration_id =
+      _wire__crate__api__message__PreKeySignalMessage_registration_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__PreKeySignalMessage_serialize(
+    int that,
+  ) {
+    return _wire__crate__api__message__PreKeySignalMessage_serialize(that);
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_serializePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_serialize',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_serialize =
+      _wire__crate__api__message__PreKeySignalMessage_serializePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(int that) {
+    return _wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__PreKeySignalMessage_signed_pre_key_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id',
+      );
+  late final _wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id =
+      _wire__crate__api__message__PreKeySignalMessage_signed_pre_key_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
   WireSyncRust2DartDco wire__crate__api__keys__PrivateKey_agree(
     int that,
     int public_key,
@@ -3341,6 +4205,296 @@ class RustLibWire implements BaseWire {
             WireSyncRust2DartDco Function(
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_chain_id(int that) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_chain_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_chain_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_chain_id',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_chain_id =
+      _wire__crate__api__message__SenderKeyDistributionMessage_chain_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_clone_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_clone_message',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_clone_message =
+      _wire__crate__api__message__SenderKeyDistributionMessage_clone_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+      data,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_deserializePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_deserialize',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_deserialize =
+      _wire__crate__api__message__SenderKeyDistributionMessage_deserializePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_distribution_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_distribution_id',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_distribution_id =
+      _wire__crate__api__message__SenderKeyDistributionMessage_distribution_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_iteration(int that) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_iteration(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_iterationPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_iteration',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_iteration =
+      _wire__crate__api__message__SenderKeyDistributionMessage_iterationPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_message_versionPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_message_version',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_message_version =
+      _wire__crate__api__message__SenderKeyDistributionMessage_message_versionPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_serialize(int that) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_serialize(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_serializePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_serialize',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_serialize =
+      _wire__crate__api__message__SenderKeyDistributionMessage_serializePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyDistributionMessage_signing_key(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyDistributionMessage_signing_key(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_signing_keyPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyDistributionMessage_signing_key',
+      );
+  late final _wire__crate__api__message__SenderKeyDistributionMessage_signing_key =
+      _wire__crate__api__message__SenderKeyDistributionMessage_signing_keyPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__SenderKeyMessage_chain_id(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_chain_id(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_chain_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_chain_id',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_chain_id =
+      _wire__crate__api__message__SenderKeyMessage_chain_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__SenderKeyMessage_ciphertext(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_ciphertext(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_ciphertextPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_ciphertext',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_ciphertext =
+      _wire__crate__api__message__SenderKeyMessage_ciphertextPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyMessage_clone_message(int that) {
+    return _wire__crate__api__message__SenderKeyMessage_clone_message(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_clone_messagePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_clone_message',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_clone_message =
+      _wire__crate__api__message__SenderKeyMessage_clone_messagePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__SenderKeyMessage_deserialize(
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_deserialize(data);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_deserializePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_deserialize',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_deserialize =
+      _wire__crate__api__message__SenderKeyMessage_deserializePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyMessage_distribution_id(int that) {
+    return _wire__crate__api__message__SenderKeyMessage_distribution_id(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_distribution_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_distribution_id',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_distribution_id =
+      _wire__crate__api__message__SenderKeyMessage_distribution_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__SenderKeyMessage_iteration(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_iteration(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_iterationPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_iteration',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_iteration =
+      _wire__crate__api__message__SenderKeyMessage_iterationPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyMessage_message_version(int that) {
+    return _wire__crate__api__message__SenderKeyMessage_message_version(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_message_versionPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_message_version',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_message_version =
+      _wire__crate__api__message__SenderKeyMessage_message_versionPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco wire__crate__api__message__SenderKeyMessage_serialize(
+    int that,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_serialize(that);
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_serializePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_serialize',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_serialize =
+      _wire__crate__api__message__SenderKeyMessage_serializePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__message__SenderKeyMessage_verify_signature(
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> signature_key,
+  ) {
+    return _wire__crate__api__message__SenderKeyMessage_verify_signature(
+      that,
+      signature_key,
+    );
+  }
+
+  late final _wire__crate__api__message__SenderKeyMessage_verify_signaturePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__message__SenderKeyMessage_verify_signature',
+      );
+  late final _wire__crate__api__message__SenderKeyMessage_verify_signature =
+      _wire__crate__api__message__SenderKeyMessage_verify_signaturePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             )
           >();
@@ -3809,6 +4963,178 @@ class RustLibWire implements BaseWire {
       );
   late final _wire__crate__api__signed_prekey__SignedPreKeyRecord_timestamp =
       _wire__crate__api__signed_prekey__SignedPreKeyRecord_timestampPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hintPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hintPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contentsPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contentsPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+      data,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserializePtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserializePtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_idPtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_idPtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_typePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_typePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+    int message_type,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> sender_certificate,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> contents,
+    int content_hint,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> group_id,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+      message_type,
+      sender_certificate,
+      contents,
+      content_hint,
+      group_id,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_newPtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.Uint8,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Uint32,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_newPtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            )
+          >();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificatePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificatePtr
+          .asFunction<WireSyncRust2DartDco Function(int)>();
+
+  WireSyncRust2DartDco
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
+    int that,
+  ) {
+    return _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
+      that,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serializePtr =
+      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize',
+      );
+  late final _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize =
+      _wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serializePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
   WireSyncRust2DartDco
@@ -4567,6 +5893,53 @@ class RustLibWire implements BaseWire {
             )
           >();
 
+  void
+  wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> trust_root,
+    int timestamp,
+    ffi.Pointer<ffi.Void> get_identity_key_pair,
+    ffi.Pointer<ffi.Void> get_local_registration_id,
+  ) {
+    return _wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+      port_,
+      ciphertext,
+      trust_root,
+      timestamp,
+      get_identity_key_pair,
+      get_local_registration_id,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacksPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Uint64,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks',
+      );
+  late final _wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks =
+      _wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacksPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              int,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+            )
+          >();
+
   void wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
@@ -4657,6 +6030,57 @@ class RustLibWire implements BaseWire {
             )
           >();
 
+  void
+  wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> recipient_name,
+    int recipient_device_id,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> usmc,
+    ffi.Pointer<ffi.Void> get_identity_key_pair,
+    ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> get_identity,
+  ) {
+    return _wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+      port_,
+      recipient_name,
+      recipient_device_id,
+      usmc,
+      get_identity_key_pair,
+      get_local_registration_id,
+      get_identity,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacksPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks',
+      );
+  late final _wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks =
+      _wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacksPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+            )
+          >();
+
   void wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
     int port_,
     ffi.Pointer<wire_cst_list_prim_u_8_strict> recipient_name,
@@ -4717,6 +6141,84 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
             )
+          >();
+
+  void
+  wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+    int port_,
+    ffi.Pointer<wire_cst_list_multi_recipient_destination> destinations,
+    ffi.Pointer<wire_cst_list_String> excluded_recipients,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> usmc,
+    ffi.Pointer<ffi.Void> get_identity_key_pair,
+    ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> get_identity,
+  ) {
+    return _wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+      port_,
+      destinations,
+      excluded_recipients,
+      usmc,
+      get_identity_key_pair,
+      get_local_registration_id,
+      get_identity,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacksPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_multi_recipient_destination>,
+            ffi.Pointer<wire_cst_list_String>,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+            ffi.Pointer<ffi.Void>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks',
+      );
+  late final _wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks =
+      _wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacksPtr
+          .asFunction<
+            void Function(
+              int,
+              ffi.Pointer<wire_cst_list_multi_recipient_destination>,
+              ffi.Pointer<wire_cst_list_String>,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+              ffi.Pointer<ffi.Void>,
+            )
+          >();
+
+  void wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+    int port_,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> data,
+  ) {
+    return _wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+      port_,
+      data,
+    );
+  }
+
+  late final _wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_messagePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Void Function(
+            ffi.Int64,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >(
+        'frbgen_libsignal_wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message',
+      );
+  late final _wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message =
+      _wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_messagePtr
+          .asFunction<
+            void Function(int, ffi.Pointer<wire_cst_list_prim_u_8_loose>)
           >();
 
   WireSyncRust2DartDco
@@ -5135,6 +6637,40 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContentPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContentPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContentPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContentPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -5200,6 +6736,40 @@ class RustLibWire implements BaseWire {
       );
   late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord =
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecordPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessagePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessagePtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
@@ -5305,6 +6875,74 @@ class RustLibWire implements BaseWire {
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
   void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessagePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessagePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessagePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessagePtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessagePtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     ffi.Pointer<ffi.Void> ptr,
   ) {
@@ -5406,6 +7044,40 @@ class RustLibWire implements BaseWire {
       _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecordPtr
           .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
 
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContentPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent',
+      );
+  late final _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent =
+      _rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContentPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    ffi.Pointer<ffi.Void> ptr,
+  ) {
+    return _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+      ptr,
+    );
+  }
+
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContentPtr =
+      _lookup<ffi.NativeFunction<ffi.Void Function(ffi.Pointer<ffi.Void>)>>(
+        'frbgen_libsignal_rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent',
+      );
+  late final _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent =
+      _rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContentPtr
+          .asFunction<void Function(ffi.Pointer<ffi.Void>)>();
+
   ffi.Pointer<ffi.Uint32> cst_new_box_autoadd_u_32(int value) {
     return _cst_new_box_autoadd_u_32(value);
   }
@@ -5416,6 +7088,38 @@ class RustLibWire implements BaseWire {
       );
   late final _cst_new_box_autoadd_u_32 = _cst_new_box_autoadd_u_32Ptr
       .asFunction<ffi.Pointer<ffi.Uint32> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_String> cst_new_list_String(int len) {
+    return _cst_new_list_String(len);
+  }
+
+  late final _cst_new_list_StringPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_String> Function(ffi.Int32)
+        >
+      >('frbgen_libsignal_cst_new_list_String');
+  late final _cst_new_list_String = _cst_new_list_StringPtr
+      .asFunction<ffi.Pointer<wire_cst_list_String> Function(int)>();
+
+  ffi.Pointer<wire_cst_list_multi_recipient_destination>
+  cst_new_list_multi_recipient_destination(int len) {
+    return _cst_new_list_multi_recipient_destination(len);
+  }
+
+  late final _cst_new_list_multi_recipient_destinationPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_multi_recipient_destination> Function(
+            ffi.Int32,
+          )
+        >
+      >('frbgen_libsignal_cst_new_list_multi_recipient_destination');
+  late final _cst_new_list_multi_recipient_destination =
+      _cst_new_list_multi_recipient_destinationPtr
+          .asFunction<
+            ffi.Pointer<wire_cst_list_multi_recipient_destination> Function(int)
+          >();
 
   ffi.Pointer<wire_cst_list_prim_u_8_loose> cst_new_list_prim_u_8_loose(
     int len,
@@ -5447,6 +7151,44 @@ class RustLibWire implements BaseWire {
   late final _cst_new_list_prim_u_8_strict = _cst_new_list_prim_u_8_strictPtr
       .asFunction<ffi.Pointer<wire_cst_list_prim_u_8_strict> Function(int)>();
 
+  ffi.Pointer<wire_cst_list_sealed_sender_v_2_device>
+  cst_new_list_sealed_sender_v_2_device(int len) {
+    return _cst_new_list_sealed_sender_v_2_device(len);
+  }
+
+  late final _cst_new_list_sealed_sender_v_2_devicePtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_sealed_sender_v_2_device> Function(
+            ffi.Int32,
+          )
+        >
+      >('frbgen_libsignal_cst_new_list_sealed_sender_v_2_device');
+  late final _cst_new_list_sealed_sender_v_2_device =
+      _cst_new_list_sealed_sender_v_2_devicePtr
+          .asFunction<
+            ffi.Pointer<wire_cst_list_sealed_sender_v_2_device> Function(int)
+          >();
+
+  ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient>
+  cst_new_list_sealed_sender_v_2_recipient(int len) {
+    return _cst_new_list_sealed_sender_v_2_recipient(len);
+  }
+
+  late final _cst_new_list_sealed_sender_v_2_recipientPtr =
+      _lookup<
+        ffi.NativeFunction<
+          ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient> Function(
+            ffi.Int32,
+          )
+        >
+      >('frbgen_libsignal_cst_new_list_sealed_sender_v_2_recipient');
+  late final _cst_new_list_sealed_sender_v_2_recipient =
+      _cst_new_list_sealed_sender_v_2_recipientPtr
+          .asFunction<
+            ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient> Function(int)
+          >();
+
   int dummy_method_to_enforce_bundling() {
     return _dummy_method_to_enforce_bundling();
   }
@@ -5477,6 +7219,59 @@ final class wire_cst_list_prim_u_8_loose extends ffi.Struct {
 
 final class wire_cst_list_prim_u_8_strict extends ffi.Struct {
   external ffi.Pointer<ffi.Uint8> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_multi_recipient_destination extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> name;
+
+  @ffi.Uint32()
+  external int device_id;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> session_record;
+}
+
+final class wire_cst_list_multi_recipient_destination extends ffi.Struct {
+  external ffi.Pointer<wire_cst_multi_recipient_destination> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_list_String extends ffi.Struct {
+  external ffi.Pointer<ffi.Pointer<wire_cst_list_prim_u_8_strict>> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_sealed_sender_v_2_device extends ffi.Struct {
+  @ffi.Uint32()
+  external int device_id;
+
+  @ffi.Uint32()
+  external int registration_id;
+}
+
+final class wire_cst_list_sealed_sender_v_2_device extends ffi.Struct {
+  external ffi.Pointer<wire_cst_sealed_sender_v_2_device> ptr;
+
+  @ffi.Int32()
+  external int len;
+}
+
+final class wire_cst_sealed_sender_v_2_recipient extends ffi.Struct {
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> service_id;
+
+  external ffi.Pointer<wire_cst_list_sealed_sender_v_2_device> devices;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> received_message;
+}
+
+final class wire_cst_list_sealed_sender_v_2_recipient extends ffi.Struct {
+  external ffi.Pointer<wire_cst_sealed_sender_v_2_recipient> ptr;
 
   @ffi.Int32()
   external int len;
@@ -5533,4 +7328,11 @@ final class wire_cst_sealed_sender_encrypt_result extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> ciphertext;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> session_record;
+}
+
+final class wire_cst_sealed_sender_v_2_sent_message extends ffi.Struct {
+  @ffi.Uint32()
+  external int version;
+
+  external ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient> recipients;
 }

@@ -66,12 +66,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PlaintextContentPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PreKeyBundlePtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PreKeyRecordPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PreKeySignalMessagePtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage;
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_PrivateKeyPtr => wire
@@ -86,6 +94,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey;
 
   CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyDistributionMessagePtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyMessagePtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage;
+
+  CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_SessionRecordPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord;
 
@@ -96,6 +112,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_SignedPreKeyRecordPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_UnidentifiedSenderMessageContentPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
@@ -149,6 +169,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -157,6 +183,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -179,6 +211,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -193,6 +237,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -251,6 +301,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -259,6 +315,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -281,6 +343,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -295,6 +369,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -400,6 +480,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  );
+
+  @protected
   PreKeyBundle
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -408,6 +494,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     dynamic raw,
   );
 
@@ -430,6 +522,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  );
+
+  @protected
+  SenderKeyMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  );
+
+  @protected
   SessionRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -444,6 +548,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    dynamic raw,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     dynamic raw,
   );
 
@@ -476,10 +586,31 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw);
+
+  @protected
+  List<MultiRecipientDestination> dco_decode_list_multi_recipient_destination(
+    dynamic raw,
+  );
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw);
 
   @protected
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+
+  @protected
+  List<SealedSenderV2Device> dco_decode_list_sealed_sender_v_2_device(
+    dynamic raw,
+  );
+
+  @protected
+  List<SealedSenderV2Recipient> dco_decode_list_sealed_sender_v_2_recipient(
+    dynamic raw,
+  );
+
+  @protected
+  MultiRecipientDestination dco_decode_multi_recipient_destination(dynamic raw);
 
   @protected
   int? dco_decode_opt_box_autoadd_u_32(dynamic raw);
@@ -497,6 +628,17 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SealedSenderEncryptResult dco_decode_sealed_sender_encrypt_result(
+    dynamic raw,
+  );
+
+  @protected
+  SealedSenderV2Device dco_decode_sealed_sender_v_2_device(dynamic raw);
+
+  @protected
+  SealedSenderV2Recipient dco_decode_sealed_sender_v_2_recipient(dynamic raw);
+
+  @protected
+  SealedSenderV2SentMessage dco_decode_sealed_sender_v_2_sent_message(
     dynamic raw,
   );
 
@@ -567,6 +709,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -575,6 +723,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -597,6 +751,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -611,6 +777,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -669,6 +841,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -677,6 +855,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -699,6 +883,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -713,6 +909,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -768,6 +970,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  PlaintextContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   PreKeyBundle
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -776,6 +984,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   PreKeyRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     SseDeserializer deserializer,
   );
 
@@ -798,6 +1012,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SenderKeyMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   SessionRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -812,6 +1038,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   SignedPreKeyRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     SseDeserializer deserializer,
   );
 
@@ -850,10 +1082,33 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
+
+  @protected
+  List<MultiRecipientDestination> sse_decode_list_multi_recipient_destination(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer);
 
   @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+
+  @protected
+  List<SealedSenderV2Device> sse_decode_list_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  List<SealedSenderV2Recipient> sse_decode_list_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  MultiRecipientDestination sse_decode_multi_recipient_destination(
+    SseDeserializer deserializer,
+  );
 
   @protected
   int? sse_decode_opt_box_autoadd_u_32(SseDeserializer deserializer);
@@ -871,6 +1126,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   SealedSenderEncryptResult sse_decode_sealed_sender_encrypt_result(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2Device sse_decode_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2Recipient sse_decode_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  SealedSenderV2SentMessage sse_decode_sealed_sender_v_2_sent_message(
     SseDeserializer deserializer,
   );
 
@@ -952,6 +1222,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   }
 
   @protected
+  JSAny cst_encode_list_String(List<String> raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_String).toList().jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_list_multi_recipient_destination(
+    List<MultiRecipientDestination> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_multi_recipient_destination).toList().jsify()!;
+  }
+
+  @protected
   JSAny cst_encode_list_prim_u_8_loose(List<int> raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.jsify()!;
@@ -961,6 +1245,32 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JSAny cst_encode_list_prim_u_8_strict(Uint8List raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw.jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_list_sealed_sender_v_2_device(
+    List<SealedSenderV2Device> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_sealed_sender_v_2_device).toList().jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_list_sealed_sender_v_2_recipient(
+    List<SealedSenderV2Recipient> raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return raw.map(cst_encode_sealed_sender_v_2_recipient).toList().jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_multi_recipient_destination(MultiRecipientDestination raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_String(raw.name),
+      cst_encode_u_32(raw.deviceId),
+      cst_encode_list_prim_u_8_strict(raw.sessionRecord),
+    ].jsify()!;
   }
 
   @protected
@@ -1003,6 +1313,36 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     return [
       cst_encode_list_prim_u_8_strict(raw.ciphertext),
       cst_encode_list_prim_u_8_strict(raw.sessionRecord),
+    ].jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_sealed_sender_v_2_device(SealedSenderV2Device raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_u_32(raw.deviceId),
+      cst_encode_u_32(raw.registrationId),
+    ].jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_sealed_sender_v_2_recipient(SealedSenderV2Recipient raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_String(raw.serviceId),
+      cst_encode_list_sealed_sender_v_2_device(raw.devices),
+      cst_encode_list_prim_u_8_strict(raw.receivedMessage),
+    ].jsify()!;
+  }
+
+  @protected
+  JSAny cst_encode_sealed_sender_v_2_sent_message(
+    SealedSenderV2SentMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_u_32(raw.version),
+      cst_encode_list_sealed_sender_v_2_recipient(raw.recipients),
     ].jsify()!;
   }
 
@@ -1068,6 +1408,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1076,6 +1422,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1098,6 +1450,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1112,6 +1476,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1170,6 +1540,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1178,6 +1554,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1200,6 +1582,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1214,6 +1608,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1321,6 +1721,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  );
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   );
@@ -1329,6 +1735,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
   );
 
   @protected
@@ -1351,6 +1763,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  );
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   );
@@ -1365,6 +1789,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord raw,
+  );
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
   );
 
   @protected
@@ -1446,6 +1876,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1455,6 +1892,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1481,6 +1925,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1497,6 +1955,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1565,6 +2030,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1574,6 +2046,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1600,6 +2079,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1616,6 +2109,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1740,6 +2240,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -1749,6 +2256,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
     PreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
     SseSerializer serializer,
   );
 
@@ -1775,6 +2289,20 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -1791,6 +2319,13 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
     SignedPreKeyRecord self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
     SseSerializer serializer,
   );
 
@@ -1831,11 +2366,38 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_multi_recipient_destination(
+    List<MultiRecipientDestination> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_prim_u_8_loose(List<int> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_prim_u_8_strict(
     Uint8List self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_device(
+    List<SealedSenderV2Device> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_recipient(
+    List<SealedSenderV2Recipient> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_multi_recipient_destination(
+    MultiRecipientDestination self,
     SseSerializer serializer,
   );
 
@@ -1863,6 +2425,24 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_sealed_sender_encrypt_result(
     SealedSenderEncryptResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_device(
+    SealedSenderV2Device self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_recipient(
+    SealedSenderV2Recipient self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_sealed_sender_v_2_sent_message(
+    SealedSenderV2SentMessage self,
     SseSerializer serializer,
   );
 
@@ -2142,6 +2722,32 @@ class RustLibWire implements BaseWire {
       wasmModule.wire__crate__api__kyber__KyberSecretKey_serialize(that);
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_body(int that) =>
+      wasmModule.wire__crate__api__message__PlaintextContent_body(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_clone_message(int that) =>
+      wasmModule.wire__crate__api__message__PlaintextContent_clone_message(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_deserialize(JSAny data) =>
+      wasmModule.wire__crate__api__message__PlaintextContent_deserialize(data);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+    int message,
+  ) => wasmModule
+      .wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+        message,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_serialize(int that) =>
+      wasmModule.wire__crate__api__message__PlaintextContent_serialize(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__bundle__PreKeyBundle_device_id(int that) =>
       wasmModule.wire__crate__api__bundle__PreKeyBundle_device_id(that);
 
@@ -2253,6 +2859,75 @@ class RustLibWire implements BaseWire {
       wasmModule.wire__crate__api__prekey__PreKeyRecord_serialize(that);
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_base_key(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_base_key(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_clone_message(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_clone_message(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_deserialize(JSAny data) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_deserialize(
+        data,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_identity_key(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_identity_key(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(int that) =>
+      wasmModule
+          .wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(int that) =>
+      wasmModule
+          .wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_message(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_message(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_message_version(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_message_version(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_pre_key_id(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_pre_key_id(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_registration_id(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_registration_id(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_serialize(int that) =>
+      wasmModule.wire__crate__api__message__PreKeySignalMessage_serialize(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(int that) =>
+      wasmModule
+          .wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__keys__PrivateKey_agree(int that, int public_key) =>
       wasmModule.wire__crate__api__keys__PrivateKey_agree(that, public_key);
 
@@ -2328,6 +3003,114 @@ class RustLibWire implements BaseWire {
     that,
     message,
     signature,
+  );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_chain_id(int that) =>
+      wasmModule
+          .wire__crate__api__message__SenderKeyDistributionMessage_chain_id(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+    JSAny data,
+  ) => wasmModule
+      .wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+        data,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_iteration(int that) =>
+      wasmModule
+          .wire__crate__api__message__SenderKeyDistributionMessage_iteration(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_serialize(int that) =>
+      wasmModule
+          .wire__crate__api__message__SenderKeyDistributionMessage_serialize(
+            that,
+          );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_signing_key(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__message__SenderKeyDistributionMessage_signing_key(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_chain_id(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_chain_id(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_ciphertext(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_ciphertext(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_clone_message(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_clone_message(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_deserialize(JSAny data) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_deserialize(data);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_distribution_id(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_distribution_id(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_iteration(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_iteration(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_message_version(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_message_version(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_serialize(int that) =>
+      wasmModule.wire__crate__api__message__SenderKeyMessage_serialize(that);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_verify_signature(
+    int that,
+    JSAny signature_key,
+  ) => wasmModule.wire__crate__api__message__SenderKeyMessage_verify_signature(
+    that,
+    signature_key,
   );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -2489,6 +3272,78 @@ class RustLibWire implements BaseWire {
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_timestamp(int that) =>
       wasmModule.wire__crate__api__signed_prekey__SignedPreKeyRecord_timestamp(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+    JSAny data,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+        data,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+    int message_type,
+    JSAny sender_certificate,
+    JSAny contents,
+    int content_hint,
+    JSAny? group_id,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+        message_type,
+        sender_certificate,
+        contents,
+        content_hint,
+        group_id,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+        that,
+      );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
+    int that,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
         that,
       );
 
@@ -2779,6 +3634,24 @@ class RustLibWire implements BaseWire {
         store_sender_key,
       );
 
+  void
+  wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+    NativePortType port_,
+    JSAny ciphertext,
+    JSAny trust_root,
+    JSAny timestamp,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+        port_,
+        ciphertext,
+        trust_root,
+        timestamp,
+        get_identity_key_pair,
+        get_local_registration_id,
+      );
+
   void wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
     NativePortType port_,
     JSAny ciphertext,
@@ -2818,6 +3691,26 @@ class RustLibWire implements BaseWire {
         get_identity,
       );
 
+  void
+  wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+    NativePortType port_,
+    String recipient_name,
+    int recipient_device_id,
+    JSAny usmc,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+        port_,
+        recipient_name,
+        recipient_device_id,
+        usmc,
+        get_identity_key_pair,
+        get_local_registration_id,
+        get_identity,
+      );
+
   void wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
     NativePortType port_,
     String recipient_name,
@@ -2841,6 +3734,35 @@ class RustLibWire implements BaseWire {
         get_identity_key_pair,
         get_local_registration_id,
         get_identity,
+      );
+
+  void
+  wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+    NativePortType port_,
+    JSAny destinations,
+    JSAny excluded_recipients,
+    JSAny usmc,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+        port_,
+        destinations,
+        excluded_recipients,
+        usmc,
+        get_identity_key_pair,
+        get_local_registration_id,
+        get_identity,
+      );
+
+  void wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+    NativePortType port_,
+    JSAny data,
+  ) => wasmModule
+      .wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+        port_,
+        data,
       );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3014,6 +3936,22 @@ class RustLibWire implements BaseWire {
       );
 
   void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+        ptr,
+      );
+
+  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     int ptr,
   ) => wasmModule
@@ -3042,6 +3980,22 @@ class RustLibWire implements BaseWire {
     int ptr,
   ) => wasmModule
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
         ptr,
       );
 
@@ -3094,6 +4048,38 @@ class RustLibWire implements BaseWire {
       );
 
   void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+        ptr,
+      );
+
+  void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     int ptr,
   ) => wasmModule
@@ -3138,6 +4124,22 @@ class RustLibWire implements BaseWire {
     int ptr,
   ) => wasmModule
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
         ptr,
       );
 }
@@ -3313,6 +4315,23 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   wire__crate__api__kyber__KyberSecretKey_serialize(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_body(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_clone_message(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_deserialize(JSAny data);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+    int message,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PlaintextContent_serialize(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__bundle__PreKeyBundle_device_id(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3383,6 +4402,42 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   wire__crate__api__prekey__PreKeyRecord_serialize(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_base_key(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_clone_message(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_deserialize(JSAny data);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_identity_key(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_message(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_message_version(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_pre_key_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_registration_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_serialize(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__keys__PrivateKey_agree(int that, int public_key);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3435,6 +4490,68 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     int that,
     JSAny message,
     JSAny signature,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_chain_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+    JSAny data,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_iteration(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_serialize(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyDistributionMessage_signing_key(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_chain_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_ciphertext(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_clone_message(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_deserialize(JSAny data);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_distribution_id(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_iteration(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_message_version(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_serialize(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__message__SenderKeyMessage_verify_signature(
+    int that,
+    JSAny signature_key,
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3532,6 +4649,50 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_timestamp(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+    JSAny data,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+    int message_type,
+    JSAny sender_certificate,
+    JSAny contents,
+    int content_hint,
+    JSAny? group_id,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+    int that,
+  );
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
+    int that,
+  );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__sealed_sender__create_sender_certificate(
@@ -3698,6 +4859,16 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external void
+  wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+    NativePortType port_,
+    JSAny ciphertext,
+    JSAny trust_root,
+    JSAny timestamp,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+  );
+
+  external void
   wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
     NativePortType port_,
     JSAny ciphertext,
@@ -3719,6 +4890,17 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external void
+  wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+    NativePortType port_,
+    String recipient_name,
+    int recipient_device_id,
+    JSAny usmc,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
+  );
+
+  external void
   wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
     NativePortType port_,
     String recipient_name,
@@ -3730,6 +4912,23 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
     PlatformPointer get_identity,
+  );
+
+  external void
+  wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+    NativePortType port_,
+    JSAny destinations,
+    JSAny excluded_recipients,
+    JSAny usmc,
+    PlatformPointer get_identity_key_pair,
+    PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
+  );
+
+  external void
+  wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+    NativePortType port_,
+    JSAny data,
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -3840,6 +5039,16 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    int ptr,
+  );
+
+  external void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     int ptr,
   );
@@ -3856,6 +5065,16 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
     int ptr,
   );
 
@@ -3890,6 +5109,26 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    int ptr,
+  );
+
+  external void
   rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     int ptr,
   );
@@ -3916,6 +5155,16 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
     int ptr,
   );
 }

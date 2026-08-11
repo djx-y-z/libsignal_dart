@@ -56,6 +56,152 @@ abstract class DecryptionErrorMessage implements RustOpaqueInterface {
   BigInt timestamp();
 }
 
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PlaintextContent>>
+abstract class PlaintextContent implements RustOpaqueInterface {
+  /// Get the body: the serialized protobuf `Content`, without the leading
+  /// plaintext-content identifier byte.
+  ///
+  /// This — **not** [PlaintextContent.serialize] — is what
+  /// [DecryptionErrorMessage.extractFromSerializedContent] takes; it
+  /// rejects the leading identifier byte.
+  Uint8List body();
+
+  /// Create a copy of this message.
+  PlaintextContent cloneMessage();
+
+  /// Deserialize a PlaintextContent from bytes.
+  static PlaintextContent deserialize({required List<int> data}) => RustLib
+      .instance
+      .api
+      .crateApiMessagePlaintextContentDeserialize(data: data);
+
+  /// Wrap a decryption error message for sending.
+  static PlaintextContent fromDecryptionErrorMessage({
+    required DecryptionErrorMessage message,
+  }) => RustLib.instance.api
+      .crateApiMessagePlaintextContentFromDecryptionErrorMessage(
+        message: message,
+      );
+
+  /// Serialize the message to bytes, ready to send.
+  Uint8List serialize();
+}
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PreKeySignalMessage>>
+abstract class PreKeySignalMessage implements RustOpaqueInterface {
+  /// Get the sender's ephemeral base public key (serialized).
+  Uint8List baseKey();
+
+  /// Create a copy of this message.
+  PreKeySignalMessage cloneMessage();
+
+  /// Deserialize a PreKeySignalMessage from bytes.
+  static PreKeySignalMessage deserialize({required List<int> data}) => RustLib
+      .instance
+      .api
+      .crateApiMessagePreKeySignalMessageDeserialize(data: data);
+
+  /// Get the sender's identity public key (serialized).
+  ///
+  /// Unauthenticated until the message is decrypted:
+  /// <https://github.com/djx-y-z/libsignal_dart/blob/main/SECURITY.md#message-inspection-is-not-authentication>
+  Uint8List identityKey();
+
+  /// Get the Kyber ciphertext (KEM encapsulation), if this is a PQXDH message.
+  Uint8List? kyberCiphertext();
+
+  /// Get the Kyber pre-key ID this message consumes, if any.
+  int? kyberPreKeyId();
+
+  /// Get the wrapped [SignalMessage].
+  ///
+  /// This is what exposes the post-quantum ratchet payload of a session's
+  /// very first message: `preKeyMessage.message().pqRatchet()`.
+  SignalMessage message();
+
+  /// Get the Signal Protocol message version.
+  int messageVersion();
+
+  /// Get the one-time pre-key ID this message consumes, if any.
+  int? preKeyId();
+
+  /// Get the sender's registration ID.
+  int registrationId();
+
+  /// Serialize the message to bytes.
+  Uint8List serialize();
+
+  /// Get the signed pre-key ID this message was addressed to.
+  int signedPreKeyId();
+}
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SenderKeyDistributionMessage>>
+abstract class SenderKeyDistributionMessage implements RustOpaqueInterface {
+  /// Get the sender key chain ID.
+  int chainId();
+
+  /// Create a copy of this message.
+  SenderKeyDistributionMessage cloneMessage();
+
+  /// Deserialize a SenderKeyDistributionMessage from bytes.
+  static SenderKeyDistributionMessage deserialize({required List<int> data}) =>
+      RustLib.instance.api
+          .crateApiMessageSenderKeyDistributionMessageDeserialize(data: data);
+
+  /// Get the distribution (group) ID this message establishes, as a UUID string.
+  String distributionId();
+
+  /// Get the chain position this distribution message starts from.
+  int iteration();
+
+  /// Get the Signal Protocol message version.
+  int messageVersion();
+
+  /// Serialize the message to bytes.
+  Uint8List serialize();
+
+  /// Get the sender's public signing key (serialized).
+  ///
+  /// Pass this to [SenderKeyMessage.verifySignature].
+  Uint8List signingKey();
+}
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SenderKeyMessage>>
+abstract class SenderKeyMessage implements RustOpaqueInterface {
+  /// Get the sender key chain ID.
+  int chainId();
+
+  /// Get the encrypted message body.
+  Uint8List ciphertext();
+
+  /// Create a copy of this message.
+  SenderKeyMessage cloneMessage();
+
+  /// Deserialize a SenderKeyMessage from bytes.
+  static SenderKeyMessage deserialize({required List<int> data}) => RustLib
+      .instance
+      .api
+      .crateApiMessageSenderKeyMessageDeserialize(data: data);
+
+  /// Get the distribution (group) ID this message belongs to, as a UUID string.
+  String distributionId();
+
+  /// Get the position of this message within the sender's chain.
+  int iteration();
+
+  /// Get the Signal Protocol message version.
+  int messageVersion();
+
+  /// Serialize the message to bytes.
+  Uint8List serialize();
+
+  /// Verify this message's signature against the sender's signing key.
+  ///
+  /// The signing key is the one carried by the sender's distribution message
+  /// ([SenderKeyDistributionMessage.signingKey]).
+  bool verifySignature({required List<int> signatureKey});
+}
+
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SignalMessage>>
 abstract class SignalMessage implements RustOpaqueInterface {
   /// Get the encrypted message body (ciphertext).

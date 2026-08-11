@@ -78,6 +78,7 @@ export 'src/rust/api/session_builder.dart';
 export 'src/rust/api/session_cipher.dart';
 export 'src/rust/api/signed_prekey.dart';
 // Sealed sender (high-level Dart API)
+export 'src/sealed_sender/content_hint.dart';
 export 'src/sealed_sender/sealed_sender_cipher.dart';
 // Security utilities
 export 'src/security/secure_bytes.dart';

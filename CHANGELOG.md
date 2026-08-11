@@ -1,3 +1,44 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **Every Signal Protocol message type is now inspectable from Dart** — `PreKeySignalMessage`, `SenderKeyMessage`, `SenderKeyDistributionMessage` and `PlaintextContent` join `SignalMessage` and `DecryptionErrorMessage`. Messages could be produced and consumed but never read, which is why a group ciphertext's own `distributionId` had to be known out-of-band and a session's first post-quantum ratchet payload was unreachable ([#62](https://github.com/djx-y-z/libsignal_dart/issues/62))
+- **Sealed sender gains content hints, group ids and multi-recipient fan-out** — `UnidentifiedSenderMessageContent` makes the sealed envelope itself addressable, so a recipient can learn whether an undecryptable message is worth a resend request without decrypting it; `sealedSenderMultiRecipientEncryptWithCallbacks` produces one Sealed Sender v2 message for a whole group
+
+#### Changed
+
+- **New `PreKeySignalMessage` type** ([#62](https://github.com/djx-y-z/libsignal_dart/issues/62)) — `PreKeySignalMessage.deserialize(data: bytes)` plus `serialize()`, `messageVersion()`, `registrationId()`, `preKeyId()`, `signedPreKeyId()`, `kyberPreKeyId()`, `kyberCiphertext()`, `baseKey()`, `identityKey()`, `message()` and `cloneMessage()`. `message()` returns the wrapped `SignalMessage`, which is what makes a session's very first post-quantum ratchet payload readable: `PreKeySignalMessage.deserialize(data: ct).message().pqRatchet()`. Purely additive — nothing in the existing surface changed, and decryption still goes through `SessionCipher`, which owns the stores this type has no access to. As with `SignalMessage.deserialize`, parsing validates structure but does **not** authenticate: the inner MAC is only checked during decryption, so anything read off an un-decrypted message is attacker-controlled
+
+- **New `SenderKeyMessage` and `SenderKeyDistributionMessage` types** — `distributionId()`, `chainId()`, `iteration()`, `messageVersion()`, plus `ciphertext()` and `verifySignature()` on the message and `signingKey()` on the distribution message. This is what lets a recipient derive the `distributionId` that `GroupCipher.decrypt` and `processDistributionMessage` require, instead of having to carry it alongside the ciphertext. The distribution message's **chain key is deliberately not exposed**: it is secret key material, there is no constructor to pair it with, and an accessor would only add a way to leak it
+
+- **New `PlaintextContent` type** — `PlaintextContent.fromDecryptionErrorMessage(...)` builds the envelope a `DecryptionErrorMessage` travels in, which previously could be parsed from an incoming message but not produced, leaving the retry-receipt flow half-implemented. Note `DecryptionErrorMessage.extractFromSerializedContent` takes `body()`, not `serialize()` — it rejects the leading identifier byte
+
+- **New `UnidentifiedSenderMessageContent` type and `ContentHint` enum** — build the inner payload of a sealed sender message yourself to set a content hint (`none`/`resendable`/`implicit`, with unknown values passed through) and a group id, then seal it with `sealedSenderEncryptFromUsmcWithCallbacks`. `sealedSenderDecryptToUsmcWithCallbacks` goes the other way: it validates the sender certificate against the trust root you pass in and returns the envelope **without** decrypting the message inside, which is how a client reads the hint for a message it cannot decrypt. The trust-root check is mandatory by design — libsignal's own `sealed_sender_decrypt_to_usmc` binds the certificate only to whoever sealed the blob, and sealing needs nothing but the recipient's public identity key, so an unchecked variant would let anyone name any sender and any group. An empty group id is omitted from the serialized form, so it reads back as absent after a round trip
+
+- **Sealed Sender v2 multi-recipient encryption** — `sealedSenderMultiRecipientEncryptWithCallbacks` encrypts one `UnidentifiedSenderMessageContent` for many destinations at once, producing the single *SentMessage* blob a server fans out; `sealedSenderV2ParseSentMessage` performs that fan-out, returning each recipient's service id, devices with their registration ids, and the ready-to-deliver single-recipient message. Excluded recipients are listed with no payload. Sessions are read but never advanced, so nothing needs storing. Two constraints the single-recipient path does not have: destination address names must be service ids (a bare UUID or `PNI:<uuid>`), and destination registration ids must fit in 14 bits (0..=16383). Each destination's identity is looked up through the `getIdentity` callback and refused if unknown, rather than trusted on first use
+
+#### Fixed
+
+- **A sender key distribution message processed under the wrong distribution id is now refused instead of silently dropped** — `GroupCipher.processDistributionMessage` takes the distribution id from the caller, but a `SenderKeyDistributionMessage` also carries one, and libsignal stores the new sender-key state under the id *inside* the message. When the two disagreed the state was written to a key the wrapper never reads back. On first contact that surfaced as an error, but when a record already existed under the caller's id the read-back returned that stale record, so the call **succeeded** while discarding the distribution message — the group's later messages then failed to decrypt with a misleading "Process a distribution message first." The ids are now compared up front and a mismatch throws `Distribution ID mismatch: message carries <x>, caller passed <y>`. The matching-id path is unchanged. `GroupCipher.decrypt` was already fail-closed on the same mismatch and is untouched
+
+### For Contributors
+
+#### Added
+
+- **`PreKeySignalMessage` test coverage** — `test/protocol/prekey_signal_message_test.dart` covers the serialize round-trip, every accessor against the keys the session was actually built from, that inspecting a message does not consume it, and that malformed input (including a bare `SignalMessage`) is rejected
+
+- **Distribution-id mismatch coverage** — `test/groups/distribution_id_mismatch_test.dart` pins the refusal in both branches (with and without an existing record) and that two independent groups still round-trip
+
+- **Coverage for the new message and sealed-sender types** — `test/groups/sender_key_message_inspection_test.dart`, `test/protocol/plaintext_content_test.dart` and `test/sealed_sender/usmc_and_multi_recipient_test.dart`, including a full multi-recipient round trip where two recipients each unseal their own message, and the refusal of an untrusted destination
+
+- **SPQR progress regression test** — `test/protocol/spqr_ratchet_progress_test.dart` runs a 200-round-trip alternating conversation and decodes the epoch and payload type out of each `SignalMessage.pqRatchet()` frame instead of measuring its length. Every chunk-bearing SPQR frame is the same ~37 bytes (the encoder chunks all ML-KEM material at 32 bytes), so length says nothing about progress; the epoch does. The test asserts both sides pass epoch 1 — which requires a full ML-KEM encapsulation to have completed across ~400 store round-trips per side — and that the responder answers with `Ct1` on exactly its third send, i.e. as soon as the third header chunk has arrived, pinning that the PreKey decrypt path applies and persists its inbound SPQR chunk — chunk 0 of that header is read straight off the PreKey message through the new `PreKeySignalMessage.message()`. A second case pins the responder's 4-byte `None` frames while the header is still incomplete as expected behaviour (reported as [#62](https://github.com/djx-y-z/libsignal_dart/issues/62))
+
+#### Changed
+
+- **`TestParty` moved to `test/test_helpers/test_party.dart`** — it lived inside `session_cipher_test.dart` and was already being imported across test files; it is now a proper helper library alongside `session_helpers.dart`
+
 ## [7.0.2] - 2026-08-08
 
 ### For Users

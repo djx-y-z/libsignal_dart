@@ -422,9 +422,23 @@ Stores are **required** for Signal Protocol operations due to Double Ratchet:
 
 - Key generation (`PrivateKey.generate()`, `IdentityKeyPair.generate()`)
 - Signing and verification (`privateKey.sign()`, `publicKey.verifySignature()`)
-- Message parsing (`SignalMessage.deserialize()`)
-- Certificate validation (`SenderCertificate.validate()`)
+- Message parsing — `SignalMessage`, `PreKeySignalMessage`, `SenderKeyMessage`,
+  `SenderKeyDistributionMessage`, `PlaintextContent`,
+  `UnidentifiedSenderMessageContent` (construct *and* parse), and
+  `sealedSenderV2ParseSentMessage`. Parsing validates structure only — it never
+  authenticates; see SECURITY.md
+- Certificate validation (`validateSenderCertificate()`)
 - Creating `PreKeyBundle` from existing keys
+
+### Sealed-Sender Envelope Operations (identity only, no session stores)
+
+| Operation | Needs |
+|-----------|-------|
+| `sealedSenderEncryptFromUsmc` | identity key pair + `getIdentity` for the recipient |
+| `sealedSenderDecryptToUsmc` | identity key pair + trust root (validates the sender certificate) |
+| `sealedSenderMultiRecipientEncrypt` | identity key pair + `getIdentity` per destination + caller-supplied `SessionRecord` bytes |
+
+None of these write to a store — they do no Double Ratchet work.
 
 ### Available Implementations
 

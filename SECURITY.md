@@ -473,10 +473,18 @@ Byte-parsing entry points (the network/storage boundary) are covered by
 |--------|--------|
 | `keys` | `PublicKey` / `PrivateKey` / `IdentityKeyPair` deserialization |
 | `messages` | `SignalMessage` / `DecryptionErrorMessage` parsing |
+| *(not yet covered)* | `PreKeySignalMessage`, `SenderKeyMessage`, `SenderKeyDistributionMessage`, `PlaintextContent`, `UnidentifiedSenderMessageContent` and `sealedSenderV2ParseSentMessage` are attacker-facing parsers with **no fuzz target yet** — see the note below |
 | `records` | pre-key / signed-pre-key / session / Kyber record deserialization |
 | `certificates` | sealed-sender certificate parsing and validation |
 | `crypto_primitives` | HKDF, AES-256-GCM-SIV, fingerprint comparison |
 | `session_decrypt` | pre-key message decryption (network-controlled ciphertext) |
+
+> **Known coverage gap.** The message-inspection types added alongside
+> `SignalMessage` parse untrusted bytes but have no fuzz target yet.
+> `sealedSenderV2ParseSentMessage` deserves one first: it parses a server-side
+> fan-out blob and allocates one buffer per recipient from length fields inside
+> that blob, so its output can be far larger than its input. Treat its input as
+> size-bounded until a target exists.
 
 ```bash
 make setup-fuzz                          # one-time: nightly toolchain + cargo-fuzz
@@ -543,9 +551,23 @@ before the operation returns its result, on all entry points:
 | `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`, `storeSession` |
 | `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
+| `sealedSenderEncryptFromUsmc` / `sealedSenderDecryptToUsmc` / `sealedSenderMultiRecipientEncrypt` | *(none — see below)* |
 
 There is no fire-and-forget write anywhere in the bridge, so the *ordering* half
-of the rule holds by construction. What the library cannot do for you is decide
+of the rule holds by construction.
+
+> **The three sealed-sender envelope entry points write nothing.** They do no
+> Double Ratchet work: `encryptFromUsmc` seals contents you already encrypted,
+> `decryptToUsmc` stops at the envelope, and the multi-recipient path reads
+> sessions without advancing them. Nothing to persist, nothing to lose.
+>
+> One obligation moves to you, though.
+> `sealedSenderMultiRecipientEncrypt` takes each destination's
+> **`SessionRecord` as raw bytes you pass in**, not through `SessionStore` — so
+> the "serialize operations per address" rule below applies to code that never
+> touches a store. Snapshot the record under the same per-address lock you use
+> for `SessionCipher`, or you may hand it a record another operation is midway
+> through replacing. What the library cannot do for you is decide
 when your write became durable, or stop you from running two operations on one
 session at the same time.
 
@@ -888,7 +910,45 @@ so a **remote identity key that differs from the stored one is rejected with an
 `UntrustedIdentity` error** rather than being silently accepted — whether it
 arrives in a new bundle / pre-key message or disagrees with the identity bound
 to an existing session. First contact (no stored identity) is
-trusted-on-first-use.
+trusted-on-first-use — with one deliberate exception, below.
+
+**Sealed Sender v2 does not trust on first use.**
+`sealedSenderMultiRecipientEncryptWithCallbacks` and
+`sealedSenderEncryptFromUsmcWithCallbacks` need the recipient's identity key
+directly rather than through a session, so a destination your
+`IdentityKeyStore.getIdentity` returns `null` for is **refused**, not accepted.
+You cannot address an account you have never seen. For multi-recipient sends the
+lookup is per *account*, not per device: contiguous destinations sharing an
+address name resolve to one identity, which is correct because Sealed Sender v2
+derives its per-recipient key material per account.
+
+### Message inspection is not authentication
+
+`SignalMessage`, `PreKeySignalMessage`, `SenderKeyMessage`,
+`SenderKeyDistributionMessage`, `PlaintextContent` and
+`UnidentifiedSenderMessageContent` can all be `deserialize`d without any key.
+That validates **structure only**. MACs and signatures are checked when the
+message is decrypted or processed, so every field you read off an un-decrypted
+message — sender identity key, pre-key ids, group id, distribution id — is
+attacker-controlled until then. Do not route, attribute, or make trust decisions
+on those values alone.
+
+Two consequences worth stating outright:
+
+- `SenderKeyDistributionMessage` has **no `chainKey()` accessor** by design: the
+  chain key is secret key material and the type has no from-parts constructor,
+  so an accessor would only add a way to leak it. This does not make the bytes
+  safe — the chain key is a field of the serialized message, so a serialized
+  distribution message is itself a secret and must be handled as one.
+- `sealedSenderDecryptToUsmcWithCallbacks` is the exception that *does*
+  authenticate: it takes `trustRoot` and `timestamp` and validates the sender
+  certificate before returning, exactly as `SealedSenderCipher.decrypt` does.
+  This is not optional. libsignal's own `sealed_sender_decrypt_to_usmc` binds
+  the certificate only to whoever sealed the blob, and sealing needs nothing but
+  the recipient's *public* identity key — so without the trust-root check anyone
+  could mint a certificate naming any sender and any group, and a caller reading
+  `senderCertificate()` or `groupId()` off the result would aim its resend
+  request wherever the attacker chose.
 
 Applications **must handle the `UntrustedIdentity` error** (its message contains
 `untrusted identity`): treat it as a safety-number change — surface it to the

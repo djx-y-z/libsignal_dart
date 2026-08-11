@@ -6,7 +6,7 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `sealed_sender_decrypt_inner`, `sealed_sender_encrypt_inner`
+// These functions are ignored because they are not marked as `pub`: `sealed_sender_decrypt_inner`, `sealed_sender_decrypt_to_usmc_inner`, `sealed_sender_encrypt_from_usmc_inner`, `sealed_sender_encrypt_inner`, `sealed_sender_multi_recipient_encrypt_inner`
 // These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `SealedSenderDecryptOutcome`
 
 /// Validate a sender certificate.
@@ -196,6 +196,206 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   getIdentity: getIdentity,
 );
 
+/// Seal an already-built USMC for one recipient.
+///
+/// Unlike `SealedSenderCipher.encrypt` this does no Double Ratchet work — `contents`
+/// is whatever you already encrypted — so no session is loaded or stored. It
+/// only needs your identity key pair and the recipient's trusted identity.
+Future<Uint8List> sealedSenderEncryptFromUsmcWithCallbacks({
+  required String recipientName,
+  required int recipientDeviceId,
+  required List<int> usmc,
+  required FutureOr<Uint8List> Function() getIdentityKeyPair,
+  required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
+}) => RustLib.instance.api
+    .crateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacks(
+      recipientName: recipientName,
+      recipientDeviceId: recipientDeviceId,
+      usmc: usmc,
+      getIdentityKeyPair: getIdentityKeyPair,
+      getLocalRegistrationId: getLocalRegistrationId,
+      getIdentity: getIdentity,
+    );
+
+/// Unseal a sealed sender message down to its USMC without decrypting the
+/// message inside it.
+///
+/// Use it when you need the content hint or group id of a message you cannot
+/// decrypt — that is exactly the case a resend request is for.
+///
+/// # Security
+/// The sender certificate is validated against `trust_root` before the content
+/// is returned, exactly as `sealedSenderDecryptWithCallbacks` does.
+///
+/// **This is a deliberate divergence from upstream's factoring.** libsignal
+/// splits the two: `sealed_sender_decrypt_to_usmc` performs no validation and
+/// `sealed_sender_decrypt` layers it on. This binding merges them, so there is
+/// no unchecked variant. The cost is real — a message whose certificate has
+/// expired (clock skew, or long-queued delivery) can no longer be unsealed to
+/// read its content hint at all — but `SealedSenderCipher.decrypt` already
+/// behaves that way, and an unchecked reader is too sharp an edge to expose:
+/// libsignal's own
+/// `sealed_sender_decrypt_to_usmc` only binds the certificate to whoever sealed
+/// the blob, and sealing requires nothing but the recipient's *public* identity
+/// key. Without the trust-root check anyone could mint a certificate naming any
+/// sender and any group, and a caller reading `senderCertificate()` or
+/// `groupId()` off the result would attribute the message — and aim its resend
+/// request — wherever the attacker chose.
+Future<Uint8List> sealedSenderDecryptToUsmcWithCallbacks({
+  required List<int> ciphertext,
+  required List<int> trustRoot,
+  required BigInt timestamp,
+  required FutureOr<Uint8List> Function() getIdentityKeyPair,
+  required FutureOr<int> Function() getLocalRegistrationId,
+}) => RustLib.instance.api
+    .crateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacks(
+      ciphertext: ciphertext,
+      trustRoot: trustRoot,
+      timestamp: timestamp,
+      getIdentityKeyPair: getIdentityKeyPair,
+      getLocalRegistrationId: getLocalRegistrationId,
+    );
+
+/// Encrypt one USMC for many recipients at once (Sealed Sender v2).
+///
+/// The result is a single *SentMessage* blob addressed to the server, which
+/// fans it out into a per-recipient *ReceivedMessage* — see
+/// [sealedSenderV2ParseSentMessage]. Sessions are read but never advanced,
+/// so nothing needs storing afterwards.
+///
+/// `excluded_recipients` are service id strings included in the message's
+/// recipient list without a payload, which is how Signal tells a server about
+/// recipients it deliberately skipped.
+///
+/// Two constraints Sealed Sender v2 imposes that the single-recipient path does
+/// not:
+/// - every destination's **address name must be a service id** — a bare UUID or
+///   `PNI:<uuid>` — because that is how recipients are addressed on the wire
+/// - every destination session's **registration id must fit in 14 bits**
+///   (0..=16383); larger values are rejected as invalid
+Future<Uint8List> sealedSenderMultiRecipientEncryptWithCallbacks({
+  required List<MultiRecipientDestination> destinations,
+  required List<String> excludedRecipients,
+  required List<int> usmc,
+  required FutureOr<Uint8List> Function() getIdentityKeyPair,
+  required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<Uint8List?> Function(String, int) getIdentity,
+}) => RustLib.instance.api
+    .crateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacks(
+      destinations: destinations,
+      excludedRecipients: excludedRecipients,
+      usmc: usmc,
+      getIdentityKeyPair: getIdentityKeyPair,
+      getLocalRegistrationId: getLocalRegistrationId,
+      getIdentity: getIdentity,
+    );
+
+/// Parse a multi-recipient SentMessage and fan it out.
+///
+/// This is the server-side half of
+/// [sealedSenderMultiRecipientEncryptWithCallbacks]: it splits one
+/// SentMessage into the per-recipient messages to deliver. It reads only the
+/// envelope — nothing here is decrypted or authenticated.
+///
+/// # Preconditions
+/// Each recipient's message is materialized as its own byte array, so the
+/// shared body is copied once per recipient: the output is roughly
+/// `recipients × message size`, and a ~100-byte-per-recipient input can
+/// therefore amplify into a much larger allocation. Pass only messages whose
+/// size you already bound — this is a server-side fan-out helper, not a place
+/// to hand an unvetted blob straight off the network. It is deliberately async
+/// so neither the copying nor the allocation lands on the calling isolate.
+Future<SealedSenderV2SentMessage> sealedSenderV2ParseSentMessage({
+  required List<int> data,
+}) => RustLib.instance.api.crateApiSealedSenderSealedSenderV2ParseSentMessage(
+  data: data,
+);
+
+// Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<UnidentifiedSenderMessageContent>>
+abstract class UnidentifiedSenderMessageContent implements RustOpaqueInterface {
+  /// Get the content hint.
+  int contentHint();
+
+  /// Get the wrapped (still encrypted) message.
+  Uint8List contents();
+
+  /// Deserialize a USMC from its serialized form.
+  static UnidentifiedSenderMessageContent deserialize({
+    required List<int> data,
+  }) => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentDeserialize(
+        data: data,
+      );
+
+  /// Get the group id, if the sender set one.
+  Uint8List? groupId();
+
+  /// Get the wrapped message's `CiphertextMessageType` value.
+  int messageType();
+
+  /// Build a new USMC.
+  ///
+  /// - `message_type` is a `CiphertextMessageType` value (2 = signal,
+  ///   3 = pre-key, 7 = sender key, 8 = plaintext content)
+  /// - `sender_certificate` is the serialized certificate for the sender
+  /// - `contents` is the already-encrypted message to wrap
+  /// - `group_id` is optional. An empty list is omitted from the serialized
+  ///   form, so it survives on this object but reads back as absent after a
+  ///   round trip — pass `null` if you mean absent.
+  factory UnidentifiedSenderMessageContent({
+    required int messageType,
+    required List<int> senderCertificate,
+    required List<int> contents,
+    required int contentHint,
+    Uint8List? groupId,
+  }) => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentNew(
+        messageType: messageType,
+        senderCertificate: senderCertificate,
+        contents: contents,
+        contentHint: contentHint,
+        groupId: groupId,
+      );
+
+  /// Get the sender's certificate (serialized).
+  Uint8List senderCertificate();
+
+  /// Serialize the USMC.
+  Uint8List serialize();
+}
+
+/// One destination of a multi-recipient sealed sender message.
+class MultiRecipientDestination {
+  /// The recipient's address name (service id string).
+  final String name;
+
+  /// The recipient's device ID.
+  final int deviceId;
+
+  /// The serialized `SessionRecord` for that address.
+  final Uint8List sessionRecord;
+
+  const MultiRecipientDestination({
+    required this.name,
+    required this.deviceId,
+    required this.sessionRecord,
+  });
+
+  @override
+  int get hashCode =>
+      name.hashCode ^ deviceId.hashCode ^ sessionRecord.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is MultiRecipientDestination &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          deviceId == other.deviceId &&
+          sessionRecord == other.sessionRecord;
+}
+
 /// Result of sealed sender decryption.
 class SealedSenderDecryptResult {
   /// The decrypted plaintext.
@@ -264,4 +464,86 @@ class SealedSenderEncryptResult {
           runtimeType == other.runtimeType &&
           ciphertext == other.ciphertext &&
           sessionRecord == other.sessionRecord;
+}
+
+/// One device of one recipient in a parsed multi-recipient message.
+class SealedSenderV2Device {
+  /// The recipient's device ID.
+  final int deviceId;
+
+  /// The registration ID that device had when the message was built.
+  final int registrationId;
+
+  const SealedSenderV2Device({
+    required this.deviceId,
+    required this.registrationId,
+  });
+
+  @override
+  int get hashCode => deviceId.hashCode ^ registrationId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SealedSenderV2Device &&
+          runtimeType == other.runtimeType &&
+          deviceId == other.deviceId &&
+          registrationId == other.registrationId;
+}
+
+/// One recipient of a parsed multi-recipient message.
+class SealedSenderV2Recipient {
+  /// The recipient's service id string (a bare UUID, or `PNI:<uuid>`).
+  final String serviceId;
+
+  /// The recipient's devices. Empty for an excluded recipient.
+  final List<SealedSenderV2Device> devices;
+
+  /// The single-recipient sealed sender message to deliver to this recipient,
+  /// ready for `SealedSenderCipher.decrypt`. Empty for an excluded recipient.
+  final Uint8List receivedMessage;
+
+  const SealedSenderV2Recipient({
+    required this.serviceId,
+    required this.devices,
+    required this.receivedMessage,
+  });
+
+  @override
+  int get hashCode =>
+      serviceId.hashCode ^ devices.hashCode ^ receivedMessage.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SealedSenderV2Recipient &&
+          runtimeType == other.runtimeType &&
+          serviceId == other.serviceId &&
+          devices == other.devices &&
+          receivedMessage == other.receivedMessage;
+}
+
+/// A parsed multi-recipient (Sealed Sender v2) SentMessage.
+class SealedSenderV2SentMessage {
+  /// The version byte at the head of the message.
+  final int version;
+
+  /// The recipients, in the order they first appear in the message.
+  final List<SealedSenderV2Recipient> recipients;
+
+  const SealedSenderV2SentMessage({
+    required this.version,
+    required this.recipients,
+  });
+
+  @override
+  int get hashCode => version.hashCode ^ recipients.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is SealedSenderV2SentMessage &&
+          runtimeType == other.runtimeType &&
+          version == other.version &&
+          recipients == other.recipients;
 }
