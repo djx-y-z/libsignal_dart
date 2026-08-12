@@ -1331,7 +1331,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     return [
       cst_encode_String(raw.serviceId),
       cst_encode_list_sealed_sender_v_2_device(raw.devices),
-      cst_encode_list_prim_u_8_strict(raw.receivedMessage),
+      cst_encode_u_32(raw.keyMaterialStart),
+      cst_encode_u_32(raw.keyMaterialEnd),
     ].jsify()!;
   }
 
@@ -1342,6 +1343,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return [
       cst_encode_u_32(raw.version),
+      cst_encode_u_32(raw.receivedMessageVersion),
+      cst_encode_u_32(raw.sharedBytesOffset),
+      cst_encode_u_32(raw.parsedLength),
       cst_encode_list_sealed_sender_v_2_recipient(raw.recipients),
     ].jsify()!;
   }
@@ -3640,16 +3644,22 @@ class RustLibWire implements BaseWire {
     JSAny ciphertext,
     JSAny trust_root,
     JSAny timestamp,
+    String local_name,
+    int local_device_id,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
         port_,
         ciphertext,
         trust_root,
         timestamp,
+        local_name,
+        local_device_id,
         get_identity_key_pair,
         get_local_registration_id,
+        get_identity,
       );
 
   void wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks(
@@ -4864,8 +4874,11 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     JSAny ciphertext,
     JSAny trust_root,
     JSAny timestamp,
+    String local_name,
+    int local_device_id,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer get_identity,
   );
 
   external void

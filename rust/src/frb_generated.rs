@@ -5651,12 +5651,15 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks
     ciphertext: impl CstDecode<Vec<u8>>,
     trust_root: impl CstDecode<Vec<u8>>,
     timestamp: impl CstDecode<u64>,
+    local_name: impl CstDecode<String>,
+    local_device_id: impl CstDecode<u32>,
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
     get_local_registration_id: impl CstDecode<flutter_rust_bridge::DartOpaque>,
+    get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "sealed_sender_decrypt_to_usmc_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_ciphertext = ciphertext.cst_decode();let api_trust_root = trust_root.cst_decode();let api_timestamp = timestamp.cst_decode();let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode());let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(get_local_registration_id.cst_decode()); move |context| async move {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "sealed_sender_decrypt_to_usmc_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || { let api_ciphertext = ciphertext.cst_decode();let api_trust_root = trust_root.cst_decode();let api_timestamp = timestamp.cst_decode();let api_local_name = local_name.cst_decode();let api_local_device_id = local_device_id.cst_decode();let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode());let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(get_local_registration_id.cst_decode());let api_get_identity = decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(get_identity.cst_decode()); move |context| async move {
                     transform_result_dco::<_, _, String>((move || async move {
-                         let output_ok = crate::api::sealed_sender::sealed_sender_decrypt_to_usmc_with_callbacks(api_ciphertext, api_trust_root, api_timestamp, api_get_identity_key_pair, api_get_local_registration_id).await?;   Ok(output_ok)
+                         let output_ok = crate::api::sealed_sender::sealed_sender_decrypt_to_usmc_with_callbacks(api_ciphertext, api_trust_root, api_timestamp, api_local_name, api_local_device_id, api_get_identity_key_pair, api_get_local_registration_id, api_get_identity).await?;   Ok(output_ok)
                     })().await)
                 } })
 }
@@ -7058,11 +7061,13 @@ impl SseDecode for crate::api::sealed_sender::SealedSenderV2Recipient {
         let mut var_serviceId = <String>::sse_decode(deserializer);
         let mut var_devices =
             <Vec<crate::api::sealed_sender::SealedSenderV2Device>>::sse_decode(deserializer);
-        let mut var_receivedMessage = <Vec<u8>>::sse_decode(deserializer);
+        let mut var_keyMaterialStart = <u32>::sse_decode(deserializer);
+        let mut var_keyMaterialEnd = <u32>::sse_decode(deserializer);
         return crate::api::sealed_sender::SealedSenderV2Recipient {
             service_id: var_serviceId,
             devices: var_devices,
-            received_message: var_receivedMessage,
+            key_material_start: var_keyMaterialStart,
+            key_material_end: var_keyMaterialEnd,
         };
     }
 }
@@ -7071,10 +7076,16 @@ impl SseDecode for crate::api::sealed_sender::SealedSenderV2SentMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         let mut var_version = <u32>::sse_decode(deserializer);
+        let mut var_receivedMessageVersion = <u32>::sse_decode(deserializer);
+        let mut var_sharedBytesOffset = <u32>::sse_decode(deserializer);
+        let mut var_parsedLength = <u32>::sse_decode(deserializer);
         let mut var_recipients =
             <Vec<crate::api::sealed_sender::SealedSenderV2Recipient>>::sse_decode(deserializer);
         return crate::api::sealed_sender::SealedSenderV2SentMessage {
             version: var_version,
+            received_message_version: var_receivedMessageVersion,
+            shared_bytes_offset: var_sharedBytesOffset,
+            parsed_length: var_parsedLength,
             recipients: var_recipients,
         };
     }
@@ -7678,7 +7689,8 @@ impl flutter_rust_bridge::IntoDart for crate::api::sealed_sender::SealedSenderV2
         [
             self.service_id.into_into_dart().into_dart(),
             self.devices.into_into_dart().into_dart(),
-            self.received_message.into_into_dart().into_dart(),
+            self.key_material_start.into_into_dart().into_dart(),
+            self.key_material_end.into_into_dart().into_dart(),
         ]
         .into_dart()
     }
@@ -7699,6 +7711,9 @@ impl flutter_rust_bridge::IntoDart for crate::api::sealed_sender::SealedSenderV2
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
             self.version.into_into_dart().into_dart(),
+            self.received_message_version.into_into_dart().into_dart(),
+            self.shared_bytes_offset.into_into_dart().into_dart(),
+            self.parsed_length.into_into_dart().into_dart(),
             self.recipients.into_into_dart().into_dart(),
         ]
         .into_dart()
@@ -8317,7 +8332,8 @@ impl SseEncode for crate::api::sealed_sender::SealedSenderV2Recipient {
             self.devices,
             serializer,
         );
-        <Vec<u8>>::sse_encode(self.received_message, serializer);
+        <u32>::sse_encode(self.key_material_start, serializer);
+        <u32>::sse_encode(self.key_material_end, serializer);
     }
 }
 
@@ -8325,6 +8341,9 @@ impl SseEncode for crate::api::sealed_sender::SealedSenderV2SentMessage {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <u32>::sse_encode(self.version, serializer);
+        <u32>::sse_encode(self.received_message_version, serializer);
+        <u32>::sse_encode(self.shared_bytes_offset, serializer);
+        <u32>::sse_encode(self.parsed_length, serializer);
         <Vec<crate::api::sealed_sender::SealedSenderV2Recipient>>::sse_encode(
             self.recipients,
             serializer,
@@ -9142,7 +9161,8 @@ mod io {
             crate::api::sealed_sender::SealedSenderV2Recipient {
                 service_id: self.service_id.cst_decode(),
                 devices: self.devices.cst_decode(),
-                received_message: self.received_message.cst_decode(),
+                key_material_start: self.key_material_start.cst_decode(),
+                key_material_end: self.key_material_end.cst_decode(),
             }
         }
     }
@@ -9153,6 +9173,9 @@ mod io {
         fn cst_decode(self) -> crate::api::sealed_sender::SealedSenderV2SentMessage {
             crate::api::sealed_sender::SealedSenderV2SentMessage {
                 version: self.version.cst_decode(),
+                received_message_version: self.received_message_version.cst_decode(),
+                shared_bytes_offset: self.shared_bytes_offset.cst_decode(),
+                parsed_length: self.parsed_length.cst_decode(),
                 recipients: self.recipients.cst_decode(),
             }
         }
@@ -9284,7 +9307,8 @@ mod io {
             Self {
                 service_id: core::ptr::null_mut(),
                 devices: core::ptr::null_mut(),
-                received_message: core::ptr::null_mut(),
+                key_material_start: Default::default(),
+                key_material_end: Default::default(),
             }
         }
     }
@@ -9297,6 +9321,9 @@ mod io {
         fn new_with_null_ptr() -> Self {
             Self {
                 version: Default::default(),
+                received_message_version: Default::default(),
+                shared_bytes_offset: Default::default(),
+                parsed_length: Default::default(),
                 recipients: core::ptr::null_mut(),
             }
         }
@@ -10745,16 +10772,22 @@ mod io {
         ciphertext: *mut wire_cst_list_prim_u_8_loose,
         trust_root: *mut wire_cst_list_prim_u_8_loose,
         timestamp: u64,
+        local_name: *mut wire_cst_list_prim_u_8_strict,
+        local_device_id: u32,
         get_identity_key_pair: *const std::ffi::c_void,
         get_local_registration_id: *const std::ffi::c_void,
+        get_identity: *const std::ffi::c_void,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks_impl(
             port_,
             ciphertext,
             trust_root,
             timestamp,
+            local_name,
+            local_device_id,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 
@@ -11492,12 +11525,16 @@ mod io {
     pub struct wire_cst_sealed_sender_v_2_recipient {
         service_id: *mut wire_cst_list_prim_u_8_strict,
         devices: *mut wire_cst_list_sealed_sender_v_2_device,
-        received_message: *mut wire_cst_list_prim_u_8_strict,
+        key_material_start: u32,
+        key_material_end: u32,
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
     pub struct wire_cst_sealed_sender_v_2_sent_message {
         version: u32,
+        received_message_version: u32,
+        shared_bytes_offset: u32,
+        parsed_length: u32,
         recipients: *mut wire_cst_list_sealed_sender_v_2_recipient,
     }
 }
@@ -11810,14 +11847,15 @@ mod web {
                 .unwrap();
             assert_eq!(
                 self_.length(),
-                3,
-                "Expected 3 elements, got {}",
+                4,
+                "Expected 4 elements, got {}",
                 self_.length()
             );
             crate::api::sealed_sender::SealedSenderV2Recipient {
                 service_id: self_.get(0).cst_decode(),
                 devices: self_.get(1).cst_decode(),
-                received_message: self_.get(2).cst_decode(),
+                key_material_start: self_.get(2).cst_decode(),
+                key_material_end: self_.get(3).cst_decode(),
             }
         }
     }
@@ -11831,13 +11869,16 @@ mod web {
                 .unwrap();
             assert_eq!(
                 self_.length(),
-                2,
-                "Expected 2 elements, got {}",
+                5,
+                "Expected 5 elements, got {}",
                 self_.length()
             );
             crate::api::sealed_sender::SealedSenderV2SentMessage {
                 version: self_.get(0).cst_decode(),
-                recipients: self_.get(1).cst_decode(),
+                received_message_version: self_.get(1).cst_decode(),
+                shared_bytes_offset: self_.get(2).cst_decode(),
+                parsed_length: self_.get(3).cst_decode(),
+                recipients: self_.get(4).cst_decode(),
             }
         }
     }
@@ -13983,16 +14024,22 @@ mod web {
         ciphertext: Box<[u8]>,
         trust_root: Box<[u8]>,
         timestamp: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        local_name: String,
+        local_device_id: u32,
         get_identity_key_pair: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
         get_local_registration_id: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        get_identity: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) {
         wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks_impl(
             port_,
             ciphertext,
             trust_root,
             timestamp,
+            local_name,
+            local_device_id,
             get_identity_key_pair,
             get_local_registration_id,
+            get_identity,
         )
     }
 

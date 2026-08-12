@@ -245,8 +245,11 @@ void main() {
           ciphertext: sealed,
           trustRoot: trustRootPrivate.getPublicKey().serialize(),
           timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          localName: bob.uuid,
+          localDeviceId: bob.deviceId,
           getIdentityKeyPair: () async => bob.keys.identityKeyPair.serialize(),
           getLocalRegistrationId: () async => bob.registrationId,
+          getIdentity: (name, deviceId) async => null,
         );
         final unsealed = UnidentifiedSenderMessageContent.deserialize(
           data: unsealedBytes,
@@ -304,8 +307,11 @@ void main() {
           ciphertext: sealed,
           trustRoot: trustRootPrivate.getPublicKey().serialize(),
           timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+          localName: bob.uuid,
+          localDeviceId: bob.deviceId,
           getIdentityKeyPair: () async => bob.keys.identityKeyPair.serialize(),
           getLocalRegistrationId: () async => bob.registrationId,
+          getIdentity: (name, deviceId) async => null,
         );
       });
 
@@ -360,9 +366,12 @@ void main() {
             ciphertext: sealed,
             trustRoot: trustRootPrivate.getPublicKey().serialize(),
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+            localName: bob.uuid,
+            localDeviceId: bob.deviceId,
             getIdentityKeyPair: () async =>
                 bob.keys.identityKeyPair.serialize(),
             getLocalRegistrationId: () async => bob.registrationId,
+            getIdentity: (name, deviceId) async => null,
           ),
           throwsA(anything),
           reason: 'a foreign trust root must not authenticate',
@@ -405,9 +414,12 @@ void main() {
             ciphertext: sealed,
             trustRoot: trustRootPrivate.getPublicKey().serialize(),
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+            localName: bob.uuid,
+            localDeviceId: bob.deviceId,
             getIdentityKeyPair: () async =>
                 bob.keys.identityKeyPair.serialize(),
             getLocalRegistrationId: () async => bob.registrationId,
+            getIdentity: (name, deviceId) async => null,
           ),
           throwsA(anything),
         );
@@ -439,8 +451,11 @@ void main() {
             ciphertext: sealed,
             trustRoot: trustRootPrivate.getPublicKey().serialize(),
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+            localName: 'mallory-uuid',
+            localDeviceId: 1,
             getIdentityKeyPair: () async => mallory.serialize(),
             getLocalRegistrationId: () async => 99999,
+            getIdentity: (name, deviceId) async => null,
           ),
           throwsA(anything),
         );
@@ -494,7 +509,13 @@ void main() {
 
         // The excluded recipient is listed but gets nothing to deliver.
         expect(byId[_excludedUuid]!.devices, isEmpty);
-        expect(byId[_excludedUuid]!.receivedMessage, isEmpty);
+        expect(
+          parsed.receivedMessageFor(
+            recipient: byId[_excludedUuid]!,
+            data: sent,
+          ),
+          isEmpty,
+        );
 
         // Each real recipient gets their own single-recipient message, with the
         // registration id the server needs for routing.
@@ -511,12 +532,18 @@ void main() {
         for (final peer in [bob, carol]) {
           final unsealed = UnidentifiedSenderMessageContent.deserialize(
             data: await sealedSenderDecryptToUsmcWithCallbacks(
-              ciphertext: byId[peer.uuid]!.receivedMessage,
+              ciphertext: parsed.receivedMessageFor(
+                recipient: byId[peer.uuid]!,
+                data: sent,
+              ),
               trustRoot: trustRootPrivate.getPublicKey().serialize(),
               timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+              localName: peer.uuid,
+              localDeviceId: peer.deviceId,
               getIdentityKeyPair: () async =>
                   peer.keys.identityKeyPair.serialize(),
               getLocalRegistrationId: () async => peer.registrationId,
+              getIdentity: (name, deviceId) async => null,
             ),
           );
           expect(
@@ -529,10 +556,16 @@ void main() {
       });
 
       test('each fanned-out message decrypts end to end', () async {
-        // The parser's doc promises each receivedMessage is "ready for
+        // The parser's doc promises each fanned-out message is "ready for
         // SealedSenderCipher.decrypt" — assert that, not just that the
         // envelope unseals.
+        //
+        // Two recipients, deliberately. With one, `keyMaterialEnd` and
+        // `sharedBytesOffset` coincide, and a whole class of offset mistakes in
+        // `receivedMessageFor` assembles the right bytes anyway. Only from the
+        // second recipient onwards do the two diverge.
         final bob = await addPeer(_bobUuid, 2222);
+        final carol = await addPeer(_carolUuid, 3333);
 
         final inner = await SessionCipher(
           localAddress: aliceAddress,
@@ -545,13 +578,14 @@ void main() {
 
         final sent = await sealedSenderMultiRecipientEncryptWithCallbacks(
           destinations: [
-            MultiRecipientDestination(
-              name: bob.address.name(),
-              deviceId: bob.address.deviceId(),
-              sessionRecord: (await aliceSessions.loadSession(
-                bob.address,
-              ))!.serialize(),
-            ),
+            for (final peer in [bob, carol])
+              MultiRecipientDestination(
+                name: peer.address.name(),
+                deviceId: peer.address.deviceId(),
+                sessionRecord: (await aliceSessions.loadSession(
+                  peer.address,
+                ))!.serialize(),
+              ),
           ],
           excludedRecipients: [],
           usmc: UnidentifiedSenderMessageContent(
@@ -570,12 +604,27 @@ void main() {
 
         final parsed = await sealedSenderV2ParseSentMessage(data: sent);
         expect(parsed.version, isPositive);
+        expect(parsed.recipients, hasLength(2));
 
-        final bobSessions = InMemorySessionStore();
+        // The inner message is Alice's session with Bob, so only Bob's
+        // reconstruction can decrypt all the way to plaintext — but Carol's
+        // must still be a well-formed sealed sender message addressed to her,
+        // which is what unsealing it proves.
+        final bobRecipient = parsed.recipients.firstWhere(
+          (r) => r.serviceId == _bobUuid,
+        );
+        expect(
+          bobRecipient.keyMaterialEnd,
+          lessThan(parsed.sharedBytesOffset),
+          reason:
+              'with two recipients the two offsets must differ, or this '
+              'test is no stronger than the single-recipient one',
+        );
+
         final result =
             await SealedSenderCipher(
               localAddress: bob.address,
-              sessionStore: bobSessions,
+              sessionStore: InMemorySessionStore(),
               identityKeyStore: InMemoryIdentityKeyStore(
                 bob.keys.identityKeyPair,
                 bob.registrationId,
@@ -584,13 +633,47 @@ void main() {
               signedPreKeyStore: bob.signedPreKeyStore,
               kyberPreKeyStore: bob.kyberPreKeyStore,
             ).decrypt(
-              ciphertext: parsed.recipients.single.receivedMessage,
+              ciphertext: parsed.receivedMessageFor(
+                recipient: bobRecipient,
+                data: sent,
+              ),
               trustRoot: trustRootPrivate.getPublicKey().serialize(),
               timestamp: DateTime.now().millisecondsSinceEpoch,
             );
 
         expect(utf8.decode(result.plaintext), equals('all the way through'));
         expect(result.senderAddress.name(), equals(_aliceUuid));
+
+        // Carol's copy: unseals under her identity, and is not Bob's copy.
+        final carolRecipient = parsed.recipients.firstWhere(
+          (r) => r.serviceId == _carolUuid,
+        );
+        final carolMessage = parsed.receivedMessageFor(
+          recipient: carolRecipient,
+          data: sent,
+        );
+        expect(
+          await sealedSenderDecryptToUsmcWithCallbacks(
+            ciphertext: carolMessage,
+            trustRoot: trustRootPrivate.getPublicKey().serialize(),
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+            localName: carol.uuid,
+            localDeviceId: carol.deviceId,
+            getIdentityKeyPair: () async =>
+                carol.keys.identityKeyPair.serialize(),
+            getLocalRegistrationId: () async => carol.registrationId,
+            getIdentity: (name, deviceId) async => null,
+          ),
+          isNotEmpty,
+        );
+        expect(
+          carolMessage,
+          isNot(
+            equals(
+              parsed.receivedMessageFor(recipient: bobRecipient, data: sent),
+            ),
+          ),
+        );
       });
 
       test('rejects a registration id wider than 14 bits', () async {
@@ -799,6 +882,305 @@ void main() {
           throwsA(anything),
         );
       });
+
+      test('parsing returns offsets, not copies, so its cost does not scale '
+          'with the body', () async {
+        // The parser used to materialise one full message per recipient, so
+        // a large body was copied once each and an N-byte input could
+        // produce ~N^2/272 bytes of output. It now hands back ranges into
+        // the caller's own buffer.
+        final bob = await addPeer(_bobUuid, 2222);
+        final carol = await addPeer(_carolUuid, 3333);
+
+        Future<Uint8List> sendBody(int bodyLength) async =>
+            sealedSenderMultiRecipientEncryptWithCallbacks(
+              destinations: [
+                for (final peer in [bob, carol])
+                  MultiRecipientDestination(
+                    name: peer.uuid,
+                    deviceId: peer.deviceId,
+                    sessionRecord: (await aliceSessions.loadSession(
+                      peer.address,
+                    ))!.serialize(),
+                  ),
+              ],
+              excludedRecipients: [],
+              usmc: UnidentifiedSenderMessageContent(
+                messageType: CiphertextMessageType.signal.value,
+                senderCertificate: aliceCertificate,
+                contents: List.filled(bodyLength, 7),
+                contentHint: 0,
+              ).serialize(),
+              getIdentityKeyPair: () async => aliceIdentity.serialize(),
+              getLocalRegistrationId: () async => 11111,
+              getIdentity: (name, deviceId) async =>
+                  (await aliceIdentityStore.getIdentity(
+                    ProtocolAddress(name: name, deviceId: deviceId),
+                  ))?.serialize(),
+            );
+
+        final small = await sendBody(64);
+        final large = await sendBody(200000);
+        final parsedSmall = await sealedSenderV2ParseSentMessage(data: small);
+        final parsedLarge = await sealedSenderV2ParseSentMessage(data: large);
+
+        // Same recipient count either way; the ranges are what changes, and
+        // key material is a fixed 48 bytes per recipient regardless of body.
+        expect(
+          parsedLarge.recipients,
+          hasLength(parsedSmall.recipients.length),
+        );
+        for (final recipient in parsedLarge.recipients) {
+          expect(
+            recipient.keyMaterialEnd - recipient.keyMaterialStart,
+            equals(48),
+          );
+          expect(recipient.keyMaterialEnd, lessThanOrEqualTo(large.length));
+        }
+        expect(parsedLarge.sharedBytesOffset, lessThan(large.length));
+        expect(parsedLarge.receivedMessageVersion, isPositive);
+      });
+
+      test(
+        'reconstructed messages are exactly what each recipient needs',
+        () async {
+          final bob = await addPeer(_bobUuid, 2222);
+          final carol = await addPeer(_carolUuid, 3333);
+          final sent = await sealedSenderMultiRecipientEncryptWithCallbacks(
+            destinations: [
+              for (final peer in [bob, carol])
+                MultiRecipientDestination(
+                  name: peer.uuid,
+                  deviceId: peer.deviceId,
+                  sessionRecord: (await aliceSessions.loadSession(
+                    peer.address,
+                  ))!.serialize(),
+                ),
+            ],
+            excludedRecipients: [],
+            usmc: UnidentifiedSenderMessageContent(
+              messageType: CiphertextMessageType.signal.value,
+              senderCertificate: aliceCertificate,
+              contents: utf8.encode('shared body'),
+              contentHint: 0,
+            ).serialize(),
+            getIdentityKeyPair: () async => aliceIdentity.serialize(),
+            getLocalRegistrationId: () async => 11111,
+            getIdentity: (name, deviceId) async =>
+                (await aliceIdentityStore.getIdentity(
+                  ProtocolAddress(name: name, deviceId: deviceId),
+                ))?.serialize(),
+          );
+          final parsed = await sealedSenderV2ParseSentMessage(data: sent);
+
+          for (final recipient in parsed.recipients) {
+            final message = parsed.receivedMessageFor(
+              recipient: recipient,
+              data: sent,
+            );
+            // [version][48B key material][shared bytes to the end]
+            expect(
+              message.length,
+              equals(1 + 48 + (sent.length - parsed.sharedBytesOffset)),
+            );
+            expect(message.first, equals(parsed.receivedMessageVersion));
+            expect(
+              message.sublist(1, 49),
+              equals(
+                sent.sublist(
+                  recipient.keyMaterialStart,
+                  recipient.keyMaterialEnd,
+                ),
+              ),
+            );
+            expect(
+              message.sublist(49),
+              equals(sent.sublist(parsed.sharedBytesOffset)),
+            );
+          }
+
+          // Two recipients of one message share everything but their key material.
+          final first = parsed.receivedMessageFor(
+            recipient: parsed.recipients.first,
+            data: sent,
+          );
+          final second = parsed.receivedMessageFor(
+            recipient: parsed.recipients.last,
+            data: sent,
+          );
+          expect(first.sublist(49), equals(second.sublist(49)));
+          expect(first.sublist(1, 49), isNot(equals(second.sublist(1, 49))));
+        },
+      );
+
+      test(
+        'reconstruction refuses a buffer that is not the parsed one',
+        () async {
+          final bob = await addPeer(_bobUuid, 2222);
+          final sent = await sealedSenderMultiRecipientEncryptWithCallbacks(
+            destinations: [
+              MultiRecipientDestination(
+                name: bob.uuid,
+                deviceId: bob.deviceId,
+                sessionRecord: (await aliceSessions.loadSession(
+                  bob.address,
+                ))!.serialize(),
+              ),
+            ],
+            excludedRecipients: [],
+            usmc: UnidentifiedSenderMessageContent(
+              messageType: CiphertextMessageType.signal.value,
+              senderCertificate: aliceCertificate,
+              contents: utf8.encode('body'),
+              contentHint: 0,
+            ).serialize(),
+            getIdentityKeyPair: () async => aliceIdentity.serialize(),
+            getLocalRegistrationId: () async => 11111,
+            getIdentity: (name, deviceId) async =>
+                (await aliceIdentityStore.getIdentity(
+                  ProtocolAddress(name: name, deviceId: deviceId),
+                ))?.serialize(),
+          );
+          final parsed = await sealedSenderV2ParseSentMessage(data: sent);
+          expect(parsed.parsedLength, equals(sent.length));
+
+          expect(
+            () => parsed.receivedMessageFor(
+              recipient: parsed.recipients.single,
+              data: Uint8List(4),
+            ),
+            throwsArgumentError,
+          );
+
+          // A buffer that merely *starts* with the parsed message used to slip
+          // through the bounds check and silently extend the shared run, so the
+          // delivered message grew a tail that was never in the blob. The
+          // length is now part of what is checked.
+          final longer = Uint8List(sent.length + 100)
+            ..setRange(0, sent.length, sent);
+          expect(
+            () => parsed.receivedMessageFor(
+              recipient: parsed.recipients.single,
+              data: longer,
+            ),
+            throwsArgumentError,
+          );
+
+          // Truncated by one, likewise.
+          expect(
+            () => parsed.receivedMessageFor(
+              recipient: parsed.recipients.single,
+              data: sent.sublist(0, sent.length - 1),
+            ),
+            throwsArgumentError,
+          );
+
+          // A same-length foreign buffer is NOT detectable, and the doc says
+          // so. Pin it, so nobody later reads the guard as stronger than it is.
+          final foreign = Uint8List(sent.length);
+          expect(
+            parsed.receivedMessageFor(
+              recipient: parsed.recipients.single,
+              data: foreign,
+            ),
+            isNot(
+              equals(
+                parsed.receivedMessageFor(
+                  recipient: parsed.recipients.single,
+                  data: sent,
+                ),
+              ),
+            ),
+            reason: 'assembles from the wrong bytes; only the AEAD catches it',
+          );
+
+          // The excluded-recipient shortcut must not bypass the length check.
+          expect(
+            () => parsed.receivedMessageFor(
+              recipient: SealedSenderV2Recipient(
+                serviceId: bob.uuid,
+                devices: const [],
+                keyMaterialStart: 0,
+                keyMaterialEnd: 0,
+              ),
+              data: Uint8List(4),
+            ),
+            throwsArgumentError,
+          );
+        },
+      );
+
+      test(
+        'an unknown identity is refused per contiguous run, not per device',
+        () async {
+          // libsignal resolves one identity per contiguous run of destinations
+          // sharing an address name, from the run's FIRST destination. So an
+          // unknown device is refused or not depending on where it sits — the
+          // behaviour SECURITY.md documents. Cryptographically it is sound
+          // either way: an accepted device gets material derived from an
+          // identity the caller does trust.
+          final bob1 = await addPeer(_bobUuid, 2222);
+          final bob2 = await addPeer(
+            _bobUuid,
+            3333,
+            deviceId: 2,
+            identity: bob1.keys.identityKeyPair,
+          );
+          final carol = await addPeer(_carolUuid, 4444);
+
+          Future<Object?> send(List<_Peer> order) async {
+            try {
+              await sealedSenderMultiRecipientEncryptWithCallbacks(
+                destinations: [
+                  for (final peer in order)
+                    MultiRecipientDestination(
+                      name: peer.uuid,
+                      deviceId: peer.deviceId,
+                      sessionRecord: (await aliceSessions.loadSession(
+                        peer.address,
+                      ))!.serialize(),
+                    ),
+                ],
+                excludedRecipients: [],
+                usmc: UnidentifiedSenderMessageContent(
+                  messageType: CiphertextMessageType.signal.value,
+                  senderCertificate: aliceCertificate,
+                  contents: utf8.encode('body'),
+                  contentHint: 0,
+                ).serialize(),
+                getIdentityKeyPair: () async => aliceIdentity.serialize(),
+                getLocalRegistrationId: () async => 11111,
+                // bob device 2 is the unknown one.
+                getIdentity: (name, deviceId) async =>
+                    name == _bobUuid && deviceId == 2
+                    ? null
+                    : (await aliceIdentityStore.getIdentity(
+                        ProtocolAddress(name: name, deviceId: deviceId),
+                      ))?.serialize(),
+              );
+              return null;
+            } on Object catch (e) {
+              return e;
+            }
+          }
+
+          expect(
+            await send([bob1, bob2]),
+            isNull,
+            reason: 'one run resolved from bob.1, which is known',
+          );
+          expect(
+            await send([bob2, bob1]),
+            isNotNull,
+            reason: 'one run resolved from bob.2, which is not',
+          );
+          expect(
+            await send([bob1, carol, bob2]),
+            isNotNull,
+            reason: 'carol splits the run, so bob.2 is looked up on its own',
+          );
+        },
+      );
     });
   });
 }

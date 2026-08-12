@@ -480,11 +480,26 @@ Byte-parsing entry points (the network/storage boundary) are covered by
 | `session_decrypt` | pre-key message decryption (network-controlled ciphertext) |
 
 > **Known coverage gap.** The message-inspection types added alongside
-> `SignalMessage` parse untrusted bytes but have no fuzz target yet.
-> `sealedSenderV2ParseSentMessage` deserves one first: it parses a server-side
-> fan-out blob and allocates one buffer per recipient from length fields inside
-> that blob, so its output can be far larger than its input. Treat its input as
-> size-bounded until a target exists.
+> `SignalMessage` parse untrusted bytes but have no fuzz target yet. They are
+> parse-only — they hold no keys and write to no store — and each rejects
+> malformed input with an ordinary error, but that is asserted by unit tests
+> rather than by fuzzing.
+>
+> `sealedSenderV2ParseSentMessage` used to be the sharpest of them: it built one
+> buffer per recipient out of a shared body, so a 570 KB input measured at 1 GB
+> of output. It now returns **offsets** instead, which is `O(recipients)`
+> regardless of body size, and `SealedSenderV2SentMessage.receivedMessageFor`
+> assembles one recipient's message at a time. Bounding the number of recipients
+> you accept is still worthwhile; bounding the body size is no longer load-bearing.
+>
+> That parser is the one exception to the gap above:
+> `rust/src/ssv2_equivalence_tests.rs` (run by `make rust-test`, and by CI) puts
+> a corpus of crafted messages plus a real multi-recipient message through both
+> our parser and libsignal's, asserts the reassembled bytes are **identical** to
+> `received_message_parts_for_recipient`, and sweeps every truncation and a few
+> thousand byte mutations for panics. That is a fixed sweep, not a fuzzer — it
+> does not replace a `cargo-fuzz` target, and the other message-inspection types
+> still have neither.
 
 ```bash
 make setup-fuzz                          # one-time: nightly toolchain + cargo-fuzz
@@ -917,10 +932,25 @@ trusted-on-first-use — with one deliberate exception, below.
 `sealedSenderEncryptFromUsmcWithCallbacks` need the recipient's identity key
 directly rather than through a session, so a destination your
 `IdentityKeyStore.getIdentity` returns `null` for is **refused**, not accepted.
-You cannot address an account you have never seen. For multi-recipient sends the
-lookup is per *account*, not per device: contiguous destinations sharing an
-address name resolve to one identity, which is correct because Sealed Sender v2
-derives its per-recipient key material per account.
+You cannot address an account you have never seen.
+
+For multi-recipient sends, be precise about *which* destination is looked up:
+libsignal resolves one identity per **contiguous run of destinations sharing an
+address name**, using the run's **first** destination. That is correct — Sealed
+Sender v2 derives its per-recipient key material per account, and all of an
+account's devices share one identity key — but it means the refusal is not
+per-device, and whether an unknown device is refused depends on where it sits in
+your list:
+
+| destinations | result |
+|---|---|
+| `[bob.1 known, bob.2 unknown]` | **accepted** — one run, resolved from `bob.1` |
+| `[bob.2 unknown, bob.1 known]` | refused — one run, resolved from `bob.2` |
+| `[bob.1 known, carol.1, bob.2 unknown]` | refused — `carol.1` splits the run, so `bob.2` is looked up |
+
+In every accepted case the key material is derived from an identity you *do*
+trust, so an unknown device cannot read a message it was not entitled to. Sort
+each account's devices together and the behaviour is uniform.
 
 ### Message inspection is not authentication
 
@@ -941,14 +971,42 @@ Two consequences worth stating outright:
   safe — the chain key is a field of the serialized message, so a serialized
   distribution message is itself a secret and must be handled as one.
 - `sealedSenderDecryptToUsmcWithCallbacks` is the exception that *does*
-  authenticate: it takes `trustRoot` and `timestamp` and validates the sender
-  certificate before returning, exactly as `SealedSenderCipher.decrypt` does.
-  This is not optional. libsignal's own `sealed_sender_decrypt_to_usmc` binds
-  the certificate only to whoever sealed the blob, and sealing needs nothing but
-  the recipient's *public* identity key — so without the trust-root check anyone
-  could mint a certificate naming any sender and any group, and a caller reading
-  `senderCertificate()` or `groupId()` off the result would aim its resend
-  request wherever the attacker chose.
+  authenticate. It runs the same three gates `SealedSenderCipher.decrypt` puts
+  in front of its plaintext, in the same order:
+  1. it takes `trustRoot` and `timestamp` and validates the sender certificate.
+     This is not optional. libsignal's own `sealed_sender_decrypt_to_usmc` binds
+     the certificate only to whoever sealed the blob, and sealing needs nothing
+     but the recipient's *public* identity key — so without the trust-root check
+     anyone could mint a certificate naming any sender and any group, and a
+     caller reading `senderCertificate()` or `groupId()` off the result would
+     aim its resend request wherever the attacker chose.
+  2. it takes `localName` and `localDeviceId` and refuses a certificate naming
+     this very device as a **self-send**, the way upstream's
+     `sealed_sender_decrypt` does. Without it a server that reflects your own
+     message back has you unseal it and report yourself as the sender, and a
+     caller acting on that would aim a resend request at itself. Upstream also
+     matches on the sender's E.164; this package has no local E.164 to compare,
+     so the service id is the whole test on both paths.
+  3. it takes `getIdentity` and rejects a certificate whose identity key differs
+     from the one you have stored for that sender, with the same
+     `untrusted identity` error the decrypt path raises. A valid certificate is
+     not the same claim as a familiar peer: a sender who re-registers gets a
+     perfectly valid certificate carrying a **new** identity key, which is a
+     safety-number change. Gate 1 alone would hand that back silently while
+     `SealedSenderCipher.decrypt` refuses it. As everywhere else, no stored
+     identity means first contact and is accepted.
+
+  One difference from the decrypt path is worth knowing, because it is not a
+  weakening: gate 3 compares the key carried by the **certificate**, while the
+  decrypt path lets libsignal compare the key bound into the *session* (or
+  carried by the inner `PreKeySignalMessage`). Upstream never checks that those
+  two agree. Comparing the certificate's key is the right test for a function
+  that hands the certificate back, and it is the stricter of the two — a
+  certificate carrying a key you have not stored is refused here even when the
+  session it wraps would still decrypt.
+
+  Handle the error the same way as on the decrypt path — see
+  [Identity trust](#identity-trust--mitm-detection) above.
 
 Applications **must handle the `UntrustedIdentity` error** (its message contains
 `untrusted identity`): treat it as a safety-number change — surface it to the

@@ -1386,9 +1386,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   ) {
     wireObj.service_id = cst_encode_String(apiObj.serviceId);
     wireObj.devices = cst_encode_list_sealed_sender_v_2_device(apiObj.devices);
-    wireObj.received_message = cst_encode_list_prim_u_8_strict(
-      apiObj.receivedMessage,
-    );
+    wireObj.key_material_start = cst_encode_u_32(apiObj.keyMaterialStart);
+    wireObj.key_material_end = cst_encode_u_32(apiObj.keyMaterialEnd);
   }
 
   @protected
@@ -1397,6 +1396,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wire_cst_sealed_sender_v_2_sent_message wireObj,
   ) {
     wireObj.version = cst_encode_u_32(apiObj.version);
+    wireObj.received_message_version = cst_encode_u_32(
+      apiObj.receivedMessageVersion,
+    );
+    wireObj.shared_bytes_offset = cst_encode_u_32(apiObj.sharedBytesOffset);
+    wireObj.parsed_length = cst_encode_u_32(apiObj.parsedLength);
     wireObj.recipients = cst_encode_list_sealed_sender_v_2_recipient(
       apiObj.recipients,
     );
@@ -5899,16 +5903,22 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<wire_cst_list_prim_u_8_loose> ciphertext,
     ffi.Pointer<wire_cst_list_prim_u_8_loose> trust_root,
     int timestamp,
+    ffi.Pointer<wire_cst_list_prim_u_8_strict> local_name,
+    int local_device_id,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
       port_,
       ciphertext,
       trust_root,
       timestamp,
+      local_name,
+      local_device_id,
       get_identity_key_pair,
       get_local_registration_id,
+      get_identity,
     );
   }
 
@@ -5920,6 +5930,9 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Uint64,
+            ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+            ffi.Uint32,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
           )
@@ -5935,6 +5948,9 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               int,
+              ffi.Pointer<wire_cst_list_prim_u_8_strict>,
+              int,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
             )
@@ -7267,7 +7283,11 @@ final class wire_cst_sealed_sender_v_2_recipient extends ffi.Struct {
 
   external ffi.Pointer<wire_cst_list_sealed_sender_v_2_device> devices;
 
-  external ffi.Pointer<wire_cst_list_prim_u_8_strict> received_message;
+  @ffi.Uint32()
+  external int key_material_start;
+
+  @ffi.Uint32()
+  external int key_material_end;
 }
 
 final class wire_cst_list_sealed_sender_v_2_recipient extends ffi.Struct {
@@ -7333,6 +7353,15 @@ final class wire_cst_sealed_sender_encrypt_result extends ffi.Struct {
 final class wire_cst_sealed_sender_v_2_sent_message extends ffi.Struct {
   @ffi.Uint32()
   external int version;
+
+  @ffi.Uint32()
+  external int received_message_version;
+
+  @ffi.Uint32()
+  external int shared_bytes_offset;
+
+  @ffi.Uint32()
+  external int parsed_length;
 
   external ffi.Pointer<wire_cst_list_sealed_sender_v_2_recipient> recipients;
 }

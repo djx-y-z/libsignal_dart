@@ -824,8 +824,11 @@ abstract class RustLibApi extends BaseApi {
     required List<int> ciphertext,
     required List<int> trustRoot,
     required BigInt timestamp,
+    required String localName,
+    required int localDeviceId,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
   Future<SealedSenderDecryptResult>
@@ -6981,8 +6984,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required List<int> ciphertext,
     required List<int> trustRoot,
     required BigInt timestamp,
+    required String localName,
+    required int localDeviceId,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
       NormalTask(
@@ -6990,13 +6996,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           var arg0 = cst_encode_list_prim_u_8_loose(ciphertext);
           var arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
           var arg2 = cst_encode_u_64(timestamp);
-          var arg3 =
+          var arg3 = cst_encode_String(localName);
+          var arg4 = cst_encode_u_32(localDeviceId);
+          var arg5 =
               cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
                 getIdentityKeyPair,
               );
-          var arg4 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
             getLocalRegistrationId,
           );
+          var arg7 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
           return wire
               .wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
                 port_,
@@ -7005,6 +7017,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg2,
                 arg3,
                 arg4,
+                arg5,
+                arg6,
+                arg7,
               );
         },
         codec: DcoCodec(
@@ -7017,8 +7032,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           ciphertext,
           trustRoot,
           timestamp,
+          localName,
+          localDeviceId,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          getIdentity,
         ],
         apiImpl: this,
       ),
@@ -7033,8 +7051,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "ciphertext",
           "trustRoot",
           "timestamp",
+          "localName",
+          "localDeviceId",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "getIdentity",
         ],
       );
 
@@ -8994,12 +9015,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   SealedSenderV2Recipient dco_decode_sealed_sender_v_2_recipient(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 3)
-      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
     return SealedSenderV2Recipient(
       serviceId: dco_decode_String(arr[0]),
       devices: dco_decode_list_sealed_sender_v_2_device(arr[1]),
-      receivedMessage: dco_decode_list_prim_u_8_strict(arr[2]),
+      keyMaterialStart: dco_decode_u_32(arr[2]),
+      keyMaterialEnd: dco_decode_u_32(arr[3]),
     );
   }
 
@@ -9009,11 +9031,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
-    if (arr.length != 2)
-      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return SealedSenderV2SentMessage(
       version: dco_decode_u_32(arr[0]),
-      recipients: dco_decode_list_sealed_sender_v_2_recipient(arr[1]),
+      receivedMessageVersion: dco_decode_u_32(arr[1]),
+      sharedBytesOffset: dco_decode_u_32(arr[2]),
+      parsedLength: dco_decode_u_32(arr[3]),
+      recipients: dco_decode_list_sealed_sender_v_2_recipient(arr[4]),
     );
   }
 
@@ -10083,11 +10108,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_serviceId = sse_decode_String(deserializer);
     var var_devices = sse_decode_list_sealed_sender_v_2_device(deserializer);
-    var var_receivedMessage = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_keyMaterialStart = sse_decode_u_32(deserializer);
+    var var_keyMaterialEnd = sse_decode_u_32(deserializer);
     return SealedSenderV2Recipient(
       serviceId: var_serviceId,
       devices: var_devices,
-      receivedMessage: var_receivedMessage,
+      keyMaterialStart: var_keyMaterialStart,
+      keyMaterialEnd: var_keyMaterialEnd,
     );
   }
 
@@ -10097,11 +10124,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_version = sse_decode_u_32(deserializer);
+    var var_receivedMessageVersion = sse_decode_u_32(deserializer);
+    var var_sharedBytesOffset = sse_decode_u_32(deserializer);
+    var var_parsedLength = sse_decode_u_32(deserializer);
     var var_recipients = sse_decode_list_sealed_sender_v_2_recipient(
       deserializer,
     );
     return SealedSenderV2SentMessage(
       version: var_version,
+      receivedMessageVersion: var_receivedMessageVersion,
+      sharedBytesOffset: var_sharedBytesOffset,
+      parsedLength: var_parsedLength,
       recipients: var_recipients,
     );
   }
@@ -12148,7 +12181,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.serviceId, serializer);
     sse_encode_list_sealed_sender_v_2_device(self.devices, serializer);
-    sse_encode_list_prim_u_8_strict(self.receivedMessage, serializer);
+    sse_encode_u_32(self.keyMaterialStart, serializer);
+    sse_encode_u_32(self.keyMaterialEnd, serializer);
   }
 
   @protected
@@ -12158,6 +12192,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_u_32(self.version, serializer);
+    sse_encode_u_32(self.receivedMessageVersion, serializer);
+    sse_encode_u_32(self.sharedBytesOffset, serializer);
+    sse_encode_u_32(self.parsedLength, serializer);
     sse_encode_list_sealed_sender_v_2_recipient(self.recipients, serializer);
   }
 
