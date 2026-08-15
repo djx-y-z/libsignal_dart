@@ -33,7 +33,7 @@ const _nativeAssetId = 'package:libsignal/libsignal';
 ///
 /// ### For Native Platforms (iOS, Android, macOS, Linux, Windows)
 ///
-/// 1. **Custom path**: If provided via [libraryPath] parameter
+/// 1. **Custom path** (if provided via [libraryPath] parameter)
 /// 2. **Build hook locations**, in order: `.dart_tool/lib/`
 ///    (`dart run`/`dart test`), `../lib/` next to the executable (AOT
 ///    bundle), `build/native_assets/<os>/` (`flutter test`)
