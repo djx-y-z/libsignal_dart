@@ -95,7 +95,9 @@ The library is automatically located via `package_config.json`.
 `LibSignal.init()` searches for the native library in this order:
 
 1. Custom path (if provided via `libraryPath` parameter)
-2. Build hook locations (JIT: `.dart_tool/lib/`, AOT: `../lib/`)
+2. Build hook locations, in order: `.dart_tool/lib/` (`dart run`/`dart test`),
+   `../lib/` relative to the executable (AOT bundle), then
+   `build/native_assets/<os>/` (`flutter test`)
 3. FRB's default loader (flutter_rust_bridge)
 
 For a pure Dart CLI, run `dart pub get` so the package's build hook downloads and

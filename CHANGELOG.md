@@ -5,6 +5,8 @@
 #### ✨ Highlights
 
 - **Every Signal Protocol message type is now inspectable from Dart** — `PreKeySignalMessage`, `SenderKeyMessage`, `SenderKeyDistributionMessage` and `PlaintextContent` join `SignalMessage` and `DecryptionErrorMessage`. Messages could be produced and consumed but never read, which is why a group ciphertext's own `distributionId` had to be known out-of-band and a session's first post-quantum ratchet payload was unreachable ([#62](https://github.com/djx-y-z/libsignal_dart/issues/62))
+- **`flutter test` works again for Flutter apps that depend on this package** ([#63](https://github.com/djx-y-z/libsignal_dart/issues/63)) — on macOS and Linux `LibSignal.init()` could not find the native library the build hook had just provisioned for the test runner, so a dependent package's own unit tests failed on a clean checkout while the app itself built and ran fine
+
 - **Sealed sender gains content hints, group ids and multi-recipient fan-out** — `UnidentifiedSenderMessageContent` makes the sealed envelope itself addressable, so a recipient can learn whether an undecryptable message is worth a resend request without decrypting it; `sealedSenderMultiRecipientEncryptWithCallbacks` produces one Sealed Sender v2 message for a whole group
 
 #### Changed
@@ -33,11 +35,15 @@
 
 #### Fixed
 
+- **`LibSignal.init()` now works under `flutter test`** ([#63](https://github.com/djx-y-z/libsignal_dart/issues/63)) — the build hook registers the native library as a `CodeAsset`, but a `package:` asset id is not a path: it cannot be `dlopen`ed, and Dart offers no way to ask for a registered asset's file location, so the library has to be found on disk. Only the `dart run`/`dart test` and AOT-bundle locations were probed. `flutter test` installs the very same hooked library under `build/native_assets/<os>/` and never creates `.dart_tool/lib/`, so on macOS and Linux the unit tests of every Flutter package depending on `libsignal` failed in `LibSignal.init()` on a clean tree, while the app itself built and ran fine. Windows resolved it by accident: flutter_tools prepends that directory to the test runner's `PATH`, which is where Windows looks for a DLL. A leftover `.dart_tool/lib/` from a previous `dart test` was what made it look intermittent. That directory is now probed too — **last**, after the AOT bundle, so a library that happens to sit in the working directory can never shadow the one a compiled application shipped with. **Workaround on older versions:** pass the path explicitly, e.g. `LibSignal.init(libraryPath: 'build/native_assets/macos/liblibsignal_frb.dylib')` (`.../linux/liblibsignal_frb.so` on Linux)
+
 - **A sender key distribution message processed under the wrong distribution id is now refused instead of silently dropped** — `GroupCipher.processDistributionMessage` takes the distribution id from the caller, but a `SenderKeyDistributionMessage` also carries one, and libsignal stores the new sender-key state under the id *inside* the message. When the two disagreed the state was written to a key the wrapper never reads back. On first contact that surfaced as an error, but when a record already existed under the caller's id the read-back returned that stale record, so the call **succeeded** while discarding the distribution message — the group's later messages then failed to decrypt with a misleading "Process a distribution message first." The ids are now compared up front and a mismatch throws `Distribution ID mismatch: message carries <x>, caller passed <y>`. The matching-id path is unchanged. `GroupCipher.decrypt` was already fail-closed on the same mismatch and is untouched
 
 ### For Contributors
 
 #### Added
+
+- **Native-asset probe-order coverage** — `test/platform/native_asset_search_paths_test.dart` pins that the `flutter test` install directory is in the probe list, spelled as a per-host literal rather than by recomputing the implementation's own `Platform.operatingSystem` expression, and that it stays *behind* the AOT bundle. Nothing in `make test` could have caught [#63](https://github.com/djx-y-z/libsignal_dart/issues/63) — `dart test` always resolves through `.dart_tool/lib/`, so the first probe wins there. The only end-to-end guard would be a `flutter test` leg over `example/`, which does not exist yet
 
 - **`PreKeySignalMessage` test coverage** — `test/protocol/prekey_signal_message_test.dart` covers the serialize round-trip, every accessor against the keys the session was actually built from, that inspecting a message does not consume it, and that malformed input (including a bare `SignalMessage`) is rejected
 
