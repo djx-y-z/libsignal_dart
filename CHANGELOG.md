@@ -10,6 +10,7 @@
 - **Sealed sender gains content hints, group ids and multi-recipient fan-out** — `UnidentifiedSenderMessageContent` makes the sealed envelope itself addressable, so a recipient can learn whether an undecryptable message is worth a resend request without decrypting it; `sealedSenderMultiRecipientEncryptWithCallbacks` produces one Sealed Sender v2 message for a whole group
 
 - **libsignal v0.100.0** — unchanged this release
+- **libsignal_frb v6.1.0** — Rust FFI bindings
 
 #### Changed
 
