@@ -409,6 +409,38 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
   default today. Automatic (opt-in) verification via an installed `gh` CLI is
   tracked as a possible future hardening step.
 
+### Load-time resolution is not re-verified
+
+The checksum and attestation guarantees above cover the **download**. The file
+that is actually `dlopen`ed is a *copy* the Dart SDK or flutter_tools placed
+somewhere for the running toolchain, and `LibSignal.init()` finds it by probing
+a fixed list of paths (`nativeAssetSearchPaths`): `.dart_tool/lib/`, then
+`../lib/` relative to the executable, then `build/native_assets/<os>/`. Those
+copies are **not** hashed or otherwise re-verified at load time, and two of the
+three are relative to the current working directory. `dlopen` also runs a
+library's initializers before any check could inspect it, so a check performed
+after opening would be too late in any case.
+
+Practical consequences:
+
+- Anyone who can write `.dart_tool/lib/` or `build/native_assets/<os>/` in a
+  directory a Dart/Flutter process is launched from can supply the native code
+  that process runs. In a development checkout this is the same trust boundary
+  as the source tree itself; for a **compiled application shipped to users** it
+  is not, which is why the executable-relative location is probed *before* the
+  working-directory one.
+- A stale but loadable build in one of those directories is not detected: FRB's
+  content-hash check pins the bridge's API signature, not the libsignal
+  version, so an older binary with an unchanged bridge signature loads
+  silently.
+
+For a hardened deployment, pin the library explicitly and skip probing
+entirely:
+
+```dart
+await LibSignal.init(libraryPath: '/opt/myapp/lib/liblibsignal_frb.so');
+```
+
 ### Release & build-trigger protection
 
 The native binaries above are published by `build-libsignal.yml`, triggered by a
