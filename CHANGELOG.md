@@ -9,6 +9,8 @@
 
 - **Sealed sender gains content hints, group ids and multi-recipient fan-out** — `UnidentifiedSenderMessageContent` makes the sealed envelope itself addressable, so a recipient can learn whether an undecryptable message is worth a resend request without decrypting it; `sealedSenderMultiRecipientEncryptWithCallbacks` produces one Sealed Sender v2 message for a whole group
 
+- **libsignal v0.100.0** — unchanged this release
+
 #### Changed
 
 - **New `PreKeySignalMessage` type** ([#62](https://github.com/djx-y-z/libsignal_dart/issues/62)) — `PreKeySignalMessage.deserialize(data: bytes)` plus `serialize()`, `messageVersion()`, `registrationId()`, `preKeyId()`, `signedPreKeyId()`, `kyberPreKeyId()`, `kyberCiphertext()`, `baseKey()`, `identityKey()`, `message()` and `cloneMessage()`. `message()` returns the wrapped `SignalMessage`, which is what makes a session's very first post-quantum ratchet payload readable: `PreKeySignalMessage.deserialize(data: ct).message().pqRatchet()`. Purely additive — nothing in the existing surface changed, and decryption still goes through `SessionCipher`, which owns the stores this type has no access to. As with `SignalMessage.deserialize`, parsing validates structure but does **not** authenticate: the inner MAC is only checked during decryption, so anything read off an un-decrypted message is attacker-controlled
