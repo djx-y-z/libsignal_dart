@@ -52,7 +52,7 @@ aes 0.9.2
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T72]
 
-aho-corasick 1.1.4
+aho-corasick 1.1.5
   License: Unlicense OR MIT
   Texts:   COPYING [T138], LICENSE-MIT [T129], UNLICENSE [T137]
 
@@ -76,7 +76,7 @@ assert_matches 1.5.0
   License: MIT/Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T45]
 
-async-trait 0.1.91
+async-trait 0.1.92
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T124]
 
@@ -136,7 +136,7 @@ cbc 0.2.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T70]
 
-cc 1.4.0
+cc 1.4.3
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -252,19 +252,19 @@ dashmap 5.5.3
   License: MIT
   Texts:   LICENSE [T112]
 
-data-encoding-macro-internal 0.1.18
+data-encoding-macro-internal 0.1.19
   License: MIT
   Texts:   LICENSE [T131]
 
-data-encoding-macro 0.1.20
+data-encoding-macro 0.1.21
   License: MIT
   Texts:   LICENSE [T131]
 
-data-encoding 2.11.0
+data-encoding 2.11.1
   License: MIT
   Texts:   LICENSE [T131]
 
-delegate-attr 0.3.0
+delegate-attr 0.3.1
   License: MIT
   Texts:   LICENSE [T89]
 
@@ -316,7 +316,7 @@ fiat-crypto 0.3.0
   License: MIT OR Apache-2.0 OR BSD-1-Clause
   Texts:   LICENSE-APACHE [T126], LICENSE-BSD-1 [T127], LICENSE-MIT [T132]
 
-find-msvc-tools 0.1.9
+find-msvc-tools 0.1.11
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -338,39 +338,39 @@ foldhash 0.1.5
   License: Zlib
   Texts:   LICENSE [T98]
 
-futures-channel 0.3.33
+futures-channel 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-core 0.3.33
+futures-core 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-executor 0.3.33
+futures-executor 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-io 0.3.33
+futures-io 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-macro 0.3.33
+futures-macro 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-sink 0.3.33
+futures-sink 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-task 0.3.33
+futures-task 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures-util 0.3.33
+futures-util 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
-futures 0.3.33
+futures 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T43]
 
@@ -499,7 +499,7 @@ itoa 1.0.18
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T124]
 
-js-sys 0.3.103
+js-sys 0.3.104
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -569,7 +569,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T109]
 
-libsignal-debug 0.99.3
+libsignal-debug 0.101.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T109]
 
@@ -617,7 +617,7 @@ num-bigint 0.4.8
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T33]
 
-num-integer 0.1.46
+num-integer 0.1.47
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T33]
 
@@ -673,7 +673,7 @@ pin-project-lite 0.2.17
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T2], LICENSE-MIT [T124]
 
-pkg-config 0.3.33
+pkg-config 0.3.34
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -685,7 +685,7 @@ polyval 0.7.3
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T88]
 
-portable-atomic 1.14.0
+portable-atomic 1.15.0
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T2], LICENSE-MIT [T124]
 
@@ -779,7 +779,7 @@ redox_syscall 0.5.18
   License: MIT
   Texts:   LICENSE [T60]
 
-regex-automata 0.4.16
+regex-automata 0.4.18
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T33]
 
@@ -891,11 +891,11 @@ tempfile 3.27.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T37]
 
-thiserror-impl 2.0.19
+thiserror-impl 2.0.20
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T124]
 
-thiserror 2.0.19
+thiserror 2.0.20
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T124]
 
@@ -935,7 +935,7 @@ universal-hash 0.6.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T87]
 
-uuid 1.24.0
+uuid 1.24.1
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T34]
 
@@ -951,27 +951,27 @@ wasip2 1.0.4+wasi-0.2.12
   License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-Apache-2.0_WITH_LLVM-exception [T7], LICENSE-MIT [T124]
 
-wasm-bindgen-futures 0.4.76
+wasm-bindgen-futures 0.4.77
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro-support 0.2.126
+wasm-bindgen-macro-support 0.2.127
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro 0.2.126
+wasm-bindgen-macro 0.2.127
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-shared 0.2.126
+wasm-bindgen-shared 0.2.127
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen 0.2.126
+wasm-bindgen 0.2.127
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-web-sys 0.3.103
+web-sys 0.3.104
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -995,11 +995,11 @@ x25519-dalek 3.0.0
   License: BSD-3-Clause
   Texts:   LICENSE [T61]
 
-zerocopy-derive 0.8.55
+zerocopy-derive 0.8.56
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T106], LICENSE-MIT [T107]
 
-zerocopy 0.8.55
+zerocopy 0.8.56
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T106], LICENSE-MIT [T107]
 
@@ -1061,7 +1061,7 @@ DEALINGS IN THE SOFTWARE.
 Crates:
   miniz_oxide@0.8.9
   pin-project-lite@0.2.17
-  portable-atomic@1.14.0
+  portable-atomic@1.15.0
 
 Apache License
                            Version 2.0, January 2004
@@ -1664,8 +1664,8 @@ Apache License
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.55
-  zerocopy@0.8.55
+  zerocopy-derive@0.8.56
+  zerocopy@0.8.56
 
 Apache License
                            Version 2.0, January 2004
@@ -2533,7 +2533,7 @@ Apache License
 
 Crates:
   anyhow@1.0.104
-  async-trait@0.1.91
+  async-trait@0.1.92
   itoa@1.0.18
   libc@0.2.189
   num_enum@0.7.6
@@ -2551,8 +2551,8 @@ Crates:
   serde_json@1.0.151
   syn@2.0.119
   syn@3.0.3
-  thiserror-impl@2.0.19
-  thiserror@2.0.19
+  thiserror-impl@2.0.20
+  thiserror@2.0.20
   unicode-ident@1.0.24
 
 Apache License
@@ -2737,15 +2737,15 @@ END OF TERMS AND CONDITIONS
 ------------------------------------------------------------------------------
 
 Crates:
-  futures-channel@0.3.33
-  futures-core@0.3.33
-  futures-executor@0.3.33
-  futures-io@0.3.33
-  futures-macro@0.3.33
-  futures-sink@0.3.33
-  futures-task@0.3.33
-  futures-util@0.3.33
-  futures@0.3.33
+  futures-channel@0.3.34
+  futures-core@0.3.34
+  futures-executor@0.3.34
+  futures-io@0.3.34
+  futures-macro@0.3.34
+  futures-sink@0.3.34
+  futures-task@0.3.34
+  futures-util@0.3.34
+  futures@0.3.34
 
 Apache License
                         Version 2.0, January 2004
@@ -3589,7 +3589,7 @@ Crates:
   backtrace@0.3.76
   bitflags@2.13.1
   bumpalo@3.20.3
-  cc@1.4.0
+  cc@1.4.3
   cexpr@0.6.0
   cfg-if@1.0.4
   crossbeam-deque@0.8.7
@@ -3601,7 +3601,7 @@ Crates:
   equivalent@1.0.2
   errno@0.3.14
   fastrand@2.5.0
-  find-msvc-tools@0.1.9
+  find-msvc-tools@0.1.11
   fixedbitset@0.5.7
   gimli@0.32.3
   glob@0.3.4
@@ -3614,14 +3614,14 @@ Crates:
   itertools@0.13.0
   itertools@0.14.0
   itertools@0.15.0
-  js-sys@0.3.103
+  js-sys@0.3.104
   lazy_static@1.5.0
   linux-raw-sys@0.12.1
   lock_api@0.4.14
   log@0.4.33
   multimap@0.10.1
   num-bigint@0.4.8
-  num-integer@0.1.46
+  num-integer@0.1.47
   num-traits@0.2.19
   num_cpus@1.17.0
   object@0.37.3
@@ -3629,14 +3629,14 @@ Crates:
   parking_lot@0.12.5
   parking_lot_core@0.9.12
   petgraph@0.8.3
-  pkg-config@0.3.33
+  pkg-config@0.3.34
   prost-build@0.14.4
   prost-derive@0.14.4
   prost-types@0.14.4
   prost@0.14.4
   rayon-core@1.13.0
   rayon@1.12.0
-  regex-automata@0.4.16
+  regex-automata@0.4.18
   regex-syntax@0.8.11
   regex@1.13.1
   rustc-demangle@0.1.28
@@ -3646,16 +3646,16 @@ Crates:
   smallvec@1.15.2
   tempfile@3.27.0
   threadpool@1.8.1
-  uuid@1.24.0
+  uuid@1.24.1
   version_check@0.9.5
   wasi@0.11.1+wasi-snapshot-preview1
   wasip2@1.0.4+wasi-0.2.12
-  wasm-bindgen-futures@0.4.76
-  wasm-bindgen-macro-support@0.2.126
-  wasm-bindgen-macro@0.2.126
-  wasm-bindgen-shared@0.2.126
-  wasm-bindgen@0.2.126
-  web-sys@0.3.103
+  wasm-bindgen-futures@0.4.77
+  wasm-bindgen-macro-support@0.2.127
+  wasm-bindgen-macro@0.2.127
+  wasm-bindgen-shared@0.2.127
+  wasm-bindgen@0.2.127
+  web-sys@0.3.104
   wit-bindgen@0.57.1
 
 Apache License
@@ -6186,18 +6186,18 @@ SOFTWARE.
 
 Crates:
   backtrace@0.3.76
-  cc@1.4.0
+  cc@1.4.3
   cfg-if@1.0.4
-  find-msvc-tools@0.1.9
-  js-sys@0.3.103
-  pkg-config@0.3.33
+  find-msvc-tools@0.1.11
+  js-sys@0.3.104
+  pkg-config@0.3.34
   rustc-demangle@0.1.28
-  wasm-bindgen-futures@0.4.76
-  wasm-bindgen-macro-support@0.2.126
-  wasm-bindgen-macro@0.2.126
-  wasm-bindgen-shared@0.2.126
-  wasm-bindgen@0.2.126
-  web-sys@0.3.103
+  wasm-bindgen-futures@0.4.77
+  wasm-bindgen-macro-support@0.2.127
+  wasm-bindgen-macro@0.2.127
+  wasm-bindgen-shared@0.2.127
+  wasm-bindgen@0.2.127
+  web-sys@0.3.104
 
 Copyright (c) 2014 Alex Crichton
 
@@ -6267,9 +6267,9 @@ Crates:
   glob@0.3.4
   log@0.4.33
   num-bigint@0.4.8
-  num-integer@0.1.46
+  num-integer@0.1.47
   num-traits@0.2.19
-  regex-automata@0.4.16
+  regex-automata@0.4.18
   regex-syntax@0.8.11
   regex@1.13.1
   threadpool@1.8.1
@@ -6305,7 +6305,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  uuid@1.24.0
+  uuid@1.24.1
 
 Copyright (c) 2014 The Rust Project Developers
 Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
@@ -6599,15 +6599,15 @@ THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  futures-channel@0.3.33
-  futures-core@0.3.33
-  futures-executor@0.3.33
-  futures-io@0.3.33
-  futures-macro@0.3.33
-  futures-sink@0.3.33
-  futures-task@0.3.33
-  futures-util@0.3.33
-  futures@0.3.33
+  futures-channel@0.3.34
+  futures-core@0.3.34
+  futures-executor@0.3.34
+  futures-io@0.3.34
+  futures-macro@0.3.34
+  futures-sink@0.3.34
+  futures-task@0.3.34
+  futures-util@0.3.34
+  futures@0.3.34
 
 Copyright (c) 2016 Alex Crichton
 Copyright (c) 2017 The Tokio Authors
@@ -8137,7 +8137,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  delegate-attr@0.3.0
+  delegate-attr@0.3.1
 
 Copyright (c) 2020 Xidorn Quan
 
@@ -8677,8 +8677,8 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.55
-  zerocopy@0.8.55
+  zerocopy-derive@0.8.56
+  zerocopy@0.8.56
 
 Copyright 2019 The Fuchsia Authors.
 
@@ -8710,8 +8710,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.55
-  zerocopy@0.8.55
+  zerocopy-derive@0.8.56
+  zerocopy@0.8.56
 
 Copyright 2023 The Fuchsia Authors
 
@@ -8765,7 +8765,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.99.3
+  libsignal-debug@0.101.0
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3
@@ -9812,7 +9812,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Crates:
   adler2@2.0.1
   anyhow@1.0.104
-  async-trait@0.1.91
+  async-trait@0.1.92
   curve25519-dalek-derive@0.1.1
   displaydoc@0.2.7
   fastrand@2.5.0
@@ -9825,7 +9825,7 @@ Crates:
   once_cell@1.21.4
   pastey@0.2.3
   pin-project-lite@0.2.17
-  portable-atomic@1.14.0
+  portable-atomic@1.15.0
   prettyplease@0.2.37
   proc-macro-crate@3.5.0
   proc-macro2@1.0.107
@@ -9840,8 +9840,8 @@ Crates:
   serde_json@1.0.151
   syn@2.0.119
   syn@3.0.3
-  thiserror-impl@2.0.19
-  thiserror@2.0.19
+  thiserror-impl@2.0.20
+  thiserror@2.0.20
   unicode-ident@1.0.24
   wasi@0.11.1+wasi-snapshot-preview1
   wasip2@1.0.4+wasi-0.2.12
@@ -9986,7 +9986,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  aho-corasick@1.1.4
+  aho-corasick@1.1.5
   byteorder@1.5.0
   memchr@2.8.3
 
@@ -10047,9 +10047,9 @@ THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  data-encoding-macro-internal@0.1.18
-  data-encoding-macro@0.1.20
-  data-encoding@2.11.0
+  data-encoding-macro-internal@0.1.19
+  data-encoding-macro@0.1.21
+  data-encoding@2.11.1
 
 The MIT License (MIT)
 
@@ -10231,7 +10231,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  aho-corasick@1.1.4
+  aho-corasick@1.1.5
   byteorder@1.5.0
   memchr@2.8.3
 
@@ -10265,7 +10265,7 @@ For more information, please refer to <http://unlicense.org/>
 ------------------------------------------------------------------------------
 
 Crates:
-  aho-corasick@1.1.4
+  aho-corasick@1.1.5
   byteorder@1.5.0
   memchr@2.8.3
 

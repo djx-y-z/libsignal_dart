@@ -203,6 +203,22 @@ fn process_sender_key_distribution_inner(
     let skdm = SenderKeyDistributionMessage::try_from(distribution_message)
         .map_err(|e: SignalProtocolError| e.to_string())?;
 
+    // SECURITY: libsignal stores the new sender-key state under the id carried
+    // *inside* the message, while this wrapper's store callbacks are keyed by
+    // the caller-supplied id. If the two disagree the state would be written to
+    // a key we never read back — and when the caller already holds a record
+    // under their id, the read-back silently returns that stale record, so the
+    // distribution message is dropped without an error. Refuse instead.
+    let msg_uuid = skdm
+        .distribution_id()
+        .map_err(|e: SignalProtocolError| e.to_string())?;
+    if msg_uuid != dist_uuid {
+        return Err(format!(
+            "Distribution ID mismatch: message carries {}, caller passed {}",
+            msg_uuid, dist_uuid
+        ));
+    }
+
     // Create in-memory store
     let mut sender_key_store = InMemSenderKeyStore::new();
 

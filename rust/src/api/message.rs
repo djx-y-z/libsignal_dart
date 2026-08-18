@@ -2,8 +2,11 @@
 
 use libsignal_protocol::{
     CiphertextMessageType, DecryptionErrorMessage as NativeDecryptionErrorMessage,
-    DeviceId, IdentityKey, ProtocolAddress, PublicKey as NativePublicKey,
-    SignalMessage as NativeSignalMessage, Timestamp,
+    DeviceId, IdentityKey, PlaintextContent as NativePlaintextContent,
+    PreKeySignalMessage as NativePreKeySignalMessage, ProtocolAddress,
+    PublicKey as NativePublicKey,
+    SenderKeyDistributionMessage as NativeSenderKeyDistributionMessage,
+    SenderKeyMessage as NativeSenderKeyMessage, SignalMessage as NativeSignalMessage, Timestamp,
 };
 
 /// An encrypted Signal Protocol message (whisper message).
@@ -117,6 +120,331 @@ impl SignalMessage {
     #[flutter_rust_bridge::frb(sync)]
     pub fn clone_message(&self) -> Result<SignalMessage, String> {
         Ok(SignalMessage {
+            inner: self.inner.clone(),
+        })
+    }
+}
+
+/// The first message of a session, carrying the X3DH/PQXDH key material
+/// alongside an ordinary [SignalMessage].
+///
+/// This type is for *inspecting* a pre-key message — reading which pre-keys it
+/// references, or reaching the inner [SignalMessage] and its post-quantum
+/// ratchet payload. Decryption still goes through `SessionCipher`, which needs
+/// the stores this type has no access to.
+///
+/// # Security
+/// Deserializing parses and structurally validates, but it does **not**
+/// authenticate: the inner message's MAC is only checked during decryption,
+/// once a session has produced the key to check it with. Treat everything read
+/// off an un-decrypted message as attacker-controlled.
+pub struct PreKeySignalMessage {
+    inner: NativePreKeySignalMessage,
+}
+
+impl PreKeySignalMessage {
+    /// Deserialize a PreKeySignalMessage from bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn deserialize(data: Vec<u8>) -> Result<PreKeySignalMessage, String> {
+        let native =
+            NativePreKeySignalMessage::try_from(&data[..]).map_err(|e| e.to_string())?;
+        Ok(PreKeySignalMessage { inner: native })
+    }
+
+    /// Serialize the message to bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.serialized().to_vec())
+    }
+
+    /// Get the Signal Protocol message version.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn message_version(&self) -> Result<u32, String> {
+        Ok(self.inner.message_version() as u32)
+    }
+
+    /// Get the sender's registration ID.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn registration_id(&self) -> Result<u32, String> {
+        Ok(self.inner.registration_id())
+    }
+
+    /// Get the one-time pre-key ID this message consumes, if any.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn pre_key_id(&self) -> Result<Option<u32>, String> {
+        Ok(self.inner.pre_key_id().map(u32::from))
+    }
+
+    /// Get the signed pre-key ID this message was addressed to.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn signed_pre_key_id(&self) -> Result<u32, String> {
+        Ok(self.inner.signed_pre_key_id().into())
+    }
+
+    /// Get the Kyber pre-key ID this message consumes, if any.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn kyber_pre_key_id(&self) -> Result<Option<u32>, String> {
+        Ok(self.inner.kyber_pre_key_id().map(u32::from))
+    }
+
+    /// Get the Kyber ciphertext (KEM encapsulation), if this is a PQXDH message.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn kyber_ciphertext(&self) -> Result<Option<Vec<u8>>, String> {
+        Ok(self.inner.kyber_ciphertext().map(|ct| ct.to_vec()))
+    }
+
+    /// Get the sender's ephemeral base public key (serialized).
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn base_key(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.base_key().serialize().into_vec())
+    }
+
+    /// Get the sender's identity public key (serialized).
+    ///
+    /// Unauthenticated until the message is decrypted:
+    /// <https://github.com/djx-y-z/libsignal_dart/blob/main/SECURITY.md#message-inspection-is-not-authentication>
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn identity_key(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.identity_key().public_key().serialize().into_vec())
+    }
+
+    /// Get the wrapped [SignalMessage].
+    ///
+    /// This is what exposes the post-quantum ratchet payload of a session's
+    /// very first message: `preKeyMessage.message().pqRatchet()`.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn message(&self) -> Result<SignalMessage, String> {
+        Ok(SignalMessage {
+            inner: self.inner.message().clone(),
+        })
+    }
+
+    /// Create a copy of this message.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn clone_message(&self) -> Result<PreKeySignalMessage, String> {
+        Ok(PreKeySignalMessage {
+            inner: self.inner.clone(),
+        })
+    }
+}
+
+/// An encrypted group message, produced by `GroupCipher.encrypt`.
+///
+/// Lets a recipient read which group (`distributionId`) and which point in the
+/// sender's chain a message belongs to *before* decrypting it — which is what
+/// `GroupCipher.decrypt` needs its `distributionId` argument for.
+///
+/// # Security
+/// Deserializing parses and structurally validates, but it does **not**
+/// authenticate. Use [SenderKeyMessage.verifySignature] with the sender's
+/// signing key, or simply decrypt, before trusting any of these fields.
+pub struct SenderKeyMessage {
+    inner: NativeSenderKeyMessage,
+}
+
+impl SenderKeyMessage {
+    /// Deserialize a SenderKeyMessage from bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn deserialize(data: Vec<u8>) -> Result<SenderKeyMessage, String> {
+        let native = NativeSenderKeyMessage::try_from(&data[..]).map_err(|e| e.to_string())?;
+        Ok(SenderKeyMessage { inner: native })
+    }
+
+    /// Serialize the message to bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.serialized().to_vec())
+    }
+
+    /// Get the Signal Protocol message version.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn message_version(&self) -> Result<u32, String> {
+        Ok(self.inner.message_version() as u32)
+    }
+
+    /// Get the distribution (group) ID this message belongs to, as a UUID string.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn distribution_id(&self) -> Result<String, String> {
+        Ok(self.inner.distribution_id().to_string())
+    }
+
+    /// Get the sender key chain ID.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn chain_id(&self) -> Result<u32, String> {
+        Ok(self.inner.chain_id())
+    }
+
+    /// Get the position of this message within the sender's chain.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn iteration(&self) -> Result<u32, String> {
+        Ok(self.inner.iteration())
+    }
+
+    /// Get the encrypted message body.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn ciphertext(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.ciphertext().to_vec())
+    }
+
+    /// Verify this message's signature against the sender's signing key.
+    ///
+    /// The signing key is the one carried by the sender's distribution message
+    /// ([SenderKeyDistributionMessage.signingKey]).
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn verify_signature(&self, signature_key: Vec<u8>) -> Result<bool, String> {
+        let key = NativePublicKey::deserialize(&signature_key).map_err(|e| e.to_string())?;
+        self.inner
+            .verify_signature(&key)
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
+    }
+
+    /// Create a copy of this message.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn clone_message(&self) -> Result<SenderKeyMessage, String> {
+        Ok(SenderKeyMessage {
+            inner: self.inner.clone(),
+        })
+    }
+}
+
+/// A sender key distribution message: the bundle a group member sends so others
+/// can decrypt their future group messages.
+///
+/// Reading [SenderKeyDistributionMessage.distributionId] is what lets a
+/// recipient route the message to the right group — `processDistributionMessage`
+/// requires that id and refuses a mismatch.
+///
+/// # Security
+/// There is deliberately **no `chainKey()` accessor**: the chain key is secret
+/// key material, and since this type has no from-parts constructor an accessor
+/// would only add a way to leak it. Note this makes the *object* no safer than
+/// the bytes behind it — the chain key is a field of the serialized message, so
+/// anything holding those bytes (including the result of `serialize()`, which
+/// only ever returns what was passed to `deserialize`) already has it. Treat a
+/// serialized distribution message as the secret it is.
+///
+/// Deserializing does not authenticate — the signing key here is used to sign
+/// the sender's later messages, not this one — so treat the fields as
+/// attacker-controlled until the distribution message has been processed.
+pub struct SenderKeyDistributionMessage {
+    inner: NativeSenderKeyDistributionMessage,
+}
+
+impl SenderKeyDistributionMessage {
+    /// Deserialize a SenderKeyDistributionMessage from bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn deserialize(data: Vec<u8>) -> Result<SenderKeyDistributionMessage, String> {
+        let native =
+            NativeSenderKeyDistributionMessage::try_from(&data[..]).map_err(|e| e.to_string())?;
+        Ok(SenderKeyDistributionMessage { inner: native })
+    }
+
+    /// Serialize the message to bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.serialized().to_vec())
+    }
+
+    /// Get the Signal Protocol message version.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn message_version(&self) -> Result<u32, String> {
+        Ok(self.inner.message_version() as u32)
+    }
+
+    /// Get the distribution (group) ID this message establishes, as a UUID string.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn distribution_id(&self) -> Result<String, String> {
+        self.inner
+            .distribution_id()
+            .map(|id| id.to_string())
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
+    }
+
+    /// Get the sender key chain ID.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn chain_id(&self) -> Result<u32, String> {
+        self.inner
+            .chain_id()
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
+    }
+
+    /// Get the chain position this distribution message starts from.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn iteration(&self) -> Result<u32, String> {
+        self.inner
+            .iteration()
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
+    }
+
+    /// Get the sender's public signing key (serialized).
+    ///
+    /// Pass this to [SenderKeyMessage.verifySignature].
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn signing_key(&self) -> Result<Vec<u8>, String> {
+        self.inner
+            .signing_key()
+            .map(|k| k.serialize().into_vec())
+            .map_err(|e: libsignal_protocol::SignalProtocolError| e.to_string())
+    }
+
+    /// Create a copy of this message.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn clone_message(&self) -> Result<SenderKeyDistributionMessage, String> {
+        Ok(SenderKeyDistributionMessage {
+            inner: self.inner.clone(),
+        })
+    }
+}
+
+/// A message body sent without encryption.
+///
+/// The only thing that may travel this way is a [DecryptionErrorMessage] — the
+/// receipt asking a peer to re-establish a session after a decryption failure.
+/// Build one with [PlaintextContent.fromDecryptionErrorMessage] and send its
+/// [PlaintextContent.serialize] bytes as `CiphertextMessageType.plaintextContent`.
+pub struct PlaintextContent {
+    inner: NativePlaintextContent,
+}
+
+impl PlaintextContent {
+    /// Wrap a decryption error message for sending.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn from_decryption_error_message(
+        message: &DecryptionErrorMessage,
+    ) -> Result<PlaintextContent, String> {
+        Ok(PlaintextContent {
+            inner: NativePlaintextContent::from(message.inner.clone()),
+        })
+    }
+
+    /// Deserialize a PlaintextContent from bytes.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn deserialize(data: Vec<u8>) -> Result<PlaintextContent, String> {
+        let native = NativePlaintextContent::try_from(&data[..]).map_err(|e| e.to_string())?;
+        Ok(PlaintextContent { inner: native })
+    }
+
+    /// Serialize the message to bytes, ready to send.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.serialized().to_vec())
+    }
+
+    /// Get the body: the serialized protobuf `Content`, without the leading
+    /// plaintext-content identifier byte.
+    ///
+    /// This — **not** [PlaintextContent.serialize] — is what
+    /// [DecryptionErrorMessage.extractFromSerializedContent] takes; it
+    /// rejects the leading identifier byte.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn body(&self) -> Result<Vec<u8>, String> {
+        Ok(self.inner.body().to_vec())
+    }
+
+    /// Create a copy of this message.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn clone_message(&self) -> Result<PlaintextContent, String> {
+        Ok(PlaintextContent {
             inner: self.inner.clone(),
         })
     }

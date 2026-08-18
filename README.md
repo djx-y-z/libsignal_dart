@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-brightgreen.svg)](https://dart.dev)
 [![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.38.0-blue.svg)](https://flutter.dev)
-[![libsignal](https://img.shields.io/badge/libsignal-v0.99.3-orange.svg)](https://github.com/signalapp/libsignal)
+[![libsignal](https://img.shields.io/badge/libsignal-v0.101.0-orange.svg)](https://github.com/signalapp/libsignal)
 
 Dart bindings for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
@@ -68,26 +68,34 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 | `SessionBuilder` | processPreKeyBundle |
 | `SessionRecord` | serialize, deserialize |
 | `ProtocolAddress` | new, name, deviceId |
-| `SignalMessage` | serialize, body, counter, verifyMac |
-| `PreKeySignalMessage` | serialize, preKeyId, signedPreKeyId |
+| `SignalMessage` | deserialize, serialize, body, counter, pqRatchet, verifyMac |
+| `PreKeySignalMessage` | deserialize, serialize, message, preKeyId, signedPreKeyId, kyberPreKeyId, kyberCiphertext, baseKey, identityKey, registrationId |
+| `DecryptionErrorMessage` | forOriginalMessage, extractFromSerializedContent, timestamp, deviceId, ratchetKey |
+| `PlaintextContent` | fromDecryptionErrorMessage, deserialize, serialize, body |
+
+Message types are **parsed, not authenticated** — `deserialize` validates
+structure only. See [SECURITY.md](SECURITY.md#message-inspection-is-not-authentication).
 
 #### Groups
 
 | Class | Key Methods |
 |-------|-------------|
-| `GroupSession` | createDistributionMessage, encrypt, decrypt |
-| `SenderKeyRecord` | serialize, deserialize |
-| `SenderKeyMessage` | serialize, getDistributionId |
-| `SenderKeyDistributionMessage` | create, serialize |
+| `GroupCipher` | createDistributionMessage, processDistributionMessage, encrypt, decrypt |
+| `SenderKeyMessage` | deserialize, serialize, distributionId, chainId, iteration, ciphertext, verifySignature |
+| `SenderKeyDistributionMessage` | deserialize, serialize, distributionId, chainId, iteration, signingKey |
 
 #### Sealed Sender
 
-| Class | Key Methods |
+| Class / Function | Key Methods |
 |-------|-------------|
 | `SealedSenderCipher` | encrypt, decrypt |
-| `SenderCertificate` | create, validate, serialize |
-| `ServerCertificate` | create, serialize |
-| `UnidentifiedSenderMessageContent` | create, serialize |
+| `UnidentifiedSenderMessageContent` | *(constructor)*, deserialize, serialize, messageType, senderCertificate, contents, contentHint, groupId |
+| `ContentHint` | none, resendable, implicit, fromValue |
+| `sealedSenderEncryptFromUsmcWithCallbacks` | seal a USMC you built yourself |
+| `sealedSenderDecryptToUsmcWithCallbacks` | unseal to the envelope without decrypting the body |
+| `sealedSenderMultiRecipientEncryptWithCallbacks` | one Sealed Sender v2 message for many recipients |
+| `sealedSenderV2ParseSentMessage` | fan a v2 message out per recipient |
+| `createSenderCertificate` / `validateSenderCertificate` / `createServerCertificate` | certificate helpers (free functions, not classes) |
 
 #### Crypto
 

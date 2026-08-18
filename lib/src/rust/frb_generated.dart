@@ -77,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 579484814;
+  int get rustContentHash => 450650216;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -271,6 +271,26 @@ abstract class RustLibApi extends BaseApi {
     required KyberSecretKey that,
   });
 
+  Uint8List crateApiMessagePlaintextContentBody({
+    required PlaintextContent that,
+  });
+
+  PlaintextContent crateApiMessagePlaintextContentCloneMessage({
+    required PlaintextContent that,
+  });
+
+  PlaintextContent crateApiMessagePlaintextContentDeserialize({
+    required List<int> data,
+  });
+
+  PlaintextContent crateApiMessagePlaintextContentFromDecryptionErrorMessage({
+    required DecryptionErrorMessage message,
+  });
+
+  Uint8List crateApiMessagePlaintextContentSerialize({
+    required PlaintextContent that,
+  });
+
   int crateApiBundlePreKeyBundleDeviceId({required PreKeyBundle that});
 
   Uint8List crateApiBundlePreKeyBundleIdentityKey({required PreKeyBundle that});
@@ -335,6 +355,54 @@ abstract class RustLibApi extends BaseApi {
 
   Uint8List crateApiPrekeyPreKeyRecordSerialize({required PreKeyRecord that});
 
+  Uint8List crateApiMessagePreKeySignalMessageBaseKey({
+    required PreKeySignalMessage that,
+  });
+
+  PreKeySignalMessage crateApiMessagePreKeySignalMessageCloneMessage({
+    required PreKeySignalMessage that,
+  });
+
+  PreKeySignalMessage crateApiMessagePreKeySignalMessageDeserialize({
+    required List<int> data,
+  });
+
+  Uint8List crateApiMessagePreKeySignalMessageIdentityKey({
+    required PreKeySignalMessage that,
+  });
+
+  Uint8List? crateApiMessagePreKeySignalMessageKyberCiphertext({
+    required PreKeySignalMessage that,
+  });
+
+  int? crateApiMessagePreKeySignalMessageKyberPreKeyId({
+    required PreKeySignalMessage that,
+  });
+
+  SignalMessage crateApiMessagePreKeySignalMessageMessage({
+    required PreKeySignalMessage that,
+  });
+
+  int crateApiMessagePreKeySignalMessageMessageVersion({
+    required PreKeySignalMessage that,
+  });
+
+  int? crateApiMessagePreKeySignalMessagePreKeyId({
+    required PreKeySignalMessage that,
+  });
+
+  int crateApiMessagePreKeySignalMessageRegistrationId({
+    required PreKeySignalMessage that,
+  });
+
+  Uint8List crateApiMessagePreKeySignalMessageSerialize({
+    required PreKeySignalMessage that,
+  });
+
+  int crateApiMessagePreKeySignalMessageSignedPreKeyId({
+    required PreKeySignalMessage that,
+  });
+
   Uint8List crateApiKeysPrivateKeyAgree({
     required PrivateKey that,
     required PublicKey publicKey,
@@ -386,6 +454,75 @@ abstract class RustLibApi extends BaseApi {
     required PublicKey that,
     required List<int> message,
     required List<int> signature,
+  });
+
+  int crateApiMessageSenderKeyDistributionMessageChainId({
+    required SenderKeyDistributionMessage that,
+  });
+
+  SenderKeyDistributionMessage
+  crateApiMessageSenderKeyDistributionMessageCloneMessage({
+    required SenderKeyDistributionMessage that,
+  });
+
+  SenderKeyDistributionMessage
+  crateApiMessageSenderKeyDistributionMessageDeserialize({
+    required List<int> data,
+  });
+
+  String crateApiMessageSenderKeyDistributionMessageDistributionId({
+    required SenderKeyDistributionMessage that,
+  });
+
+  int crateApiMessageSenderKeyDistributionMessageIteration({
+    required SenderKeyDistributionMessage that,
+  });
+
+  int crateApiMessageSenderKeyDistributionMessageMessageVersion({
+    required SenderKeyDistributionMessage that,
+  });
+
+  Uint8List crateApiMessageSenderKeyDistributionMessageSerialize({
+    required SenderKeyDistributionMessage that,
+  });
+
+  Uint8List crateApiMessageSenderKeyDistributionMessageSigningKey({
+    required SenderKeyDistributionMessage that,
+  });
+
+  int crateApiMessageSenderKeyMessageChainId({required SenderKeyMessage that});
+
+  Uint8List crateApiMessageSenderKeyMessageCiphertext({
+    required SenderKeyMessage that,
+  });
+
+  SenderKeyMessage crateApiMessageSenderKeyMessageCloneMessage({
+    required SenderKeyMessage that,
+  });
+
+  SenderKeyMessage crateApiMessageSenderKeyMessageDeserialize({
+    required List<int> data,
+  });
+
+  String crateApiMessageSenderKeyMessageDistributionId({
+    required SenderKeyMessage that,
+  });
+
+  int crateApiMessageSenderKeyMessageIteration({
+    required SenderKeyMessage that,
+  });
+
+  int crateApiMessageSenderKeyMessageMessageVersion({
+    required SenderKeyMessage that,
+  });
+
+  Uint8List crateApiMessageSenderKeyMessageSerialize({
+    required SenderKeyMessage that,
+  });
+
+  bool crateApiMessageSenderKeyMessageVerifySignature({
+    required SenderKeyMessage that,
+    required List<int> signatureKey,
   });
 
   void crateApiSessionSessionRecordArchiveCurrentState({
@@ -493,6 +630,45 @@ abstract class RustLibApi extends BaseApi {
 
   BigInt crateApiSignedPrekeySignedPreKeyRecordTimestamp({
     required SignedPreKeyRecord that,
+  });
+
+  int crateApiSealedSenderUnidentifiedSenderMessageContentContentHint({
+    required UnidentifiedSenderMessageContent that,
+  });
+
+  Uint8List crateApiSealedSenderUnidentifiedSenderMessageContentContents({
+    required UnidentifiedSenderMessageContent that,
+  });
+
+  UnidentifiedSenderMessageContent
+  crateApiSealedSenderUnidentifiedSenderMessageContentDeserialize({
+    required List<int> data,
+  });
+
+  Uint8List? crateApiSealedSenderUnidentifiedSenderMessageContentGroupId({
+    required UnidentifiedSenderMessageContent that,
+  });
+
+  int crateApiSealedSenderUnidentifiedSenderMessageContentMessageType({
+    required UnidentifiedSenderMessageContent that,
+  });
+
+  UnidentifiedSenderMessageContent
+  crateApiSealedSenderUnidentifiedSenderMessageContentNew({
+    required int messageType,
+    required List<int> senderCertificate,
+    required List<int> contents,
+    required int contentHint,
+    Uint8List? groupId,
+  });
+
+  Uint8List
+  crateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificate({
+    required UnidentifiedSenderMessageContent that,
+  });
+
+  Uint8List crateApiSealedSenderUnidentifiedSenderMessageContentSerialize({
+    required UnidentifiedSenderMessageContent that,
   });
 
   Uint8List crateApiSealedSenderCreateSenderCertificate({
@@ -644,6 +820,17 @@ abstract class RustLibApi extends BaseApi {
     storeSenderKey,
   });
 
+  Future<Uint8List> crateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacks({
+    required List<int> ciphertext,
+    required List<int> trustRoot,
+    required BigInt timestamp,
+    required String localName,
+    required int localDeviceId,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  });
+
   Future<SealedSenderDecryptResult>
   crateApiSealedSenderSealedSenderDecryptWithCallbacks({
     required List<int> ciphertext,
@@ -664,6 +851,16 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
+  Future<Uint8List>
+  crateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacks({
+    required String recipientName,
+    required int recipientDeviceId,
+    required List<int> usmc,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  });
+
   Future<SealedSenderEncryptResult>
   crateApiSealedSenderSealedSenderEncryptWithCallbacks({
     required String recipientName,
@@ -676,6 +873,19 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<int> Function() getLocalRegistrationId,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
+
+  Future<Uint8List>
+  crateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacks({
+    required List<MultiRecipientDestination> destinations,
+    required List<String> excludedRecipients,
+    required List<int> usmc,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  });
+
+  Future<SealedSenderV2SentMessage>
+  crateApiSealedSenderSealedSenderV2ParseSentMessage({required List<int> data});
 
   BigInt crateApiSealedSenderSenderCertificateGetExpiration({
     required List<int> certificate,
@@ -769,6 +979,15 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_KyberSecretKeyPtr;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PlaintextContent;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PlaintextContent;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PlaintextContentPtr;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PreKeyBundle;
 
   RustArcDecrementStrongCountFnType
@@ -783,6 +1002,15 @@ abstract class RustLibApi extends BaseApi {
   get rust_arc_decrement_strong_count_PreKeyRecord;
 
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PreKeyRecordPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PreKeySignalMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PreKeySignalMessage;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_PreKeySignalMessagePtr;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PrivateKey;
@@ -810,6 +1038,24 @@ abstract class RustLibApi extends BaseApi {
   CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_PublicKeyPtr;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_SenderKeyDistributionMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_SenderKeyDistributionMessage;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyDistributionMessagePtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_SenderKeyMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_SenderKeyMessage;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_SenderKeyMessagePtr;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_SessionRecord;
 
   RustArcDecrementStrongCountFnType
@@ -835,6 +1081,15 @@ abstract class RustLibApi extends BaseApi {
 
   CrossPlatformFinalizerArg
   get rust_arc_decrement_strong_count_SignedPreKeyRecordPtr;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_UnidentifiedSenderMessageContent;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_UnidentifiedSenderMessageContent;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_UnidentifiedSenderMessageContentPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -2271,6 +2526,167 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Uint8List crateApiMessagePlaintextContentBody({
+    required PlaintextContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+                that,
+              );
+          return wire.wire__crate__api__message__PlaintextContent_body(arg0);
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePlaintextContentBodyConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePlaintextContentBodyConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlaintextContent_body",
+        argNames: ["that"],
+      );
+
+  @override
+  PlaintextContent crateApiMessagePlaintextContentCloneMessage({
+    required PlaintextContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+                that,
+              );
+          return wire.wire__crate__api__message__PlaintextContent_clone_message(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePlaintextContentCloneMessageConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePlaintextContentCloneMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlaintextContent_clone_message",
+        argNames: ["that"],
+      );
+
+  @override
+  PlaintextContent crateApiMessagePlaintextContentDeserialize({
+    required List<int> data,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire.wire__crate__api__message__PlaintextContent_deserialize(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePlaintextContentDeserializeConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePlaintextContentDeserializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlaintextContent_deserialize",
+        argNames: ["data"],
+      );
+
+  @override
+  PlaintextContent crateApiMessagePlaintextContentFromDecryptionErrorMessage({
+    required DecryptionErrorMessage message,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage(
+                message,
+              );
+          return wire
+              .wire__crate__api__message__PlaintextContent_from_decryption_error_message(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessagePlaintextContentFromDecryptionErrorMessageConstMeta,
+        argValues: [message],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessagePlaintextContentFromDecryptionErrorMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlaintextContent_from_decryption_error_message",
+        argNames: ["message"],
+      );
+
+  @override
+  Uint8List crateApiMessagePlaintextContentSerialize({
+    required PlaintextContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+                that,
+              );
+          return wire.wire__crate__api__message__PlaintextContent_serialize(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePlaintextContentSerializeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePlaintextContentSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "PlaintextContent_serialize",
+        argNames: ["that"],
+      );
+
+  @override
   int crateApiBundlePreKeyBundleDeviceId({required PreKeyBundle that}) {
     return handler.executeSync(
       SyncTask(
@@ -2874,6 +3290,400 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Uint8List crateApiMessagePreKeySignalMessageBaseKey({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__PreKeySignalMessage_base_key(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageBaseKeyConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageBaseKeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_base_key",
+        argNames: ["that"],
+      );
+
+  @override
+  PreKeySignalMessage crateApiMessagePreKeySignalMessageCloneMessage({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_clone_message(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageCloneMessageConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageCloneMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_clone_message",
+        argNames: ["that"],
+      );
+
+  @override
+  PreKeySignalMessage crateApiMessagePreKeySignalMessageDeserialize({
+    required List<int> data,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_deserialize(arg0);
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageDeserializeConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageDeserializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_deserialize",
+        argNames: ["data"],
+      );
+
+  @override
+  Uint8List crateApiMessagePreKeySignalMessageIdentityKey({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_identity_key(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageIdentityKeyConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageIdentityKeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_identity_key",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List? crateApiMessagePreKeySignalMessageKyberCiphertext({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageKyberCiphertextConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessagePreKeySignalMessageKyberCiphertextConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_kyber_ciphertext",
+        argNames: ["that"],
+      );
+
+  @override
+  int? crateApiMessagePreKeySignalMessageKyberPreKeyId({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageKyberPreKeyIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageKyberPreKeyIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_kyber_pre_key_id",
+        argNames: ["that"],
+      );
+
+  @override
+  SignalMessage crateApiMessagePreKeySignalMessageMessage({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__PreKeySignalMessage_message(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageMessageConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_message",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessagePreKeySignalMessageMessageVersion({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_message_version(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageMessageVersionConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessagePreKeySignalMessageMessageVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_message_version",
+        argNames: ["that"],
+      );
+
+  @override
+  int? crateApiMessagePreKeySignalMessagePreKeyId({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__PreKeySignalMessage_pre_key_id(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessagePreKeyIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessagePreKeyIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_pre_key_id",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessagePreKeySignalMessageRegistrationId({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_registration_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageRegistrationIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessagePreKeySignalMessageRegistrationIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_registration_id",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiMessagePreKeySignalMessageSerialize({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__PreKeySignalMessage_serialize(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageSerializeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessagePreKeySignalMessageSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_serialize",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessagePreKeySignalMessageSignedPreKeyId({
+    required PreKeySignalMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessagePreKeySignalMessageSignedPreKeyIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessagePreKeySignalMessageSignedPreKeyIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "PreKeySignalMessage_signed_pre_key_id",
+        argNames: ["that"],
+      );
+
+  @override
   Uint8List crateApiKeysPrivateKeyAgree({
     required PrivateKey that,
     required PublicKey publicKey,
@@ -3377,6 +4187,577 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "PublicKey_verify",
         argNames: ["that", "message", "signature"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyDistributionMessageChainId({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_chain_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyDistributionMessageChainIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageChainIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_chain_id",
+        argNames: ["that"],
+      );
+
+  @override
+  SenderKeyDistributionMessage
+  crateApiMessageSenderKeyDistributionMessageCloneMessage({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_clone_message(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageCloneMessageConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageCloneMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_clone_message",
+        argNames: ["that"],
+      );
+
+  @override
+  SenderKeyDistributionMessage
+  crateApiMessageSenderKeyDistributionMessageDeserialize({
+    required List<int> data,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_deserialize(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageDeserializeConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageDeserializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_deserialize",
+        argNames: ["data"],
+      );
+
+  @override
+  String crateApiMessageSenderKeyDistributionMessageDistributionId({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_distribution_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_String,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageDistributionIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageDistributionIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_distribution_id",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyDistributionMessageIteration({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_iteration(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageIterationConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageIterationConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_iteration",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyDistributionMessageMessageVersion({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_message_version(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageMessageVersionConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageMessageVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_message_version",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiMessageSenderKeyDistributionMessageSerialize({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_serialize(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageSerializeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_serialize",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiMessageSenderKeyDistributionMessageSigningKey({
+    required SenderKeyDistributionMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyDistributionMessage_signing_key(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiMessageSenderKeyDistributionMessageSigningKeyConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiMessageSenderKeyDistributionMessageSigningKeyConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyDistributionMessage_signing_key",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyMessageChainId({required SenderKeyMessage that}) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__SenderKeyMessage_chain_id(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageChainIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageChainIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_chain_id",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiMessageSenderKeyMessageCiphertext({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__SenderKeyMessage_ciphertext(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageCiphertextConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageCiphertextConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_ciphertext",
+        argNames: ["that"],
+      );
+
+  @override
+  SenderKeyMessage crateApiMessageSenderKeyMessageCloneMessage({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__SenderKeyMessage_clone_message(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageCloneMessageConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageCloneMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_clone_message",
+        argNames: ["that"],
+      );
+
+  @override
+  SenderKeyMessage crateApiMessageSenderKeyMessageDeserialize({
+    required List<int> data,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire.wire__crate__api__message__SenderKeyMessage_deserialize(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageDeserializeConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageDeserializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_deserialize",
+        argNames: ["data"],
+      );
+
+  @override
+  String crateApiMessageSenderKeyMessageDistributionId({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyMessage_distribution_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_String,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageDistributionIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageDistributionIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_distribution_id",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyMessageIteration({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__SenderKeyMessage_iteration(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageIterationConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageIterationConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_iteration",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiMessageSenderKeyMessageMessageVersion({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire
+              .wire__crate__api__message__SenderKeyMessage_message_version(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageMessageVersionConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageMessageVersionConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_message_version",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiMessageSenderKeyMessageSerialize({
+    required SenderKeyMessage that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          return wire.wire__crate__api__message__SenderKeyMessage_serialize(
+            arg0,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageSerializeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_serialize",
+        argNames: ["that"],
+      );
+
+  @override
+  bool crateApiMessageSenderKeyMessageVerifySignature({
+    required SenderKeyMessage that,
+    required List<int> signatureKey,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+                that,
+              );
+          var arg1 = cst_encode_list_prim_u_8_loose(signatureKey);
+          return wire
+              .wire__crate__api__message__SenderKeyMessage_verify_signature(
+                arg0,
+                arg1,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_bool,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiMessageSenderKeyMessageVerifySignatureConstMeta,
+        argValues: [that, signatureKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiMessageSenderKeyMessageVerifySignatureConstMeta =>
+      const TaskConstMeta(
+        debugName: "SenderKeyMessage_verify_signature",
+        argNames: ["that", "signatureKey"],
       );
 
   @override
@@ -4237,6 +5618,309 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiSignedPrekeySignedPreKeyRecordTimestampConstMeta =>
       const TaskConstMeta(
         debugName: "SignedPreKeyRecord_timestamp",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiSealedSenderUnidentifiedSenderMessageContentContentHint({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hint(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_32,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentContentHintConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentContentHintConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_content_hint",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiSealedSenderUnidentifiedSenderMessageContentContents({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentContentsConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentContentsConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_contents",
+        argNames: ["that"],
+      );
+
+  @override
+  UnidentifiedSenderMessageContent
+  crateApiSealedSenderUnidentifiedSenderMessageContentDeserialize({
+    required List<int> data,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentDeserializeConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentDeserializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_deserialize",
+        argNames: ["data"],
+      );
+
+  @override
+  Uint8List? crateApiSealedSenderUnidentifiedSenderMessageContentGroupId({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentGroupIdConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentGroupIdConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_group_id",
+        argNames: ["that"],
+      );
+
+  @override
+  int crateApiSealedSenderUnidentifiedSenderMessageContentMessageType({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_type(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_u_8,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentMessageTypeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentMessageTypeConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_message_type",
+        argNames: ["that"],
+      );
+
+  @override
+  UnidentifiedSenderMessageContent
+  crateApiSealedSenderUnidentifiedSenderMessageContentNew({
+    required int messageType,
+    required List<int> senderCertificate,
+    required List<int> contents,
+    required int contentHint,
+    Uint8List? groupId,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 = cst_encode_u_8(messageType);
+          var arg1 = cst_encode_list_prim_u_8_loose(senderCertificate);
+          var arg2 = cst_encode_list_prim_u_8_loose(contents);
+          var arg3 = cst_encode_u_32(contentHint);
+          var arg4 = cst_encode_opt_list_prim_u_8_strict(groupId);
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new(
+                arg0,
+                arg1,
+                arg2,
+                arg3,
+                arg4,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentNewConstMeta,
+        argValues: [
+          messageType,
+          senderCertificate,
+          contents,
+          contentHint,
+          groupId,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentNewConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_new",
+        argNames: [
+          "messageType",
+          "senderCertificate",
+          "contents",
+          "contentHint",
+          "groupId",
+        ],
+      );
+
+  @override
+  Uint8List
+  crateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificate({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_certificate(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificateConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificateConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_sender_certificate",
+        argNames: ["that"],
+      );
+
+  @override
+  Uint8List crateApiSealedSenderUnidentifiedSenderMessageContentSerialize({
+    required UnidentifiedSenderMessageContent that,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+                that,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize(
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderUnidentifiedSenderMessageContentSerializeConstMeta,
+        argValues: [that],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderUnidentifiedSenderMessageContentSerializeConstMeta =>
+      const TaskConstMeta(
+        debugName: "UnidentifiedSenderMessageContent_serialize",
         argNames: ["that"],
       );
 
@@ -5296,6 +6980,86 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<Uint8List> crateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacks({
+    required List<int> ciphertext,
+    required List<int> trustRoot,
+    required BigInt timestamp,
+    required String localName,
+    required int localDeviceId,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_list_prim_u_8_loose(ciphertext);
+          var arg1 = cst_encode_list_prim_u_8_loose(trustRoot);
+          var arg2 = cst_encode_u_64(timestamp);
+          var arg3 = cst_encode_String(localName);
+          var arg4 = cst_encode_u_32(localDeviceId);
+          var arg5 =
+              cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
+                getIdentityKeyPair,
+              );
+          var arg6 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+            getLocalRegistrationId,
+          );
+          var arg7 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks(
+                port_,
+                arg0,
+                arg1,
+                arg2,
+                arg3,
+                arg4,
+                arg5,
+                arg6,
+                arg7,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacksConstMeta,
+        argValues: [
+          ciphertext,
+          trustRoot,
+          timestamp,
+          localName,
+          localDeviceId,
+          getIdentityKeyPair,
+          getLocalRegistrationId,
+          getIdentity,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacksConstMeta =>
+      const TaskConstMeta(
+        debugName: "sealed_sender_decrypt_to_usmc_with_callbacks",
+        argNames: [
+          "ciphertext",
+          "trustRoot",
+          "timestamp",
+          "localName",
+          "localDeviceId",
+          "getIdentityKeyPair",
+          "getLocalRegistrationId",
+          "getIdentity",
+        ],
+      );
+
+  @override
   Future<SealedSenderDecryptResult>
   crateApiSealedSenderSealedSenderDecryptWithCallbacks({
     required List<int> ciphertext,
@@ -5440,6 +7204,77 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<Uint8List>
+  crateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacks({
+    required String recipientName,
+    required int recipientDeviceId,
+    required List<int> usmc,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_String(recipientName);
+          var arg1 = cst_encode_u_32(recipientDeviceId);
+          var arg2 = cst_encode_list_prim_u_8_loose(usmc);
+          var arg3 =
+              cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
+                getIdentityKeyPair,
+              );
+          var arg4 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+            getLocalRegistrationId,
+          );
+          var arg5 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbacks(
+                port_,
+                arg0,
+                arg1,
+                arg2,
+                arg3,
+                arg4,
+                arg5,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacksConstMeta,
+        argValues: [
+          recipientName,
+          recipientDeviceId,
+          usmc,
+          getIdentityKeyPair,
+          getLocalRegistrationId,
+          getIdentity,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacksConstMeta =>
+      const TaskConstMeta(
+        debugName: "sealed_sender_encrypt_from_usmc_with_callbacks",
+        argNames: [
+          "recipientName",
+          "recipientDeviceId",
+          "usmc",
+          "getIdentityKeyPair",
+          "getLocalRegistrationId",
+          "getIdentity",
+        ],
+      );
+
+  @override
   Future<SealedSenderEncryptResult>
   crateApiSealedSenderSealedSenderEncryptWithCallbacks({
     required String recipientName,
@@ -5529,6 +7364,110 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "getLocalRegistrationId",
           "getIdentity",
         ],
+      );
+
+  @override
+  Future<Uint8List>
+  crateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacks({
+    required List<MultiRecipientDestination> destinations,
+    required List<String> excludedRecipients,
+    required List<int> usmc,
+    required FutureOr<Uint8List> Function() getIdentityKeyPair,
+    required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<Uint8List?> Function(String, int) getIdentity,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_list_multi_recipient_destination(destinations);
+          var arg1 = cst_encode_list_String(excludedRecipients);
+          var arg2 = cst_encode_list_prim_u_8_loose(usmc);
+          var arg3 =
+              cst_encode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(
+                getIdentityKeyPair,
+              );
+          var arg4 = cst_encode_DartFn_Inputs__Output_u_32_AnyhowException(
+            getLocalRegistrationId,
+          );
+          var arg5 =
+              cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
+                getIdentity,
+              );
+          return wire
+              .wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_callbacks(
+                port_,
+                arg0,
+                arg1,
+                arg2,
+                arg3,
+                arg4,
+                arg5,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_list_prim_u_8_strict,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta:
+            kCrateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacksConstMeta,
+        argValues: [
+          destinations,
+          excludedRecipients,
+          usmc,
+          getIdentityKeyPair,
+          getLocalRegistrationId,
+          getIdentity,
+        ],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacksConstMeta =>
+      const TaskConstMeta(
+        debugName: "sealed_sender_multi_recipient_encrypt_with_callbacks",
+        argNames: [
+          "destinations",
+          "excludedRecipients",
+          "usmc",
+          "getIdentityKeyPair",
+          "getLocalRegistrationId",
+          "getIdentity",
+        ],
+      );
+
+  @override
+  Future<SealedSenderV2SentMessage>
+  crateApiSealedSenderSealedSenderV2ParseSentMessage({
+    required List<int> data,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          var arg0 = cst_encode_list_prim_u_8_loose(data);
+          return wire
+              .wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message(
+                port_,
+                arg0,
+              );
+        },
+        codec: DcoCodec(
+          decodeSuccessData: dco_decode_sealed_sender_v_2_sent_message,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiSealedSenderSealedSenderV2ParseSentMessageConstMeta,
+        argValues: [data],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta
+  get kCrateApiSealedSenderSealedSenderV2ParseSentMessageConstMeta =>
+      const TaskConstMeta(
+        debugName: "sealed_sender_v2_parse_sent_message",
+        argNames: ["data"],
       );
 
   @override
@@ -6076,6 +8015,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PlaintextContent => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PlaintextContent => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PreKeyBundle => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle;
 
@@ -6090,6 +8037,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_PreKeyRecord => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_PreKeySignalMessage => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_PreKeySignalMessage => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage;
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_PrivateKey => wire
@@ -6116,6 +8071,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey;
 
   RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_SenderKeyDistributionMessage => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_SenderKeyDistributionMessage => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_SenderKeyMessage => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_SenderKeyMessage => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage;
+
+  RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_SessionRecord => wire
       .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord;
 
@@ -6138,6 +8109,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   RustArcDecrementStrongCountFnType
   get rust_arc_decrement_strong_count_SignedPreKeyRecord => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord;
+
+  RustArcIncrementStrongCountFnType
+  get rust_arc_increment_strong_count_UnidentifiedSenderMessageContent => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent;
+
+  RustArcDecrementStrongCountFnType
+  get rust_arc_decrement_strong_count_UnidentifiedSenderMessageContent => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -6220,6 +8199,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -6235,6 +8223,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -6265,6 +8262,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   SessionRecord
   dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -6289,6 +8306,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
   }
 
   @protected
@@ -6375,6 +8403,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   PreKeyBundle
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -6390,6 +8427,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -6420,6 +8466,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   SessionRecord
   dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -6444,6 +8510,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
   }
 
   @protected
@@ -6604,6 +8681,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   PreKeyBundle
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     dynamic raw,
@@ -6619,6 +8705,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  PreKeySignalMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
@@ -6649,6 +8744,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
   SessionRecord
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     dynamic raw,
@@ -6673,6 +8788,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalDcoDecode(raw as List<dynamic>);
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalDcoDecode(
+      raw as List<dynamic>,
+    );
   }
 
   @protected
@@ -6755,6 +8881,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String> dco_decode_list_String(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_String).toList();
+  }
+
+  @protected
+  List<MultiRecipientDestination> dco_decode_list_multi_recipient_destination(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_multi_recipient_destination)
+        .toList();
+  }
+
+  @protected
   List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as List<int>;
@@ -6764,6 +8906,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Uint8List dco_decode_list_prim_u_8_strict(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as Uint8List;
+  }
+
+  @protected
+  List<SealedSenderV2Device> dco_decode_list_sealed_sender_v_2_device(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_sealed_sender_v_2_device)
+        .toList();
+  }
+
+  @protected
+  List<SealedSenderV2Recipient> dco_decode_list_sealed_sender_v_2_recipient(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>)
+        .map(dco_decode_sealed_sender_v_2_recipient)
+        .toList();
+  }
+
+  @protected
+  MultiRecipientDestination dco_decode_multi_recipient_destination(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 3)
+      throw Exception('unexpected arr length: expect 3 but see ${arr.length}');
+    return MultiRecipientDestination(
+      name: dco_decode_String(arr[0]),
+      deviceId: dco_decode_u_32(arr[1]),
+      sessionRecord: dco_decode_list_prim_u_8_strict(arr[2]),
+    );
   }
 
   @protected
@@ -6819,6 +8996,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return SealedSenderEncryptResult(
       ciphertext: dco_decode_list_prim_u_8_strict(arr[0]),
       sessionRecord: dco_decode_list_prim_u_8_strict(arr[1]),
+    );
+  }
+
+  @protected
+  SealedSenderV2Device dco_decode_sealed_sender_v_2_device(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return SealedSenderV2Device(
+      deviceId: dco_decode_u_32(arr[0]),
+      registrationId: dco_decode_u_32(arr[1]),
+    );
+  }
+
+  @protected
+  SealedSenderV2Recipient dco_decode_sealed_sender_v_2_recipient(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return SealedSenderV2Recipient(
+      serviceId: dco_decode_String(arr[0]),
+      devices: dco_decode_list_sealed_sender_v_2_device(arr[1]),
+      keyMaterialStart: dco_decode_u_32(arr[2]),
+      keyMaterialEnd: dco_decode_u_32(arr[3]),
+    );
+  }
+
+  @protected
+  SealedSenderV2SentMessage dco_decode_sealed_sender_v_2_sent_message(
+    dynamic raw,
+  ) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 5)
+      throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
+    return SealedSenderV2SentMessage(
+      version: dco_decode_u_32(arr[0]),
+      receivedMessageVersion: dco_decode_u_32(arr[1]),
+      sharedBytesOffset: dco_decode_u_32(arr[2]),
+      parsedLength: dco_decode_u_32(arr[3]),
+      recipients: dco_decode_list_sealed_sender_v_2_recipient(arr[4]),
     );
   }
 
@@ -6956,6 +9176,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -6974,6 +9206,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7016,6 +9260,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   SessionRecord
   sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -7046,6 +9314,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7160,6 +9440,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   PreKeyBundle
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -7178,6 +9470,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7220,6 +9524,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   SessionRecord
   sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -7250,6 +9578,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7359,6 +9699,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  PlaintextContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PlaintextContentImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   PreKeyBundle
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     SseDeserializer deserializer,
@@ -7377,6 +9729,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return PreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  PreKeySignalMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return PreKeySignalMessageImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7419,6 +9783,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  SenderKeyDistributionMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyDistributionMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  SenderKeyMessage
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return SenderKeyMessageImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
   SessionRecord
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SseDeserializer deserializer,
@@ -7449,6 +9837,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return SignedPreKeyRecordImpl.frbInternalSseDecode(
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
+  }
+
+  @protected
+  UnidentifiedSenderMessageContent
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return UnidentifiedSenderMessageContentImpl.frbInternalSseDecode(
       sse_decode_usize(deserializer),
       sse_decode_i_32(deserializer),
     );
@@ -7537,6 +9937,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <String>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_String(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<MultiRecipientDestination> sse_decode_list_multi_recipient_destination(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <MultiRecipientDestination>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_multi_recipient_destination(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
   List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -7548,6 +9974,49 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
     return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
+  List<SealedSenderV2Device> sse_decode_list_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SealedSenderV2Device>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_sealed_sender_v_2_device(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<SealedSenderV2Recipient> sse_decode_list_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <SealedSenderV2Recipient>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_sealed_sender_v_2_recipient(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  MultiRecipientDestination sse_decode_multi_recipient_destination(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_name = sse_decode_String(deserializer);
+    var var_deviceId = sse_decode_u_32(deserializer);
+    var var_sessionRecord = sse_decode_list_prim_u_8_strict(deserializer);
+    return MultiRecipientDestination(
+      name: var_name,
+      deviceId: var_deviceId,
+      sessionRecord: var_sessionRecord,
+    );
   }
 
   @protected
@@ -7616,6 +10085,57 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return SealedSenderEncryptResult(
       ciphertext: var_ciphertext,
       sessionRecord: var_sessionRecord,
+    );
+  }
+
+  @protected
+  SealedSenderV2Device sse_decode_sealed_sender_v_2_device(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_deviceId = sse_decode_u_32(deserializer);
+    var var_registrationId = sse_decode_u_32(deserializer);
+    return SealedSenderV2Device(
+      deviceId: var_deviceId,
+      registrationId: var_registrationId,
+    );
+  }
+
+  @protected
+  SealedSenderV2Recipient sse_decode_sealed_sender_v_2_recipient(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_serviceId = sse_decode_String(deserializer);
+    var var_devices = sse_decode_list_sealed_sender_v_2_device(deserializer);
+    var var_keyMaterialStart = sse_decode_u_32(deserializer);
+    var var_keyMaterialEnd = sse_decode_u_32(deserializer);
+    return SealedSenderV2Recipient(
+      serviceId: var_serviceId,
+      devices: var_devices,
+      keyMaterialStart: var_keyMaterialStart,
+      keyMaterialEnd: var_keyMaterialEnd,
+    );
+  }
+
+  @protected
+  SealedSenderV2SentMessage sse_decode_sealed_sender_v_2_sent_message(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_version = sse_decode_u_32(deserializer);
+    var var_receivedMessageVersion = sse_decode_u_32(deserializer);
+    var var_sharedBytesOffset = sse_decode_u_32(deserializer);
+    var var_parsedLength = sse_decode_u_32(deserializer);
+    var var_recipients = sse_decode_list_sealed_sender_v_2_recipient(
+      deserializer,
+    );
+    return SealedSenderV2SentMessage(
+      version: var_version,
+      receivedMessageVersion: var_receivedMessageVersion,
+      sharedBytesOffset: var_sharedBytesOffset,
+      parsedLength: var_parsedLength,
+      recipients: var_recipients,
     );
   }
 
@@ -7730,6 +10250,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PlaintextContentImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   ) {
@@ -7746,6 +10276,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PreKeyRecordImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PreKeySignalMessageImpl).frbInternalCstEncode(move: true);
   }
 
   @protected
@@ -7780,6 +10320,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyDistributionMessageImpl).frbInternalCstEncode(
+      move: true,
+    );
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyMessageImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   ) {
@@ -7806,6 +10368,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as SignedPreKeyRecordImpl).frbInternalCstEncode(move: true);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as UnidentifiedSenderMessageContentImpl).frbInternalCstEncode(
+      move: true,
+    );
   }
 
   @protected
@@ -7902,6 +10476,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PlaintextContentImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   ) {
@@ -7918,6 +10502,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PreKeyRecordImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PreKeySignalMessageImpl).frbInternalCstEncode(move: false);
   }
 
   @protected
@@ -7952,6 +10546,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyDistributionMessageImpl).frbInternalCstEncode(
+      move: false,
+    );
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyMessageImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int
   cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   ) {
@@ -7978,6 +10594,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as SignedPreKeyRecordImpl).frbInternalCstEncode(move: false);
+  }
+
+  @protected
+  int
+  cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as UnidentifiedSenderMessageContentImpl).frbInternalCstEncode(
+      move: false,
+    );
   }
 
   @protected
@@ -8181,6 +10809,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PlaintextContentImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle raw,
   ) {
@@ -8197,6 +10835,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as PreKeyRecordImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as PreKeySignalMessageImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -8231,6 +10879,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyDistributionMessageImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as SenderKeyMessageImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
   cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord raw,
   ) {
@@ -8257,6 +10925,16 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Cst (C-struct based), see doc to use other codecs
     // ignore: invalid_use_of_internal_member
     return (raw as SignedPreKeyRecordImpl).frbInternalCstEncode();
+  }
+
+  @protected
+  int
+  cst_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent raw,
+  ) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    // ignore: invalid_use_of_internal_member
+    return (raw as UnidentifiedSenderMessageContentImpl).frbInternalCstEncode();
   }
 
   @protected
@@ -8404,6 +11082,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlaintextContentImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -8424,6 +11115,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PreKeyRecordImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PreKeySignalMessageImpl).frbInternalSseEncode(move: true),
       serializer,
     );
   }
@@ -8469,6 +11173,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyDistributionMessageImpl).frbInternalSseEncode(
+        move: true,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyMessageImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -8502,6 +11234,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as SignedPreKeyRecordImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as UnidentifiedSenderMessageContentImpl).frbInternalSseEncode(
+        move: true,
+      ),
       serializer,
     );
   }
@@ -8625,6 +11372,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlaintextContentImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -8645,6 +11405,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PreKeyRecordImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PreKeySignalMessageImpl).frbInternalSseEncode(move: false),
       serializer,
     );
   }
@@ -8690,6 +11463,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyDistributionMessageImpl).frbInternalSseEncode(
+        move: false,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyMessageImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -8723,6 +11524,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as SignedPreKeyRecordImpl).frbInternalSseEncode(move: false),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as UnidentifiedSenderMessageContentImpl).frbInternalSseEncode(
+        move: false,
+      ),
       serializer,
     );
   }
@@ -8974,6 +11790,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent(
+    PlaintextContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PlaintextContentImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle(
     PreKeyBundle self,
     SseSerializer serializer,
@@ -8994,6 +11823,19 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as PreKeyRecordImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage(
+    PreKeySignalMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as PreKeySignalMessageImpl).frbInternalSseEncode(move: null),
       serializer,
     );
   }
@@ -9039,6 +11881,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage(
+    SenderKeyDistributionMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyDistributionMessageImpl).frbInternalSseEncode(
+        move: null,
+      ),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage(
+    SenderKeyMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as SenderKeyMessageImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord(
     SessionRecord self,
     SseSerializer serializer,
@@ -9072,6 +11942,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
       (self as SignedPreKeyRecordImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
+  }
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent(
+    UnidentifiedSenderMessageContent self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_usize(
+      (self as UnidentifiedSenderMessageContentImpl).frbInternalSseEncode(
+        move: null,
+      ),
       serializer,
     );
   }
@@ -9144,6 +12029,27 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_String(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_multi_recipient_destination(
+    List<MultiRecipientDestination> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_multi_recipient_destination(item, serializer);
+    }
+  }
+
+  @protected
   void sse_encode_list_prim_u_8_loose(
     List<int> self,
     SseSerializer serializer,
@@ -9163,6 +12069,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
+  }
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_device(
+    List<SealedSenderV2Device> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_sealed_sender_v_2_device(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_sealed_sender_v_2_recipient(
+    List<SealedSenderV2Recipient> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_sealed_sender_v_2_recipient(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_multi_recipient_destination(
+    MultiRecipientDestination self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.name, serializer);
+    sse_encode_u_32(self.deviceId, serializer);
+    sse_encode_list_prim_u_8_strict(self.sessionRecord, serializer);
   }
 
   @protected
@@ -9220,6 +12161,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(self.ciphertext, serializer);
     sse_encode_list_prim_u_8_strict(self.sessionRecord, serializer);
+  }
+
+  @protected
+  void sse_encode_sealed_sender_v_2_device(
+    SealedSenderV2Device self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.deviceId, serializer);
+    sse_encode_u_32(self.registrationId, serializer);
+  }
+
+  @protected
+  void sse_encode_sealed_sender_v_2_recipient(
+    SealedSenderV2Recipient self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.serviceId, serializer);
+    sse_encode_list_sealed_sender_v_2_device(self.devices, serializer);
+    sse_encode_u_32(self.keyMaterialStart, serializer);
+    sse_encode_u_32(self.keyMaterialEnd, serializer);
+  }
+
+  @protected
+  void sse_encode_sealed_sender_v_2_sent_message(
+    SealedSenderV2SentMessage self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_u_32(self.version, serializer);
+    sse_encode_u_32(self.receivedMessageVersion, serializer);
+    sse_encode_u_32(self.sharedBytesOffset, serializer);
+    sse_encode_u_32(self.parsedLength, serializer);
+    sse_encode_list_sealed_sender_v_2_recipient(self.recipients, serializer);
   }
 
   @protected
@@ -9634,6 +12610,47 @@ class KyberSecretKeyImpl extends RustOpaque implements KyberSecretKey {
 }
 
 @sealed
+class PlaintextContentImpl extends RustOpaque implements PlaintextContent {
+  // Not to be used by end users
+  PlaintextContentImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PlaintextContentImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_PlaintextContent,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_PlaintextContent,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_PlaintextContentPtr,
+  );
+
+  /// Get the body: the serialized protobuf `Content`, without the leading
+  /// plaintext-content identifier byte.
+  ///
+  /// This — **not** [PlaintextContent.serialize] — is what
+  /// [DecryptionErrorMessage.extractFromSerializedContent] takes; it
+  /// rejects the leading identifier byte.
+  Uint8List body() =>
+      RustLib.instance.api.crateApiMessagePlaintextContentBody(that: this);
+
+  /// Create a copy of this message.
+  PlaintextContent cloneMessage() => RustLib.instance.api
+      .crateApiMessagePlaintextContentCloneMessage(that: this);
+
+  /// Serialize the message to bytes, ready to send.
+  Uint8List serialize() =>
+      RustLib.instance.api.crateApiMessagePlaintextContentSerialize(that: this);
+}
+
+@sealed
 class PreKeyBundleImpl extends RustOpaque implements PreKeyBundle {
   // Not to be used by end users
   PreKeyBundleImpl.frbInternalDcoDecode(List<dynamic> wire)
@@ -9740,6 +12757,85 @@ class PreKeyRecordImpl extends RustOpaque implements PreKeyRecord {
   /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
   Uint8List serialize() =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordSerialize(that: this);
+}
+
+@sealed
+class PreKeySignalMessageImpl extends RustOpaque
+    implements PreKeySignalMessage {
+  // Not to be used by end users
+  PreKeySignalMessageImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  PreKeySignalMessageImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_increment_strong_count_PreKeySignalMessage,
+    rustArcDecrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_PreKeySignalMessage,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_PreKeySignalMessagePtr,
+  );
+
+  /// Get the sender's ephemeral base public key (serialized).
+  Uint8List baseKey() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageBaseKey(that: this);
+
+  /// Create a copy of this message.
+  PreKeySignalMessage cloneMessage() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageCloneMessage(that: this);
+
+  /// Get the sender's identity public key (serialized).
+  ///
+  /// Unauthenticated until the message is decrypted:
+  /// <https://github.com/djx-y-z/libsignal_dart/blob/main/SECURITY.md#message-inspection-is-not-authentication>
+  Uint8List identityKey() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageIdentityKey(that: this);
+
+  /// Get the Kyber ciphertext (KEM encapsulation), if this is a PQXDH message.
+  Uint8List? kyberCiphertext() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageKyberCiphertext(that: this);
+
+  /// Get the Kyber pre-key ID this message consumes, if any.
+  int? kyberPreKeyId() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageKyberPreKeyId(that: this);
+
+  /// Get the wrapped [SignalMessage].
+  ///
+  /// This is what exposes the post-quantum ratchet payload of a session's
+  /// very first message: `preKeyMessage.message().pqRatchet()`.
+  SignalMessage message() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageMessage(that: this);
+
+  /// Get the Signal Protocol message version.
+  int messageVersion() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageMessageVersion(that: this);
+
+  /// Get the one-time pre-key ID this message consumes, if any.
+  int? preKeyId() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessagePreKeyId(that: this);
+
+  /// Get the sender's registration ID.
+  int registrationId() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageRegistrationId(that: this);
+
+  /// Serialize the message to bytes.
+  Uint8List serialize() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageSerialize(that: this);
+
+  /// Get the signed pre-key ID this message was addressed to.
+  int signedPreKeyId() => RustLib.instance.api
+      .crateApiMessagePreKeySignalMessageSignedPreKeyId(that: this);
 }
 
 @sealed
@@ -9875,6 +12971,127 @@ class PublicKeyImpl extends RustOpaque implements PublicKey {
         that: this,
         message: message,
         signature: signature,
+      );
+}
+
+@sealed
+class SenderKeyDistributionMessageImpl extends RustOpaque
+    implements SenderKeyDistributionMessage {
+  // Not to be used by end users
+  SenderKeyDistributionMessageImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  SenderKeyDistributionMessageImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_increment_strong_count_SenderKeyDistributionMessage,
+    rustArcDecrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_SenderKeyDistributionMessage,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_SenderKeyDistributionMessagePtr,
+  );
+
+  /// Get the sender key chain ID.
+  int chainId() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageChainId(that: this);
+
+  /// Create a copy of this message.
+  SenderKeyDistributionMessage cloneMessage() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageCloneMessage(that: this);
+
+  /// Get the distribution (group) ID this message establishes, as a UUID string.
+  String distributionId() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageDistributionId(that: this);
+
+  /// Get the chain position this distribution message starts from.
+  int iteration() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageIteration(that: this);
+
+  /// Get the Signal Protocol message version.
+  int messageVersion() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageMessageVersion(that: this);
+
+  /// Serialize the message to bytes.
+  Uint8List serialize() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageSerialize(that: this);
+
+  /// Get the sender's public signing key (serialized).
+  ///
+  /// Pass this to [SenderKeyMessage.verifySignature].
+  Uint8List signingKey() => RustLib.instance.api
+      .crateApiMessageSenderKeyDistributionMessageSigningKey(that: this);
+}
+
+@sealed
+class SenderKeyMessageImpl extends RustOpaque implements SenderKeyMessage {
+  // Not to be used by end users
+  SenderKeyMessageImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  SenderKeyMessageImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount:
+        RustLib.instance.api.rust_arc_increment_strong_count_SenderKeyMessage,
+    rustArcDecrementStrongCount:
+        RustLib.instance.api.rust_arc_decrement_strong_count_SenderKeyMessage,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_SenderKeyMessagePtr,
+  );
+
+  /// Get the sender key chain ID.
+  int chainId() =>
+      RustLib.instance.api.crateApiMessageSenderKeyMessageChainId(that: this);
+
+  /// Get the encrypted message body.
+  Uint8List ciphertext() => RustLib.instance.api
+      .crateApiMessageSenderKeyMessageCiphertext(that: this);
+
+  /// Create a copy of this message.
+  SenderKeyMessage cloneMessage() => RustLib.instance.api
+      .crateApiMessageSenderKeyMessageCloneMessage(that: this);
+
+  /// Get the distribution (group) ID this message belongs to, as a UUID string.
+  String distributionId() => RustLib.instance.api
+      .crateApiMessageSenderKeyMessageDistributionId(that: this);
+
+  /// Get the position of this message within the sender's chain.
+  int iteration() =>
+      RustLib.instance.api.crateApiMessageSenderKeyMessageIteration(that: this);
+
+  /// Get the Signal Protocol message version.
+  int messageVersion() => RustLib.instance.api
+      .crateApiMessageSenderKeyMessageMessageVersion(that: this);
+
+  /// Serialize the message to bytes.
+  Uint8List serialize() =>
+      RustLib.instance.api.crateApiMessageSenderKeyMessageSerialize(that: this);
+
+  /// Verify this message's signature against the sender's signing key.
+  ///
+  /// The signing key is the one carried by the sender's distribution message
+  /// ([SenderKeyDistributionMessage.signingKey]).
+  bool verifySignature({required List<int> signatureKey}) =>
+      RustLib.instance.api.crateApiMessageSenderKeyMessageVerifySignature(
+        that: this,
+        signatureKey: signatureKey,
       );
 }
 
@@ -10066,4 +13283,65 @@ class SignedPreKeyRecordImpl extends RustOpaque implements SignedPreKeyRecord {
   /// Get the timestamp when this key was generated.
   BigInt timestamp() => RustLib.instance.api
       .crateApiSignedPrekeySignedPreKeyRecordTimestamp(that: this);
+}
+
+@sealed
+class UnidentifiedSenderMessageContentImpl extends RustOpaque
+    implements UnidentifiedSenderMessageContent {
+  // Not to be used by end users
+  UnidentifiedSenderMessageContentImpl.frbInternalDcoDecode(List<dynamic> wire)
+    : super.frbInternalDcoDecode(wire, _kStaticData);
+
+  // Not to be used by end users
+  UnidentifiedSenderMessageContentImpl.frbInternalSseDecode(
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+
+  static final _kStaticData = RustArcStaticData(
+    rustArcIncrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_increment_strong_count_UnidentifiedSenderMessageContent,
+    rustArcDecrementStrongCount: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_UnidentifiedSenderMessageContent,
+    rustArcDecrementStrongCountPtr: RustLib
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_UnidentifiedSenderMessageContentPtr,
+  );
+
+  /// Get the content hint.
+  int contentHint() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentContentHint(
+        that: this,
+      );
+
+  /// Get the wrapped (still encrypted) message.
+  Uint8List contents() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentContents(that: this);
+
+  /// Get the group id, if the sender set one.
+  Uint8List? groupId() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentGroupId(that: this);
+
+  /// Get the wrapped message's `CiphertextMessageType` value.
+  int messageType() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentMessageType(
+        that: this,
+      );
+
+  /// Get the sender's certificate (serialized).
+  Uint8List senderCertificate() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificate(
+        that: this,
+      );
+
+  /// Serialize the USMC.
+  Uint8List serialize() => RustLib.instance.api
+      .crateApiSealedSenderUnidentifiedSenderMessageContentSerialize(
+        that: this,
+      );
 }

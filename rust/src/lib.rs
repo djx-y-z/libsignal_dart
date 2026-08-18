@@ -17,6 +17,11 @@ mod frb_generated;
 mod recording_stores;
 mod utils;
 
+// Differential tests for the SSv2 fan-out offsets. Deliberately outside
+// `api/`, which FRB codegen scans. Run with `make rust-test`.
+#[cfg(test)]
+mod ssv2_equivalence_tests;
+
 pub mod api;
 
 // Re-export utilities for internal use

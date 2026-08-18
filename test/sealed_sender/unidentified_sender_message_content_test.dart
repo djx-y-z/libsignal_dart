@@ -5,9 +5,10 @@ void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
 
-  // Note: UnidentifiedSenderMessageContent is an internal type used by the
-  // sealed sender protocol. The public API exposes high-level functions
-  // instead of the raw message content type.
+  // Note: this file covers the certificate helpers only.
+  // `UnidentifiedSenderMessageContent` itself — construction, accessors, and
+  // the encryptFromUsmc / decryptToUsmc round trip — is covered in
+  // `usmc_and_multi_recipient_test.dart`.
   //
   // Sealed sender encryption/decryption is tested in:
   // - sealed_session_cipher_test.dart (via SealedSenderCipher)
