@@ -851,7 +851,7 @@ jobs:
 
       - name: Upload the patch
         if: steps.verdict.outputs.status == 'fixed'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repair-patch
           path: |
@@ -865,7 +865,7 @@ jobs:
       # `repair-patch` and still gets exactly the two files it always got.
       - name: Upload the verdict
         if: steps.verdict.outputs.status == 'cannot-fix'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repair-verdict
           path: ${{ runner.temp }}/verdict.json
@@ -992,7 +992,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
           ref: main
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: repair-patch
           path: ${{ runner.temp }}/repair
@@ -1145,7 +1145,7 @@ jobs:
           app-id: ${{ vars.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: repair-verdict
           path: ${{ runner.temp }}/verdict
