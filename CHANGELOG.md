@@ -180,6 +180,80 @@
   rather than a variable name, it keeps working whatever provider that value was
   handed to.
 
+- **An agent reviews pull requests, and is trusted with nothing** —
+  `ai-review.yml` reads the diff of a pull request opened from a branch in this
+  repository and leaves one comment, updated in place on each push rather than
+  added to. It uses the same three-job split as the repair workflow and for the
+  same reason: the agent job holds no credential, not even one that could write
+  a comment, and the job that publishes runs no agent.
+  **It gates nothing, deliberately.** Published measurements of adversarially
+  filtered LLM review put roughly four in five candidate findings in the
+  false-positive bin, and one reported case had ten independent reviewers
+  unanimously confirm a vulnerability that did not exist — killed only by
+  running a test. So the reviewer has no way to say "approved": it emits
+  findings or it emits none, and the absence of findings is the absence of
+  findings rather than an endorsement. What decides whether a change is sound is
+  the four-platform matrix and the lint gates, exactly as before. Before this is
+  wired to anything that can block a merge, its false-positive rate should be
+  measured by replaying merged pull requests through it — that number, not the
+  catch rate, is what decides whether it can gate, because a blocker that cries
+  wolf turns "automatic" into "automatic unless a model got fussy".
+  **It never sees a bot's account of the diff before forming its own.** When the
+  pull request was opened by automation, its title and description are simply not
+  written to disk: that text is prose another model wrote to explain this same
+  change, and reading it first produces a review of the explanation. A person's
+  description is included, because an account of intent is context rather than a
+  claim to audit. The prompt spends as much space on what *not* to report —
+  anything `make format-check`, `make analyze ARGS="--fatal-infos"` or
+  `make rust-clippy` already enforces, style, taste, ungrounded speculation — as
+  on what to look for, since noise is what makes a reviewer stop being read.
+  **The reviewer is strictly read-only**, with no tool that can write, edit or
+  patch a file and no shell at all, and it reports through its reply rather than
+  by leaving a file behind. That was forced by measurement: across seven runs the
+  model this repository runs never called the write tool once, reaching instead
+  for patch application, and denied that it produced a complete set of findings
+  and then spent its remaining turns failing to save them. Reporting through the
+  reply removes the need for any write permission, which makes "the reviewer does
+  not change the repository" a property of the tool list rather than a promise —
+  and the job asserts the working tree is untouched anyway. Both agents' resolved
+  permissions are asserted against the engine before either runs, because a
+  per-agent block in OpenCode is appended to the global one rather than replacing
+  it, so a rule can read as narrower than it resolves.
+  **What it publishes is checked, not copied.** The reply is cut out of the
+  transcript by parsing rather than by pattern-matching a code fence, so a
+  finding that quotes a fenced diff hunk no longer truncates the object and loses
+  the whole review. Every finding is checked against the fields the prompt calls
+  required, and one that is missing them is published with the omission printed
+  beside it rather than as though it were whole; a severity the prompt does not
+  define is read as blocking rather than quietly shown as a note. The list of
+  files the reviewer claims to have read is cross-checked against the files it
+  actually opened, and a claim the transcript does not support is removed and
+  reported as removed — in the one clean control run, four of the six files it
+  named had never been opened. Everything a model wrote is escaped before it
+  reaches the comment, so a fence, a stray `</details>` or an `@`-mention in a
+  quoted diff line cannot break out of its block or notify anybody.
+  **Configuration:** none beyond the repair agent's. `REVIEW_AGENT_ENGINE`,
+  `REVIEW_AGENT_CLAUDECODE_MODEL` and `REVIEW_AGENT_OPENCODE_MODEL` each fall
+  back to the repair setting, so a repository that configured one agent has both;
+  the separate variables exist so that running the reviewer on a different model
+  family is a settings change, which is worth having because a reviewer drawn
+  from the same family as the writer shares its blind spots. There is no comment
+  trigger: `issue_comment` runs in the base repository's context with secrets,
+  which is the classic pwn request, so review of somebody else's pull request is
+  `workflow_dispatch` — the one manual trigger that already requires write
+  access — and it takes a `dry_run` flag so a rehearsal does not comment on a
+  real pull request. Fork pull requests are refused explicitly rather than left
+  to fail for want of a key, and so are Dependabot's: GitHub runs those without
+  access to a repository's secrets, so the reviewer would have no key, and the
+  refusal is a named skip rather than a red run on every dependency bump. On the
+  Claude Code engine, `REVIEW_ALLOWED_BOTS` names the bots whose pull requests
+  may be reviewed — that engine refuses a non-human actor otherwise, and seven of
+  the last eight pull requests here were opened by one. Every run writes what it
+  decided to the job summary, since most runs of this workflow decide not to
+  review and used to leave nothing but a green tick behind. The token that posts
+  the comment is minted with one permission rather than with everything the
+  App installation holds.
+
 #### Changed
 
 - **AI changelog: configurable provider list, replacing the retired GitHub
