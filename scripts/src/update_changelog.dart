@@ -271,11 +271,29 @@ Return a JSON object with EXACTLY two string fields:
      Swift-Java-Node/tooling/CI): do NOT give them their own feature bullets.
      Summarize them together in ONE bullet that ends with
      "— none of which this library exposes".
-   - Only changes to the crates we bind that affect our exposed API get their
-     own bullets. Prefix breaking ones with "**BREAKING:**".
-3. When the crates we bind had no API-affecting change, say so explicitly, e.g.
+   - A change earns its own bullet only when BOTH hold: (a) it lands in a crate
+     we bind, AND (b) it changes something named in "Exposed surface" above.
+     Landing in a bound crate is NOT sufficient on its own — most of what those
+     crates contain is never reached from this package.
+     If you cannot name the specific item from "Exposed surface" that the change
+     touches, treat it as invisible and fold it into the
+     "— none of which this library exposes" bullet.
+   - Prefix a bullet with "**BREAKING:**" only when a caller of THIS package
+     would have to change their code. A symbol removed or altered upstream that
+     this package never calls is not breaking here, whatever upstream calls it.
+   - Never emit a "**BREAKING:**" bullet together with the rule-4 note: if
+     something genuinely broke, the update by definition DOES affect this
+     package's public API, and the note must be omitted.
+3. When the crates we bind had no change reaching our exposed surface, say so
+   explicitly. Default wording, which is true whenever (b) in rule 2 failed:
    "The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`)
-   are unchanged apart from version strings".
+   have no changes reaching the surface this package exposes".
+   Use the STRONGER "are unchanged apart from version strings" ONLY when those
+   crates genuinely had no code change at all. Those are different claims, and
+   the strong one is checkable: if a bound crate lost or altered any symbol —
+   even one this package never calls — it is FALSE and must not be written.
+   Naming such a symbol and saying why it does not reach us is better than
+   claiming nothing changed.
 4. End with "Note: These changes do not affect this library's public API" when
    true.
 5. Judge relevance from the release notes AND the commit list, NOT from the
@@ -291,7 +309,7 @@ Return a JSON object with EXACTLY two string fields:
 ```json
 {
   "libsignal_highlight": "**libsignal v0.97.3** — internal/dependency update, no public-API impact",
-  "changed": "- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))\\n  - Upstream changes are limited to username services, a chat transport error reclassification, and a key-transparency clock-skew tolerance — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings\\n  - Note: These changes do not affect this library's public API"
+  "changed": "- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))\\n  - Upstream changes are limited to username services, a chat transport error reclassification, and a key-transparency clock-skew tolerance — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) have no changes reaching the surface this package exposes\\n  - Note: These changes do not affect this library's public API"
 }
 ```
 
@@ -323,11 +341,47 @@ Return ONLY valid JSON, no markdown code blocks.
     );
   }
 
+  // A `**BREAKING:**` bullet and the "does not affect this library's public
+  // API" note cannot both be true of one entry, and a model that writes both
+  // has misjudged one of them. Observed for real: a run labelled the removal of
+  // a `libsignal-protocol` helper BREAKING and then closed with the no-impact
+  // note. The helper sits in a crate this package binds but not on the surface
+  // it exposes, so nothing here broke — the model collapsed the two conditions
+  // in rule 2 into one.
+  //
+  // Checked in code rather than only asked for in the prompt, because the
+  // contradiction is decidable from the text alone. Telling users a release is
+  // breaking when it is not is the expensive outcome; failing here leaves the
+  // entry unwritten and the pull request labelled for a human, which is the
+  // path a malformed answer already takes.
+  if (breakingContradictsNoImpact(changed)) {
+    throw AiCallException(
+      '${response.model} marked a change **BREAKING:** and also stated the '
+      "update does not affect this package's public API. Only one can hold: a "
+      'change is breaking here only when it touches the exposed surface, not '
+      'merely because it lands in a bound crate.',
+    );
+  }
+
   return (
     highlight: highlight.trim(),
     changed: changed.trimRight(),
     model: response.model,
   );
+}
+
+/// Whether [changed] both claims a breaking change and claims the update leaves
+/// the public API untouched. Pure; exposed for testing.
+///
+/// Apostrophes are normalised before matching. The prompt asks for a straight
+/// one and the example shows a straight one, but a model writing prose reaches
+/// for the typographic `’` often enough — and a check that a curly quote walks
+/// straight through is worse than no check, because the contradiction it exists
+/// to catch would then publish while this reads as though it were guarded.
+bool breakingContradictsNoImpact(String changed) {
+  final lower = changed.toLowerCase().replaceAll(RegExp('[‘’ʼ]'), "'");
+  return lower.contains('**breaking:**') &&
+      lower.contains("do not affect this library's public api");
 }
 
 /// Insert the new changelog entry in the correct location. Pure; exposed for

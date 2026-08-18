@@ -297,6 +297,20 @@
   key with `400 API_KEY_INVALID` where Anthropic uses `401`, and reading that
   as a malformed request would halt the walk at a misconfigured first entry
   instead of falling through to the second.
+- **An entry that calls a release breaking and harmless at once is refused** —
+  a run labelled the removal of a `libsignal-protocol` helper `**BREAKING:**`
+  and then closed with "these changes do not affect this library's public API".
+  Only one can hold: a change is breaking *here* when it touches the surface
+  this package exposes, not merely because it lands in a crate this package
+  binds, and the helper in question sat in the second category. The prompt now
+  separates those two conditions and says so, and the contradiction is checked
+  in code before the entry is written, because it is decidable from the text and
+  telling users a release is breaking when it is not is the expensive direction
+  to be wrong in. Failing leaves the entry unwritten and the pull request
+  labelled for a person, which is the path a malformed answer already took. The
+  check normalises typographic apostrophes first — a model writing prose reaches
+  for `’` whatever the example shows, and a check that a curly quote walks
+  straight through is worse than none, because it reads as a guard.
 - **OpenRouter is available as a third provider** — one key for many models, so
   trying a different model costs neither a code change nor a new secret. Because
   it is an aggregator its model half carries its own slash, which the entry
