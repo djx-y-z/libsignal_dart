@@ -75,6 +75,23 @@ jobs:
     name: Detect a broken main
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Named at the job rather than raised for the whole file, so the job the
+    # agent runs in keeps the narrowest token of the five. `pull-requests: read`
+    # is for the duplicate check below, which asks `gh pr list` whether this
+    # exact failure already has a pull request — under `github.token`, since
+    # only the writing jobs mint the App token. The file-level block grants
+    # `contents` and `actions` and nothing else, so without this line that call
+    # has no permission for the resource it reads. `resolve` already carries the
+    # same thing for `issues: read` and the same reason; `detect` was the one
+    # that asks the API a question its token was never given.
+    #
+    # It would only ever have failed on the path this workflow exists for: the
+    # step is gated on `main` actually being broken, so no rehearsal and no
+    # green day reaches it.
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
     outputs:
       broken: ${{ steps.failure.outputs.broken }}
       conclusion: ${{ steps.failure.outputs.conclusion }}
