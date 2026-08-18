@@ -71,15 +71,44 @@
   the workflow or in `.claude/skills/`: a prompt in a plain file is reviewable
   on its own, diffable, and portable to another engine.
   **Configuration:** `ANTHROPIC_API_KEY`, the same secret the CHANGELOG entry
-  uses; `AGENT_MODEL` optionally overrides the model. `workflow_dispatch` takes
+  uses, checked for presence before the agent is called so a missing one names
+  itself instead of surfacing as an authentication error from inside a
+  third-party action; and `AGENT_CLAUDECODE_MODEL`, which names the model and
+  has no default. `workflow_dispatch` takes
   a `run_id` and a `dry_run` flag so the whole path can be rehearsed against a
   past failure instead of waiting for `main` to break — and a rehearsal against
   a commit that is no longer the tip is forced into a dry run, so it cannot open
   a reverting pull request.
+  **Every run says what it decided, and the commonest decision is not a pull
+  request.** A step summary in each of the first two jobs records whether an
+  agent is configured at all, what the latest `Tests` run on `main` concluded,
+  which engine and model ran, and the verdict with its reasoning — so "the
+  automation is switched off" and "the automation looked and `main` is fine" stop
+  producing identical-looking green runs. When the agent returns `cannot-fix` a
+  fourth job files an issue carrying the diagnosis, keyed to the broken commit so
+  one failure gets one issue. That outcome is the one this workflow reaches most
+  often — `main` went red four times in five weeks here and every one was a flaky
+  runner — and it used to leave nothing behind but an annotation, which is to say
+  the agent's usual and correct answer was the one nobody was told about. An
+  issue rather than a red run, because a daily failure for a condition that
+  resolves itself is how people learn to ignore a workflow, and declining to act
+  is the behaviour the prompt asks for rather than an error. The job that files
+  it holds the App token and runs no agent, the same split the pull-request path
+  uses, and the secret scan now covers both publication paths rather than only
+  the pull request. A fifth job retires those issues once `main` is green again,
+  so a report cannot outlive its subject and turn a useful signal into a list
+  nobody reads — but it leaves alone anything somebody has commented on or
+  assigned to themselves, because at that point closing it would be a bot
+  overruling a person on a judgement it is not making. It reads the issue list
+  on the read-only token and mints the App token only when there is something to
+  close, so an ordinary green day creates no write credential at all.
 
 - **A second engine for the repair agent: OpenCode, on any provider**
-  — `vars.AGENT_ENGINE` selects `claude-code` (the default, unchanged) or
-  `opencode`. The claim that the prompt was "portable to another engine" is now
+  — `vars.AGENT_ENGINE` selects `claude-code` or `opencode`, and neither is a
+  default: an unset engine attempts no repair and says so, because something
+  that writes into this repository should be named by a person rather than
+  inherited from whatever a template shipped. The claim that the prompt was
+  "portable to another engine" is now
   load-bearing rather than aspirational: both engines read the same
   `.github/agent-prompts/repair-build.md`, work on the same prepared evidence,
   and are judged by the same path allowlist, secret scan and `verdict.json`
@@ -128,8 +157,8 @@
   of turns, reached by a different route.
   **Which provider is used is configuration, not code.** OpenCode reaches every
   provider it knows about through that provider's own environment variable, so
-  the *name* of the variable is `OPENCODE_PROVIDER_ENV` (default
-  `OPENROUTER_API_KEY`) and the value is a single `OPENCODE_API_KEY` secret.
+  the *name* of the variable is `AGENT_OPENCODE_PROVIDER_ENV` (default
+  `OPENROUTER_API_KEY`) and the value is a single `AGENT_OPENCODE_API_KEY` secret.
   Pointing a repository at a different provider, a self-hosted gateway or a
   proxy is then two repository settings rather than a YAML edit repeated in
   every generated project and shipped through a template release — the same
@@ -138,13 +167,14 @@
   `baseURL` in the OpenCode config; no workflow change is needed for that
   either. The name is validated before use, because a typo would otherwise
   surface as an OpenCode failure rather than as the settings mistake it is.
-  **Configuration:** `AGENT_ENGINE`, the `OPENCODE_API_KEY` secret, and
-  optionally `OPENCODE_PROVIDER_ENV`, `OPENCODE_MODEL` and `OPENCODE_VERSION`.
+  **Configuration:** `AGENT_ENGINE`, the `AGENT_OPENCODE_API_KEY` secret, and
+  optionally `AGENT_OPENCODE_PROVIDER_ENV` and `AGENT_OPENCODE_VERSION`;
+  `AGENT_OPENCODE_MODEL` names the model and has no default.
   The model default is chosen for context rather than price — the prompt invites
   the agent to open the full log, which is capped at 400 KB and tokenises to far
   more than a small window holds, so a cheaper model with a 128K context would
   serve every ordinary run and fail on exactly the unfamiliar failure the full
-  log exists for. The secret scan covers `OPENCODE_API_KEY` alongside
+  log exists for. The secret scan covers `AGENT_OPENCODE_API_KEY` alongside
   `ANTHROPIC_API_KEY` and scans both whichever engine ran, so adding an engine
   cannot quietly leave a key unscanned; because it matches the secret's value
   rather than a variable name, it keeps working whatever provider that value was
