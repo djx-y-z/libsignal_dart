@@ -8,6 +8,29 @@
 
 set -e
 
+# Git hands every hook a GIT_DIR pointing at the repository being committed to,
+# and any child process inherits it. In an ordinary checkout that is the
+# relative string `.git`, which is harmless: a tool that chdirs elsewhere
+# re-resolves it against its own directory. For a *worktree* it is necessarily
+# an absolute path — `.git` there is a file, not a directory — and it then
+# follows every child process everywhere it goes.
+#
+# That breaks any tool downstream that asks git about itself. `flutter` does
+# exactly that to work out its own version: run from a worktree's hook it read
+# THIS repository's HEAD instead of its own, found no Flutter tag on it, and
+# wrote `"frameworkVersion": "0.0.0-unknown"` into the pinned SDK's
+# `bin/cache/flutter.version.json`. That file is a cache, so the damage outlived
+# the hook — every later `flutter` and `dart` invocation, inside a hook or not,
+# then failed version solving with "The current Flutter SDK version is
+# 0.0.0-unknown" until it was deleted by hand.
+#
+# Measured rather than reasoned: with GIT_DIR set to a worktree's gitdir,
+# `git -C <flutter-sdk> describe --tags` answers with this repository's tag.
+# GIT_INDEX_FILE and GIT_WORK_TREE go with it for the same reason — the checks
+# below need none of the three, and a tool that wants this repository can still
+# find it from the working directory the hook already runs in.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
