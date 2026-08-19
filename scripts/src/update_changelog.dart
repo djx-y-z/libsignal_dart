@@ -1,9 +1,9 @@
 // Update CHANGELOG.md with AI-generated entry for a libsignal dependency
 // update.
 //
-// Uses GitHub Models API (OpenAI-compatible) to analyze the release notes and
-// the upstream commit list and generate a changelog entry that matches this
-// project's house style.
+// The release notes and the upstream commit list are handed to whichever model
+// `AI_MODELS` puts first (see `ai_client.dart`), which writes an entry matching
+// this project's house style.
 //
 // NOTE: This step does NOT touch the `libsignal_frb` crate version. The crate
 // version is bumped as a deliberate release step (`make release-frb`), which
@@ -15,13 +15,17 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'ai_client.dart';
 import 'common.dart';
 
 /// Update CHANGELOG.md with a new libsignal version entry.
-Future<void> updateChangelog({
+///
+/// Returns the model that wrote the entry, so a caller can publish it.
+Future<AiModel> updateChangelog({
   required String version,
-  required String token,
+  required List<ResolvedAiModel> models,
   String? fromVersion,
+  String? codegenResult,
   bool ciMode = false,
 }) async {
   final packageDir = getPackageDir();
@@ -50,20 +54,19 @@ Future<void> updateChangelog({
   final currentChangelog = changelogFile.readAsStringSync();
 
   // Step 4: Analyze with AI.
-  logStep('Analyzing with GitHub Models AI...');
-  final aiResponse = await _generateChangelogEntry(
+  logStep('Analyzing release notes with AI...');
+  final entry = await _generateChangelogEntry(
     version: version,
     fromVersion: fromVersion,
     releaseNotes: releaseNotes,
     upstreamCommits: upstreamCommits,
     currentChangelog: currentChangelog,
-    token: token,
+    codegenResult: codegenResult,
+    models: models,
   );
 
-  // Parse AI response.
-  final parsed = jsonDecode(aiResponse) as Map<String, dynamic>;
-  final nativeHighlight = parsed['libsignal_highlight'] as String;
-  final changed = parsed['changed'] as String;
+  final nativeHighlight = entry.highlight;
+  final changed = entry.changed;
   logInfo('Generated libsignal highlight: $nativeHighlight');
   logInfo('Generated changed entry');
 
@@ -77,6 +80,8 @@ Future<void> updateChangelog({
 
   await changelogFile.writeAsString(updatedChangelog);
   logInfo('CHANGELOG.md updated');
+
+  return entry.model;
 }
 
 /// Fetch release notes from the GitHub API.
@@ -96,7 +101,14 @@ Future<String> _fetchReleaseNotes(String version) async {
     throw Exception('Release $version not found');
   }
 
-  return json['body'] as String? ?? 'No release notes available.';
+  // libsignal publishes its releases with an empty body, so this is the normal
+  // case here rather than an error. Saying so explicitly matters: an empty
+  // section under a "release notes" heading reads to a model as "nothing
+  // changed", and the commit list below it is the real input.
+  final body = json['body'] as String? ?? '';
+  return body.trim().isEmpty
+      ? 'No release notes were published for this release.'
+      : body;
 }
 
 /// Fetch the commit list between two upstream tags via the GitHub compare API.
@@ -144,14 +156,33 @@ Future<String> _fetchUpstreamCommits(String from, String to) async {
   return listing;
 }
 
-/// Generate changelog entry using the GitHub Models API.
-Future<String> _generateChangelogEntry({
+/// The fields the model must return, and what each one is.
+///
+/// Doubles as the schema every provider enforces natively, so the JSON contract
+/// is checked by the provider rather than only asked for in the prompt.
+const _changelogFields = <String, String>{
+  'libsignal_highlight':
+      'A single "#### ✨ Highlights" line for the libsignal dependency.',
+  'changed':
+      'The "#### Changed" entry: one top-level Markdown list item with its '
+      'indented sub-bullets.',
+};
+
+/// Generate the changelog entry with the configured AI model.
+///
+/// Returns the two fields together with the model that wrote them: without
+/// recording which provider answered, entries written by different providers
+/// become indistinguishable a month later, when the difference in house style
+/// is the only symptom that the first provider has been failing.
+Future<({String highlight, String changed, AiModel model})>
+_generateChangelogEntry({
   required String version,
   required String? fromVersion,
   required String releaseNotes,
   required String upstreamCommits,
   required String currentChangelog,
-  required String token,
+  required String? codegenResult,
+  required List<ResolvedAiModel> models,
 }) async {
   // Extract recent changelog entries for context (first 150 lines).
   final changelogContext = currentChangelog.split('\n').take(150).join('\n');
@@ -161,6 +192,29 @@ Future<String> _generateChangelogEntry({
   final sourceLink = fromVersion != null && fromVersion != version
       ? '[compare](https://github.com/signalapp/libsignal/compare/$fromVersion...$version)'
       : '[release notes](https://github.com/signalapp/libsignal/releases/tag/$version)';
+
+  // Injected only when the pipeline actually ran codegen and captured the
+  // result. Absent, the prompt says nothing about codegen and rule 6 forbids
+  // the model from inventing it — which is what it did before this existed.
+  final codegenSection = switch (codegenResult) {
+    'unchanged' =>
+      '''
+
+## Binding regeneration result (a real result from this run, not an inference)
+`make codegen` ran after the dependency bump and produced NO change to
+`lib/src/rust/`: the FFI surface did not move. You may state this.
+''',
+    'changed' =>
+      '''
+
+## Binding regeneration result (a real result from this run, not an inference)
+`make codegen` ran after the dependency bump and DID change `lib/src/rust/`:
+the FFI surface moved. State it plainly and prefix that bullet with
+"**BREAKING:**" if the change is visible to users of this package. On a plain
+dependency bump this is unexpected and a reviewer needs to see it.
+''',
+    _ => '',
+  };
 
   final prompt =
       '''
@@ -198,6 +252,7 @@ incomplete, and the commit list shows what actually changed.'''}
 
 ## Current CHANGELOG.md (match this house style exactly):
 $changelogContext
+$codegenSection
 
 ## Your task
 Return a JSON object with EXACTLY two string fields:
@@ -216,93 +271,117 @@ Return a JSON object with EXACTLY two string fields:
      Swift-Java-Node/tooling/CI): do NOT give them their own feature bullets.
      Summarize them together in ONE bullet that ends with
      "— none of which this library exposes".
-   - Only changes to the crates we bind that affect our exposed API get their
-     own bullets. Prefix breaking ones with "**BREAKING:**".
-3. When the crates we bind had no API-affecting change, say so explicitly, e.g.
+   - A change earns its own bullet only when BOTH hold: (a) it lands in a crate
+     we bind, AND (b) it changes something named in "Exposed surface" above.
+     Landing in a bound crate is NOT sufficient on its own — most of what those
+     crates contain is never reached from this package.
+     If you cannot name the specific item from "Exposed surface" that the change
+     touches, treat it as invisible and fold it into the
+     "— none of which this library exposes" bullet.
+   - Prefix a bullet with "**BREAKING:**" only when a caller of THIS package
+     would have to change their code. A symbol removed or altered upstream that
+     this package never calls is not breaking here, whatever upstream calls it.
+   - Never emit a "**BREAKING:**" bullet together with the rule-4 note: if
+     something genuinely broke, the update by definition DOES affect this
+     package's public API, and the note must be omitted.
+3. When the crates we bind had no change reaching our exposed surface, say so
+   explicitly. Default wording, which is true whenever (b) in rule 2 failed:
    "The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`)
-   are unchanged apart from version strings".
+   have no changes reaching the surface this package exposes".
+   Use the STRONGER "are unchanged apart from version strings" ONLY when those
+   crates genuinely had no code change at all. Those are different claims, and
+   the strong one is checkable: if a bound crate lost or altered any symbol —
+   even one this package never calls — it is FALSE and must not be written.
+   Naming such a symbol and saying why it does not reach us is better than
+   claiming nothing changed.
 4. End with "Note: These changes do not affect this library's public API" when
    true.
 5. Judge relevance from the release notes AND the commit list, NOT from the
    version numbers.
+6. Claim only what the material above supports. Where a "Binding
+   regeneration result" section appears above, that is a real result from this
+   run — report it. Where it does NOT appear, say nothing whatsoever about
+   `make codegen`, binding diffs or the FFI surface, however often the entries
+   above mention them: a human ran those and you did not. Copy the style, never
+   a finding.
 
 ## Example output (house style — follow this SHAPE):
 ```json
 {
   "libsignal_highlight": "**libsignal v0.97.3** — internal/dependency update, no public-API impact",
-  "changed": "- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))\\n  - Upstream changes are limited to username services, a chat transport error reclassification, and a key-transparency clock-skew tolerance — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) are unchanged apart from version strings\\n  - Note: These changes do not affect this library's public API"
+  "changed": "- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))\\n  - Upstream changes are limited to username services, a chat transport error reclassification, and a key-transparency clock-skew tolerance — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) have no changes reaching the surface this package exposes\\n  - Note: These changes do not affect this library's public API"
 }
 ```
 
 Return ONLY valid JSON, no markdown code blocks.
 ''';
 
-  final requestBody = jsonEncode({
-    'model': 'gpt-4o-mini',
-    'messages': [
-      {'role': 'user', 'content': prompt},
-    ],
-    'temperature': 0.3,
-    'max_tokens': 800,
-  });
+  final response = await callAi(
+    models: models,
+    prompt: prompt,
+    jsonFields: _changelogFields,
+  );
 
-  final result = await Process.run('curl', [
-    '-s',
-    '-X',
-    'POST',
-    'https://models.github.ai/inference/chat/completions',
-    '-H',
-    'Content-Type: application/json',
-    '-H',
-    'Authorization: Bearer $token',
-    '-d',
-    requestBody,
-  ]);
+  final parsed = decodeAiJsonObject(response.text);
+  final highlight = parsed?['libsignal_highlight'];
+  final changed = parsed?['changed'];
 
-  if (result.exitCode != 0) {
-    throw Exception('GitHub Models API request failed');
+  // Both fields are required, and nothing is salvaged from a partial answer.
+  // The previous version wrote whatever it got straight into the "changed"
+  // field, which turned a malformed answer into a malformed CHANGELOG. Failing
+  // here instead leaves the entry unwritten and the pull request labelled for
+  // a human — a state the workflow already handles.
+  if (highlight is! String ||
+      highlight.trim().isEmpty ||
+      changed is! String ||
+      changed.trim().isEmpty) {
+    throw AiCallException(
+      '${response.model} answered without the required fields '
+      '(${_changelogFields.keys.join(', ')}).',
+    );
   }
 
-  final response = jsonDecode(result.stdout as String) as Map<String, dynamic>;
-
-  if (response.containsKey('error')) {
-    final error = response['error'] as Map<String, dynamic>;
-    throw Exception('API error: ${error['message']}');
+  // A `**BREAKING:**` bullet and the "does not affect this library's public
+  // API" note cannot both be true of one entry, and a model that writes both
+  // has misjudged one of them. Observed for real: a run labelled the removal of
+  // a `libsignal-protocol` helper BREAKING and then closed with the no-impact
+  // note. The helper sits in a crate this package binds but not on the surface
+  // it exposes, so nothing here broke — the model collapsed the two conditions
+  // in rule 2 into one.
+  //
+  // Checked in code rather than only asked for in the prompt, because the
+  // contradiction is decidable from the text alone. Telling users a release is
+  // breaking when it is not is the expensive outcome; failing here leaves the
+  // entry unwritten and the pull request labelled for a human, which is the
+  // path a malformed answer already takes.
+  if (breakingContradictsNoImpact(changed)) {
+    throw AiCallException(
+      '${response.model} marked a change **BREAKING:** and also stated the '
+      "update does not affect this package's public API. Only one can hold: a "
+      'change is breaking here only when it touches the exposed surface, not '
+      'merely because it lands in a bound crate.',
+    );
   }
 
-  final choices = response['choices'] as List<Object?>?;
-  if (choices == null || choices.isEmpty) {
-    throw Exception('No response from AI');
-  }
+  return (
+    highlight: highlight.trim(),
+    changed: changed.trimRight(),
+    model: response.model,
+  );
+}
 
-  final firstChoice = choices[0];
-  if (firstChoice is! Map<String, dynamic>) {
-    throw Exception('Invalid response format from AI');
-  }
-  final message = firstChoice['message'] as Map<String, dynamic>?;
-  if (message == null) {
-    throw Exception('No message in AI response');
-  }
-  final content = (message['content'] as String).trim();
-
-  // Parse JSON response.
-  try {
-    final parsed = jsonDecode(content) as Map<String, dynamic>;
-    return jsonEncode(parsed); // Return normalized JSON.
-  } catch (e) {
-    // If AI didn't return valid JSON, try to extract it.
-    final jsonMatch = RegExp(r'\{[\s\S]*\}').firstMatch(content);
-    if (jsonMatch != null) {
-      return jsonMatch.group(0)!;
-    }
-    // Fallback: minimal entry from the raw content.
-    return jsonEncode({
-      'libsignal_highlight':
-          '**libsignal $version** — internal/dependency update, '
-          'no public-API impact',
-      'changed': content,
-    });
-  }
+/// Whether [changed] both claims a breaking change and claims the update leaves
+/// the public API untouched. Pure; exposed for testing.
+///
+/// Apostrophes are normalised before matching. The prompt asks for a straight
+/// one and the example shows a straight one, but a model writing prose reaches
+/// for the typographic `’` often enough — and a check that a curly quote walks
+/// straight through is worse than no check, because the contradiction it exists
+/// to catch would then publish while this reads as though it were guarded.
+bool breakingContradictsNoImpact(String changed) {
+  final lower = changed.toLowerCase().replaceAll(RegExp('[‘’ʼ]'), "'");
+  return lower.contains('**breaking:**') &&
+      lower.contains("do not affect this library's public api");
 }
 
 /// Insert the new changelog entry in the correct location. Pure; exposed for

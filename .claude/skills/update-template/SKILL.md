@@ -59,8 +59,8 @@ make update-template ARGS="--version vX.Y.Z"
 ```
 
 This runs copier, reports what it could not merge, checks that `_commit` landed,
-and writes the CHANGELOG entry (the entry needs `AI_MODELS_TOKEN`; without it the
-update still applies). It refuses to start on a dirty tree and names the files —
+and writes the CHANGELOG entry (the entry needs `AI_MODELS` plus a key for each
+provider it names; without them the update still applies). It refuses to start on a dirty tree and names the files —
 copier rejects a dirty destination, **untracked files included**.
 
 Or drive copier directly:

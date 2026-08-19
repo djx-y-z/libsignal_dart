@@ -69,20 +69,23 @@ permissions:
 
 jobs:
   test:
-    # Skip tests for:
-    # - Failed workflow_run triggers
-    # - libsignal update PRs, which move native_version ahead of the binaries
+    # Only a failed workflow_run trigger is skipped.
     #
-    # The second condition used to skip every PR opened by a bot, which also
-    # silenced Dependabot's action bumps and the template update PRs — precisely
-    # the PRs that change CI and so most need to be exercised before merge.
-    # Matching the branch prefix instead narrows the skip to the PRs
-    # check-libsignal-updates.yml opens for itself (`update-libsignal-<version>`).
-    # head_ref is empty outside pull_request, so push, workflow_dispatch and
-    # workflow_run runs are unaffected.
-    if: |
-      (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
-      !startsWith(github.head_ref, 'update-libsignal-')
+    # `update-libsignal-*` branches used to be skipped as well, on the grounds
+    # that they move the libsignal version ahead of the published
+    # `libsignal_frb` binary. That was the more dangerous half of the trade: the
+    # dependency bump — the one pull request whose entire payload is new native
+    # code — became the only one merged without the suite ever running against
+    # it on any platform.
+    #
+    # What closes it is already in the reusable workflow: `make build` runs
+    # before `make test`, and the build hook checks `rust/target/release` first,
+    # returning without downloading anything when a local build is there
+    # (`hook/build.dart`). `.dart_tool` is cached nowhere, so on a fresh runner
+    # the first hook run happens during `make test`, after that build — which is
+    # exactly the procedure that used to be carried out by hand before merging
+    # one of these pull requests.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     uses: ./.github/workflows/test-reusable.yml
     with:
       run-coverage: true
