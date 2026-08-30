@@ -254,7 +254,7 @@ setup-repo-protections:
 # Code Generation
 # =============================================================================
 
-codegen:
+codegen: setup-frb-codegen
 	@touch .skip_libsignal_hook
 	@flutter_rust_bridge_codegen generate $(ARGS); ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
