@@ -1235,7 +1235,7 @@ dependencies = [
  "libsignal-debug",
  "log",
  "rand 0.9.5",
- "sha2 0.11.0",
+ "sha2",
  "subtle",
  "thiserror",
  "uuid",
@@ -1281,7 +1281,7 @@ dependencies = [
  "rand 0.9.5",
  "rayon",
  "serde",
- "sha2 0.11.0",
+ "sha2",
  "signal-crypto",
  "spqr",
  "subtle",
@@ -1308,7 +1308,7 @@ dependencies = [
  "once_cell",
  "parking_lot",
  "rand 0.9.5",
- "sha2 0.10.9",
+ "sha2",
  "signal-crypto",
  "thiserror",
  "uuid",
@@ -1912,17 +1912,6 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.10.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
-dependencies = [
- "cfg-if",
- "cpufeatures 0.2.17",
- "digest 0.10.7",
-]
-
-[[package]]
-name = "sha2"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "446ba717509524cb3f22f17ecc096f10f4822d76ab5c0b9822c5f9c284e825f4"
@@ -1964,7 +1953,7 @@ dependencies = [
  "rand_chacha",
  "rand_core 0.9.5",
  "sha1",
- "sha2 0.11.0",
+ "sha2",
  "subtle",
  "thiserror",
  "zeroize",
@@ -2006,7 +1995,7 @@ dependencies = [
  "prost-build",
  "rand 0.9.5",
  "rand_core 0.9.5",
- "sha2 0.11.0",
+ "sha2",
  "sorted-vec",
  "thiserror",
 ]
