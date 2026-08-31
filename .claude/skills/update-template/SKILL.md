@@ -58,10 +58,15 @@ For a local update, or when the automation could not finish:
 make update-template ARGS="--version vX.Y.Z"
 ```
 
-This runs copier, reports what it could not merge, checks that `_commit` landed,
-and writes the CHANGELOG entry (the entry needs `AI_MODELS` plus a key for each
-provider it names; without them the update still applies). It refuses to start on a dirty tree and names the files —
-copier rejects a dirty destination, **untracked files included**.
+This runs copier, reports what it could not merge, and checks that `_commit`
+landed. It refuses to start on a dirty tree and names the files — copier rejects
+a dirty destination, **untracked files included**.
+
+It also writes the CHANGELOG entry, through whichever model `AI_MODELS` names
+first that has a key (`ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+`OPENROUTER_API_KEY`). With no list set, or no key for anything on it, the
+update still applies and the run reports the entry as not written — write it by
+hand in that case.
 
 Or drive copier directly:
 

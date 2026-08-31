@@ -101,10 +101,10 @@ Future<String> _fetchReleaseNotes(String version) async {
     throw Exception('Release $version not found');
   }
 
-  // libsignal publishes its releases with an empty body, so this is the normal
-  // case here rather than an error. Saying so explicitly matters: an empty
+  // Some upstreams publish every release with an empty body, so this is an
+  // ordinary case rather than an error. Saying so explicitly matters: an empty
   // section under a "release notes" heading reads to a model as "nothing
-  // changed", and the commit list below it is the real input.
+  // changed", when what it means is that the commit list below it is the input.
   final body = json['body'] as String? ?? '';
   return body.trim().isEmpty
       ? 'No release notes were published for this release.'
@@ -154,6 +154,62 @@ Future<String> _fetchUpstreamCommits(String from, String to) async {
     listing += '\n- ... and ${totalCommits - commits.length} more commits';
   }
   return listing;
+}
+
+/// Where this project states what it binds and exposes, for the prompt below.
+///
+/// The one part of the prompt no template variable can hold. Which crates are
+/// built is answerable from the generator's answers; which symbols this wrapper
+/// re-exports — and, more usefully, which whole upstream areas it never touches
+/// — is knowledge only this project has, and it is what rule 2 of the prompt
+/// classifies every upstream change against. So the template writes the file
+/// once and then never overwrites it (`_skip_if_exists`), which also means
+/// `copier update` never raises a conflict over it.
+const changelogScopePath = '.github/agent-prompts/changelog-scope.md';
+
+/// The upstream crates this package builds, as the prompt should name them.
+///
+/// A list with a trailing comma rather than one joined string: `dart format`
+/// keeps a trailing-comma literal expanded whatever its length, so the rendered
+/// file is formatted identically for a project with one bound crate and for one
+/// with six. A single string would be collapsed onto one line for the short
+/// answer and split for the long one, and the template source can only be
+/// correct for one of them.
+const boundCrateNames = <String>[
+  '`libsignal-protocol`',
+  '`libsignal-core`',
+  '`signal-crypto`',
+];
+
+/// [boundCrateNames] as the prompt writes them; empty when none are answered.
+final boundCrates = boundCrateNames.join(', ');
+
+/// Reads [changelogScopePath], falling back to the bound-crate list alone.
+///
+/// The fallback is deliberately weak rather than absent: with no scope section
+/// at all the prompt's rule 2 would classify against nothing, and a model given
+/// no list treats everything upstream as in scope — the exact failure the file
+/// exists to prevent. Naming the crates at least bounds it.
+String readChangelogScope({Directory? packageDir}) {
+  final dir = packageDir ?? getPackageDir();
+  final file = File('${dir.path}/$changelogScopePath');
+  final text = file.existsSync() ? file.readAsStringSync().trim() : '';
+  if (text.isNotEmpty) return text;
+
+  logWarning('$changelogScopePath is missing; classifying on crate names only');
+  const surface =
+      'Exposed surface: not stated — this project has not written its scope\n'
+      'file yet, so nothing here names what it re-exports. Treat any upstream\n'
+      "change you cannot tie to a symbol this package exposes as INVISIBLE to\n"
+      "this package's users, and say so rather than guessing.";
+
+  if (boundCrates.isEmpty) {
+    return 'This package wraps a SUBSET of what it binds.\n$surface';
+  }
+  return 'This package builds ONLY these upstream crates:\n'
+      '$boundCrates.\n'
+      'It exposes a SUBSET of what they contain.\n'
+      '$surface';
 }
 
 /// The fields the model must return, and what each one is.
@@ -216,29 +272,18 @@ dependency bump this is unexpected and a reviewer needs to see it.
     _ => '',
   };
 
+  // Project-owned; see [readChangelogScope]. Read per call rather than cached
+  // so editing the file takes effect without touching this script.
+  final scope = readChangelogScope();
+
   final prompt =
       '''
-You are updating CHANGELOG.md for **libsignal_dart**, a Dart package that wraps
-a SUBSET of libsignal via Flutter Rust Bridge. It just updated its libsignal
-native dependency to $version.
+You are updating CHANGELOG.md for **libsignal_dart**, a Dart package
+that wraps a SUBSET of libsignal via Flutter Rust Bridge. It just
+updated its libsignal native dependency to $version.
 
-## What this library actually binds and exposes (CRITICAL for classification)
-This wrapper builds ONLY these upstream crates and exposes ONLY the Signal
-Protocol primitives on top of them:
-- Crates bound: `libsignal-protocol`, `libsignal-core`, `signal-crypto`
-- Exposed surface: identity / pre / signed-pre / Kyber keys, X3DH session
-  establishment, Double Ratchet encrypt/decrypt, sealed sender, group messaging
-  (SenderKey), and serialization of the above.
-
-It does NOT bind or expose the following — treat any change here as INVISIBLE to
-this package's users (never present it as a feature/change of this package):
-- networking / chat / websocket transport (`libsignal-net`)
-- key transparency (keytrans)
-- username services (e.g. `AuthUsernamesService`)
-- zkgroup, profile keys, credentials
-- SVR / secure value recovery, registration, CDSI, backups
-- language bindings for Swift / Java / Node, and CLI / bridge / codegen / CI
-  tooling
+## What this package binds and exposes (CRITICAL for classification)
+$scope
 
 ## libsignal release notes for $version:
 $releaseNotes
@@ -266,13 +311,12 @@ Return a JSON object with EXACTLY two string fields:
 
 ## Rules for "changed" (THIS IS THE IMPORTANT PART — match the house style)
 1. First line exactly: "- Update libsignal native library to $version ($sourceLink)".
-2. Classify EVERY upstream change against the bind list above:
-   - Changes OUTSIDE our exposed surface (net/chat/keytrans/username/zkgroup/
-     Swift-Java-Node/tooling/CI): do NOT give them their own feature bullets.
-     Summarize them together in ONE bullet that ends with
+2. Classify EVERY upstream change against the scope section above:
+   - Changes OUTSIDE our exposed surface: do NOT give them their own feature
+     bullets. Summarize them together in ONE bullet that ends with
      "— none of which this library exposes".
    - A change earns its own bullet only when BOTH hold: (a) it lands in a crate
-     we bind, AND (b) it changes something named in "Exposed surface" above.
+     we bind, AND (b) it changes something named under "Exposed surface" above.
      Landing in a bound crate is NOT sufficient on its own — most of what those
      crates contain is never reached from this package.
      If you cannot name the specific item from "Exposed surface" that the change
@@ -286,8 +330,7 @@ Return a JSON object with EXACTLY two string fields:
      package's public API, and the note must be omitted.
 3. When the crates we bind had no change reaching our exposed surface, say so
    explicitly. Default wording, which is true whenever (b) in rule 2 failed:
-   "The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`)
-   have no changes reaching the surface this package exposes".
+   "The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes".
    Use the STRONGER "are unchanged apart from version strings" ONLY when those
    crates genuinely had no code change at all. Those are different claims, and
    the strong one is checkable: if a bound crate lost or altered any symbol —
@@ -305,11 +348,11 @@ Return a JSON object with EXACTLY two string fields:
    above mention them: a human ran those and you did not. Copy the style, never
    a finding.
 
-## Example output (house style — follow this SHAPE):
+## Example output (house style — follow this SHAPE, not this wording):
 ```json
 {
-  "libsignal_highlight": "**libsignal v0.97.3** — internal/dependency update, no public-API impact",
-  "changed": "- Update libsignal native library to v0.97.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.97.2...v0.97.3))\\n  - Upstream changes are limited to username services, a chat transport error reclassification, and a key-transparency clock-skew tolerance — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `signal-crypto`, `libsignal-core`) have no changes reaching the surface this package exposes\\n  - Note: These changes do not affect this library's public API"
+  "libsignal_highlight": "**libsignal $version** — internal/dependency update, no public-API impact",
+  "changed": "- Update libsignal native library to $version ($sourceLink)\\n  - Upstream changes are limited to <name the areas, from the \\"Not bound or exposed\\" list above> — none of which this library exposes\\n  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes\\n  - Note: These changes do not affect this library's public API"
 }
 ```
 
@@ -344,7 +387,7 @@ Return ONLY valid JSON, no markdown code blocks.
   // A `**BREAKING:**` bullet and the "does not affect this library's public
   // API" note cannot both be true of one entry, and a model that writes both
   // has misjudged one of them. Observed for real: a run labelled the removal of
-  // a `libsignal-protocol` helper BREAKING and then closed with the no-impact
+  // a helper in a bound crate BREAKING and then closed with the no-impact
   // note. The helper sits in a crate this package binds but not on the surface
   // it exposes, so nothing here broke — the model collapsed the two conditions
   // in rule 2 into one.

@@ -336,6 +336,7 @@ All development tasks should be done via Makefile:
 | `make third-party-notices` | Regenerate THIRD_PARTY_NOTICES.txt from the dependency graph |
 | `make verify-third-party-notices` | Verify THIRD_PARTY_NOTICES.txt matches the dependency graph |
 | `make update-changelog` | Update CHANGELOG.md with AI (requires `AI_MODELS` + a key) |
+| `make verify-frb-pins` | Verify every file names the same flutter_rust_bridge version |
 | `make release-frb` | Release the `libsignal_frb` native crate (stage 1) — see [Releasing](#releasing-two-stages) |
 | `make release` | Release the Dart package to pub.dev (stage 2) — see [Releasing](#releasing-two-stages) |
 | `make get` | Get dependencies |
@@ -452,6 +453,63 @@ The CI automatically measures test coverage and can update a badge in your READM
 5. Add as repository variable: Settings → Secrets and variables → Actions → Variables → New repository variable → `COVERAGE_GIST_ID` (value: the Gist ID from step 2)
 6. Update `README.md`: uncomment the coverage badge line and replace `COVERAGE_GIST_ID` with your actual Gist ID
 
+### Setting up the GitHub App
+
+Several workflows open pull requests, file issues or push signed commits. None
+of them uses the default `GITHUB_TOKEN` for that: a pull request opened with it
+does not trigger workflows, which would leave the four-platform matrix — the
+only oracle those pull requests have — silently absent.
+
+1. Create a GitHub App (Settings → Developer settings → GitHub Apps) and install
+   it on this repository
+2. Repository permissions it needs: **Contents → Read and write**,
+   **Pull requests → Read and write**, **Issues → Read and write**,
+   **Workflows → Read and write** (the last one only if the automation may ever
+   touch `.github/workflows/`, which template updates do)
+3. Generate a private key and add it as a repository secret:
+   Settings → Secrets and variables → Actions → New repository secret →
+   `APP_PRIVATE_KEY`
+4. Add the App's **Client ID** as a repository variable → `APP_CLIENT_ID`.
+   This is the `Iv23li…` string on the App's page, **not** the numeric App ID
+   shown beside it; `create-github-app-token` fails the mint if given the wrong
+   one, and that failure takes out the only credential these workflows can write
+   with.
+
+### Setting up the repair and review agents
+
+Two workflows run an agent: `repair-build.yml` attempts a fix when `main` goes
+red and reports when it cannot, and `ai-review.yml` reviews pull requests and
+leaves one comment. Both are **off entirely** until an engine is named — an
+unset `AGENT_ENGINE` produces a notice and no run, which is what an
+unconfigured repository is supposed to look like.
+
+1. Choose the engine: variable `AGENT_ENGINE` = `claude-code` or `opencode`
+2. Name the model — there is deliberately no default:
+   - `claude-code` → variable `AGENT_CLAUDECODE_MODEL`, secret
+     `ANTHROPIC_API_KEY`
+   - `opencode` → variable `AGENT_OPENCODE_MODEL` in `provider/model` form
+     (an aggregator's model half carries its own slash, e.g.
+     `openrouter/openai/gpt-5.6-luna`), and the provider's own key as a secret.
+     Which variable that key is read from is `AGENT_OPENCODE_PROVIDER_ENV`,
+     default `OPENROUTER_API_KEY`; `AGENT_OPENCODE_API_KEY` overrides it.
+3. Optional: `REVIEW_AGENT_ENGINE`, `REVIEW_AGENT_CLAUDECODE_MODEL` and
+   `REVIEW_AGENT_OPENCODE_MODEL` run the reviewer on a different model from the
+   repair agent — worth having, since a reviewer drawn from the same family as
+   the writer shares its blind spots. Each falls back to the `AGENT_*` setting.
+4. Optional: `REVIEW_ALLOWED_BOTS`, a comma-separated list including your App's
+   slug. Only the `claude-code` engine reads it, and without it that engine
+   refuses to review pull requests opened by a bot — which is most of them here.
+
+Both agents hold no write credential: the job that runs the agent cannot reach
+the repository, and the job that publishes runs no agent. Read the header of
+either workflow before changing that split.
+
+The reviewer **gates nothing** and has no verdict meaning "approved". Before
+wiring it to anything that blocks a merge, measure its false-positive rate by
+replaying merged pull requests through it — published measurements put roughly
+four in five findings of this kind in the false-positive bin, and three runs
+over one unchanged diff here produced three different lists.
+
 ### Setting up pub.dev Publishing
 
 The publish workflow uses OIDC authentication to publish to pub.dev without tokens. This requires a one-time setup.
@@ -477,6 +535,25 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 4. Click **Save protection rules**
 
 > The `pub.dev` environment is required by the publish workflow. Protection rules ensure that every publish requires manual approval, preventing accidental releases.
+
+## The flutter_rust_bridge pin
+
+Five files record it, and two of them are compared with `==` at runtime:
+`frb_generated.dart` carries the version of the generator that produced it, and
+`RustLib.init()` throws unless the runtime package's version is the same string.
+So the constraint in `pubspec.yaml` is one version written as a range,
+`>=X.Y.Z <X.Y.Z+1` — a caret admits versions that assert rejects, and a bare
+`X.Y.Z` admits only the right one but makes the package unpublishable, because
+`dart pub publish` warns that a single-version constraint "should allow more
+than one version" and exits 65 on any warning.
+
+`make verify-frb-pins` checks all five agree and that the constraint is written
+in that form. It runs in CI on the Linux leg and costs five file reads — no
+build, no network. Moving the version means moving `frb_version` in
+`.copier-answers.yml`, then `make setup-frb-codegen` and `make codegen` so the
+installed generator and the committed bindings match; a pull request that edits
+one of the five is wrong by construction, which is why Dependabot is told to
+leave `flutter_rust_bridge` alone.
 
 ## Releasing (two stages)
 
@@ -590,6 +667,13 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
    AI_MODELS=anthropic/claude-opus-5 ANTHROPIC_API_KEY=your_key \
      make update-changelog ARGS="--version vX.Y.Z"
    ```
+
+   What the entry is classified against lives in
+   `.github/agent-prompts/changelog-scope.md` — this repository's own statement
+   of what it binds and exposes. A template update never overwrites it, so keep
+   it current: an upstream change that cannot be tied to something named there
+   is invisible to this package's users, and a stale list is how somebody
+   else's release notes end up described as our features.
 6. Test all protocol operations:
    ```bash
    make test

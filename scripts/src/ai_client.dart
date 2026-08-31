@@ -403,7 +403,11 @@ Future<AiResponse> callAi({
   Duration timeout = const Duration(minutes: 5),
 }) async {
   final resolvedEffort = effort ?? resolveAiEffort(Platform.environment);
-  final effortLabel = resolvedEffort ?? '$defaultAiEffort (default)';
+  // Anthropic is always sent a level, defaulting to [defaultAiEffort]; Google
+  // has no such knob and OpenRouter is sent one only when asked. Saying
+  // "(default)" without that distinction reads as though all three were.
+  final effortLabel =
+      resolvedEffort ?? '$defaultAiEffort (default; providers differ)';
 
   if (models.isEmpty) {
     throw AiCallException(

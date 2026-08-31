@@ -438,6 +438,85 @@
   parsers, including the four that would otherwise corrupt a CHANGELOG
   silently: an answer behind a leading thinking block, a truncated response, a
   refusal, and Gemini reasoning parts flagged `thought`.
+- **Adopted copier template v4.4.0 → v4.6.0** (`.copier-answers.yml`, and the
+  files listed below) — two template releases at once, so most of this is
+  arriving rather than being decided here.
+
+  **`Check Template Updates` stops failing.** It has been red on every run since
+  2026-08-16 — fifteen consecutive runs, one cause. `create-pull-request` begins
+  with `git checkout -B <temp> HEAD`, and git refuses that while the index holds
+  unmerged entries: `error: you need to resolve your current index first`. Its
+  own `git add -A` comes later and is never reached, so a conflicted update
+  counted the conflicts, wrote the draft body naming them, and then died on git
+  — producing no pull request at all, which is the one outcome the workflow
+  exists to report. The unmerged paths are now staged before the pull request is
+  created, which is what the draft is for. The same workflow also installs
+  protoc now: it runs `make rust-check` as one of the gates it reports, and
+  without protoc `spqr`'s build script panics with ``Could not find `protoc` ``,
+  so that row read **fail** on every update. It never turned a run red — the
+  gates are deliberately non-fatal — which is worse, because a row that is
+  always red is a row nobody reads.
+
+  **The bind list moved out of the script**
+  (`.github/agent-prompts/changelog-scope.md`, `scripts/src/update_changelog.dart`)
+  — the "what this package binds and exposes" block that this repository added
+  to its prompt is now a file the template creates once and never overwrites, so
+  it can be edited without touching Dart and without conflicting on every
+  template release. Moving it made room to say something the inline version left
+  out: `spqr` reaches this package's users without being named anywhere in
+  `lib/` or `rust/src/api/`, because it runs inside the Double Ratchet that
+  *is* exposed. An upstream change to it satisfies neither condition in the
+  prompt's rule 2 and is nevertheless user-visible, so the file says so
+  explicitly.
+
+  **`make verify-frb-pins`** (`scripts/verify_frb_pins.dart`, `Makefile`,
+  `.github/workflows/`) — five files record the flutter_rust_bridge version and
+  two of them are compared with `==` at runtime. The exact-range constraint above
+  stops the resolver drifting; nothing stopped a person editing four of the five.
+  The gate reads all five, rejects both a caret and the unpublishable bare form
+  with the reason, and runs beside `verify-third-party-notices` on the Linux leg
+  — five file reads, no build. It reads every occurrence rather than the first,
+  because the first is not always the one that counts: a `dependency_overrides`
+  entry replaces the dependency outright, a second pin in a `[target.'cfg(…)']`
+  section resolves per target, and make takes a later `=` over an earlier `?=`. `.copier-answers.yml` joins the `test.yml` path
+  filters, because a commit that edits only `frb_version` is exactly the commit
+  that can put the pins out of step.
+
+  **Dependabot watches `pub` and `cargo`** (`.github/dependabot.yml`) — it
+  watched only `github-actions`, which is one reason the flutter_rust_bridge
+  break arrived as a silent resolve rather than a reviewable pull request.
+  `flutter_rust_bridge` itself is ignored in both, because its version has to
+  move in four places at once and a one-file pull request is wrong by
+  construction; `make verify-frb-pins` catches that instead. The upstream crates are ignored under `cargo` for a different reason: Dependabot's cargo updater does follow git refs, so without that it would open its own pull request for the same bump `check-libsignal-updates.yml` exists to make — without codegen, the bindings tripwire, the CHANGELOG entry or the version badge.
+
+  **Two floating dev inputs pinned, one left floating on purpose**
+  (`pubspec.yaml`) — `pubspec.lock` is deliberately not committed for a library,
+  so CI re-resolves on every run. `lints` is capped to one minor line because
+  `make analyze ARGS="--fatal-infos"` turns any newly-added info-level lint into
+  a build failure; this is precautionary rather than a live fix, since 6.1.0 is
+  already published and was measured against this repository with nothing to
+  report. `ffigen` keeps its `^20.1.1` floor, which the template now shares.
+  `hooks` and `code_assets` stay on the caret: they define the protocol
+  `hook/build.dart` implements and the SDK is the other half of it, so capping
+  them below what the pinned Flutter expects breaks the hook at a consumer's
+  build. The `test` job's Rust toolchain also stays `stable` while the MSRV job
+  pins, and the asymmetry is now written down where a reader asks about it.
+
+  **The App token is minted by Client ID** (`.github/workflows/`) —
+  `actions/create-github-app-token@v3` deprecates `app-id`, and all six call
+  sites now pass `client-id: ${{ vars.APP_CLIENT_ID }}`. This superseded the
+  unmerged `chore/app-token-client-id` branch entirely — `pr-review.md`,
+  `ai-review.yml` and `repair-build.yml` came out byte-identical to it and the
+  other two files gained the same change plus what the template brought — so
+  that branch and its worktree have been deleted.
+
+  **Committing from a git worktree no longer breaks the pinned Flutter SDK**
+  (`.githooks/pre-commit`) — arriving from the template, where the fix this
+  repository made was ported. git exports an absolute `GIT_DIR` from a worktree,
+  every child process inherits it, and `flutter` then reads the committing
+  repository's HEAD to determine its own version and writes `0.0.0-unknown` into
+  the shared SDK's version cache.
+
 ## [7.1.0] - 2026-08-15
 
 ### For Users

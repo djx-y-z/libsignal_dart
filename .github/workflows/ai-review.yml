@@ -506,8 +506,8 @@ jobs:
           # action refuses a run whose actor is not a `User` unless the bot is
           # named. Read at the pinned SHA: `checkHumanActor` throws for any
           # non-User actor not in this list, and `isAllowedBot` lowercases each
-          # entry and strips a `[bot]` suffix, so `libsignal-dart-bot` and
-          # `libsignal-dart-bot[bot]` are the same entry.
+          # entry and strips a `[bot]` suffix, so `my-bot` and `my-bot[bot]`
+          # are the same entry.
           #
           # The audit that added this expected a second gate,
           # `checkWritePermissions`, to fire as well — a `pull_request` is an
@@ -523,10 +523,13 @@ jobs:
           #
           # A list, never `'*'`: the input's own description warns against it,
           # and `'*'` would let any bot that can open a pull request here spend
-          # this repository's tokens. Extend it with `REVIEW_ALLOWED_BOTS` when
-          # another bot starts opening pull requests; Dependabot is deliberately
-          # absent, since `config` refuses those runs a job earlier.
-          allowed_bots: ${{ vars.REVIEW_ALLOWED_BOTS || 'libsignal-dart-bot,github-actions' }}
+          # this repository's tokens. The default names only what every
+          # repository has — a project's own GitHub App has a slug this file
+          # cannot know, so set `REVIEW_ALLOWED_BOTS` to it (comma-separated,
+          # `[bot]` optional) or the pull requests that App opens go unreviewed
+          # on this engine. Dependabot is deliberately absent, since `config`
+          # refuses those runs a job earlier.
+          allowed_bots: ${{ vars.REVIEW_ALLOWED_BOTS || 'github-actions' }}
           prompt: |
             Read `.github/agent-prompts/pr-review.md` and carry out exactly the
             task it describes. It is the complete specification, including what
@@ -1205,7 +1208,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           permission-pull-requests: write
 

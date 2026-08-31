@@ -243,6 +243,74 @@ Future<int> runCopierUpdate({
   return process.exitCode;
 }
 
+/// Applies the one generation task that has to run on an update as well.
+///
+/// `copier.yml`'s last `_task` is `dart format .`, and it is load-bearing
+/// rather than tidiness. The template hard-wraps the Dart it emits, but whether
+/// a rendered line fits in 80 columns depends on the *answers*:
+/// `check_updates.dart` wraps one `RegExp` per upstream crate, and for a short
+/// crate name the wrapped form is exactly what `dart format` collapses. The
+/// same template source is therefore correctly formatted for one project and
+/// not for another, and no better choice of wrap fixes it — three variants were
+/// measured and each merely moved the range of crate-name lengths that comes
+/// out wrong. Formatting the rendered tree is the only thing that settles it,
+/// which is why the task exists.
+///
+/// `copier copy` runs it. `copier update` runs no tasks at all — deliberately,
+/// and that must not change: see [runCopierUpdate]. So an update that
+/// re-renders such a file lands it unformatted. What kept this invisible is
+/// that `make format-check` used to *write*: the pull request's own gate
+/// repaired the file, recorded `format=false` for it, and
+/// `create-pull-request`'s `git add -A` then committed the repair — a reported
+/// failure that cannot be reproduced from the branch it is reported on. The
+/// gate no longer writes, so this has to.
+///
+/// Run here, after copier has returned, and not by dropping `--skip-tasks`:
+/// copier runs tasks *between* rendering and replaying the project's diff, and
+/// a task that dies in that window takes local changes with it — the
+/// measurement [runCopierUpdate] records. By this point there is no such
+/// window.
+///
+/// Never fatal. A file copier left conflicted cannot be parsed, so the
+/// formatter reports it at length and exits non-zero while leaving it untouched
+/// (measured) — expected here, and already reported by [findConflicts], so it
+/// is summarised rather than repeated. A failure with nothing conflicted is a
+/// different animal and its output is passed through verbatim, because this is
+/// the only place it appears.
+Future<void> formatAfterUpdate({
+  Iterable<String> conflicts = const [],
+  String? workingDirectory,
+}) async {
+  final dir = workingDirectory ?? getPackageDir().path;
+
+  logStep('Formatting (the generation task copier skips on an update)...');
+
+  // The SDK already running this script, so the result matches what the
+  // project's own `make format` produces and no PATH lookup can disagree —
+  // under FVM this is the pinned SDK, which is the whole point of pinning it.
+  final result = await Process.run(Platform.resolvedExecutable, [
+    'format',
+    '.',
+  ], workingDirectory: dir);
+
+  for (final line in (result.stdout as String).split('\n')) {
+    if (line.startsWith('Formatted ')) logInfo(line.trim());
+  }
+
+  if (result.exitCode == 0) return;
+
+  if (conflicts.isNotEmpty) {
+    logWarn(
+      'Some files could not be parsed and were left unformatted — expected '
+      'while ${conflicts.length} file(s) still carry conflict markers.',
+    );
+    return;
+  }
+
+  logWarn('dart format reported errors:');
+  logWarn((result.stderr as String).trim());
+}
+
 /// Reads the template version currently recorded in `.copier-answers.yml`.
 String readRecordedTemplateVersion() => readCopierAnswers()['_commit']!;
 
@@ -585,6 +653,11 @@ Future<TemplateUpdateResult> applyTemplateUpdate({
       logWarn('  $path');
     }
   }
+
+  // After the conflicts are known, so an unparseable file can be told apart
+  // from a real formatter failure, and before the CHANGELOG entry is written
+  // off the diff.
+  await formatAfterUpdate(conflicts: conflicts, workingDirectory: packageDir);
 
   final recorded = readRecordedTemplateVersion();
   final commitLanded = recorded == toVersion;

@@ -4,12 +4,11 @@ You are reviewing a diff. Report what is wrong with it, or report that you found
 nothing. Both are ordinary outcomes. Inventing a finding to look useful is not.
 
 This file is the whole task. It names no upstream project and no dependency
-version, so that it stays correct as this repository changes — but it is not
-generic. Four things in it are specific to this repository and are what a copy
-of this file has to be edited for: the generated-code path `lib/src/rust/`, the
-`make` targets named under "What NOT to report", the four-platform test matrix,
-and the assumption that this is a cryptography library. Everything else
-transfers unchanged.
+version, so that it stays correct as this repository changes. What it does
+assume is the shape of the repository itself: a Rust crate behind a Dart FFI
+binding, bindings generated into `lib/src/rust/`, the `make` targets named under
+"What NOT to report", and a four-platform test matrix. Edit those if this
+repository ever stops looking like that.
 
 ## You did not write this diff, and you are not being asked to fix it
 
@@ -82,12 +81,14 @@ that has actually happened here, repeatedly, so give it real attention:
    bump riding along with a bug fix, a dependency added for one call site. Each
    is individually defensible and collectively how an automated change stops
    being reviewable.
-3. **Security-relevant edits**, in a repository whose whole purpose is
-   cryptography: a new or widened `unsafe` block, removed zeroization or a
+3. **Security-relevant edits.** This is native code reached across an FFI
+   boundary, so memory safety and input validation are the reviewer's business
+   whatever the crate does: a new or widened `unsafe` block, a validation or
+   bounds check removed, an error path that now swallows a failure instead of
+   propagating it, a raw pointer or length crossing the boundary unchecked. If
+   the crate handles secrets, the same attention covers removed zeroization, a
    secret that outlives its use, a changed cryptographic parameter or algorithm,
-   an error path that now swallows a failure instead of propagating it, a
-   validation or bounds check removed, a comparison of secret material that is
-   no longer constant-time.
+   and a comparison of secret material that is no longer constant-time.
 4. **Hand-edited generated code.** `lib/src/rust/` is produced by the FFI
    binding generator. A change there that the generator would not produce will
    be silently reverted by the next `make codegen`, and anything that depended

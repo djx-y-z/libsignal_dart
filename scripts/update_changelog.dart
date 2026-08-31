@@ -25,8 +25,8 @@
 /// Examples:
 ///   ```bash
 ///   # Update changelog for specific version
-///   ANTHROPIC_API_KEY=xxx fvm dart scripts/update_changelog.dart \
-///     --version v1.0.0
+///   AI_MODELS=anthropic/claude-opus-5 ANTHROPIC_API_KEY=xxx \
+///     fvm dart scripts/update_changelog.dart --version v1.0.0
 ///
 ///   # CI mode (key from environment)
 ///   fvm dart scripts/update_changelog.dart --version v1.0.0 --ci
@@ -183,7 +183,8 @@ Environment:
 
 Examples:
   # Update changelog for specific version
-  ANTHROPIC_API_KEY=xxx fvm dart scripts/update_changelog.dart --version v1.0.0
+  AI_MODELS=anthropic/claude-opus-5 ANTHROPIC_API_KEY=xxx \
+    fvm dart scripts/update_changelog.dart --version v1.0.0
 
   # CI mode (key from environment)
   fvm dart scripts/update_changelog.dart --version v1.0.0 --ci

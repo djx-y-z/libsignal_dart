@@ -519,7 +519,17 @@ make clean              # Clean build artifacts
 make help               # Show all commands
 ```
 
-GitHub Actions automation checks for new upstream libsignal releases and copier template updates daily and opens notification PRs with a changelog and update instructions.
+The CI automatically checks for new libsignal releases daily and creates PRs with:
+- Updated `pubspec.yaml` and version badges
+- Updated `Cargo.lock` (if successful)
+- Regenerated FRB bindings (if successful)
+- AI-generated CHANGELOG entry, when `AI_MODELS` names a model with a key
+  (see CONTRIBUTING); otherwise the pull request is labelled `changelog-needed`
+
+It also checks for copier template updates daily. When one is found it applies
+it with `copier update` and opens a pull request carrying the result — a draft
+when copier could not merge something, or when the update failed to record the
+new version in `.copier-answers.yml`.
 
 ## Architecture
 
