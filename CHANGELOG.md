@@ -2,6 +2,18 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.101.2** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- Update libsignal native library to v0.101.2 ([compare](https://github.com/signalapp/libsignal/compare/v0.101.0...v0.101.2))
+  - Upstream changes cover bridge and language-binding cleanup, CLI and tooling, backups, chat and gRPC services, SVR, username services, CI, and dependency maintenance — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
+  - Binding regeneration produced no changes to `lib/src/rust/`, so the FFI surface did not move
+  - Note: These changes do not affect this library's public API
+
 #### Fixed
 
 - **`RustLib.init()` threw for anyone who resolved this package after
