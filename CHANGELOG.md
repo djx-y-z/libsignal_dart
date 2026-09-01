@@ -2,6 +2,45 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.101.2** — upstream bump. One change does land in a surface this
+  package exposes, and it is an internal API migration with no behavioural
+  effect; sealed sender's cipher state is now cleared on drop
+
+#### Changed
+
+- **libsignal updated to v0.101.2**, across two upstream releases
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.101.0...v0.101.2))
+  — 139 files over 26 commits. Neither v0.101.1 nor v0.101.2 published any
+  release notes, so the diff is the whole account of what arrived. Exactly three
+  files land in the crates this package binds, and both substantive ones are
+  from v0.101.1; for these crates v0.101.2 is the version constant alone.
+  `rust/core/src/version.rs` is that constant.
+  `rust/protocol/Cargo.toml` turns on the `zeroize` feature (below).
+  `rust/protocol/src/sealed_sender.rs` is an `aead` 0.5 → 0.6 migration —
+  `encrypt_in_place_detached` becomes `encrypt_inout_detached`, `AeadInPlace`
+  becomes `AeadInOut` — passing the same key, nonce and associated data, so the
+  wire format does not move. That is checked rather than assumed: the six
+  differential tests in `rust/src/ssv2_equivalence_tests.rs`, which reassemble a
+  real multi-recipient message and compare it byte-for-byte against upstream's
+  own output, all pass against v0.101.2. Everything else upstream is in the
+  bridge and the Swift/Java/Node bindings, message-backup, net, attest, zkgroup
+  and media, none of which this package exposes. `make codegen` produced no diff
+  in `lib/src/rust/`, so the FFI surface is unchanged.
+
+- **The native binary now carries two AES-GCM-SIV implementations** — the
+  migration above moved `libsignal-protocol` to `aes-gcm-siv` 0.12.1 while this
+  crate is still on 0.11.1, so the graph resolves both. It costs size, not
+  correctness, and it closes when this crate follows upstream to 0.12.1.
+
+#### Security
+
+- **Sealed sender's AES-GCM-SIV key material is cleared on drop** — upstream
+  enabled the `zeroize` feature of `aes-gcm-siv` for `libsignal-protocol`. This
+  package exposes sealed sender, so the hardening reaches consumers through the
+  native binary rather than staying upstream.
+
 #### Fixed
 
 - **`RustLib.init()` threw for anyone who resolved this package after
