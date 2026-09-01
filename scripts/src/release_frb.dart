@@ -441,7 +441,17 @@ String stampFrbHighlight(String content, String version) {
     if (lines[i].trimLeft().startsWith('- ')) lastBullet = i;
   }
   if (lastBullet != -1) {
-    lines.insert(lastBullet + 1, frbLine);
+    // A bullet can wrap over several lines, and its continuation lines are
+    // indented rather than starting with `- `. Inserting at `lastBullet + 1`
+    // therefore lands the stamp in the middle of the last bullet's sentence —
+    // which is exactly what happened to the v6.1.2 stamp. Everything between
+    // the last bullet and the end of the Highlights block belongs to that
+    // bullet, so insert after the block's last non-blank line instead.
+    var insertAt = blockEnd;
+    while (insertAt > lastBullet + 1 && lines[insertAt - 1].trim().isEmpty) {
+      insertAt--;
+    }
+    lines.insert(insertAt, frbLine);
   } else {
     lines.insert(highlights + 1, frbLine);
     lines.insert(highlights + 1, '');

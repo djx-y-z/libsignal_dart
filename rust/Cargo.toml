@@ -46,12 +46,22 @@ once_cell = "1.19"
 parking_lot = "0.12"
 
 # WASM support - getrandom needs explicit features for browser randomness
-# Both versions needed due to diamond dependency in crypto crates
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-# getrandom 0.2.x (used by curve25519-dalek, aes-gcm-siv)
+# Three live at once, and each needs its browser backend turned on by name or
+# the wasm32 build fails inside getrandom itself. Cargo unions features per
+# package version, so declaring them here is what enables the backend for every
+# crate in the graph that reaches them.
+# getrandom 0.2.x — nothing else in the graph reaches it any more: this
+# declaration is its only consumer, so it is also the only thing holding 0.2 on
+# this target. Left in place for now rather than removed on a release branch;
+# if it goes, 0.2 announces its return by failing to compile without `js`.
 getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
-# getrandom 0.3.x (used by libsignal-core, uuid)
+# getrandom 0.3.x (used by libsignal-core, rand_core 0.9)
 getrandom = { version = "0.3", features = ["wasm_js"] }
+# getrandom 0.4.x — reached through aes-gcm-siv 0.12 -> aead 0.6 ->
+# crypto-common, which depends on it with no target cfg, so it is compiled for
+# wasm32 as well. Nothing else in the graph names its backend.
+getrandom_04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 

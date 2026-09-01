@@ -5,9 +5,9 @@
 #### ✨ Highlights
 
 - **libsignal v0.101.2** — upstream bump. One change does land in a surface this
-- **libsignal_frb v6.1.2** — Rust FFI bindings
   package exposes, and it is an internal API migration with no behavioural
   effect; sealed sender's cipher state is now cleared on drop
+- **libsignal_frb v6.1.2** — Rust FFI bindings
 
 #### Changed
 
@@ -54,6 +54,15 @@
   **Ciphertext is unchanged**, which matters because anything encrypted by an
   earlier release has to stay readable. That is now pinned by a test rather than
   argued — see the RFC 8452 vectors below.
+
+  One thing had to be named for the Web build to keep working. `aes-gcm-siv`
+  0.12 enables `aead/getrandom` by default, `aead` 0.6 forwards that to
+  `crypto-common`, and `crypto-common` depends on `getrandom` 0.4 with **no**
+  target cfg — so that crate is now compiled for `wasm32-unknown-unknown`, where
+  it refuses to build unless its browser backend is selected by name. Two
+  getrandom majors were already declared in `rust/Cargo.toml` for exactly this
+  reason; 0.4 is now declared alongside them with `wasm_js`. No other platform
+  was affected — the twelve native targets built before this was added.
 
 #### Security
 
@@ -374,6 +383,18 @@
   App installation holds.
 
 #### Changed
+
+- **`make release-frb` no longer stamps its highlight into the middle of a
+  sentence** (`scripts/src/release_frb.dart`) — `stampFrbHighlight` inserted the
+  `**libsignal_frb vX.Y.Z**` line at `lastBullet + 1`, one line after the *first*
+  line of the last Highlights bullet. A bullet that wraps continues on indented
+  lines that do not start with `- `, so the stamp landed inside it and split the
+  sentence in half. Every previous release happened to have a single-line
+  highlight there, which is why this only surfaced on the v6.1.2 stamp — and it
+  surfaced in a section a release is about to freeze, where it could not have
+  been corrected afterwards. Everything between the last bullet and the end of
+  the block belongs to that bullet, so the insert point is now the block's last
+  non-blank line. The regression test fails against the old insert.
 
 - **`make codegen` now uses the pinned generator** (`Makefile`) —
   `FRB_CODEGEN_VERSION` pins the binary that `make setup-frb-codegen` installs,

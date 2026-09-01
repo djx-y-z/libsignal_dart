@@ -28,6 +28,86 @@ void main() {
       expect(result, contains('**libsignal v0.97.3**'));
     });
 
+    test('inserts after a wrapped highlight, not inside it', () {
+      // Regression: the v6.1.2 stamp landed between the first and second line
+      // of a highlight that wrapped, splitting the sentence in half. A bullet's
+      // continuation lines are indented and do not start with `- `, so the
+      // insert point has to be the end of the block, not `lastBullet + 1`.
+      const changelog = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.101.2** — upstream bump. One change does land in a surface this
+  package exposes, and it is an internal API migration with no behavioural
+  effect; sealed sender's cipher state is now cleared on drop
+
+#### Changed
+
+- Update libsignal native library to v0.101.2
+
+## [7.1.0] - 2026-08-15
+''';
+      final result = stampFrbHighlight(changelog, '6.1.2');
+      final lines = result.split('\n');
+
+      final frbIdx = lines.indexWhere(
+        (l) => l.contains('**libsignal_frb v6.1.2**'),
+      );
+      final lastContinuationIdx = lines.indexWhere(
+        (l) =>
+            l.contains("sealed sender's cipher state is now cleared on drop"),
+      );
+      expect(frbIdx, greaterThan(lastContinuationIdx));
+
+      // The wrapped bullet survives as one contiguous block.
+      expect(
+        result,
+        contains(
+          '- **libsignal v0.101.2** — upstream bump. One change does land in a surface this\n'
+          '  package exposes, and it is an internal API migration with no behavioural\n'
+          "  effect; sealed sender's cipher state is now cleared on drop\n",
+        ),
+      );
+    });
+
+    test('replaces the frb line in place when the highlight above it wraps', () {
+      // The re-run case after a failed native build: the frb line is already
+      // there, sitting below a wrapped highlight, and only its version moves.
+      const changelog = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.101.2** — upstream bump. One change does land in a surface this
+  package exposes, and it is an internal API migration with no behavioural
+  effect; sealed sender's cipher state is now cleared on drop
+- **libsignal_frb v6.1.2** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.101.2
+
+## [7.1.0] - 2026-08-15
+''';
+      final result = stampFrbHighlight(changelog, '6.1.3');
+      expect(result, contains('**libsignal_frb v6.1.3** — Rust FFI bindings'));
+      expect(result, isNot(contains('libsignal_frb v6.1.2')));
+      expect(
+        result,
+        contains(
+          '- **libsignal v0.101.2** — upstream bump. One change does land in a surface this\n'
+          '  package exposes, and it is an internal API migration with no behavioural\n'
+          "  effect; sealed sender's cipher state is now cleared on drop\n"
+          '- **libsignal_frb v6.1.3** — Rust FFI bindings\n',
+        ),
+      );
+    });
+
     test('inserts after the last highlight when no frb line exists', () {
       const changelog = '''
 ## [Unreleased]
