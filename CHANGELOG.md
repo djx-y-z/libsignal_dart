@@ -29,10 +29,30 @@
   and media, none of which this package exposes. `make codegen` produced no diff
   in `lib/src/rust/`, so the FFI surface is unchanged.
 
-- **The native binary now carries two AES-GCM-SIV implementations** — the
-  migration above moved `libsignal-protocol` to `aes-gcm-siv` 0.12.1 while this
-  crate is still on 0.11.1, so the graph resolves both. It costs size, not
-  correctness, and it closes when this crate follows upstream to 0.12.1.
+- **This crate's RustCrypto dependencies now match the ones libsignal resolves**
+  — `sha2` 0.10 → 0.11, `hkdf` 0.12 → 0.13 and `aes-gcm-siv` 0.11 → 0.12. The
+  first two had been a version behind `libsignal-protocol` for some time and the
+  third fell behind with the bump above, so the graph was resolving two copies
+  of each: two `sha2`, two `hkdf`, two `aes-gcm-siv` and two `aead`. It now
+  resolves one of each, and the binary carries one implementation of each
+  primitive rather than two.
+
+  The three could not be bumped separately, which is how they were offered —
+  three separate pull requests, each of which fails to build. `sha2` 0.11 moves
+  to `digest` 0.11 while `hkdf` 0.12 still expects `digest` 0.10, so
+  `Hkdf::<Sha256>::new` stops type-checking under either bump alone; applying
+  both at once resolves it, and that part needed no code change.
+
+  `aes-gcm-siv` 0.12 brings `aead` 0.6, where `Array::from_slice` is deprecated
+  in favour of `TryFrom`. The two nonce conversions in `rust/src/api/crypto.rs`
+  were rewritten accordingly. The length is validated a few lines above either
+  of them, so the conversion cannot fail; it is handled rather than unwrapped so
+  that a later change to that check cannot become a panic crossing the FFI
+  boundary.
+
+  **Ciphertext is unchanged**, which matters because anything encrypted by an
+  earlier release has to stay readable. That is now pinned by a test rather than
+  argued — see the RFC 8452 vectors below.
 
 #### Security
 
@@ -91,6 +111,16 @@
 ### For Contributors
 
 #### Added
+
+- **AES-256-GCM-SIV is pinned to RFC 8452, not just to itself**
+  (`test/crypto/aes_gcm_siv_kat_test.dart`) — the existing cipher tests are
+  round-trips. They prove encrypt and decrypt agree with each other, and they
+  would keep passing if the ciphertext bytes moved, which is exactly what
+  swapping an implementation can do — and this release swaps one. The 24
+  published vectors from Appendix C.2 now run through the public Dart API in
+  both directions, so a future bump of `aes-gcm-siv`, or a change to how the
+  nonce is converted, cannot silently make data written by an earlier release
+  unreadable.
 
 - **An agent proposes a fix when `main` goes red** — `repair-build.yml` runs
   daily; when the latest completed `Tests` run on `main` failed, it hands that

@@ -113,11 +113,16 @@ impl Aes256GcmSiv {
             return Err(format!("Nonce must be 12 bytes, got {} bytes", nonce.len()));
         }
 
-        let nonce_arr = Nonce::<CipherAes256GcmSiv>::from_slice(&nonce);
+        // `Array::from_slice` is deprecated in aead 0.6 in favour of `TryFrom`.
+        // The length is already checked above, so this conversion cannot fail;
+        // it is still handled rather than unwrapped so a future change to that
+        // check cannot turn into a panic across the FFI boundary.
+        let nonce_arr = Nonce::<CipherAes256GcmSiv>::try_from(&nonce[..])
+            .map_err(|_| format!("Nonce must be 12 bytes, got {} bytes", nonce.len()))?;
 
         self.cipher
             .encrypt(
-                nonce_arr,
+                &nonce_arr,
                 aes_gcm_siv::aead::Payload {
                     msg: &plaintext,
                     aad: &associated_data,
@@ -149,11 +154,13 @@ impl Aes256GcmSiv {
             return Err(format!("Nonce must be 12 bytes, got {} bytes", nonce.len()));
         }
 
-        let nonce_arr = Nonce::<CipherAes256GcmSiv>::from_slice(&nonce);
+        // See `encrypt` above for why this is a checked conversion.
+        let nonce_arr = Nonce::<CipherAes256GcmSiv>::try_from(&nonce[..])
+            .map_err(|_| format!("Nonce must be 12 bytes, got {} bytes", nonce.len()))?;
 
         self.cipher
             .decrypt(
-                nonce_arr,
+                &nonce_arr,
                 aes_gcm_siv::aead::Payload {
                     msg: &ciphertext,
                     aad: &associated_data,
