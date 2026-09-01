@@ -5,6 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.101.2** — upstream bump. One change does land in a surface this
+- **libsignal_frb v6.1.2** — Rust FFI bindings
   package exposes, and it is an internal API migration with no behavioural
   effect; sealed sender's cipher state is now cleared on drop
 
