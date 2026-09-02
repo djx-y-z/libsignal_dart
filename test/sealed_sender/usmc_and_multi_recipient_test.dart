@@ -1183,4 +1183,132 @@ void main() {
       );
     });
   });
+  // The offsets guard cannot be reached through `sealedSenderV2ParseSentMessage`
+  // — a message that parses always carries offsets inside its own buffer. It is
+  // reachable, and worth reaching, because these are plain public value classes
+  // with public constructors: anything that persists a parse result and rebuilds
+  // it later, or that reorders recipients between accounts, hands
+  // `receivedMessageFor` numbers the parser never produced. Without the guard
+  // those numbers go straight into `setRange`, so the failure is a RangeError
+  // from inside the copy at best and a silently wrong message at worst.
+  group('SSv2 reconstruction guards offsets it did not parse', () {
+    const device = SealedSenderV2Device(deviceId: 1, registrationId: 4242);
+
+    SealedSenderV2SentMessage messageWith({
+      required int keyMaterialStart,
+      required int keyMaterialEnd,
+      int sharedBytesOffset = 20,
+      int parsedLength = 100,
+    }) => SealedSenderV2SentMessage(
+      version: 2,
+      receivedMessageVersion: 2,
+      sharedBytesOffset: sharedBytesOffset,
+      parsedLength: parsedLength,
+      recipients: [
+        SealedSenderV2Recipient(
+          serviceId: _bobUuid,
+          devices: const [device],
+          keyMaterialStart: keyMaterialStart,
+          keyMaterialEnd: keyMaterialEnd,
+        ),
+      ],
+    );
+
+    // The control: the same construction with offsets that do fit produces a
+    // message, so each case below fails on its offsets and not on the fixture.
+    test('accepts offsets that fit the buffer', () {
+      final message = messageWith(keyMaterialStart: 10, keyMaterialEnd: 30);
+      final out = message.receivedMessageFor(
+        recipient: message.recipients.single,
+        data: Uint8List(100),
+      );
+      // version byte + 20 bytes of key material + the shared run from 20 to 100.
+      expect(out.length, equals(1 + 20 + 80));
+      expect(out.first, equals(2));
+    });
+
+    test('rejects a key range that ends past the buffer', () {
+      final message = messageWith(keyMaterialStart: 10, keyMaterialEnd: 9999);
+      expect(
+        () => message.receivedMessageFor(
+          recipient: message.recipients.single,
+          data: Uint8List(100),
+        ),
+        throwsA(
+          isArgumentError.having(
+            (e) => e.message,
+            'message',
+            contains('do not fit in 100 bytes'),
+          ),
+        ),
+      );
+    });
+
+    test('rejects an inverted key range', () {
+      // `keyEnd - keyStart` would be negative, which `Uint8List` rejects with a
+      // less useful error further in — and only after the length arithmetic.
+      final message = messageWith(keyMaterialStart: 50, keyMaterialEnd: 10);
+      expect(
+        () => message.receivedMessageFor(
+          recipient: message.recipients.single,
+          data: Uint8List(100),
+        ),
+        throwsA(
+          isArgumentError.having(
+            (e) => e.message,
+            'message',
+            contains('offsets [50, 10)'),
+          ),
+        ),
+      );
+    });
+
+    test('rejects a shared-bytes offset past the buffer', () {
+      final message = messageWith(
+        keyMaterialStart: 10,
+        keyMaterialEnd: 30,
+        sharedBytesOffset: 101,
+      );
+      expect(
+        () => message.receivedMessageFor(
+          recipient: message.recipients.single,
+          data: Uint8List(100),
+        ),
+        throwsA(
+          isArgumentError.having(
+            (e) => e.message,
+            'message',
+            contains('shared 101'),
+          ),
+        ),
+      );
+    });
+
+    // The early return sits before the guard, so a recipient with no devices is
+    // answered even when its offsets are nonsense — it is not addressed by this
+    // message and there is nothing to reconstruct.
+    test('returns empty for a recipient with no devices, offsets unread', () {
+      const message = SealedSenderV2SentMessage(
+        version: 2,
+        receivedMessageVersion: 2,
+        sharedBytesOffset: 999,
+        parsedLength: 100,
+        recipients: [
+          SealedSenderV2Recipient(
+            serviceId: _bobUuid,
+            devices: [],
+            keyMaterialStart: 9999,
+            keyMaterialEnd: 1,
+          ),
+        ],
+      );
+      expect(
+        message.receivedMessageFor(
+          recipient: message.recipients.single,
+          data: Uint8List(100),
+        ),
+        isEmpty,
+      );
+    });
+  });
 }

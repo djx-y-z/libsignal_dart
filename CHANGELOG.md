@@ -1,3 +1,79 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Added
+
+- **The SSv2 offsets guard is covered, by the only route that reaches it**
+  (`test/sealed_sender/usmc_and_multi_recipient_test.dart`) — a message that
+  parses always carries offsets inside its own buffer, so no amount of
+  `sealedSenderV2ParseSentMessage` reaches the second guard in
+  `receivedMessageFor`. It is reachable all the same, because
+  `SealedSenderV2SentMessage` and `SealedSenderV2Recipient` are public value
+  classes with public constructors: anything that persists a parse result and
+  rebuilds it later hands that method numbers the parser never produced, and
+  without the guard they go straight into `setRange`. Five tests — a control
+  that fits, then a key range ending past the buffer, an inverted range, a
+  shared offset past the end, and the empty-devices early return that answers
+  before the offsets are read at all.
+
+#### Changed
+
+- **The Dependabot ignore that was holding setup-dart back is deleted, because
+  it never held anything back** — Dependabot parses a `github-actions` ignore
+  through `Gem::Requirement`, which has no wildcard expansion. `"1.8.x"` becomes
+  `= 1.8.x`, a version string nothing equals: 1.7.2, 1.8.0, 1.8.1 and 1.9.0 all
+  fail it. The bot went on rebuilding its branch over the very commit that added
+  the entry, with 1.8.1 still in the diff. An ignore that reads as protection
+  and enforces nothing is worse than no entry at all, and the real fix now sits
+  in the action itself.
+
+- **`rand` is ignored at `>= 0.10.0` until libsignal moves** — an `OsRng` is
+  handed by `&mut` straight into libsignal's own `Rng + CryptoRng` bounds at 19
+  call sites in `rust/src/api/`, and those bounds are rand 0.9's traits;
+  `libsignal-protocol`, `libsignal-core` and `spqr` all resolve rand 0.9.5. A
+  0.10 `UnwrapErr<OsRng>` implements a *different* `RngCore`, so the bump cannot
+  compile. It is written as a `versions` range rather than `update-types`
+  because Dependabot's trailers call 0.9 → 0.10 `semver-minor`, so an ignore
+  aimed at majors would never fire — the same trap the group filter above it
+  already documents.
+
+- **`lints` moves to `>=6.1.0 <6.2.0`** — the window slides onto the minor the
+  matrix has already run green and stays one minor wide, so a new lint release
+  still arrives as a pull request the four platforms evaluate rather than as a
+  silent change of what `make analyze` enforces.
+
+- **`make coverage` measures the code somebody wrote** — everything under
+  `lib/src/rust/` is now excluded, not just the `frb_generated*` files: the rest
+  of that directory is the same generator's output one layer up, and 41 of its
+  lines are `hashCode` and `operator ==` on value classes. Including them meant
+  a `make codegen` run could move the badge with nobody having written a line,
+  which is what took the figure from 100% to 93.8% when the sealed-sender
+  surface grew. The denominator drops from 720 lines to the 468 hand-written
+  ones, and with the guard test above it reads 100.0% again. The Makefile
+  comment records why the second glob is not written `**/lib/src/rust/**`: a
+  glob starting with `**` can never match an absolute path, so that form is
+  tested only against the relative path, matches nothing, and turns the ignore
+  off without saying so.
+
+#### Fixed
+
+- **`dart-lang/setup-dart` moves to 1.8.1, and the reason it was held at 1.7.2
+  is switched off in the same commit** — 1.8.0 added a problem matcher for
+  `dart analyze` and registers it with `::add-matcher::dart-analyzer.json`,
+  resolving that path against `GITHUB_ACTION_PATH`. For an action invoked from
+  inside another composite action that variable holds the *caller's* directory,
+  so the runner looked for `.github/actions/setup-fvm/dart-analyzer.json`, did
+  not find it, and failed the job seconds in — before anything was built. It
+  took down all four test legs, and `publish.yml` and `build-libsignal.yml`
+  call the same action, so a release would have hit it too. Upstream
+  ([dart-lang/setup-dart#198](https://github.com/dart-lang/setup-dart/issues/198))
+  is open and 1.8.1 does not fix it, so the SHA pin advances together with
+  `problem-matcher: 'false'` rather than ahead of it: that input only exists
+  from 1.8.0 on, so neither half is safe on its own. Nothing in this action
+  runs `dart analyze` — that job uses the FVM-pinned SDK — so the matcher buys
+  nothing here even when it works.
+
 ## [7.1.1] - 2026-09-01
 
 ### For Users

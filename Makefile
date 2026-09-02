@@ -417,9 +417,24 @@ release:
 test:
 	$(FVM) dart test $(ARGS)
 
+# The number this prints is coverage of the code somebody in this repository
+# WROTE. Everything under lib/src/rust/ is emitted by `make codegen` — that is
+# `dart_output` in flutter_rust_bridge.yaml — and is excluded, not just the
+# frb_generated* files: the rest of that directory is the same generator's
+# output one layer up, and it is mostly `hashCode` and `operator ==` on value
+# classes. Including it lets a codegen run move the badge with nobody having
+# written a line, which is noise a coverage gate is supposed to not have.
+#
+# `--ignore-files` is an addMultiOption, so repeat it (or comma-join it) for
+# more than one glob. Do NOT "normalise" the second glob to
+# `**/lib/src/rust/**`: a glob starting with `**` cannot match an absolute path
+# (glob's DoubleStarNode is canMatchAbsolute = false), so it is tested only
+# against the CWD-relative path, in which nothing precedes `lib` — it silently
+# matches nothing and the ignore quietly stops working. This form is anchored to
+# the repository root, which is where make runs it.
 coverage:
 	$(FVM) dart test --coverage=coverage
-	$(FVM) dart run coverage:format_coverage --check-ignore --lcov --in=coverage --out=coverage/lcov.info --report-on=lib --ignore-files '**/frb_generated*.dart'
+	$(FVM) dart run coverage:format_coverage --check-ignore --lcov --in=coverage --out=coverage/lcov.info --report-on=lib --ignore-files '**/frb_generated*.dart' --ignore-files 'lib/src/rust/**'
 	lcov --summary coverage/lcov.info
 
 analyze:
