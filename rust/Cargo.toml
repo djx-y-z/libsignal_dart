@@ -14,7 +14,7 @@ name = "libsignal_frb"
 crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
-flutter_rust_bridge = "=2.12.0"
+flutter_rust_bridge = "=2.13.0"
 thiserror = "2.0"
 log = "0.4"
 rand = "0.9"
@@ -47,15 +47,18 @@ parking_lot = "0.12"
 
 # WASM support - getrandom needs explicit features for browser randomness
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-# Three live at once, and each needs its browser backend turned on by name or
+# Two live at once, and each needs its browser backend turned on by name or
 # the wasm32 build fails inside getrandom itself. Cargo unions features per
 # package version, so declaring them here is what enables the backend for every
 # crate in the graph that reaches them.
-# getrandom 0.2.x — nothing else in the graph reaches it any more: this
-# declaration is its only consumer, so it is also the only thing holding 0.2 on
-# this target. Left in place for now rather than removed on a release branch;
-# if it goes, 0.2 announces its return by failing to compile without `js`.
-getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+#
+# 0.2 was declared here too until it was measured out: `cargo tree --target
+# wasm32-unknown-unknown --edges normal -i getrandom@0.2.17` named this crate
+# and nothing else, so the declaration had become 0.2's only consumer and was
+# therefore the only thing holding that version in the graph at all. Removing
+# it removes the version. If something reaches 0.2 again it says so loudly, by
+# failing to compile without `js` — which is the same signal that put this
+# comment here rather than a silent omission.
 # getrandom 0.3.x (used by libsignal-core, rand_core 0.9)
 getrandom = { version = "0.3", features = ["wasm_js"] }
 # getrandom 0.4.x — reached through aes-gcm-siv 0.12 -> aead 0.6 ->
