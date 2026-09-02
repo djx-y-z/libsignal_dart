@@ -56,6 +56,22 @@
   tested only against the relative path, matches nothing, and turns the ignore
   off without saying so.
 
+- **The repair agent is told what it is explaining, and to leave generated
+  files alone** — its second pass on PR #67 lost the diagnosis: a new
+  flutter_rust_bridge landed between the two runs, the repair job's own
+  checkout began failing for an unrelated reason, and that local reproduction
+  displaced the recorded log as the thing being explained. The agent was not
+  what broke; the invariant was simply never written down. The prompt now
+  states it — the subject is the failure in the log of the run named in
+  `failure.env`, anything met locally that does not match it is a second
+  finding for `notes` rather than `cause`, and "it does not reproduce" is a
+  verdict in its own right rather than a licence to adopt some other failure.
+  It also forbids editing generated output by hand: the fix that pass produced
+  was a single `codegenVersion` line under `lib/src/rust/`, which the next
+  `make codegen` reverts, so the red was silenced rather than repaired. Those
+  paths may still change — by changing what generates them and running
+  `make codegen`, which the agent is already permitted to run.
+
 #### Fixed
 
 - **`dart-lang/setup-dart` moves to 1.8.1, and the reason it was held at 1.7.2
