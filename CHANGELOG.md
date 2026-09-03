@@ -65,9 +65,44 @@
   ships inside the published archive — now lists 227 crates and 131 licence
   texts rather than 229 and 132.
 
+#### Security
+
+- **The HKDF doc no longer promises a zeroization that does not happen**
+  (`rust/src/api/crypto.rs`) — its `# Security` block said the internal copy of
+  the key material was "cleared when the `Hkdf` instance goes out of scope". It
+  is not. `hkdf` 0.13 publishes no `[features]` at all, `hmac` 0.13 does have
+  `zeroize = ["digest/zeroize"]`, and nothing in this crate's graph turns it on,
+  so dropping an `Hkdf` runs no zeroizing `Drop` — it releases the memory for
+  reuse. The arguments this function owns are still zeroized on every path,
+  including the error one; what changed is that the note says which copy is
+  cleared and which is not, and names the change that would close the gap
+  (depend on `hmac` directly with its `zeroize` feature, gated on
+  `make build-web` because it moves the dependency graph). Nothing about the
+  derived output changes. Found by replaying the AI reviewer over merged pull
+  requests.
+
 ### For Contributors
 
 #### Added
+
+- **A pull request whose FRB bindings were never regenerated is refused**
+  (`.github/workflows/codegen-guard.yml`) — two lines of shell that fail any
+  pull request carrying the `codegen-failed` label. It exists because the
+  alternative was measured and lost: replaying the AI reviewer over all 47
+  merged pull requests put its recall on this exact condition at 6 of 28, 21%,
+  even though the label sits in plain text in the context file it reads and its
+  reasoning on the ones it did catch was sound. A model that understands a rule
+  and applies it one time in five is not a gate; the same rule stated directly
+  is 100%. The condition is the label alone, deliberately — when codegen fails
+  an unchanged `lib/src/rust/` is the *expected* state, so an extra "and the
+  bindings did not change" clause would add nothing and would let the check pass
+  on a pull request where somebody hand-edited generated output. `labeled` and
+  `unlabeled` are in the trigger list so that removing the label after a manual
+  fix re-runs the check rather than leaving the pull request red with nothing
+  left to fix, and the labels are read back from the API rather than from the
+  event payload, because the label is attached in the same breath as the pull
+  request is opened. 28 pull requests merged carrying this label before the
+  guard existed.
 
 - **The SSv2 offsets guard is covered, by the only route that reaches it**
   (`test/sealed_sender/usmc_and_multi_recipient_test.dart`) — a message that
@@ -162,6 +197,23 @@
   committed.
 
 #### Fixed
+
+- **A rate-limited GitHub reply no longer becomes "no release notes were
+  published"** (`scripts/src/update_changelog.dart`) — `curl -s` carries no
+  `-f`, so it exits 0 on 403, 429 and every 5xx, and the only other guard
+  matched the single exact string `Not Found`. A rate-limited reply reads "API
+  rate limit exceeded for <ip>", missed both tests, fell through to an absent
+  `body`, and returned the "nothing was published" sentence — an API failure
+  laundered into a fact the changelog was then written from, in a script whose
+  stated rule is that nothing is guessed and the entry is left unwritten. The
+  request is unauthenticated, so the ceiling is 60 an hour per IP and the
+  runners share IPs. The decision now lives in `releaseNotesFrom`, split out so
+  it can be tested without a network, and keys on `tag_name` rather than `body`
+  because a real release with an empty body is the ordinary case here and had to
+  keep working; `_fetchUpstreamCommits` next door already tested for `commits`
+  for the same reason and was never affected. Six tests cover it, and all three
+  failure cases fail without the guard. Found by replaying the AI reviewer over
+  merged pull requests.
 
 - **Four dropped tokens in the AES-GCM-SIV vector file, one of them
   load-bearing** — `test/crypto/aes_gcm_siv_kat_test.dart` shipped in 7.1.1
