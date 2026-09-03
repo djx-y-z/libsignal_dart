@@ -82,6 +82,20 @@
   shared offset past the end, and the empty-devices early return that answers
   before the offsets are read at all.
 
+- **HKDF-SHA256 is pinned to RFC 5869, not just to itself**
+  (`test/crypto/hkdf_kat_test.dart`) — `hkdf_test.dart` next door is round-trips
+  and shape checks: it proves `hkdfDerive` is deterministic and that its output
+  moves when its inputs do, and it would keep passing if every derived byte
+  changed. The AES-GCM-SIV vectors added in 7.1.1 closed exactly that gap for
+  the AEAD and left it open here. RFC 5869 publishes seven vectors; A.4-A.7 are
+  HMAC-SHA1 and this package exposes no SHA-1 derivation, so the three SHA-256
+  cases are the whole of what applies — including A.2, whose 82-octet output is
+  the only one that runs the expansion past two rounds and so pins the block
+  counter. A.3 earns its place twice over: its zero-length salt is the path
+  `hkdfDerive` takes whenever a caller passes `[]`, which maps to HKDF's "salt
+  not provided" and so to 32 zero bytes — which is the PRK the RFC computed it
+  against.
+
 #### Changed
 
 - **The Dependabot ignore that was holding setup-dart back is deleted, because
@@ -110,13 +124,13 @@
 
 - **`make coverage` measures the code somebody wrote** — everything under
   `lib/src/rust/` is now excluded, not just the `frb_generated*` files: the rest
-  of that directory is the same generator's output one layer up, and 41 of its
-  of the 45 lines it left uncovered were `hashCode` and `operator ==` on
-  value classes. Including them meant
-  a `make codegen` run could move the badge with nobody having written a line,
-  which is what took the figure from 100% to 93.8% when the sealed-sender
-  surface grew. The denominator drops from 720 lines to the 468 hand-written
-  ones, and with the guard test above it reads 100.0% again. The Makefile
+  of that directory is the same generator's output one layer up, and 41 of the
+  45 lines it left uncovered were `hashCode` and `operator ==` on value
+  classes. Including them meant a `make codegen` run could move the badge with
+  nobody having written a line, which is what took the figure from 100% to
+  93.8% when the sealed-sender surface grew. The denominator drops from 720
+  lines to the 468 hand-written ones, and with the guard test above it reads
+  100.0% again. The Makefile
   comment records why the second glob is not written `**/lib/src/rust/**`: a
   glob starting with `**` can never match an absolute path, so that form is
   tested only against the relative path, matches nothing, and turns the ignore
@@ -130,8 +144,9 @@
   what broke; the invariant was simply never written down. The prompt now
   states it — the subject is the failure in the log of the run named in
   `failure.env`, anything met locally that does not match it is a second
-  finding for `notes` rather than `cause`, and "it does not reproduce" is a
-  verdict in its own right rather than a licence to adopt some other failure.
+  finding for `notes` rather than `cause`, and a failure that does not
+  reproduce is a `cannot-fix` naming the recorded failure rather than a licence
+  to adopt some other one.
   It also forbids editing generated output by hand: the fix that pass produced
   was a single `codegenVersion` line under `lib/src/rust/`, which the next
   `make codegen` reverts, so the red was silenced rather than repaired. Those
@@ -147,6 +162,16 @@
   committed.
 
 #### Fixed
+
+- **Four dropped tokens in the AES-GCM-SIV vector file, one of them
+  load-bearing** — `test/crypto/aes_gcm_siv_kat_test.dart` shipped in 7.1.1
+  with `${i + 1}` missing from both loop-generated test names, so its 48 tests
+  carried two names between them: a failing vector named no vector, and
+  `dart test -n` could select none. The header lost `aes-gcm-siv` from two
+  sentences in the same edit — "a future bump of  — or a change" and
+  "transcribed from the  crate's own" — leaving the file warning about a bump
+  of nothing and citing no source for its table. The vectors themselves, and
+  everything they assert, were never affected.
 
 - **`dart-lang/setup-dart` moves to 1.8.1, and the reason it was held at 1.7.2
   is switched off in the same commit** — 1.8.0 added a problem matcher for

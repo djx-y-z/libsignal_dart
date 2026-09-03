@@ -3,11 +3,11 @@
 // The round-trip tests next door prove that encrypt and decrypt agree with each
 // other; they would keep passing if the ciphertext bytes changed, which is
 // exactly what an implementation swap can do. These pin the output to the
-// specification instead, so a future bump of  — or a change to how
-// this package converts the nonce — cannot silently make data written by an
-// earlier release unreadable.
+// specification instead, so a future bump of `aes-gcm-siv` — or a change to
+// how this package converts the nonce — cannot silently make data written by
+// an earlier release unreadable.
 //
-// Vectors transcribed from the  crate's own RFC 8452 C.2 test
+// Vectors transcribed from the `aes-gcm-siv` crate's own RFC 8452 C.2 test
 // suite, which is the same table published in the RFC.
 
 import 'dart:typed_data';
@@ -233,7 +233,7 @@ void main() {
     for (var i = 0; i < _vectors.length; i++) {
       final v = _vectors[i];
 
-      test('vector  encrypts to the published ciphertext', () {
+      test('vector ${i + 1} encrypts to the published ciphertext', () {
         final cipher = Aes256GcmSiv(key: _hex(v.key).toList());
         final actual = cipher.encrypt(
           plaintext: _hex(v.plaintext).toList(),
@@ -243,7 +243,7 @@ void main() {
         expect(_hexOf(actual), equals(v.ciphertext));
       });
 
-      test('vector  decrypts back to the published plaintext', () {
+      test('vector ${i + 1} decrypts back to the published plaintext', () {
         final cipher = Aes256GcmSiv(key: _hex(v.key).toList());
         final actual = cipher.decrypt(
           ciphertext: _hex(v.ciphertext).toList(),

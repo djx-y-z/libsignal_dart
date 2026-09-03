@@ -421,9 +421,10 @@ test:
 # WROTE. Everything under lib/src/rust/ is emitted by `make codegen` — that is
 # `dart_output` in flutter_rust_bridge.yaml — and is excluded, not just the
 # frb_generated* files: the rest of that directory is the same generator's
-# output one layer up, and it is mostly `hashCode` and `operator ==` on value
-# classes. Including it lets a codegen run move the badge with nobody having
-# written a line, which is noise a coverage gate is supposed to not have.
+# output one layer up, and what goes uncovered in it is almost all `hashCode`
+# and `operator ==` on value classes. Including it lets a codegen run move the
+# badge with nobody having written a line, which is noise a coverage gate is
+# supposed to not have.
 #
 # `--ignore-files` is an addMultiOption, so repeat it (or comma-join it) for
 # more than one glob. Do NOT "normalise" the second glob to
