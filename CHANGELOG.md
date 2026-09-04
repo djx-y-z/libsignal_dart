@@ -4,6 +4,7 @@
 
 #### ✨ Highlights
 
+- **libsignal v0.102.0** — internal/dependency update, no public-API impact
 - **flutter_rust_bridge 2.13.0** — bindings, the native crate's runtime and the
   published constraint all move together. **Action required** for anyone who
   pins `flutter_rust_bridge` in their own `pubspec.yaml`
@@ -11,6 +12,11 @@
 
 #### Changed
 
+- Update libsignal native library to v0.102.0 ([compare](https://github.com/signalapp/libsignal/compare/v0.101.2...v0.102.0))
+  - Upstream changes cover server/chat transport and gRPC/proto synchronization, SVR and registration, account, sticker, subscription and TOTP service APIs, language bindings and JNI, and build/tooling/dependency maintenance — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
+  - Binding regeneration produced no changes under `lib/src/rust/`; the FFI surface did not move
+  - Note: These changes do not affect this library's public API
 - **`flutter_rust_bridge` moves to 2.13.0, and a consumer who pins it has to
   move with it** (`pubspec.yaml`) — the constraint is now
   `">=2.13.0 <2.13.1"`. It admits exactly one version for the reason 7.1.1
