@@ -11,7 +11,8 @@ cargo-fuzz = true
 libfuzzer-sys = "0.4"
 arbitrary = { version = "1", features = ["derive"] }
 # Must match the version used by the main crate so DartFnFuture is the same type.
-flutter_rust_bridge = "=2.12.0"
+# `make verify-frb-pins` checks that it does.
+flutter_rust_bridge = "=2.13.0"
 once_cell = "1"
 # Drives async entry points the way FRB does in production; the wrapper's
 # internal futures::executor::block_on calls panic if nested inside another

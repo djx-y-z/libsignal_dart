@@ -6,7 +6,10 @@
 
 ### How to Report
 
-Use [GitHub Security Advisories](https://github.com/djx-y-z/libsignal_dart/security/advisories/new) to report vulnerabilities privately, so the risk can be assessed and a fix prepared before public disclosure.
+Use [GitHub Security Advisories](https://github.com/djx-y-z/libsignal_dart/security/advisories/new) to report vulnerabilities privately, so the risk can be assessed and a fix prepared before public disclosure. It opens a draft advisory only the maintainers
+can see, and it is the one channel that needs no contact details published
+anywhere — but it has to be enabled once per repository (Settings → Security →
+Private vulnerability reporting) before that link works for outside reporters.
 
 Please include:
 

@@ -4,21 +4,63 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.102.0** — internal/dependency update, no public-API impact
 - **flutter_rust_bridge 2.13.0** — bindings, the native crate's runtime and the
-  published constraint all move together. **Action required** for anyone who
-  pins `flutter_rust_bridge` in their own `pubspec.yaml`
-- **libsignal v0.101.2** — unchanged this release
+  published constraint all move together. **Action required** for anyone whose
+  own `pubspec.yaml` constrains `flutter_rust_bridge` so as to exclude 2.13.0;
+  an ordinary caret constraint needs no change
+- **Rust 1.93.1 is the new floor for building the native library from source** —
+  libsignal v0.102.0 raises its own; consumers who install the published binary
+  through the build hook are unaffected
+- **libsignal v0.102.0** — upstream bump. Nothing reaches the surface this
+  package exposes: of the three files that changed in the crates we bind, two
+  are comments and one is the version string
 
 #### Changed
 
-- Update libsignal native library to v0.102.0 ([compare](https://github.com/signalapp/libsignal/compare/v0.101.2...v0.102.0))
-  - Upstream changes cover server/chat transport and gRPC/proto synchronization, SVR and registration, account, sticker, subscription and TOTP service APIs, language bindings and JNI, and build/tooling/dependency maintenance — none of which this library exposes
-  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
-  - Binding regeneration produced no changes under `lib/src/rust/`; the FFI surface did not move
-  - Note: These changes do not affect this library's public API
-- **`flutter_rust_bridge` moves to 2.13.0, and a consumer who pins it has to
-  move with it** (`pubspec.yaml`) — the constraint is now
+- **libsignal moves to v0.102.0, and nothing it changed is visible here**
+  (`rust/Cargo.toml`) — the release is large upstream ([26 commits, 169
+  files](https://github.com/signalapp/libsignal/compare/v0.101.2...v0.102.0))
+  and its own notes lead with new typed chat APIs — account deletion, SVR
+  credential checks, currency conversions, pre-key counts, device capabilities,
+  sticker upload forms and TOTP/MFA key management — plus registration without
+  an E.164 and a switch to gRPC by default. Every one of those lands in
+  `libsignal-net-chat`, `libsignal-account-keys` or the Java, Node and Swift
+  bridges, and not one of those crates is in this package's dependency graph at
+  all.
+
+  Four crates from that repository do reach the graph: `libsignal-protocol`,
+  `libsignal-core` and `signal-crypto`, which this package names, and
+  `libsignal-debug`, which arrives transitively. `signal-crypto` and
+  `libsignal-debug` have no changed file in the range; `libsignal-protocol` and
+  `libsignal-core` have three between them, and two of those are comments —
+  `rust/protocol/src/sealed_sender.rs` (+2/-3, a doc comment swapping a dormant
+  RFC link for a TODO about `slice::element_offset`), `rust/core/src/lib.rs`
+  (+2/-3, an updated issue number in a comment about try-blocks) and
+  `rust/core/src/version.rs` (the version string).
+
+  Asked at the lockfile rather than the file tree, the answer is the same:
+  `rust/Cargo.lock` holds 226 packages before and after, with **none added and
+  none removed**, and four version moves — `libsignal-debug` 0.101.2 → 0.102.0,
+  which inherits the workspace version, plus `cc` 1.4.4 → 1.4.5,
+  `find-msvc-tools` 0.1.11 → 0.1.12 and `smallvec` 1.15.2 → 1.16.0.
+  `THIRD_PARTY_NOTICES.txt` records those four and nothing else. Upstream's two
+  new workspace dependency bounds both miss this package: `displaydoc`'s floor
+  rises to 0.2.6 where the graph already resolves 0.2.7, and the
+  `tinyvec < 1.13.0` cap guards a crate the graph does not contain. Regenerating
+  the bindings produced no change under `lib/src/rust/`; the FFI surface did not
+  move
+
+- **Building the native library from source now needs Rust 1.93.1**
+  (`rust/Cargo.toml`) — libsignal v0.102.0 raises its workspace `rust-version`
+  from 1.88 to 1.93.1, so the floor this package declares had to rise with it or
+  the promise would be false: the manifest said 1.88 while the dependency could
+  no longer be compiled by it. This is the from-source path only — consumers who
+  install the precompiled binary through the build hook never invoke a Rust
+  toolchain and are unaffected. **Action required** for anyone building from
+  source on a toolchain older than 1.93.1: `rustup update`
+
+- **`flutter_rust_bridge` moves to 2.13.0, and a consumer who pins it
+  narrowly has to move with it** (`pubspec.yaml`) — the constraint is now
   `">=2.13.0 <2.13.1"`. It admits exactly one version for the reason 7.1.1
   documents: the runtime compares its own version against the
   `codegenVersion` recorded in `lib/src/rust/frb_generated.dart` with string
@@ -31,20 +73,119 @@
   Dart diff under `lib/src/rust/` is 36 lines: the `@generated by` stamp in 17
   files and one `codegenVersion` string. `rustContentHash` does not move
   (450650216 before and after), so the wire signature between Dart and the
-  native binary is unchanged. The generated Rust is hygiene only — `Ok(...)`
-  written out as `std::result::Result::Ok(...)` throughout, and
-  `mismatched_lifetime_syntaxes` added to the allow list.
+  native binary is unchanged. The generated Rust is hygiene only, and the
+  377-line diff accounts for itself line by line: 173 lines spell `Ok(...)` as
+  `std::result::Result::Ok(...)`, two spell it the other way round at the
+  infallible wrappers (`Result::<_, ()>::Ok(x)` becomes `Ok::<_, ()>(x)`),
+  eight drop one space after `move || {`, three carry the `@generated by`
+  stamp, one carries `FLUTTER_RUST_BRIDGE_CODEGEN_VERSION`, and one adds
+  `mismatched_lifetime_syntaxes` to the allow list. That is 188 lines removed
+  and 189 added with nothing left unclassified. In `rust/Cargo.lock` the bump
+  moves `flutter_rust_bridge_macros` in lockstep and pulls in no new transitive
+  crate: the runtime's own 21 dependency edges are byte-identical.
 
-  **Action required:** if your own `pubspec.yaml` names `flutter_rust_bridge`
-  — which upstream's own instructions tell you to do — change it to
+  **Action required** only if you constrain `flutter_rust_bridge` yourself,
+  and what happens when you don't act is worth stating exactly, because it is
+  quieter than a failure. An ordinary `^2.12.0` is `>=2.12.0 <3.0.0`, admits
+  2.13.0, and needs no change at all. A narrow pin that excludes 2.13.0 —
+  `">=2.12.0 <2.12.1"`, the form this package itself ships — does **not** fail:
+  pub backtracks and resolves the previous `libsignal` instead, and the only
+  sign is the generic "packages have newer versions incompatible with
+  dependency constraints" advisory, which names neither package. The upgrade is
+  withheld rather than refused, so move your own constraint to
   `">=2.13.0 <2.13.1"` in the same commit that upgrades this package.
-  Otherwise resolution fails outright rather than silently upgrading, because
-  neither constraint admits a version the other does. A project that does not
-  name `flutter_rust_bridge` itself needs no change: it resolves transitively.
+  Resolution fails outright only where no version satisfies both constraints —
+  in practice the case 7.1.1 already described, a project that also depends on
+  another flutter_rust_bridge wrapper built against a different version.
+
+- **The dead `getrandom` 0.2 declaration is gone from the wasm32 block**
+  (`rust/Cargo.toml`) — it had become its own only reason to exist. In
+  `rust/Cargo.lock` the sole consumer of `getrandom 0.2.17` was `libsignal_frb`
+  itself, which is to say this declaration; for contrast 0.3.4 had two
+  consumers and 0.4.3 had four, of which one and three respectively were
+  crates other than this one. So the declaration was not holding a backend on
+  for some crate that needed it — it was the only thing holding that version in
+  the graph at all, and removing it removed the version: 0.2.17 is no longer in
+  the lockfile, and a wasm32 build now compiles exactly two getrandoms, 0.3.4
+  and 0.4.3. `wasi 0.11.1+wasi-snapshot-preview1` went with it, having been
+  reachable only through that version, so `THIRD_PARTY_NOTICES.txt` — which
+  ships inside the published archive — now lists 227 crates and 131 licence
+  texts rather than 229 and 132.
+
+#### Security
+
+- **The HKDF doc no longer promises a zeroization that does not happen**
+  (`rust/src/api/crypto.rs`) — its `# Security` block said the internal copy of
+  the key material was "cleared when the `Hkdf` instance goes out of scope". It
+  is not. `hkdf` 0.13 publishes no `[features]` at all, `hmac` 0.13 does have
+  `zeroize = ["digest/zeroize"]`, and nothing in this crate's graph turns it on,
+  so dropping an `Hkdf` runs no zeroizing `Drop` — it releases the memory for
+  reuse. The arguments this function owns are still zeroized on every path,
+  including the error one; what changed is that the note says which copy is
+  cleared and which is not, and names the change that would close the gap
+  (depend on `hmac` directly with its `zeroize` feature, gated on
+  `make build-web` because it moves the dependency graph). Nothing about the
+  derived output changes. Found by replaying the AI reviewer over merged pull
+  requests.
+
+#### Fixed
+
+- **A dead reference in the published API documentation** (`lib/libsignal.dart`)
+  — the library-level doc listed sender certificates as `[SenderCertificate]`, a
+  type this package does not expose: they reach Dart as a function family
+  (`createSenderCertificate`, `validateSenderCertificate`). dartdoc reports an
+  unresolved reference as a warning and exits zero, so it shipped to pub.dev on
+  every release that carried it and nothing ever said so. It was the only
+  instance, and the gate below now makes that class a build failure.
 
 ### For Contributors
 
 #### Added
+
+- **Two documentation gates, and both block** (`dartdoc_options.yaml`,
+  `make doc`, `make rust-doc`) — dartdoc's `unresolved-doc-reference` is
+  promoted from a warning to an error, and rustdoc runs under `-D warnings` on
+  the host and on wasm32. Both were red on adoption: one dead reference on the
+  Dart side, three on the Rust side, all dead for as long as they had existed.
+  They are the same mistake in both directions — flutter_rust_bridge copies a
+  Rust doc comment into the generated Dart verbatim, and Rust's intra-doc syntax
+  is not Dart's — so `rust/src/api/` now names the Dart surface in plain
+  backticks, which links on neither side and rots on neither either.
+  `dartdoc_options.yaml` is `.pubignore`d on purpose: pub.dev runs dartdoc
+  itself and would honour the same promotion, which could break documentation
+  generation for an already-published version.
+
+- **wasm32 is executed, not merely compiled** (`make test-web`,
+  `test-reusable.yml`) — CI gains `Build WASM` and `Rust unit tests (browser)`,
+  and `make test-web` runs the crate's `cfg(target_arch = "wasm32")` tests in
+  headless Chrome. Until now nothing covered those branches: `make test` is the
+  Dart VM and `make build-web` only compiles, while a wasm32 body is a
+  *different implementation* of the same function rather than the same code on
+  another host. `rust/Cargo.toml` gains the harness that needs, as a wasm32
+  `dev-dependencies` entry (`wasm-bindgen-test`); it is the only non-comment
+  change to that manifest, so the shipped binary is untouched, and
+  `make verify-third-party-notices` still passes with eleven new crates in
+  `Cargo.lock` because `cargo tree --edges normal,build` excludes every
+  dev-dependency on every target. First run here: 1 test, green.
+
+- **A pull request whose FRB bindings were never regenerated is refused**
+  (`.github/workflows/codegen-guard.yml`) — two lines of shell that fail any
+  pull request carrying the `codegen-failed` label. It exists because the
+  alternative was measured and lost: replaying the AI reviewer over all 47
+  merged pull requests put its recall on this exact condition at 6 of 28, 21%,
+  even though the label sits in plain text in the context file it reads and its
+  reasoning on the ones it did catch was sound. A model that understands a rule
+  and applies it one time in five is not a gate; the same rule stated directly
+  is 100%. The condition is the label alone, deliberately — when codegen fails
+  an unchanged `lib/src/rust/` is the *expected* state, so an extra "and the
+  bindings did not change" clause would add nothing and would let the check pass
+  on a pull request where somebody hand-edited generated output. `labeled` and
+  `unlabeled` are in the trigger list so that removing the label after a manual
+  fix re-runs the check rather than leaving the pull request red with nothing
+  left to fix, and the labels are read back from the API rather than from the
+  event payload, because the label is attached in the same breath as the pull
+  request is opened. 28 pull requests merged carrying this label before the
+  guard existed.
 
 - **The SSv2 offsets guard is covered, by the only route that reaches it**
   (`test/sealed_sender/usmc_and_multi_recipient_test.dart`) — a message that
@@ -59,7 +200,50 @@
   shared offset past the end, and the empty-devices early return that answers
   before the offsets are read at all.
 
+- **HKDF-SHA256 is pinned to RFC 5869, not just to itself**
+  (`test/crypto/hkdf_kat_test.dart`) — `hkdf_test.dart` next door is round-trips
+  and shape checks: it proves `hkdfDerive` is deterministic and that its output
+  moves when its inputs do, and it would keep passing if every derived byte
+  changed. The AES-GCM-SIV vectors added in 7.1.1 closed exactly that gap for
+  the AEAD and left it open here. RFC 5869 publishes seven vectors; A.4-A.7 are
+  HMAC-SHA1 and this package exposes no SHA-1 derivation, so the three SHA-256
+  cases are the whole of what applies — including A.2, whose 82-octet output is
+  the only one that runs the expansion past two rounds and so pins the block
+  counter. A.3 earns its place twice over: its zero-length salt is the path
+  `hkdfDerive` takes whenever a caller passes `[]`, which maps to HKDF's "salt
+  not provided" and so to 32 zero bytes — which is the PRK the RFC computed it
+  against.
+
 #### Changed
+
+- **Adopted copier template v4.6.0 → v4.7.0** (`.copier-answers.yml`) — the two
+  gates above are most of it. The rest: release builds are locked, so every
+  `cargo build` and `cargo install` in `build-libsignal.yml` — the workflow that
+  produces the shipped binaries — now passes `--locked` and builds from the
+  committed lockfile rather than re-resolving; Dependabot stops proposing
+  `hooks` and `code_assets` majors, which are blocked by the pinned Flutter SDK
+  rather than by anything here and so cannot be merged or fixed in this
+  repository; and bookkeeping stops outranking tests, with
+  `verify-third-party-notices` and `verify-frb-pins` moving after the test steps
+  so a stale inventory no longer fails the Linux leg before a single test has
+  run. Eleven files came back conflicted. Four were merged rather than taken
+  from either side: `rust/Cargo.toml` keeps `js-sys` — which the template render
+  does not have and `rust/src/utils.rs` calls — and attaches the new
+  unwinding note to the existing `[profile.release]` instead of the second one
+  the template side would have added, which TOML rejects; `rust/deny.toml` keeps
+  its live `RUSTSEC-2026-0173` entry under the template's new preamble, and
+  keeps its own licence note, which states the AGPL-compatibility criterion the
+  generic one replaces with an invitation to extend the list; `CONTRIBUTING.md`
+  keeps the headings its own table of contents links to and takes the template's
+  prose; `SECURITY.md` keeps this project's reporting section and takes the note
+  that private vulnerability reporting has to be enabled per repository before
+  the link works for outside reporters. The new `enable_freezed` answer is
+  false: flutter_rust_bridge needs `freezed` only for data-carrying enums and
+  structs this API does not have, and answering it once replaces stripping the
+  three dependencies by hand after every update. `README.md` was taken whole
+  from this side — all four of its conflicts were misalignments against a
+  locally rewritten file, and one template side was a code fence that never
+  closed
 
 - **The Dependabot ignore that was holding setup-dart back is deleted, because
   it never held anything back** — Dependabot parses a `github-actions` ignore
@@ -87,12 +271,13 @@
 
 - **`make coverage` measures the code somebody wrote** — everything under
   `lib/src/rust/` is now excluded, not just the `frb_generated*` files: the rest
-  of that directory is the same generator's output one layer up, and 41 of its
-  lines are `hashCode` and `operator ==` on value classes. Including them meant
-  a `make codegen` run could move the badge with nobody having written a line,
-  which is what took the figure from 100% to 93.8% when the sealed-sender
-  surface grew. The denominator drops from 720 lines to the 468 hand-written
-  ones, and with the guard test above it reads 100.0% again. The Makefile
+  of that directory is the same generator's output one layer up, and 41 of the
+  45 lines it left uncovered were `hashCode` and `operator ==` on value
+  classes. Including them meant a `make codegen` run could move the badge with
+  nobody having written a line, which is what took the figure from 100% to
+  93.8% when the sealed-sender surface grew. The denominator drops from 720
+  lines to the 468 hand-written ones, and with the guard test above it reads
+  100.0% again. The Makefile
   comment records why the second glob is not written `**/lib/src/rust/**`: a
   glob starting with `**` can never match an absolute path, so that form is
   tested only against the relative path, matches nothing, and turns the ignore
@@ -106,33 +291,86 @@
   what broke; the invariant was simply never written down. The prompt now
   states it — the subject is the failure in the log of the run named in
   `failure.env`, anything met locally that does not match it is a second
-  finding for `notes` rather than `cause`, and "it does not reproduce" is a
-  verdict in its own right rather than a licence to adopt some other failure.
+  finding for `notes` rather than `cause`, and a failure that does not
+  reproduce is a `cannot-fix` naming the recorded failure rather than a licence
+  to adopt some other one.
   It also forbids editing generated output by hand: the fix that pass produced
   was a single `codegenVersion` line under `lib/src/rust/`, which the next
   `make codegen` reverts, so the red was silenced rather than repaired. Those
   paths may still change — by changing what generates them and running
   `make codegen`, which the agent is already permitted to run.
 
-- **The dead `getrandom` 0.2 declaration is gone from the wasm32 block**
-  (`rust/Cargo.toml`) — it had become its own only reason to exist. In
-  `rust/Cargo.lock` the sole consumer of `getrandom 0.2.17` was `libsignal_frb`
-  itself, which is to say this declaration; for contrast 0.3.4 had two
-  consumers and 0.4.3 had four. So the declaration was not holding a backend on
-  for some crate that needed it — it was the only thing holding that version in
-  the graph at all, and removing it removed the version: 0.2.17 is no longer in
-  the lockfile, and a wasm32 build now compiles exactly two getrandoms, 0.3.4
-  and 0.4.3.
-
-  It waited for a release branch rather than going in when it was first noticed,
-  and the reason is worth keeping: nothing local proves a wasm32 dependency
-  change, because `make build` is host-only and CI compiles wasm **only** on a
-  `libsignal_frb-*` tag push. A graph change merged without running
-  `make build-web` first is one whose Web target is compiled for the first time
-  inside a release — which is how two crate versions were already burned. This
-  one was gated on `make build-web` before it was committed.
+- **The `getrandom` removal waited for a release branch** — nothing local
+  proves a wasm32 dependency change, because `make build` is host-only and CI
+  compiles wasm **only** on a `libsignal_frb-*` tag push. A graph change merged
+  without running `make build-web` first is one whose Web target is compiled
+  for the first time inside a release — which is how two crate versions were
+  already burned. This one was gated on `make build-web` before it was
+  committed.
 
 #### Fixed
+
+- **The fuzz crate stopped building the moment the main crate moved to
+  flutter_rust_bridge 2.13.0, and no gate could see it**
+  (`rust/fuzz/Cargo.toml`, `scripts/src/frb_pins.dart`) — `rust/fuzz` pins
+  `flutter_rust_bridge` directly *and* takes the main crate by path, so the
+  `=2.12.0` it kept when `4f47a2e` raised the main crate to 2.13.0 was not
+  drift: cargo cannot resolve the two together at all. `cargo metadata` there
+  exits 101 with "failed to select a version for `flutter_rust_bridge`", which
+  makes every fuzz target unbuildable, locally and in CI. Three separate things
+  had to miss it, and each did. `rust/fuzz` is its own workspace root, so no
+  resolution under `rust/` ever passes through it. The `Fuzz` workflow triggers
+  on `rust/**` pull requests and a weekly cron but **not** on a push, and
+  `4f47a2e` reached `main` as a push — so the first red run was somebody else's
+  pull request, days later. And `make verify-frb-pins`, the gate whose whole job
+  is that these versions move together, read five files and not this one, even
+  though the pin carries a comment saying it must match the main crate. The pin
+  is now 2.13.0, and the gate reads six files: a bump that forgets the fuzz
+  crate now fails on the constraint instead of in a fuzz run nobody is watching.
+  `FrbPin` also records absence rather than inferring it from the wording of its
+  own message, which a second optional source would otherwise have made
+  load-bearing.
+
+- **The corrected HKDF note reached Rust but never reached Dart**
+  (`lib/src/rust/api/crypto.dart`) — the `# Security` correction recorded above
+  was written into `rust/src/api/crypto.rs` without a `make codegen` run, so the
+  generated Dart still carried the claim the correction exists to retract: that
+  the internal copy of the key material is cleared when the `Hkdf` value is
+  dropped. flutter_rust_bridge copies a Rust doc comment into the Dart output
+  verbatim, which makes a docstring edit a bindings edit, and nothing in CI
+  compares committed bindings against what codegen produces on a hand-made
+  commit — the `bindings=changed` tripwire lives in
+  `check-libsignal-updates.yml`, on the automated upstream path only, and
+  `codegen-guard.yml` refuses a labelled pull request rather than comparing
+  anything. Regenerating moved nothing else: `rustContentHash` is unchanged at
+  450650216, so the wire signature did not shift.
+
+- **A rate-limited GitHub reply no longer becomes "no release notes were
+  published"** (`scripts/src/update_changelog.dart`) — `curl -s` carries no
+  `-f`, so it exits 0 on 403, 429 and every 5xx, and the only other guard
+  matched the single exact string `Not Found`. A rate-limited reply reads "API
+  rate limit exceeded for <ip>", missed both tests, fell through to an absent
+  `body`, and returned the "nothing was published" sentence — an API failure
+  laundered into a fact the changelog was then written from, in a script whose
+  stated rule is that nothing is guessed and the entry is left unwritten. The
+  request is unauthenticated, so the ceiling is 60 an hour per IP and the
+  runners share IPs. The decision now lives in `releaseNotesFrom`, split out so
+  it can be tested without a network, and keys on `tag_name` rather than `body`
+  because a real release with an empty body is the ordinary case here and had to
+  keep working; `_fetchUpstreamCommits` next door already tested for `commits`
+  for the same reason and was never affected. Six tests cover it, and all three
+  failure cases fail without the guard. Found by replaying the AI reviewer over
+  merged pull requests.
+
+- **Four dropped tokens in the AES-GCM-SIV vector file, one of them
+  load-bearing** — `test/crypto/aes_gcm_siv_kat_test.dart` shipped in 7.1.1
+  with `${i + 1}` missing from both loop-generated test names, so its 48 tests
+  carried two names between them: a failing vector named no vector, and
+  `dart test -n` could select none. The header lost `aes-gcm-siv` from two
+  sentences in the same edit — "a future bump of  — or a change" and
+  "transcribed from the  crate's own" — leaving the file warning about a bump
+  of nothing and citing no source for its table. The vectors themselves, and
+  everything they assert, were never affected.
 
 - **`dart-lang/setup-dart` moves to 1.8.1, and the reason it was held at 1.7.2
   is switched off in the same commit** — 1.8.0 added a problem matcher for

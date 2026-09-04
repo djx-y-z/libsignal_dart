@@ -36,7 +36,8 @@
 ///
 /// - **Sealed Sender**: Anonymous message sending
 ///   - Sealed sender encryption/decryption ([SealedSenderCipher])
-///   - Sender certificates ([SenderCertificate])
+///   - Sender certificates ([createSenderCertificate],
+///     [validateSenderCertificate])
 ///
 /// - **Group Messaging**: Efficient group message encryption
 ///   - Group encryption/decryption ([GroupCipher])

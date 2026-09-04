@@ -21,9 +21,20 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// Input key material and salt are securely zeroized after use, even on error.
 /// The `info` parameter is not zeroized as it's application context (RFC 5869), not a secret.
 ///
-/// Note: The HKDF implementation may create internal copies of key material that cannot
-/// be zeroized by this function. However, these copies are stack-allocated and short-lived,
-/// being cleared when the `Hkdf` instance goes out of scope.
+/// Note: `input_key_material` and `salt` are the only copies this function owns.
+/// `Hkdf::new` derives a pseudorandom key from them and keeps it inside its own
+/// `Hmac` state, and **that copy is not cleared when the `Hkdf` value is
+/// dropped** — an earlier version of this note claimed it was, and it was
+/// wrong. Three facts decide it: `hkdf` 0.13 publishes no `[features]` at all,
+/// `hmac` 0.13 does have `zeroize = ["digest/zeroize"]`, and nothing in this
+/// crate's graph turns it on. So dropping an `Hkdf` runs no zeroizing `Drop`;
+/// it simply releases the memory for reuse.
+///
+/// The exposure is bounded — the value lives for one call and never leaves the
+/// stack — but it is not zero, and callers deriving long-lived secrets should
+/// know the difference. Closing it properly means depending on `hmac` directly
+/// with its `zeroize` feature, which changes the dependency graph and so has to
+/// be gated on `make build-web` before it can be believed.
 Uint8List hkdfDerive({
   required int outputLength,
   required List<int> inputKeyMaterial,

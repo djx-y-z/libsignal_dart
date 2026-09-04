@@ -27,6 +27,7 @@ class FrbPin {
     required this.source,
     required this.version,
     required this.detail,
+    this.isAbsent = false,
   });
 
   /// Path relative to the package root, as a reader would open it.
@@ -38,11 +39,15 @@ class FrbPin {
   /// What was read, or why nothing was — quoted back in the failure.
   final String detail;
 
-  /// Whether this source exists and has nothing to say. Absent bindings are the
-  /// normal state of a project that has not run `make codegen` yet.
-  bool get isAbsent => version == null && detail == _absent;
-
-  static const _absent = 'not generated yet';
+  /// Whether this source is simply not part of this project, rather than
+  /// present with an unreadable pin. Bindings are absent until `make codegen`
+  /// has run, and a project need not carry a fuzz crate at all; neither is a
+  /// disagreement, so neither is reported.
+  ///
+  /// Recorded rather than inferred from [detail]: each absent source explains
+  /// itself in its own words, and matching on that prose would quietly make the
+  /// wording load-bearing.
+  final bool isAbsent;
 }
 
 /// The one accepted `pubspec.yaml` form: a single version written as a range.
@@ -132,14 +137,19 @@ String frbVersionFromPubspec(String content) {
 bool _sameTriple(List<int> a, List<int> b) =>
     a[0] == b[0] && a[1] == b[1] && a[2] == b[2];
 
-/// Reads the `=` pin from `rust/Cargo.toml`, in either the string or the
-/// table form cargo accepts.
+/// Reads the `=` pin from a cargo manifest, in either the string or the table
+/// form cargo accepts.
 ///
 /// Every occurrence is read, not the first: the rendered manifest already
 /// carries a `[target.'cfg(target_arch = "wasm32")'.dependencies]` section, so
 /// a second pin there is an ordinary thing to write and would otherwise be
 /// invisible.
-String? frbVersionFromCargoToml(String content) {
+///
+/// [path] names the manifest in the failure, because more than one is read.
+String? frbVersionFromCargoToml(
+  String content, {
+  String path = 'rust/Cargo.toml',
+}) {
   final matches = RegExp(
     r'^\s*flutter_rust_bridge\s*=\s*'
     r'(?:"=([^"]+)"|\{[^}]*?version\s*=\s*"=([^"]+)")',
@@ -148,7 +158,7 @@ String? frbVersionFromCargoToml(String content) {
   if (matches.isEmpty) return null;
   if (matches.length > 1) {
     throw FrbPinFormatException(
-      'rust/Cargo.toml pins flutter_rust_bridge to more than one version '
+      '$path pins flutter_rust_bridge to more than one version '
       '(${matches.join(', ')}). Cargo resolves one of them per target, so the '
       'bindings can only match one.',
     );
@@ -202,18 +212,21 @@ class FrbPinFormatException implements Exception {
 List<FrbPin> collectFrbPins({Directory? packageDir}) {
   final dir = packageDir ?? getPackageDir();
 
+  // [absentDetail] both permits the file to be missing and says how to phrase
+  // that; a source without one is required, and its absence is a failure.
   FrbPin read(
     String path,
     String what,
     String? Function(String content) parse, {
-    bool optional = false,
+    String? absentDetail,
   }) {
     final file = File('${dir.path}/$path');
     if (!file.existsSync()) {
       return FrbPin(
         source: path,
         version: null,
-        detail: optional ? FrbPin._absent : 'file not found',
+        detail: absentDetail ?? 'file not found',
+        isAbsent: absentDetail != null,
       );
     }
     final version = parse(file.readAsStringSync());
@@ -232,13 +245,26 @@ List<FrbPin> collectFrbPins({Directory? packageDir}) {
       frbVersionFromCargoToml,
     ),
     read('Makefile', 'FRB_CODEGEN_VERSION', frbVersionFromMakefile),
-    // Optional: a project generated but not yet built has no bindings, and
-    // failing there would make the gate impossible to satisfy on a first run.
+    // The fuzz crate depends on flutter_rust_bridge directly and on the main
+    // crate by path, so a stale pin here does not merely drift — cargo cannot
+    // resolve the two together at all, and every fuzz target stops building.
+    // That is invisible to every other gate: `rust/fuzz` is its own workspace
+    // root, so nothing under `rust/` resolves through it, and the Fuzz workflow
+    // runs only on `rust/**` pull requests and a weekly cron, never on a push.
+    read(
+      'rust/fuzz/Cargo.toml',
+      '`flutter_rust_bridge = "=X.Y.Z"`',
+      (content) =>
+          frbVersionFromCargoToml(content, path: 'rust/fuzz/Cargo.toml'),
+      absentDetail: 'no fuzz crate in this project',
+    ),
+    // A project generated but not yet built has no bindings, and failing there
+    // would make the gate impossible to satisfy on a first run.
     read(
       'lib/src/rust/frb_generated.dart',
       'codegenVersion',
       frbVersionFromGeneratedBindings,
-      optional: true,
+      absentDetail: 'not generated yet',
     ),
     read('.copier-answers.yml', 'frb_version', frbVersionFromCopierAnswers),
   ];

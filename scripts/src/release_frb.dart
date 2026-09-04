@@ -388,7 +388,33 @@ String stampFrbHighlight(String content, String version) {
   // Replace an existing frb highlight in the section.
   for (var i = start + 1; i < end; i++) {
     if (frbPattern.hasMatch(lines[i])) {
-      lines[i] = frbLine;
+      // The stamp is one line, but the bullet it replaces need not be: anything
+      // hand-edited into it wraps onto further lines, and overwriting only the
+      // first line leaves those behind. They are then orphaned into whatever
+      // follows — and once this release is cut, what follows is a released
+      // section, which the changelog contract says is immutable. So the whole
+      // bullet goes.
+      //
+      // Where the bullet ends: at the next bullet or heading, at a blank line,
+      // or — because a highlight may carry a second indented paragraph — at a
+      // blank line whose successor is not indented. An unindented line with no
+      // blank line before it is a lazy continuation and still part of the
+      // bullet.
+      var bulletEnd = i + 1;
+      while (bulletEnd < end) {
+        final line = lines[bulletEnd];
+        if (line.trim().isEmpty) {
+          final next = bulletEnd + 1 < end ? lines[bulletEnd + 1] : '';
+          if (next.startsWith(' ') && next.trim().isNotEmpty) {
+            bulletEnd += 2;
+            continue;
+          }
+          break;
+        }
+        if (line.trimLeft().startsWith('- ') || line.startsWith('#')) break;
+        bulletEnd++;
+      }
+      lines.replaceRange(i, bulletEnd, [frbLine]);
       return lines.join('\n');
     }
   }
@@ -443,10 +469,9 @@ String stampFrbHighlight(String content, String version) {
   if (lastBullet != -1) {
     // A bullet can wrap over several lines, and its continuation lines are
     // indented rather than starting with `- `. Inserting at `lastBullet + 1`
-    // therefore lands the stamp in the middle of the last bullet's sentence —
-    // which is exactly what happened to the v6.1.2 stamp. Everything between
-    // the last bullet and the end of the Highlights block belongs to that
-    // bullet, so insert after the block's last non-blank line instead.
+    // therefore lands the stamp in the middle of the last bullet's sentence.
+    // Everything between the last bullet and the end of the Highlights block
+    // belongs to that bullet, so insert after the block's last non-blank line.
     var insertAt = blockEnd;
     while (insertAt > lastBullet + 1 && lines[insertAt - 1].trim().isEmpty) {
       insertAt--;

@@ -28,47 +28,54 @@ Please be respectful and considerate of others. We expect all contributors to:
 
 ### Prerequisites
 
-- [Dart SDK](https://dart.dev/get-dart) (3.10.0+)
+- [Rust toolchain](https://rustup.rs/) (1.93.1+) — `rust-version` in
+  `rust/Cargo.toml` is the authority; this is the same number
+- [Dart SDK]( https://dart.dev/get-dart ) (^3.10.0) or Flutter
+  (>=3.38.0) — `make setup` installs the pinned Flutter through fvm
+- `make` (see **Windows Users** below)
 - Git
-- **For running tests:** Rust toolchain, protoc
+
+Nothing here is needed to *use* the published package: consumers get a
+precompiled native library through the build hook.
 
 ### Fork and Clone
 
 1. Fork the repository on GitHub
-2. Clone your fork locally:
+2. Clone **your fork**, not this repository:
    ```bash
    git clone https://github.com/YOUR_USERNAME/libsignal_dart.git
    cd libsignal_dart
    ```
-3. Add upstream remote:
+3. Add the upstream remote, so you can keep the fork current:
    ```bash
    git remote add upstream https://github.com/djx-y-z/libsignal_dart.git
    ```
 
 ## Development Setup
 
-### Quick Setup (Recommended)
-
-Run the setup command to install everything automatically:
+### Quick Setup
 
 ```bash
 make setup
 ```
 
-This will:
-1. Check that Rust toolchain is installed (shows instructions if not)
-2. Install FVM (Flutter Version Management) and project's Flutter version
-3. Install protoc (Protocol Buffers compiler) via brew/apt/dnf/pacman
-4. Install cargo-audit for Rust dependency vulnerability scanning
-5. Get all dependencies and configure git hooks
+It checks that a Rust toolchain is present (and tells you where to get one if
+not), installs fvm and the Flutter version pinned in `.fvmrc`, installs
+protoc, then installs the Rust tooling the gates need — `cargo-audit`,
+`cargo-deny` and `flutter_rust_bridge_codegen` at the exact version this
+project pins.
+
+Optional, per platform: `make setup-android` (cargo-ndk),
+`make setup-web` (wasm-pack), `make setup-fuzz`
+(nightly + cargo-fuzz).
 
 ### Verify Setup
 
 ```bash
-# Show all available commands
+# Every command this project has, with a one-line description each
 make help
 
-# Run tests to ensure everything works
+# The end-to-end check: this builds the native library if it is missing
 make test
 ```
 
@@ -93,60 +100,63 @@ On Windows, enable [Developer Mode][windows-dev-mode] before the first
 
 ### Windows Users
 
-On Windows, you need to install `make` first:
-- Via Chocolatey: `choco install make`
-- Via Scoop: `scoop install make`
-- Or use Git Bash / WSL
+Every task in this project runs through `make`, which Windows does not ship.
+Install it first:
 
-Then run `make setup` as above.
+- Chocolatey: `choco install make`
+- Scoop: `scoop install make`
+- Or work in Git Bash or WSL, where it is already present
+
+Then `make setup` as above.
 
 ### Project Structure
 
 ```
-libsignal/
-├── lib/                    # Main library code
-│   ├── libsignal.dart      # Public API exports
+libsignal_dart/
+├── lib/
+│   ├── libsignal.dart       # public API — the only file consumers import
 │   └── src/
-│       ├── rust/           # Auto-generated FRB bindings
-│       └── stores/         # Store interfaces and implementations
-├── rust/                   # Rust source code
-│   ├── Cargo.toml          # Rust dependencies (libsignal version here)
-│   └── src/api/            # FRB API functions
-├── hook/                   # Dart build hook (downloads native libraries)
-├── test/                   # Test files
-├── example/                # Example application
-├── scripts/                # Build scripts (use via Makefile!)
-└── Makefile                # Entry point for all commands
+│       ├── rust/            # FRB-generated bindings (do NOT hand-edit)
+│       └── stores/          # Store interfaces and implementations
+├── rust/                    # The native crate
+│   ├── Cargo.toml           # Dependencies, features, profiles, MSRV
+│   └── src/api/             # What FRB exposes; everything else is internal
+├── test/                    # Dart tests
+├── hook/build.dart          # Build hook: downloads or finds the native library
+├── scripts/                 # Automation — invoke through the Makefile
+├── example/                 # Example app
+└── Makefile                 # The single entry point for every task
 ```
+
+Two of those are load-bearing conventions rather than layout: `lib/src/rust/`
+is generated output that `make codegen` rewrites, so an edit there survives
+exactly until the next run; and `scripts/` is called through `make`, which is
+where the arguments and the environment each script expects are set.
 
 ## Making Changes
 
 ### Create a Branch
 
-Create a branch for your changes:
-
 ```bash
 git checkout -b feature/your-feature-name
 # or
-git checkout -b fix/your-bug-fix
+git checkout -b fix/the-thing-that-is-broken
 ```
 
 ### Types of Contributions
 
-We welcome:
-
-- **Bug fixes** - Fix issues in existing code
-- **Documentation** - Improve docs, examples, comments
-- **Tests** - Add or improve test coverage
-- **Features** - New functionality (please discuss first)
-- **Performance** - Optimizations with benchmarks
+- **Bug fixes** — with a test that fails before the fix
+- **Documentation** — including the comments that explain why a constraint exists
+- **Tests** — especially for a path only one platform reaches
+- **Features** — please open an issue first
+- **Performance** — with a measurement, not an argument
 
 ### Before You Start
 
-For major changes:
-1. Open an issue first to discuss the change
-2. Wait for feedback from maintainers
-3. This helps avoid wasted effort on changes that won't be merged
+For anything larger than a fix, open an issue and wait for a reply. This
+project pins versions, caps constraints and gates releases on grounds that are
+written down but not always obvious from the diff — a change can be correct and
+still be wrong here, and finding that out in review is expensive for you.
 
 ## Testing
 
@@ -242,6 +252,12 @@ Before submitting:
 - [ ] Tests pass locally (`make test`)
 - [ ] Static analysis passes (`make analyze`)
 - [ ] Code is formatted (`make format-check`)
+- [ ] Both documentation gates pass (`make doc`, `make rust-doc`) — they BLOCK in CI
+- [ ] If a `cfg(target_arch = "wasm32")` branch changed, `make test-web` passes
+      (it is the only check that executes web code, and it needs a chromedriver:
+      `make test-web CHROMEDRIVER=/path/to/chromedriver`)
+- [ ] Generated bindings are regenerated and committed, never hand-edited
+- [ ] New constraints, pins and caps carry a comment saying why
 - [ ] Documentation is updated if needed
 - [ ] CHANGELOG.md is updated for user-facing changes
 - [ ] Commit messages are clear and follow conventions
@@ -324,6 +340,9 @@ All development tasks should be done via Makefile:
 | `make help` | Show all available commands |
 | `make test` | Run all tests |
 | `make analyze` | Run static analysis |
+| `make doc` | Dartdoc gate — fails on an unresolved doc reference |
+| `make rust-doc` | Rustdoc gate — intra-doc links under `-D warnings` |
+| `make test-web` | Run the crate's browser tests (headless Chrome) |
 | `make rust-audit` | Check Rust dependencies for vulnerabilities |
 | `make rust-check` | Quick Rust type check (updates Cargo.lock) |
 | `make rust-test` | Run the crate's own Rust unit tests |
@@ -353,6 +372,14 @@ make codegen
 # Test the new bindings
 make test
 ```
+
+Regenerate after anything in `rust/src/api/` changes — a signature, a type, an
+enum variant, or a doc comment, which flutter_rust_bridge copies into the Dart
+output verbatim. Commit the result: the bindings are checked in, and the runtime
+asserts that its own flutter_rust_bridge version equals the one recorded in them.
+
+Never hand-edit a generated file to fix a build. The next `make codegen` reverts
+it, which turns a red build into a red build nobody can reproduce.
 
 When updating the libsignal version:
 
@@ -538,7 +565,7 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 
 ## The flutter_rust_bridge pin
 
-Five files record it, and two of them are compared with `==` at runtime:
+Six files record it, and two of them are compared with `==` at runtime:
 `frb_generated.dart` carries the version of the generator that produced it, and
 `RustLib.init()` throws unless the runtime package's version is the same string.
 So the constraint in `pubspec.yaml` is one version written as a range,
@@ -547,13 +574,22 @@ So the constraint in `pubspec.yaml` is one version written as a range,
 `dart pub publish` warns that a single-version constraint "should allow more
 than one version" and exits 65 on any warning.
 
-`make verify-frb-pins` checks all five agree and that the constraint is written
-in that form. It runs in CI on the Linux leg and costs five file reads — no
+The sixth, `rust/fuzz/Cargo.toml`, fails a different way and earlier. The fuzz
+crate depends on `flutter_rust_bridge` directly *and* on the main crate by
+path, so a stale pin there does not drift: cargo cannot resolve the two
+together at all, and every fuzz target stops building. Nothing else notices —
+`rust/fuzz` is its own workspace root, so no resolution under `rust/` passes
+through it, and the `Fuzz` workflow runs only on `rust/**` pull requests and a
+weekly cron, never on a push.
+
+`make verify-frb-pins` checks all six agree and that the constraint is written
+in that form. It runs in CI on the Linux leg and costs six file reads — no
 build, no network. Moving the version means moving `frb_version` in
-`.copier-answers.yml`, then `make setup-frb-codegen` and `make codegen` so the
-installed generator and the committed bindings match; a pull request that edits
-one of the five is wrong by construction, which is why Dependabot is told to
-leave `flutter_rust_bridge` alone.
+`.copier-answers.yml` and the `=` pin in both cargo manifests, then
+`make setup-frb-codegen` and `make codegen` so the installed generator and the
+committed bindings match; a pull request that edits one of the six is wrong by
+construction, which is why Dependabot is told to leave `flutter_rust_bridge`
+alone.
 
 ## Releasing (two stages)
 

@@ -295,7 +295,7 @@ Future<Uint8List> sealedSenderDecryptToUsmcWithCallbacks({
 ///
 /// The result is a single *SentMessage* blob addressed to the server, which
 /// fans it out into a per-recipient *ReceivedMessage* — see
-/// [sealedSenderV2ParseSentMessage]. Sessions are read but never advanced,
+/// `sealedSenderV2ParseSentMessage`. Sessions are read but never advanced,
 /// so nothing needs storing afterwards.
 ///
 /// `excluded_recipients` are service id strings included in the message's
@@ -328,7 +328,7 @@ Future<Uint8List> sealedSenderMultiRecipientEncryptWithCallbacks({
 /// Parse a multi-recipient SentMessage so it can be fanned out.
 ///
 /// This is the server-side half of
-/// [sealedSenderMultiRecipientEncryptWithCallbacks]: it reads the envelope of
+/// `sealedSenderMultiRecipientEncryptWithCallbacks`: it reads the envelope of
 /// one SentMessage so each recipient's message can be split out of it. It reads
 /// only the envelope — nothing here is decrypted or authenticated.
 ///
@@ -585,7 +585,7 @@ class SealedSenderV2Recipient {
 /// A parsed multi-recipient (Sealed Sender v2) SentMessage.
 ///
 /// Carries offsets rather than bytes — see
-/// [sealedSenderV2ParseSentMessage]. `SealedSenderV2SentMessage.receivedMessageFor`
+/// `sealedSenderV2ParseSentMessage`. `SealedSenderV2SentMessage.receivedMessageFor`
 /// assembles one recipient's message from them.
 class SealedSenderV2SentMessage {
   /// The version byte at the head of the *SentMessage*.
