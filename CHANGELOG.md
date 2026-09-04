@@ -81,9 +81,45 @@
   derived output changes. Found by replaying the AI reviewer over merged pull
   requests.
 
+#### Fixed
+
+- **A dead reference in the published API documentation** (`lib/libsignal.dart`)
+  — the library-level doc listed sender certificates as `[SenderCertificate]`, a
+  type this package does not expose: they reach Dart as a function family
+  (`createSenderCertificate`, `validateSenderCertificate`). dartdoc reports an
+  unresolved reference as a warning and exits zero, so it shipped to pub.dev on
+  every release that carried it and nothing ever said so. It was the only
+  instance, and the gate below now makes that class a build failure.
+
 ### For Contributors
 
 #### Added
+
+- **Two documentation gates, and both block** (`dartdoc_options.yaml`,
+  `make doc`, `make rust-doc`) — dartdoc's `unresolved-doc-reference` is
+  promoted from a warning to an error, and rustdoc runs under `-D warnings` on
+  the host and on wasm32. Both were red on adoption: one dead reference on the
+  Dart side, three on the Rust side, all dead for as long as they had existed.
+  They are the same mistake in both directions — flutter_rust_bridge copies a
+  Rust doc comment into the generated Dart verbatim, and Rust's intra-doc syntax
+  is not Dart's — so `rust/src/api/` now names the Dart surface in plain
+  backticks, which links on neither side and rots on neither either.
+  `dartdoc_options.yaml` is `.pubignore`d on purpose: pub.dev runs dartdoc
+  itself and would honour the same promotion, which could break documentation
+  generation for an already-published version.
+
+- **wasm32 is executed, not merely compiled** (`make test-web`,
+  `test-reusable.yml`) — CI gains `Build WASM` and `Rust unit tests (browser)`,
+  and `make test-web` runs the crate's `cfg(target_arch = "wasm32")` tests in
+  headless Chrome. Until now nothing covered those branches: `make test` is the
+  Dart VM and `make build-web` only compiles, while a wasm32 body is a
+  *different implementation* of the same function rather than the same code on
+  another host. `rust/Cargo.toml` gains the harness that needs, as a wasm32
+  `dev-dependencies` entry (`wasm-bindgen-test`); it is the only non-comment
+  change to that manifest, so the shipped binary is untouched, and
+  `make verify-third-party-notices` still passes with eleven new crates in
+  `Cargo.lock` because `cargo tree --edges normal,build` excludes every
+  dev-dependency on every target. First run here: 1 test, green.
 
 - **A pull request whose FRB bindings were never regenerated is refused**
   (`.github/workflows/codegen-guard.yml`) — two lines of shell that fail any
@@ -132,6 +168,35 @@
   against.
 
 #### Changed
+
+- **Adopted copier template v4.6.0 → v4.7.0** (`.copier-answers.yml`) — the two
+  gates above are most of it. The rest: release builds are locked, so every
+  `cargo build` and `cargo install` in `build-libsignal.yml` — the workflow that
+  produces the shipped binaries — now passes `--locked` and builds from the
+  committed lockfile rather than re-resolving; Dependabot stops proposing
+  `hooks` and `code_assets` majors, which are blocked by the pinned Flutter SDK
+  rather than by anything here and so cannot be merged or fixed in this
+  repository; and bookkeeping stops outranking tests, with
+  `verify-third-party-notices` and `verify-frb-pins` moving after the test steps
+  so a stale inventory no longer fails the Linux leg before a single test has
+  run. Eleven files came back conflicted. Four were merged rather than taken
+  from either side: `rust/Cargo.toml` keeps `js-sys` — which the template render
+  does not have and `rust/src/utils.rs` calls — and attaches the new
+  unwinding note to the existing `[profile.release]` instead of the second one
+  the template side would have added, which TOML rejects; `rust/deny.toml` keeps
+  its live `RUSTSEC-2026-0173` entry under the template's new preamble, and
+  keeps its own licence note, which states the AGPL-compatibility criterion the
+  generic one replaces with an invitation to extend the list; `CONTRIBUTING.md`
+  keeps the headings its own table of contents links to and takes the template's
+  prose; `SECURITY.md` keeps this project's reporting section and takes the note
+  that private vulnerability reporting has to be enabled per repository before
+  the link works for outside reporters. The new `enable_freezed` answer is
+  false: flutter_rust_bridge needs `freezed` only for data-carrying enums and
+  structs this API does not have, and answering it once replaces stripping the
+  three dependencies by hand after every update. `README.md` was taken whole
+  from this side — all four of its conflicts were misalignments against a
+  locally rewritten file, and one template side was a code fence that never
+  closed
 
 - **The Dependabot ignore that was holding setup-dart back is deleted, because
   it never held anything back** — Dependabot parses a `github-actions` ignore
@@ -197,6 +262,20 @@
   committed.
 
 #### Fixed
+
+- **The corrected HKDF note reached Rust but never reached Dart**
+  (`lib/src/rust/api/crypto.dart`) — the `# Security` correction recorded above
+  was written into `rust/src/api/crypto.rs` without a `make codegen` run, so the
+  generated Dart still carried the claim the correction exists to retract: that
+  the internal copy of the key material is cleared when the `Hkdf` value is
+  dropped. flutter_rust_bridge copies a Rust doc comment into the Dart output
+  verbatim, which makes a docstring edit a bindings edit, and nothing in CI
+  compares committed bindings against what codegen produces on a hand-made
+  commit — the `bindings=changed` tripwire lives in
+  `check-libsignal-updates.yml`, on the automated upstream path only, and
+  `codegen-guard.yml` refuses a labelled pull request rather than comparing
+  anything. Regenerating moved nothing else: `rustContentHash` is unchanged at
+  450650216, so the wire signature did not shift.
 
 - **A rate-limited GitHub reply no longer becomes "no release notes were
   published"** (`scripts/src/update_changelog.dart`) — `curl -s` carries no

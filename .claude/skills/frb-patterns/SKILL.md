@@ -380,6 +380,29 @@ rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
 - Use single-threaded alternatives when possible
 - FRB handles this automatically for most cases
 
+### A JS handle inside an opaque type is not `Send + Sync`
+
+FRB requires the types it exposes to be `Send + Sync`. A handle obtained from
+the browser — anything wrapping a `JsValue`, such as a `web_sys` object — is
+neither, because `JsValue` holds a raw pointer into the JS heap. Holding one in
+a struct FRB exposes fails to compile with a `Send`/`Sync` bound error that
+names a type you did not write.
+
+The fix is a newtype whose safety argument is the target itself:
+
+```rust
+/// `wasm32-unknown-unknown` is single-threaded: there is no second thread for
+/// this handle to be sent to, so the bound FRB requires is vacuously true.
+/// This reasoning is target-specific and does NOT transfer to native code.
+struct WebHandle(web_sys::SomeJsType);
+unsafe impl Send for WebHandle {}
+unsafe impl Sync for WebHandle {}
+```
+
+Keep it behind `#[cfg(target_arch = "wasm32")]` alongside the code that needs
+it. The same struct on a native target would be an unsound `unsafe impl` rather
+than a workaround, and nothing in the compiler would object.
+
 ### Building WASM
 ```bash
 make build-web  # Builds to rust/target/wasm32/

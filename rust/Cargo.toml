@@ -52,6 +52,9 @@ parking_lot = "0.12"
 # package version, so declaring them here is what enables the backend for every
 # crate in the graph that reaches them.
 #
+# Getting it wrong is loud rather than silently weak: getrandom `compile_error!`s
+# when it has no backend for this target, so `make build-web` fails closed.
+#
 # 0.2 was declared here too until it was measured out: `cargo tree --target
 # wasm32-unknown-unknown --edges normal -i getrandom@0.2.17` named this crate
 # and nothing else, so the declaration had become 0.2's only consumer and was
@@ -63,7 +66,10 @@ parking_lot = "0.12"
 getrandom = { version = "0.3", features = ["wasm_js"] }
 # getrandom 0.4.x — reached through aes-gcm-siv 0.12 -> aead 0.6 ->
 # crypto-common, which depends on it with no target cfg, so it is compiled for
-# wasm32 as well. Nothing else in the graph names its backend.
+# wasm32 as well. Nothing else in the graph names its backend — and the
+# `--cfg getrandom_backend="wasm_js"` in .cargo/config.toml does NOT cover it:
+# 0.4 does not recognise that value and selects its backend from the feature
+# alone.
 getrandom_04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
@@ -76,7 +82,31 @@ version = "0.3"
 version = "0.3"
 features = ["console", "Window", "Performance"]
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+# The browser harness `make test-web` drives. Target-gated so a native
+# `cargo test` does not build a browser harness it can never run.
+#
+# ⚠ This is NOT visible to the third-party notices gate, and does not need to
+# be: `make third-party-notices` runs `cargo tree --edges normal,build`, which
+# excludes EVERY dev-dependency on every target, gated or not.
+wasm-bindgen-test = "0.3"
+
 # Release profile optimizations
+#
+# ⚠ The absence of a `panic` key here is load-bearing. Adding
+# `panic = "abort"` would trade a small binary saving for skipping unwinding
+# altogether, and unwinding is what runs `Drop` — so every zeroize-on-Drop in
+# this crate would silently stop happening on the one path where it matters
+# most, a failure in the middle of an operation holding key material. Nothing
+# would fail; the wipe would just not occur. The same applies to
+# `-Cpanic=abort` in RUSTFLAGS, which bypasses this file entirely.
+#
+# It is a native-target statement only: `wasm32-unknown-unknown` aborts on
+# panic by default (`rustc --print cfg --target wasm32-unknown-unknown` says
+# `panic="abort"`), and no profile key changes that — a panic traps the module,
+# destructors do not run, and anything held in linear memory stays there until
+# the page is reloaded. Say so in SECURITY.md rather than assuming the profile
+# covers it.
 [profile.release]
 lto = true        # Link-Time Optimization for smaller binaries
 opt-level = "z"   # Optimize for size (important for WASM)

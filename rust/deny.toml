@@ -16,8 +16,22 @@ all-features = false
 
 [advisories]
 version = 2
-# Add advisory IDs here (with a justification comment) only to consciously
-# accept a risk that cannot yet be remediated.
+# Add advisory IDs here (each with a justification comment) only to consciously
+# accept a risk that cannot yet be remediated, e.g. an unmaintained build-time
+# dependency pulled transitively by an upstream crate with no available upgrade.
+#
+# Two things about this list that are easy to get wrong:
+#
+#   - An entry that stops matching is reported as `advisory-not-detected`. That
+#     warning is the signal to DELETE the entry, not to keep it in case the
+#     crate comes back: an ignore nobody can trigger is indistinguishable from
+#     one that is quietly covering a second advisory it was never reviewed for.
+#     Re-check the whole list on every upstream bump — empty it, run
+#     `make rust-deny`, and re-add only what fires again, with a fresh reason.
+#
+#   - This list and `.cargo/audit.toml` are not interchangeable. cargo-deny
+#     also reports *unmaintained* advisories, which `cargo audit` does not fail
+#     on, so an entry here is often one `make rust-audit` never needed.
 ignore = [
     # proc-macro-error2 is unmaintained (RUSTSEC-2026-0173). It is a
     # build-time-only proc-macro pulled transitively by upstream libsignal's

@@ -59,7 +59,7 @@ jobs:
 
           for l in $LABELS; do
             if [ "$l" = "codegen-failed" ]; then
-              echo "::error::#${PR} is labelled codegen-failed: \`make codegen\` did not complete, so the bindings under lib/src/rust/ do not correspond to the libsignal version this pull request pins. Regenerate them (\`make codegen\`), commit the result, and remove the label. Do not hand-edit lib/src/rust/ — the next codegen run reverts it."
+              echo "::error::#${PR} is labelled codegen-failed: \`make codegen\` did not complete, so the bindings under lib/src/rust/ do not correspond to the upstream version this pull request pins. Regenerate them (\`make codegen\`), commit the result, and remove the label. Do not hand-edit lib/src/rust/ — the next codegen run reverts it."
               exit 1
             fi
           done

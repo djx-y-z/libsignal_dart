@@ -107,8 +107,8 @@ void main() {
       );
     });
 
-    // The case the guard must NOT break: libsignal publishes releases with an
-    // empty body, and that is ordinary rather than an error.
+    // The case the guard must NOT break: some upstreams publish every release
+    // with an empty body, and that is ordinary rather than an error.
     test('a real release with an empty body is normal', () {
       expect(
         releaseNotesFrom({'tag_name': 'v1.2.3', 'body': ''}, 'v1.2.3'),

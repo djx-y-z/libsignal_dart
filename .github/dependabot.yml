@@ -83,6 +83,38 @@ updates:
       # `make setup-frb-codegen` + `make codegen` is the procedure.
       - dependency-name: "flutter_rust_bridge"
 
+      # The build-hook protocol packages. Majors are blocked by the pinned
+      # Flutter SDK rather than by anything in this repository, so the pull
+      # request cannot be merged and cannot be fixed here either: hooks >= 2.1.0
+      # pulls `record_use ^1.0.0`, which needs `meta ^1.19.0`, while Flutter
+      # 3.38.4 pins `meta: 1.17.0` exactly (packages/flutter/pubspec.yaml). The
+      # first stable SDK to relax that is 3.47.0.
+      #
+      # Ignoring rather than merging-and-fixing, because the damage is not
+      # local: the root package resolves fine — it has no `flutter: sdk`
+      # dependency — so a bump breaks `example/` and every Flutter *consumer* on
+      # an SDK that pins meta below 1.19.0, while this repository's own CI looks
+      # merely red. code_assets 2.0.0 requires hooks ^2.2.0, so the two move
+      # together and ignoring one alone only changes which pull request arrives.
+      #
+      # ⚠ Written as `update-types` rather than `versions: ["2.x"]` on purpose.
+      # A wildcard is not a version requirement: this template already shipped
+      # `versions: ["1.8.x"]` for a GitHub Action, and Dependabot parsed it
+      # through `Gem::Requirement`, which has no wildcard expansion — the entry
+      # matched nothing at all and the bot went on proposing the bump while the
+      # ignore sat in the file looking like protection. `update-types` needs no
+      # parsing of a version string and says what is meant: no majors.
+      #
+      # Lift when .fvmrc moves to Flutter >= 3.47.0. pubspec.yaml says the same
+      # thing in its own comment ("Majors are a deliberate migration, not a
+      # bump"); this is what stops the proposal arriving weekly in the meantime.
+      - dependency-name: "hooks"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "code_assets"
+        update-types:
+          - "version-update:semver-major"
+
   # The native crate's dependencies. These are compiled into the binary the
   # build hook downloads, so a vulnerable transitive crate reaches consumers as
   # shipped code rather than as a build-time inconvenience — `make rust-audit`
