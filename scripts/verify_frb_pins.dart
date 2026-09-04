@@ -5,7 +5,7 @@
 /// Usage:
 ///   fvm dart scripts/verify_frb_pins.dart
 ///
-/// Exits 0 when they agree, 1 when they do not. Reads five files and nothing
+/// Exits 0 when they agree, 1 when they do not. Reads six files and nothing
 /// else — no build, no network — so it is cheap enough to gate every push.
 ///
 /// See `scripts/src/frb_pins.dart` for why the agreement matters: the runtime
@@ -23,10 +23,11 @@ void main(List<String> args) {
   if (args.contains('--help') || args.contains('-h')) {
     print('Usage: fvm dart scripts/verify_frb_pins.dart');
     print('');
-    print('Checks that pubspec.yaml, rust/Cargo.toml, the Makefile, the');
-    print('committed FRB bindings and .copier-answers.yml all name the same');
-    print('flutter_rust_bridge version, and that the pubspec constraint is');
-    print('written as the publishable single-version range.');
+    print('Checks that pubspec.yaml, rust/Cargo.toml, the Makefile,');
+    print('rust/fuzz/Cargo.toml, the committed FRB bindings and');
+    print('.copier-answers.yml all name the same flutter_rust_bridge version,');
+    print('and that the pubspec constraint is written as the publishable');
+    print('single-version range.');
     return;
   }
 
@@ -46,7 +47,8 @@ void main(List<String> args) {
     stderr.writeln(report);
     stderr.writeln('');
     stderr.writeln(
-      'Move them together: set `frb_version` in .copier-answers.yml, then '
+      'Move them together: set `frb_version` in .copier-answers.yml and the '
+      '`=` pin in every cargo manifest that carries one, then '
       '`make setup-frb-codegen` and `make codegen` so the installed codegen '
       'and the committed bindings match the constraint.',
     );

@@ -263,6 +263,27 @@
 
 #### Fixed
 
+- **The fuzz crate stopped building the moment the main crate moved to
+  flutter_rust_bridge 2.13.0, and no gate could see it**
+  (`rust/fuzz/Cargo.toml`, `scripts/src/frb_pins.dart`) — `rust/fuzz` pins
+  `flutter_rust_bridge` directly *and* takes the main crate by path, so the
+  `=2.12.0` it kept when `4f47a2e` raised the main crate to 2.13.0 was not
+  drift: cargo cannot resolve the two together at all. `cargo metadata` there
+  exits 101 with "failed to select a version for `flutter_rust_bridge`", which
+  makes every fuzz target unbuildable, locally and in CI. Three separate things
+  had to miss it, and each did. `rust/fuzz` is its own workspace root, so no
+  resolution under `rust/` ever passes through it. The `Fuzz` workflow triggers
+  on `rust/**` pull requests and a weekly cron but **not** on a push, and
+  `4f47a2e` reached `main` as a push — so the first red run was somebody else's
+  pull request, days later. And `make verify-frb-pins`, the gate whose whole job
+  is that these versions move together, read five files and not this one, even
+  though the pin carries a comment saying it must match the main crate. The pin
+  is now 2.13.0, and the gate reads six files: a bump that forgets the fuzz
+  crate now fails on the constraint instead of in a fuzz run nobody is watching.
+  `FrbPin` also records absence rather than inferring it from the wording of its
+  own message, which a second optional source would otherwise have made
+  load-bearing.
+
 - **The corrected HKDF note reached Rust but never reached Dart**
   (`lib/src/rust/api/crypto.dart`) — the `# Security` correction recorded above
   was written into `rust/src/api/crypto.rs` without a `make codegen` run, so the

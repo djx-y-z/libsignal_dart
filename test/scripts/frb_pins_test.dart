@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:test/test.dart';
 
 import '../../scripts/src/frb_pins.dart';
@@ -110,7 +112,7 @@ void main() {
     });
   });
 
-  group('the other four sources', () {
+  group('the other five sources', () {
     test('reads the string form in Cargo.toml', () {
       expect(
         frbVersionFromCargoToml(
@@ -153,6 +155,23 @@ void main() {
           '[target.\'cfg(target_arch = "wasm32")\'.dependencies]\n'
           'flutter_rust_bridge = "=2.12.0"\n';
       expect(frbVersionFromCargoToml(content), '2.12.0');
+    });
+
+    test('names the manifest it read when two pins disagree', () {
+      const content =
+          'flutter_rust_bridge = "=2.13.0"\n'
+          '[target.\'cfg(target_arch = "wasm32")\'.dependencies]\n'
+          'flutter_rust_bridge = "=2.12.0"\n';
+      expect(
+        () => frbVersionFromCargoToml(content, path: 'rust/fuzz/Cargo.toml'),
+        throwsA(
+          isA<FrbPinFormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('rust/fuzz/Cargo.toml'),
+          ),
+        ),
+      );
     });
 
     test('reads FRB_CODEGEN_VERSION from the Makefile', () {
@@ -198,8 +217,17 @@ void main() {
   });
 
   group('frbPinReport', () {
-    FrbPin pin(String source, String? version, [String detail = '']) =>
-        FrbPin(source: source, version: version, detail: detail);
+    FrbPin pin(
+      String source,
+      String? version, {
+      String detail = '',
+      bool isAbsent = false,
+    }) => FrbPin(
+      source: source,
+      version: version,
+      detail: detail,
+      isAbsent: isAbsent,
+    );
 
     test('says nothing when every source agrees', () {
       expect(
@@ -230,7 +258,12 @@ void main() {
       expect(
         frbPinReport([
           pin('pubspec.yaml', '2.12.0'),
-          pin('lib/src/rust/frb_generated.dart', null, 'not generated yet'),
+          pin(
+            'lib/src/rust/frb_generated.dart',
+            null,
+            detail: 'not generated yet',
+            isAbsent: true,
+          ),
         ]),
         isNull,
       );
@@ -239,10 +272,69 @@ void main() {
     test('reports a file that exists but holds no readable pin', () {
       final report = frbPinReport([
         pin('pubspec.yaml', '2.12.0'),
-        pin('Makefile', null, 'no FRB_CODEGEN_VERSION found in the file'),
+        pin(
+          'Makefile',
+          null,
+          detail: 'no FRB_CODEGEN_VERSION found in the file',
+        ),
       ])!;
       expect(report, contains('Makefile'));
       expect(report, contains('no FRB_CODEGEN_VERSION'));
+    });
+  });
+
+  group('collectFrbPins', () {
+    late Directory dir;
+
+    setUp(() {
+      dir = Directory.systemTemp.createTempSync('frb_pins_test');
+      File('${dir.path}/pubspec.yaml').writeAsStringSync(
+        'dependencies:\n  flutter_rust_bridge: ">=2.13.0 <2.13.1"\n',
+      );
+      File(
+        '${dir.path}/Makefile',
+      ).writeAsStringSync('FRB_CODEGEN_VERSION ?= 2.13.0\n');
+      File(
+        '${dir.path}/.copier-answers.yml',
+      ).writeAsStringSync('frb_version: 2.13.0\n');
+      Directory('${dir.path}/rust').createSync(recursive: true);
+      File(
+        '${dir.path}/rust/Cargo.toml',
+      ).writeAsStringSync('[dependencies]\nflutter_rust_bridge = "=2.13.0"\n');
+    });
+
+    tearDown(() => dir.deleteSync(recursive: true));
+
+    void writeFuzzPin(String version) {
+      Directory('${dir.path}/rust/fuzz').createSync(recursive: true);
+      File('${dir.path}/rust/fuzz/Cargo.toml').writeAsStringSync(
+        '[dependencies]\nflutter_rust_bridge = "=$version"\n',
+      );
+    }
+
+    test('reads the fuzz crate pin', () {
+      writeFuzzPin('2.13.0');
+      final pins = collectFrbPins(packageDir: dir);
+      expect(pins.map((p) => p.source), contains('rust/fuzz/Cargo.toml'));
+      expect(frbPinReport(pins), isNull);
+    });
+
+    // The incident this source was added for: the main crate moved to 2.13.0
+    // and the fuzz crate kept its `=2.12.0`, which does not merely drift —
+    // cargo cannot resolve a path dependency on the main crate against it, so
+    // every fuzz target stops building. No other gate sees it: `rust/fuzz` is
+    // its own workspace root, so nothing under `rust/` resolves through it, and
+    // the Fuzz workflow runs only on `rust/**` pull requests and a weekly cron,
+    // never on a push to main.
+    test('reports a fuzz crate left behind on the old version', () {
+      writeFuzzPin('2.12.0');
+      final report = frbPinReport(collectFrbPins(packageDir: dir))!;
+      expect(report, contains('rust/fuzz/Cargo.toml'));
+      expect(report, contains('2.13.0 vs 2.12.0'));
+    });
+
+    test('tolerates a project with no fuzz crate', () {
+      expect(frbPinReport(collectFrbPins(packageDir: dir)), isNull);
     });
   });
 }

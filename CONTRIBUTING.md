@@ -565,7 +565,7 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 
 ## The flutter_rust_bridge pin
 
-Five files record it, and two of them are compared with `==` at runtime:
+Six files record it, and two of them are compared with `==` at runtime:
 `frb_generated.dart` carries the version of the generator that produced it, and
 `RustLib.init()` throws unless the runtime package's version is the same string.
 So the constraint in `pubspec.yaml` is one version written as a range,
@@ -574,13 +574,22 @@ So the constraint in `pubspec.yaml` is one version written as a range,
 `dart pub publish` warns that a single-version constraint "should allow more
 than one version" and exits 65 on any warning.
 
-`make verify-frb-pins` checks all five agree and that the constraint is written
-in that form. It runs in CI on the Linux leg and costs five file reads — no
+The sixth, `rust/fuzz/Cargo.toml`, fails a different way and earlier. The fuzz
+crate depends on `flutter_rust_bridge` directly *and* on the main crate by
+path, so a stale pin there does not drift: cargo cannot resolve the two
+together at all, and every fuzz target stops building. Nothing else notices —
+`rust/fuzz` is its own workspace root, so no resolution under `rust/` passes
+through it, and the `Fuzz` workflow runs only on `rust/**` pull requests and a
+weekly cron, never on a push.
+
+`make verify-frb-pins` checks all six agree and that the constraint is written
+in that form. It runs in CI on the Linux leg and costs six file reads — no
 build, no network. Moving the version means moving `frb_version` in
-`.copier-answers.yml`, then `make setup-frb-codegen` and `make codegen` so the
-installed generator and the committed bindings match; a pull request that edits
-one of the five is wrong by construction, which is why Dependabot is told to
-leave `flutter_rust_bridge` alone.
+`.copier-answers.yml` and the `=` pin in both cargo manifests, then
+`make setup-frb-codegen` and `make codegen` so the installed generator and the
+committed bindings match; a pull request that edits one of the six is wrong by
+construction, which is why Dependabot is told to leave `flutter_rust_bridge`
+alone.
 
 ## Releasing (two stages)
 
