@@ -47,6 +47,7 @@ parking_lot = "0.12"
 
 # WASM support - getrandom needs explicit features for browser randomness
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+<<<<<<< before updating
 # Two live at once, and each needs its browser backend turned on by name or
 # the wasm32 build fails inside getrandom itself. Cargo unions features per
 # package version, so declaring them here is what enables the backend for every
@@ -64,13 +65,64 @@ getrandom = { version = "0.3", features = ["wasm_js"] }
 # getrandom 0.4.x — reached through aes-gcm-siv 0.12 -> aead 0.6 ->
 # crypto-common, which depends on it with no target cfg, so it is compiled for
 # wasm32 as well. Nothing else in the graph names its backend.
+=======
+# getrandom refuses to compile for wasm32-unknown-unknown until its browser
+# backend is selected by name, and three majors coexist in a modern Rust crypto
+# graph. Cargo unions features per package version and per target, so declaring
+# each here is what turns the backend on for every crate that reaches it on the
+# Web, and changes nothing for the native builds.
+#
+# 0.4 is the one that is easy to miss. The RustCrypto stack reaches it through
+# aead 0.6 -> crypto-common, which declares it with NO target cfg, so it is
+# compiled for wasm32 as well — and a `--cfg getrandom_backend="wasm_js"` in
+# .cargo/config.toml does NOT cover it: 0.4 does not recognise that value and
+# selects its backend from the feature alone.
+#
+# Getting it wrong is loud rather than silently weak: getrandom `compile_error!`s
+# when it has no backend for this target, so `make build-web` fails closed.
+# If one of these is genuinely unreachable, `cargo tree --target
+# wasm32-unknown-unknown -i getrandom@<version>` says so — the declaration is
+# then the only thing holding it in the graph and can be dropped.
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+getrandom = { version = "0.3", features = ["wasm_js"] }
+>>>>>>> after updating
 getrandom_04 = { package = "getrandom", version = "0.4", features = ["wasm_js"] }
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 
+<<<<<<< before updating
 # For WASM: Use js_sys for console/timing
 [target.'cfg(target_arch = "wasm32")'.dependencies.js-sys]
 version = "0.3"
+=======
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+# The browser harness `make test-web` drives. Target-gated so a native
+# `cargo test` does not build a browser harness it can never run.
+#
+# ⚠ This is NOT visible to the third-party notices gate, and does not need to
+# be: `make third-party-notices` runs `cargo tree --edges normal,build`, which
+# excludes EVERY dev-dependency on every target, gated or not.
+wasm-bindgen-test = "0.3"
+
+# ⚠ The absence of a `panic` key here is load-bearing. Adding
+# `panic = "abort"` would trade a small binary saving for skipping unwinding
+# altogether, and unwinding is what runs `Drop` — so every zeroize-on-Drop in
+# this crate would silently stop happening on the one path where it matters
+# most, a failure in the middle of an operation holding key material. Nothing
+# would fail; the wipe would just not occur. The same applies to
+# `-Cpanic=abort` in RUSTFLAGS, which bypasses this file entirely.
+#
+# It is a native-target statement only: `wasm32-unknown-unknown` aborts on
+# panic by default (`rustc --print cfg --target wasm32-unknown-unknown` says
+# `panic="abort"`), and no profile key changes that — a panic traps the module,
+# destructors do not run, and anything held in linear memory stays there until
+# the page is reloaded. Say so in SECURITY.md rather than assuming the profile
+# covers it.
+[profile.release]
+lto = true
+opt-level = "z"
+strip = true
+>>>>>>> after updating
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
 version = "0.3"

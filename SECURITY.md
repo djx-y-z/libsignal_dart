@@ -4,6 +4,7 @@
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
+<<<<<<< before updating
 ### How to Report
 
 Use [GitHub Security Advisories](https://github.com/djx-y-z/libsignal_dart/security/advisories/new) to report vulnerabilities privately, so the risk can be assessed and a fix prepared before public disclosure.
@@ -24,6 +25,19 @@ Please include:
 ### Coordinated Disclosure
 
 We follow coordinated disclosure. Once a fix is available we will (1) release a patched version, (2) publish a security advisory, and (3) credit the reporter unless anonymity is requested.
+=======
+1. **Do NOT** open a public GitHub issue for security vulnerabilities
+2. Use [GitHub's private vulnerability reporting](https://github.com/djx-y-z/libsignal_dart/security/advisories/new)
+   — it opens a draft advisory only the maintainers can see, and it is the one
+   channel that needs no contact details published anywhere. It has to be
+   enabled once per repository (Settings → Security → Private vulnerability
+   reporting) before that link works for outside reporters.
+3. Include as much detail as possible:
+   - Description of the vulnerability
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (if any)
+>>>>>>> after updating
 
 ## Security Scope
 

@@ -28,8 +28,84 @@ void main() {
       expect(result, contains('**libsignal v0.97.3**'));
     });
 
+<<<<<<< before updating
     test('inserts after a wrapped highlight, not inside it', () {
       // Regression: the v6.1.2 stamp landed between the first and second line
+=======
+    test('replaces a wrapped frb highlight whole', () {
+      // Regression: the replace branch overwrote only the bullet's first line.
+      // A hand-edited highlight that wraps left its continuation behind, and
+      // that orphan then rode into the released section this stamp closes —
+      // which the changelog contract forbids editing afterwards.
+      const changelog = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal_frb v5.1.0** — Rust FFI bindings, and a sentence somebody
+  wrapped onto a second, indented line while explaining the change.
+
+#### Changed
+
+- Update libsignal native library to v0.97.3
+
+## [6.0.0] - 2026-07-14
+''';
+      final result = stampFrbHighlight(changelog, '5.2.0');
+      expect(result, contains('v5.2.0** — Rust FFI bindings'));
+      expect(result, isNot(contains('wrapped onto a second')));
+      expect(result, isNot(contains('v5.1.0')));
+      // The rest of the section survives intact.
+      expect(result, contains('#### Changed'));
+      expect(result, contains('- Update'));
+    });
+
+    test('replaces a lazily wrapped frb highlight', () {
+      // A continuation line need not be indented: with no blank line between
+      // them it is still the same bullet.
+      const changelog = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal_frb v5.1.0** — Rust FFI bindings
+still the same bullet, just not indented
+
+## [6.0.0] - 2026-07-14
+''';
+      final result = stampFrbHighlight(changelog, '5.2.0');
+      expect(result, isNot(contains('still the same bullet')));
+      expect(result, contains('v5.2.0** — Rust FFI bindings'));
+    });
+
+    test('leaves the paragraph after the highlight alone', () {
+      // The other half of the rule: a blank line ends the bullet unless what
+      // follows is indented, so an ordinary paragraph is not swallowed.
+      const changelog = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal_frb v5.1.0** — Rust FFI bindings
+
+A paragraph that belongs to the section, not to the bullet.
+
+## [6.0.0] - 2026-07-14
+''';
+      final result = stampFrbHighlight(changelog, '5.2.0');
+      expect(result, contains('A paragraph that belongs to the section'));
+      expect(result, contains('v5.2.0** — Rust FFI bindings'));
+    });
+
+    test('inserts after a wrapped highlight, not inside it', () {
+      // Regression: the insert used to land between the first and second line
+>>>>>>> after updating
       // of a highlight that wrapped, splitting the sentence in half. A bullet's
       // continuation lines are indented and do not start with `- `, so the
       // insert point has to be the end of the block, not `lastBullet + 1`.
@@ -40,6 +116,7 @@ void main() {
 
 #### ✨ Highlights
 
+<<<<<<< before updating
 - **libsignal v0.101.2** — upstream bump. One change does land in a surface this
   package exposes, and it is an internal API migration with no behavioural
   effect; sealed sender's cipher state is now cleared on drop
@@ -59,6 +136,24 @@ void main() {
       final lastContinuationIdx = lines.indexWhere(
         (l) =>
             l.contains("sealed sender's cipher state is now cleared on drop"),
+=======
+- **libsignal v0.97.5** — upstream bump. One change does land in a surface this
+  package exposes, and it is an internal API migration with no behavioural
+  effect
+
+#### Changed
+
+- Update libsignal native library to v0.97.5
+
+## [6.0.0] - 2026-07-14
+''';
+      final result = stampFrbHighlight(changelog, '5.2.0');
+      final lines = result.split('\n');
+
+      final frbIdx = lines.indexWhere((l) => l.contains('**libsignal_frb v5.2.0**'));
+      final lastContinuationIdx = lines.indexWhere(
+        (l) => l.contains('effect'),
+>>>>>>> after updating
       );
       expect(frbIdx, greaterThan(lastContinuationIdx));
 
@@ -66,16 +161,26 @@ void main() {
       expect(
         result,
         contains(
+<<<<<<< before updating
           '- **libsignal v0.101.2** — upstream bump. One change does land in a surface this\n'
           '  package exposes, and it is an internal API migration with no behavioural\n'
           "  effect; sealed sender's cipher state is now cleared on drop\n",
+=======
+          '- **libsignal v0.97.5** — upstream bump. One change does land in a surface this\n'
+          '  package exposes, and it is an internal API migration with no behavioural\n'
+          '  effect\n',
+>>>>>>> after updating
         ),
       );
     });
 
     test('replaces the frb line in place when the highlight above it wraps', () {
       // The re-run case after a failed native build: the frb line is already
+<<<<<<< before updating
       // there, sitting below a wrapped highlight, and only its version moves.
+=======
+      // there, below a wrapped highlight, and only its version moves.
+>>>>>>> after updating
       const changelog = '''
 ## [Unreleased]
 
@@ -83,6 +188,7 @@ void main() {
 
 #### ✨ Highlights
 
+<<<<<<< before updating
 - **libsignal v0.101.2** — upstream bump. One change does land in a surface this
   package exposes, and it is an internal API migration with no behavioural
   effect; sealed sender's cipher state is now cleared on drop
@@ -104,6 +210,29 @@ void main() {
           '  package exposes, and it is an internal API migration with no behavioural\n'
           "  effect; sealed sender's cipher state is now cleared on drop\n"
           '- **libsignal_frb v6.1.3** — Rust FFI bindings\n',
+=======
+- **libsignal v0.97.5** — upstream bump. One change does land in a surface this
+  package exposes, and it is an internal API migration with no behavioural
+  effect
+- **libsignal_frb v5.1.0** — Rust FFI bindings
+
+#### Changed
+
+- Update libsignal native library to v0.97.5
+
+## [6.0.0] - 2026-07-14
+''';
+      final result = stampFrbHighlight(changelog, '5.2.0');
+      expect(result, contains('**libsignal_frb v5.2.0** — Rust FFI bindings'));
+      expect(result, isNot(contains('libsignal_frb v5.1.0')));
+      expect(
+        result,
+        contains(
+          '- **libsignal v0.97.5** — upstream bump. One change does land in a surface this\n'
+          '  package exposes, and it is an internal API migration with no behavioural\n'
+          '  effect\n'
+          '- **libsignal_frb v5.2.0** — Rust FFI bindings\n',
+>>>>>>> after updating
         ),
       );
     });

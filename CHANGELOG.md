@@ -55,6 +55,75 @@
 
 #### Changed
 
+- **copier template adopted: v4.6.0 -> v4.7.0** — adds the Web, Rust-documentation,
+  documentation, code-generation and release-safety gates, while carrying forward
+  several template fixes this project already had
+
+  The new Web path is documented and executable: `Makefile` gains
+  `make run-example-web`, `make test-web`, `make rust-doc` and `make rust-geiger`,
+  while `.github/workflows/test-reusable.yml` builds the wasm target, runs the
+  browser tests and gates Rust and Dart documentation. `rust/Cargo.toml` and
+  `rust/src/utils.rs` add the wasm test harness and its `current_time()` test;
+  `wasm-bindgen-test` remains a wasm-only dev dependency. `Makefile` passes the
+  resolved ChromeDriver through wasm-pack rather than allowing an unpinned
+  download, and raises `WASM_BINDGEN_TEST_TIMEOUT`. `dartdoc_options.yaml`
+  promotes unresolved Dart references to errors, `.pubignore` keeps that policy
+  file out of published packages, and `.github/workflows/test.yml` runs the
+  documentation gate.
+
+  `.github/workflows/codegen-guard.yml` now rejects pull requests carrying the
+  `codegen-failed` label, while `.github/agent-prompts/repair-build.md` and the
+  generated-project guidance preserve the rule that generated bindings must be
+  changed through code generation rather than by hand. The latter prompt, the
+  `frb-patterns` skill, and `update-libsignal` now document the FRB `Send + Sync`
+  requirement for browser handles, feature-gated APIs, additive Cargo features,
+  checking feature-induced strings in native and wasm artifacts, revalidating
+  advisory ignores, and keeping the rendered MSRV answer, `rust-version` and
+  README in sync. The `codegen-guard.yml` copy is intentionally verbatim, as are
+  the existing generated-file workflow conventions.
+
+  `CONTRIBUTING.md` is expanded from a stub into contributor instructions,
+  including prerequisites, fork setup, `make setup`, Windows tooling, project
+  layout, code generation, pull requests and the Makefile reference. `README.md`
+  now distinguishes contributor prerequisites from consumer requirements and
+  uses the repository name created by `git clone`; `SECURITY.md` points reporters
+  directly to GitHub private vulnerability reporting. `pubspec.yaml` makes
+  `freezed`, `freezed_annotation` and `build_runner` conditional on the new
+  `enable_freezed` Copier answer, so projects without data-carrying Rust types
+  need not remove those dependencies after every update. `rust/Cargo.toml` also
+  declares `getrandom` 0.4 for the wasm32 RustCrypto graph and explains why
+  `[profile.release]` deliberately has no `panic` setting; `rust/deny.toml`
+  de-duplicates the selected licence and documents stale advisory ignores.
+
+  Release reproducibility is tightened in `Makefile` and
+  `.github/workflows/build-libsignal.yml`: shipped native and Android artifacts,
+  `cargo-ndk`, and `cargo-audit` use `--locked`, while the ordinary `make build`
+  path remains unlocked until a freshly rendered project has a lockfile.
+  `.github/workflows/test-reusable.yml` moves third-party-notice and FRB-pin
+  bookkeeping after analysis, formatting, tests and coverage, so stale
+  bookkeeping cannot prevent the substantive checks from running. Dependabot
+  in `.github/dependabot.yml` now uses `increase-if-necessary`, separates
+  `pub` and `cargo` minor/patch groups from majors, and blocks the incompatible
+  native-hooks major with `update-types` rather than the ineffective wildcard
+  form. The `lints` window and the generated FRB default move to the versions
+  already recorded by this project.
+
+  The release scripts are hardened in `scripts/src/check_updates.dart`,
+  `scripts/src/update_changelog.dart` and `scripts/src/release_frb.dart`.
+  Rate-limited or other failed GitHub responses no longer become a false claim
+  that no release notes exist; README badges use the configured tag prefix only
+  once; and FRB highlights replace or insert the whole bullet instead of
+  splitting wrapped changelog text. The corresponding behavior is covered by
+  the changed script tests. `CLAUDE.md` and the update and release skills carry
+  the matching version, workflow and contributor instructions.
+
+  Several 4.7.0 changes arrive byte-identically because this project already had
+  them: the `dart-lang/setup-dart` 1.8.1 pin with
+  `problem-matcher: 'false'`, the deleted ineffective Dependabot ignore, the
+  full `lib/src/rust/` coverage exclusion, the removal of wasm `getrandom` 0.2,
+  the expanded repair-agent prompt, and the `lints` 6.1.0 window. They are
+  retained during the adoption rather than presented as new project behavior.
+
 - **The Dependabot ignore that was holding setup-dart back is deleted, because
   it never held anything back** — Dependabot parses a `github-actions` ignore
   through `Gem::Requirement`, which has no wildcard expansion. `"1.8.x"` becomes

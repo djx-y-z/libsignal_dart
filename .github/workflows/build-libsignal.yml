@@ -133,7 +133,7 @@ jobs:
       - name: Build for Linux ${{ matrix.arch }}
         run: |
           cd rust
-          cargo build --release --target ${{ matrix.rust_target }}
+          cargo build --release --locked --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -176,7 +176,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: '10.15'
         run: |
           cd rust
-          cargo build --release --target ${{ matrix.rust_target }}
+          cargo build --release --locked --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -225,7 +225,7 @@ jobs:
           IPHONEOS_DEPLOYMENT_TARGET: '13.0'
         run: |
           cd rust
-          cargo build --release --target ${{ matrix.rust_target }}
+          cargo build --release --locked --target ${{ matrix.rust_target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -265,8 +265,11 @@ jobs:
           sdkmanager --install "ndk;26.3.11579264"
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.3.11579264" >> $GITHUB_ENV
 
+      # `--locked` so the tool is built from its own committed lockfile.
+      # ⚠ The cargo-ndk VERSION is still unpinned, and this job produces the
+      # shipped Android .so files.
       - name: Setup cargo-ndk
-        run: cargo install cargo-ndk
+        run: cargo install cargo-ndk --locked
 
       - name: Setup Protoc
         uses: ./.github/actions/setup-protoc
@@ -277,7 +280,7 @@ jobs:
           # (matches the package's documented minSdk; cargo-ndk would
           # otherwise use its own default).
           cd rust
-          cargo ndk -t ${{ matrix.rust_target }} --platform 24 build --release
+          cargo ndk -t ${{ matrix.rust_target }} --platform 24 build --release --locked
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
@@ -316,7 +319,7 @@ jobs:
             Rename-Item $gitLink $gitLinkBak
           }
           try {
-            cargo build --release `
+            cargo build --release --locked `
               --manifest-path rust/Cargo.toml `
               --target x86_64-pc-windows-msvc
           } finally {

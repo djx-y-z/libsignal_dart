@@ -119,4 +119,32 @@ void main() {
       );
     });
   });
+
+  group('updateReadmeBadge', () {
+    // Held in a Dart const rather than interpolated at every use, so the lines
+    // below have the same width in every generated project and `dart format`
+    // has nothing to rewrite whatever the library is called.
+    const lib = 'libsignal';
+    String badge(String version) =>
+        '[![$lib](https://img.shields.io/badge/$lib-$version-orange.svg)]';
+
+    test('writes the version, not the tag', () {
+      expect(
+        updateReadmeBadge(badge('v0.8.1'), '${_prefix}0.9.0'),
+        badge('v0.9.0'),
+      );
+    });
+
+    test('keeps a badge that omits the leading v', () {
+      expect(
+        updateReadmeBadge(badge('0.8.1'), '${_prefix}0.9.0'),
+        badge('0.9.0'),
+      );
+    });
+
+    test('leaves content with no badge alone', () {
+      const readme = 'no badge here';
+      expect(updateReadmeBadge(readme, '${_prefix}0.9.0'), readme);
+    });
+  });
 }

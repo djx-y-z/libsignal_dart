@@ -321,15 +321,34 @@ final plaintext = await groupSession.decrypt(
 
 ### Basic Usage
 
+<<<<<<< before updating
 ```dart
 final identity = IdentityKeyPair.generate();
 // Use identity...
 // FRB handles cleanup automatically via finalizers
 ```
+=======
+**Using the published package requires none of this.** The build hook downloads
+a precompiled native library from GitHub Releases during `flutter build`, so a
+consumer needs no Rust toolchain, no FVM and no `make`. The list below is for
+contributors and for building from source.
+
+- [Flutter](https://flutter.dev/docs/get-started/install) (>=3.38.0)
+- [Rust](https://rustup.rs/) (1.88+) — must match `rust-version` in `rust/Cargo.toml`
+- [FVM](https://fvm.app/) (recommended for version management)
+- Make (for build commands; see the Windows note in CONTRIBUTING.md)
+>>>>>>> after updating
 
 ### Performance Optimization
 
+<<<<<<< before updating
 For better performance, initialize once at app start:
+=======
+```bash
+# Clone the repository
+git clone https://github.com/djx-y-z/libsignal_dart.git
+cd libsignal_dart
+>>>>>>> after updating
 
 ```dart
 void main() async {
@@ -454,6 +473,7 @@ The Rust core of libsignal ships as a `.wasm` module in both modes — `--wasm` 
 
 ### For Contributors / Source Builds
 
+<<<<<<< before updating
 If you want to build from source (or precompiled binaries are not available):
 
 - [Flutter](https://flutter.dev/) 3.38+
@@ -465,6 +485,11 @@ If you want to build from source (or precompiled binaries are not available):
   - macOS: `brew install protobuf`
   - Ubuntu/Debian: `apt-get install protobuf-compiler`
   - Windows: [Download from GitHub](https://github.com/protocolbuffers/protobuf/releases)
+=======
+# Build for Web (WASM)
+make build-web
+```
+>>>>>>> after updating
 
 ### Setup
 
@@ -547,7 +572,11 @@ new version in `.copier-answers.yml`.
 
 ## Acknowledgements
 
+<<<<<<< before updating
 This library would not be possible without [libsignal](https://github.com/signalapp/libsignal) by [Signal](https://signal.org/), which provides the underlying Rust implementation of the Signal Protocol.
+=======
+See [SECURITY.md](SECURITY.md) for security policy and reporting vulnerabilities.
+>>>>>>> after updating
 
 ## License
 

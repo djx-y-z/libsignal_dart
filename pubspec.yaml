@@ -29,6 +29,14 @@ dependencies:
   # Majors (hooks 2.x, code_assets 2.x) are a deliberate migration, not a bump.
   hooks: ^1.0.0
   code_assets: ^1.0.0
+<<<<<<< before updating
+=======
+  # Data-carrying enums/structs in the FRB API are generated as freezed
+  # sealed classes. Only such an API needs this: if `make codegen` never emits
+  # a `@freezed` class, answer `enable_freezed` false and these three
+  # dependencies (and the build_runner step behind them) go away.
+  freezed_annotation: ^3.0.0
+>>>>>>> after updating
 
 dev_dependencies:
   # Capped to one minor line, not because 6.1 is bad but because
@@ -37,7 +45,21 @@ dev_dependencies:
   # run — so a minor published upstream reddens main with nobody having changed
   # a line. Within the range, patches still arrive. The bump then comes as a
   # Dependabot pull request the matrix actually evaluates, which is the review
+<<<<<<< before updating
   # this deserves; widen the upper bound there once it is green.
+=======
+  # this deserves; move the window there once it is green — both bounds by one
+  # minor, not just the upper one, which would delete the cap this comment
+  # exists to explain.
+  #
+  # Expect to do that by hand. `versioning-strategy: increase-if-necessary`
+  # (.github/dependabot.yml) leaves a constraint alone only while it still
+  # admits the new version; once the new minor is outside the cap, Dependabot
+  # writes its own idiomatic form, which is a caret. Measured: with the
+  # strategy already active, the 6.0 → 6.1 pull request proposed `^6.1.0` and
+  # regenerated it a day later still as a caret. So a capped pin at its ceiling
+  # always comes back uncapped, and narrowing it again is the reviewer's job.
+>>>>>>> after updating
   lints: ">=6.1.0 <6.2.0"
   test: ^1.24.0
   coverage: ^1.15.0

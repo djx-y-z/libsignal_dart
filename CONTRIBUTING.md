@@ -28,47 +28,90 @@ Please be respectful and considerate of others. We expect all contributors to:
 
 ### Prerequisites
 
+<<<<<<< before updating
 - [Dart SDK](https://dart.dev/get-dart) (3.10.0+)
 - Git
 - **For running tests:** Rust toolchain, protoc
+=======
+- [Rust toolchain](https://rustup.rs/) (1.88+) — `rust-version` in
+  `rust/Cargo.toml` is the authority; this is the same number
+- [Dart SDK]( https://dart.dev/get-dart ) (^3.10.0) or Flutter
+  (>=3.38.0) — `make setup` installs the pinned Flutter through fvm
+- `make` (see **Windows Users** below)
+- Git
+
+Nothing here is needed to *use* the published package: consumers get a
+precompiled native library through the build hook.
+>>>>>>> after updating
 
 ### Fork and Clone
 
 1. Fork the repository on GitHub
+<<<<<<< before updating
 2. Clone your fork locally:
+=======
+2. Clone **your fork**, not this repository:
+>>>>>>> after updating
    ```bash
    git clone https://github.com/YOUR_USERNAME/libsignal_dart.git
    cd libsignal_dart
    ```
+<<<<<<< before updating
 3. Add upstream remote:
+=======
+3. Add the upstream remote, so you can keep the fork current:
+>>>>>>> after updating
    ```bash
    git remote add upstream https://github.com/djx-y-z/libsignal_dart.git
    ```
 
+<<<<<<< before updating
 ## Development Setup
 
 ### Quick Setup (Recommended)
 
 Run the setup command to install everything automatically:
+=======
+### Quick Setup
+>>>>>>> after updating
 
 ```bash
 make setup
 ```
 
+<<<<<<< before updating
 This will:
 1. Check that Rust toolchain is installed (shows instructions if not)
 2. Install FVM (Flutter Version Management) and project's Flutter version
 3. Install protoc (Protocol Buffers compiler) via brew/apt/dnf/pacman
 4. Install cargo-audit for Rust dependency vulnerability scanning
 5. Get all dependencies and configure git hooks
+=======
+It checks that a Rust toolchain is present (and tells you where to get one if
+not), installs fvm and the Flutter version pinned in `.fvmrc`, installs
+protoc, then installs the Rust tooling the gates need — `cargo-audit`,
+`cargo-deny` and `flutter_rust_bridge_codegen` at the exact version this
+project pins.
+
+Optional, per platform: `make setup-android` (cargo-ndk),
+`make setup-web` (wasm-pack), `make setup-fuzz`
+(nightly + cargo-fuzz).
+>>>>>>> after updating
 
 ### Verify Setup
 
 ```bash
+<<<<<<< before updating
 # Show all available commands
 make help
 
 # Run tests to ensure everything works
+=======
+# Every command this project has, with a one-line description each
+make help
+
+# The end-to-end check: this builds the native library if it is missing
+>>>>>>> after updating
 make test
 ```
 
@@ -93,16 +136,28 @@ On Windows, enable [Developer Mode][windows-dev-mode] before the first
 
 ### Windows Users
 
+<<<<<<< before updating
 On Windows, you need to install `make` first:
 - Via Chocolatey: `choco install make`
 - Via Scoop: `scoop install make`
 - Or use Git Bash / WSL
 
 Then run `make setup` as above.
+=======
+Every task in this project runs through `make`, which Windows does not ship.
+Install it first:
+
+- Chocolatey: `choco install make`
+- Scoop: `scoop install make`
+- Or work in Git Bash or WSL, where it is already present
+
+Then `make setup` as above.
+>>>>>>> after updating
 
 ### Project Structure
 
 ```
+<<<<<<< before updating
 libsignal/
 ├── lib/                    # Main library code
 │   ├── libsignal.dart      # Public API exports
@@ -119,20 +174,49 @@ libsignal/
 └── Makefile                # Entry point for all commands
 ```
 
+=======
+libsignal_dart/
+├── lib/
+│   ├── libsignal.dart       # public API — the only file consumers import
+│   └── src/rust/            # FRB-generated bindings (do NOT hand-edit)
+├── rust/                    # The native crate
+│   ├── Cargo.toml           # Dependencies, features, profiles, MSRV
+│   └── src/api/             # What FRB exposes; everything else is internal
+├── test/                    # Dart tests
+├── hook/build.dart          # Build hook: downloads or finds the native library
+├── scripts/                 # Automation — invoke through the Makefile
+├── example/                 # Example app
+└── Makefile                 # The single entry point for every task
+```
+
+Two of those are load-bearing conventions rather than layout: `lib/src/rust/`
+is generated output that `make codegen` rewrites, so an edit there survives
+exactly until the next run; and `scripts/` is called through `make`, which is
+where the arguments and the environment each script expects are set.
+
+>>>>>>> after updating
 ## Making Changes
 
 ### Create a Branch
 
+<<<<<<< before updating
 Create a branch for your changes:
 
 ```bash
 git checkout -b feature/your-feature-name
 # or
 git checkout -b fix/your-bug-fix
+=======
+```bash
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/the-thing-that-is-broken
+>>>>>>> after updating
 ```
 
 ### Types of Contributions
 
+<<<<<<< before updating
 We welcome:
 
 - **Bug fixes** - Fix issues in existing code
@@ -149,6 +233,22 @@ For major changes:
 3. This helps avoid wasted effort on changes that won't be merged
 
 ## Testing
+=======
+- **Bug fixes** — with a test that fails before the fix
+- **Documentation** — including the comments that explain why a constraint exists
+- **Tests** — especially for a path only one platform reaches
+- **Features** — please open an issue first
+- **Performance** — with a measurement, not an argument
+
+### Before You Start
+
+For anything larger than a fix, open an issue and wait for a reply. This
+project pins versions, caps constraints and gates releases on grounds that are
+written down but not always obvious from the diff — a change can be correct and
+still be wrong here, and finding that out in review is expensive for you.
+
+## Development Workflow
+>>>>>>> after updating
 
 ### Running Tests
 
@@ -354,6 +454,7 @@ make codegen
 make test
 ```
 
+<<<<<<< before updating
 When updating the libsignal version:
 
 ```bash
@@ -368,6 +469,52 @@ cd rust && cargo update && cd ..
 # Test
 make test
 ```
+=======
+### Regenerating FRB Bindings
+
+Everything under `lib/src/rust/` is generated from `rust/src/api/`. Change the
+Rust API and the Dart side does not follow until you run:
+
+```bash
+make codegen
+make test
+```
+
+Regenerate when you add, remove or change anything in `rust/src/api/` — a
+signature, a type, an enum variant, or a doc comment, which flutter_rust_bridge
+copies into the Dart output verbatim. Commit the result: the bindings are
+checked in, CI compares them against what codegen produces, and the runtime
+asserts that its own flutter_rust_bridge version equals the one recorded in
+them.
+
+Never hand-edit a generated file to fix a build. The next `make codegen`
+reverts it, which turns a red build into a red build nobody can reproduce.
+
+## Pull Request Process
+
+1. Ensure all tests pass: `make test`
+2. Ensure code is formatted: `make format-check`
+3. Ensure no analyzer issues: `make analyze`
+4. Ensure both documentation gates pass: `make doc` and `make rust-doc`
+   (these BLOCK in CI — `dartdoc_options.yaml` promotes an unresolved
+   reference to an error, and `make rust-doc` runs under `-D warnings`)
+5. If you touched a `cfg(target_arch = "wasm32")` branch, run `make test-web` —
+   it is the only check that executes web code, and it needs a chromedriver:
+   `make test-web CHROMEDRIVER=/path/to/chromedriver`
+6. Update documentation if needed
+7. Update CHANGELOG.md with your changes
+8. Submit a pull request
+
+### Checklist
+
+- [ ] Tests pass locally (`make test`)
+- [ ] Formatting and analysis are clean (`make format-check`, `make analyze`)
+- [ ] Both documentation gates pass (`make doc`, `make rust-doc`)
+- [ ] Generated bindings are regenerated and committed, not hand-edited
+- [ ] CHANGELOG.md has an entry for anything a consumer can observe
+- [ ] New constraints, pins and caps carry a comment saying why
+- [ ] Commit messages describe the change and the reason for it
+>>>>>>> after updating
 
 **When to regenerate:**
 - After modifying Rust API code in `rust/src/api/`
@@ -375,7 +522,18 @@ make test
 
 ### Building Native Libraries
 
+<<<<<<< before updating
 Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
+=======
+The CI automatically checks for new libsignal releases daily and creates PRs. The automation includes:
+- Updating `pubspec.yaml` with new version
+- Updating `Cargo.lock` dependencies
+- Regenerating FRB bindings
+- Generating an AI-written CHANGELOG entry, when `AI_MODELS` names a model that
+  has a key — see [Setting up AI Changelog](#setting-up-ai-changelog) below.
+  Without one the PR is still opened and labelled `changelog-needed`, and the
+  entry is written by hand.
+>>>>>>> after updating
 
 For development, build the native library from source and the hook picks up the
 host-matching `rust/target/` build automatically — no marker needed:
@@ -641,7 +799,33 @@ For cryptographic code changes:
 
 ### Upstream Changes
 
+<<<<<<< before updating
 This library wraps [libsignal](https://github.com/signalapp/libsignal). When updating libsignal:
+=======
+## Makefile Commands Reference
+
+`make help` prints every target with a one-line description and is the list
+that cannot go stale. These are the ones a change usually needs:
+
+| Command | What it does |
+|---------|--------------|
+| `make setup` | Install the toolchain: fvm + pinned Flutter, Rust tools, FRB codegen |
+| `make codegen` | Regenerate the bindings under `lib/src/rust/` |
+| `make build` | Build the native library for this machine |
+| `make test` | Run the Dart test suite |
+| `make analyze` / `make format-check` | The two gates CI runs on every platform |
+| `make doc` / `make rust-doc` | The documentation gates — both BLOCK in CI |
+| `make rust-check` / `make rust-clippy` / `make rust-test` | The Rust gates |
+| `make rust-audit` / `make rust-deny` | Advisories, licences, sources |
+| `make third-party-notices` | Regenerate the notice inventory CI verifies |
+| `make clean` | Remove build artifacts, including `rust/target` |
+
+Run tasks through `make` rather than calling the underlying tool: the targets
+set the arguments and environment the scripts expect, and several of them exist
+precisely because the bare command does the wrong thing.
+
+## Code Style
+>>>>>>> after updating
 
 **Automatic (CI):** A daily workflow checks for new libsignal releases and creates a PR with all updates automatically.
 

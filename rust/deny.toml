@@ -16,6 +16,7 @@ all-features = false
 
 [advisories]
 version = 2
+<<<<<<< before updating
 # Add advisory IDs here (with a justification comment) only to consciously
 # accept a risk that cannot yet be remediated.
 ignore = [
@@ -26,12 +27,44 @@ ignore = [
     # Revisit when libsignal updates its libcrux/hax dependencies.
     "RUSTSEC-2026-0173",
 ]
+=======
+# Add advisory IDs here (each with a justification comment) only to consciously
+# accept a risk that cannot yet be remediated, e.g. an unmaintained build-time
+# dependency pulled transitively by an upstream crate with no available upgrade.
+#
+# Two things about this list that are easy to get wrong:
+#
+#   - An entry that stops matching is reported as `advisory-not-detected`. That
+#     warning is the signal to DELETE the entry, not to keep it in case the
+#     crate comes back: an ignore nobody can trigger is indistinguishable from
+#     one that is quietly covering a second advisory it was never reviewed for.
+#     Re-check the whole list on every upstream bump — empty it, run
+#     `make rust-deny`, and re-add only what fires again, with a fresh reason.
+#
+#   - This list and `.cargo/audit.toml` are not interchangeable. cargo-deny
+#     also reports *unmaintained* advisories, which `cargo audit` does not fail
+#     on, so an entry here is often one `make rust-audit` never needed.
+ignore = []
+>>>>>>> after updating
 
 [licenses]
 version = 2
 confidence-threshold = 0.9
+<<<<<<< before updating
 # This package is AGPL-3.0 (matching upstream libsignal). Everything below is
 # either AGPL itself or a permissive license that AGPL can incorporate.
+=======
+# The project's own license plus the permissive licenses commonly found in a
+# Rust dependency tree. Extend this list if `cargo deny check licenses` reports
+# a license it did not encounter (that is expected the first time you build).
+#
+# Rendered as one de-duplicated list rather than "own license, then the common
+# set": three of the four licenses this template offers (MIT, Apache-2.0,
+# BSD-3-Clause) are already in that set, so the straightforward form emits them
+# twice and cargo-deny reports the duplicate against this file. AGPL-3.0 is the
+# one that genuinely adds entries, which is why it carries the two SPDX
+# spellings the tree actually uses.
+>>>>>>> after updating
 allow = [
     "AGPL-3.0",
     "AGPL-3.0-only",

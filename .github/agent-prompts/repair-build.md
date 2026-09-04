@@ -74,8 +74,14 @@ finding**, never the diagnosis:
 - Either way it belongs in `notes`, described as what it is: a condition of this
   environment at this moment, not of the commit under repair.
 
+<<<<<<< before updating
 If the recorded failure does not reproduce here, say exactly that. "It does not
 reproduce" is a real verdict and often the correct one — `run-context.md` exists
+=======
+If the recorded failure does not reproduce here, say exactly that: a
+`cannot-fix` whose `cause` names the recorded failure and whose `notes` say it
+did not reproduce. That is often the right outcome — `run-context.md` exists
+>>>>>>> after updating
 partly so you can recognise a flaky runner — and it is never a reason to adopt
 some other failure as the thing you fix.
 

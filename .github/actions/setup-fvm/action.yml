@@ -26,8 +26,13 @@ runs:
         # *caller's* directory. This action is that caller, so the runner looks
         # for .github/actions/setup-fvm/dart-analyzer.json, does not find it,
         # and fails the job before anything is built — every leg of the test
+<<<<<<< before updating
         # matrix at once, and publish.yml and build-libsignal.yml with them,
         # since they call this action too.
+=======
+        # matrix at once, and publish.yml and build-libsignal.yml with
+        # them, since they call this action too.
+>>>>>>> after updating
         # Upstream: dart-lang/setup-dart#198, open; 1.8.1 does not fix it.
         # Nothing in this action runs `dart analyze` — that job uses the
         # FVM-pinned SDK — so the matcher buys nothing here even when it works.
