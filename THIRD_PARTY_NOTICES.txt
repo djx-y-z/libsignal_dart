@@ -132,7 +132,7 @@ cbc 0.2.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T68]
 
-cc 1.4.4
+cc 1.4.5
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -300,7 +300,7 @@ fiat-crypto 0.3.0
   License: MIT OR Apache-2.0 OR BSD-1-Clause
   Texts:   LICENSE-APACHE [T117], LICENSE-BSD-1 [T118], LICENSE-MIT [T123]
 
-find-msvc-tools 0.1.11
+find-msvc-tools 0.1.12
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.101.2
+libsignal-debug 0.102.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -815,7 +815,7 @@ slab 0.4.12
   License: MIT
   Texts:   LICENSE [T75]
 
-smallvec 1.15.2
+smallvec 1.16.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T65]
 
@@ -3532,7 +3532,7 @@ Crates:
   backtrace@0.3.76
   bitflags@2.13.1
   bumpalo@3.20.3
-  cc@1.4.4
+  cc@1.4.5
   cexpr@0.6.0
   cfg-if@1.0.4
   crossbeam-deque@0.8.7
@@ -3544,7 +3544,7 @@ Crates:
   equivalent@1.0.2
   errno@0.3.14
   fastrand@2.5.0
-  find-msvc-tools@0.1.11
+  find-msvc-tools@0.1.12
   fixedbitset@0.5.7
   gimli@0.32.3
   glob@0.3.4
@@ -3586,7 +3586,7 @@ Crates:
   rustc_version@0.4.1
   rustix@1.1.4
   scopeguard@1.2.0
-  smallvec@1.15.2
+  smallvec@1.16.0
   tempfile@3.27.0
   threadpool@1.8.1
   uuid@1.26.0
@@ -6114,9 +6114,9 @@ SOFTWARE.
 
 Crates:
   backtrace@0.3.76
-  cc@1.4.4
+  cc@1.4.5
   cfg-if@1.0.4
-  find-msvc-tools@0.1.11
+  find-msvc-tools@0.1.12
   js-sys@0.3.104
   pkg-config@0.3.34
   rustc-demangle@0.1.28
@@ -7270,7 +7270,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  smallvec@1.15.2
+  smallvec@1.16.0
 
 Copyright (c) 2018 The Servo Project Developers
 
@@ -8391,7 +8391,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.101.2
+  libsignal-debug@0.102.0
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3

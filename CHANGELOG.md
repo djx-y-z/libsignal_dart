@@ -8,9 +8,56 @@
   published constraint all move together. **Action required** for anyone whose
   own `pubspec.yaml` constrains `flutter_rust_bridge` so as to exclude 2.13.0;
   an ordinary caret constraint needs no change
-- **libsignal v0.101.2** — unchanged this release
+- **Rust 1.93.1 is the new floor for building the native library from source** —
+  libsignal v0.102.0 raises its own; consumers who install the published binary
+  through the build hook are unaffected
+- **libsignal v0.102.0** — upstream bump. Nothing reaches the surface this
+  package exposes: of the three files that changed in the crates we bind, two
+  are comments and one is the version string
 
 #### Changed
+
+- **libsignal moves to v0.102.0, and nothing it changed is visible here**
+  (`rust/Cargo.toml`) — the release is large upstream ([26 commits, 169
+  files](https://github.com/signalapp/libsignal/compare/v0.101.2...v0.102.0))
+  and its own notes lead with new typed chat APIs — account deletion, SVR
+  credential checks, currency conversions, pre-key counts, device capabilities,
+  sticker upload forms and TOTP/MFA key management — plus registration without
+  an E.164 and a switch to gRPC by default. Every one of those lands in
+  `libsignal-net-chat`, `libsignal-account-keys` or the Java, Node and Swift
+  bridges, and not one of those crates is in this package's dependency graph at
+  all.
+
+  Four crates from that repository do reach the graph: `libsignal-protocol`,
+  `libsignal-core` and `signal-crypto`, which this package names, and
+  `libsignal-debug`, which arrives transitively. `signal-crypto` and
+  `libsignal-debug` have no changed file in the range; `libsignal-protocol` and
+  `libsignal-core` have three between them, and two of those are comments —
+  `rust/protocol/src/sealed_sender.rs` (+2/-3, a doc comment swapping a dormant
+  RFC link for a TODO about `slice::element_offset`), `rust/core/src/lib.rs`
+  (+2/-3, an updated issue number in a comment about try-blocks) and
+  `rust/core/src/version.rs` (the version string).
+
+  Asked at the lockfile rather than the file tree, the answer is the same:
+  `rust/Cargo.lock` holds 226 packages before and after, with **none added and
+  none removed**, and four version moves — `libsignal-debug` 0.101.2 → 0.102.0,
+  which inherits the workspace version, plus `cc` 1.4.4 → 1.4.5,
+  `find-msvc-tools` 0.1.11 → 0.1.12 and `smallvec` 1.15.2 → 1.16.0.
+  `THIRD_PARTY_NOTICES.txt` records those four and nothing else. Upstream's two
+  new workspace dependency bounds both miss this package: `displaydoc`'s floor
+  rises to 0.2.6 where the graph already resolves 0.2.7, and the
+  `tinyvec < 1.13.0` cap guards a crate the graph does not contain. Regenerating
+  the bindings produced no change under `lib/src/rust/`; the FFI surface did not
+  move
+
+- **Building the native library from source now needs Rust 1.93.1**
+  (`rust/Cargo.toml`) — libsignal v0.102.0 raises its workspace `rust-version`
+  from 1.88 to 1.93.1, so the floor this package declares had to rise with it or
+  the promise would be false: the manifest said 1.88 while the dependency could
+  no longer be compiled by it. This is the from-source path only — consumers who
+  install the precompiled binary through the build hook never invoke a Rust
+  toolchain and are unaffected. **Action required** for anyone building from
+  source on a toolchain older than 1.93.1: `rustup update`
 
 - **`flutter_rust_bridge` moves to 2.13.0, and a consumer who pins it
   narrowly has to move with it** (`pubspec.yaml`) — the constraint is now

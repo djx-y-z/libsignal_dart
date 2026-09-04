@@ -26,8 +26,8 @@ native_library_name: libsignal
 native_repo: signalapp/libsignal
 package_name: libsignal
 rust_edition: '2024'
-rust_version: '1.88'
+rust_version: '1.93.1'
 topics: rust,flutter-rust-bridge,signal,cryptography,encryption
 upstream_crates: libsignal-protocol,libsignal-core,signal-crypto
-upstream_version: v0.101.2
+upstream_version: v0.102.0
 version_tag_prefix: v
