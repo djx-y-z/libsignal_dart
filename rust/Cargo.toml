@@ -63,7 +63,7 @@ parking_lot = "0.12"
 # failing to compile without `js` — which is the same signal that put this
 # comment here rather than a silent omission.
 # getrandom 0.3.x (used by libsignal-core, rand_core 0.9)
-getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom = { version = "0.4", features = ["wasm_js"] }
 # getrandom 0.4.x — reached through aes-gcm-siv 0.12 -> aead 0.6 ->
 # crypto-common, which depends on it with no target cfg, so it is compiled for
 # wasm32 as well. Nothing else in the graph names its backend — and the
