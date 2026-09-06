@@ -54,7 +54,7 @@ make test-web ARGS="--release"    # release profile, when the suite gets slow
 make test-web ARGS="-- --nocapture"                # show console::log output
 ```
 
-`make test-web` is the **only** command here that EXECUTES web code. `make test`
+`make test-web` is the **only** check here that EXECUTES web code. `make test`
 is the Dart VM and `make build-web` only compiles, so without it every
 `cfg(target_arch = "wasm32")` branch in the crate is covered by nothing — and
 those branches are exactly the ones nothing else can reach, because a wasm32
@@ -85,6 +85,23 @@ browser runs every test on one JS thread, so a test that blocks it starves the
 callbacks every concurrently-driven test is waiting on. The failure that
 produces names whichever test was scheduled LAST rather than the slow one, so it
 reads as a hang somewhere unrelated.
+
+```bash
+make run-example-web              # build-web, then run example/ in Chrome
+make run-example-web ARGS="--web-port=5599"        # flags reach flutter run
+```
+
+⚠ **`make run-example-web` deletes `example/build/*/dart_build.stamp`, and that
+step is load-bearing.** `flutter run` keys its build directory on the engine
+revision, the entrypoint, the build mode and the output path — the target
+platform is **not** in that key — so a debug run for macOS and a debug run for
+Chrome share one `dart_build` stamp. Whichever ran first makes the other skip
+the build hook outright (`Skipping target: dart_build`, visible under
+`--verbose`), and `example/web/pkg/` is then never provisioned:
+`RustLib.init()` fails on a 404 for `pkg/libsignal_frb.js`. The hook cannot
+declare its way out of it — the skip happens above `hooks_runner`, where
+nothing it declares is read. Consumers of the published package hit the same
+thing; the README's *Known Limitations* names the escapes.
 
 ### Rust Quality
 ```bash

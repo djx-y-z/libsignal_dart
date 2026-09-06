@@ -307,17 +307,30 @@ build-web:
 #   1. `make build-web` first, because nothing else in this repository compiles
 #      wasm32 on demand — running the app without it serves whatever was built
 #      last, which can be a different commit's Rust.
-#   2. `rm -rf example/web/pkg` next. The build hook prefers a local wasm build
-#      over a downloaded one and declares the built files as dependencies, so
-#      it *should* refresh on its own; the wipe costs nothing and removes the
-#      case where a stale copy is served and the failure looks like a Rust bug.
-#   3. `flutter run -d chrome` last, and NOT `--wasm`: that flag compiles the
+#   2. `rm -rf example/web/pkg` next, so no copy left by an earlier build
+#      survives to be served in place of the one just compiled.
+#   3. `rm -f example/build/*/dart_build.stamp` — load-bearing, not hygiene.
+#      `flutter run` keys its build directory on the engine revision, the
+#      entrypoint, the build mode and the output path; the TARGET PLATFORM is
+#      not part of that key, so a debug run for macOS and a debug run for
+#      Chrome share one directory and therefore one `dart_build` stamp.
+#      Whichever ran first leaves a stamp naming ITS dependencies — a `.dylib`,
+#      not the wasm — Flutter finds every one of them unchanged, logs
+#      `Skipping target: dart_build`, and the build hook is never invoked at
+#      all. The hook cannot declare its way out of that: the skip happens above
+#      `hooks_runner`, so nothing the hook declares is ever read. Together with
+#      step 2 it turns a stale `web/pkg/` into a missing one, and
+#      `RustLib.init()` then fails on a 404 for `pkg/libsignal_frb.js`. A
+#      stamp that does not exist cannot be stale, and an unmatched glob is
+#      a no-op under `rm -f`.
+#   4. `flutter run -d chrome` last, and NOT `--wasm`: that flag compiles the
 #      Dart half with dart2wasm, which flutter_rust_bridge's generated decoders
 #      do not support. The Rust side is a wasm module either way.
 #
 # Pass flutter arguments through ARGS, e.g. ARGS="--web-port=5599".
 run-example-web: build-web
 	@rm -rf example/web/pkg
+	@rm -f example/build/*/dart_build.stamp
 	cd example && $(FVM) flutter run -d chrome $(ARGS)
 
 # The wasm32 test runner's own timeout defaults to 20 s, and it is raised here

@@ -1,3 +1,51 @@
+## [Unreleased]
+
+### For Users
+
+#### Changed
+
+- **The README names the Flutter build-system skip that leaves `web/pkg/`
+  unprovisioned** (`README.md`) — the build hook copies the WASM module into the
+  consuming app's `web/pkg/`, and `flutter run -d chrome` reaches the hook only
+  while Flutter still considers its `dart_build` target out of date. That
+  target's cache key omits the target platform: a debug `flutter run` keys its
+  build directory on the engine revision, the entrypoint, the build mode and the
+  output path alone, so a debug run for another platform leaves a stamp naming
+  its own dependencies, the next run for Chrome finds every one of them
+  unchanged, logs `Skipping target: dart_build`, and the hook is never invoked.
+  In an app whose `web/pkg/` is not already provisioned that surfaces as
+  `RustLib.init()` failing on a 404 for `pkg/libsignal_frb.js`, with nothing in
+  the output naming the hook or the platform that poisoned the stamp.
+
+  Nothing in this package can close it — the skip happens above `hooks_runner`,
+  so no dependency the hook declares is ever read — so *Known Limitations*
+  documents the escapes instead: one `flutter build web`, which is keyed to its
+  own build directory and always reaches the hook; deleting
+  `build/*/dart_build.stamp`; or `flutter clean`. Once `web/pkg/` holds the right
+  files, `flutter run -d chrome` serves them.
+
+### For Contributors
+
+#### Changed
+
+- **`make run-example-web` clears the stale `dart_build` stamp before it runs**
+  (`Makefile`, `CLAUDE.md`) — the target wiped `example/web/pkg/` and trusted the
+  build hook to refresh it, which the hook cannot do when Flutter never invokes
+  it. `flutter run` shares one build directory, and so one `dart_build` stamp,
+  between a debug run for macOS and a debug run for Chrome, because the target
+  platform is not part of that directory's key; whichever ran first satisfies the
+  other. The wipe then turned a stale `web/pkg/` into a missing one, so the
+  example failed to start with a 404 for `pkg/libsignal_frb.js` rather than with
+  the wrong WASM — the more confusing of the two failures, and the one that reads
+  as a Rust or FRB bug. Deleting `example/build/*/dart_build.stamp` is correct by
+  construction: a stamp that does not exist cannot be stale, and an unmatched glob
+  under `rm -f` is a no-op, so a fresh tree is unaffected. Measured both ways
+  before and after — with the stamp in place the hook does not run and
+  `example/web/pkg/` stays missing; with it deleted the hook runs, and the dev
+  server serves `pkg/libsignal_frb.js` and `pkg/libsignal_frb_bg.wasm` in full.
+  The comment above the target no longer claims the hook "*should* refresh on its
+  own", and `CLAUDE.md` carries the same warning.
+
 ## [7.2.0] - 2026-09-06
 
 ### For Users
