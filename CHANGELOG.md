@@ -14,6 +14,7 @@
 - **libsignal v0.102.0** — upstream bump. Nothing reaches the surface this
   package exposes: of the three files that changed in the crates we bind, two
   are comments and one is the version string
+- **libsignal_frb v6.2.0** — Rust FFI bindings
 
 #### Changed
 
