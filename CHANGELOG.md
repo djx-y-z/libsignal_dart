@@ -368,6 +368,34 @@
   The same reasoning already carries `dartdoc_options.yaml`, one entry above
   it. Adopted from the copier template.
 
+- **Adopted copier template v4.7.0 → v4.8.0** (`.copier-answers.yml`) — a near
+  no-op, and deliberately so: almost everything in v4.8.0 started here. The
+  panic guard and the `analysis_options.yaml` filter were taken by hand from the
+  template's unreleased work before this release, and the two anchored version
+  readers and the stage-2 staleness check were written here and backported, so
+  the update mostly delivered this repository's own commits back to it. `0`
+  rejected hunks; `scripts/src/common.dart`, `scripts/src/release.dart` and both
+  their test files were not touched at all, because the template renders them
+  byte-identically to what is committed here — which was the point of matching
+  the render rather than merely fixing the same bug twice.
+
+  Two files conflicted, both standing keep-ours divergences resolved to ours:
+  `CLAUDE.md`, whose two-stage release section is richer than the template's,
+  and `README.md`, where copier paired our `### Key Types` heading against the
+  platform table — a misalignment rather than a disagreement, since our table
+  already carries the iOS `x64 (sim)` correction that went upstream.
+
+  Neither of the two things that actually needed attention was a conflict.
+  Copier inserted its own "push first" paragraph into `CLAUDE.md` **outside** the
+  conflict brackets, where a blind keep-ours would have kept it alongside ours
+  and said the same thing twice; and `test/scripts/frb_pins_test.dart` merged
+  clean and wrong, with the anchoring regression test present **twice** —
+  copier reconstructs the pre-update render, which predates the hand-added test,
+  so the resulting patch applies it again. Duplicate test names are legal Dart,
+  so nothing failed; the suite simply ran it twice. Both were removed. Net
+  effect once resolved: the `_commit` bump, plus copier rewriting
+  `rust_version: '1.93.1'` without quotes, which YAML reads identically.
+
 #### Fixed
 
 - **The fuzz crate stopped building the moment the main crate moved to
