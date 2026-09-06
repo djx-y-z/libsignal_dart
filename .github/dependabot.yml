@@ -157,6 +157,27 @@ updates:
       - dependency-name: "libsignal-protocol"
       - dependency-name: "libsignal-core"
       - dependency-name: "signal-crypto"
+      # `getrandom` is declared twice, under two names, because two majors are
+      # live in the wasm32 graph at once and each needs its browser backend
+      # enabled by name: `getrandom` 0.3 (reached through libsignal-core and
+      # rand_core 0.9) and `getrandom_04` 0.4 (through aes-gcm-siv -> aead ->
+      # crypto-common). Dependabot sees one dependency, and in #85 it raised the
+      # *0.3* declaration to 0.4 — pointing both names at one version, which
+      # cargo refuses outright: "depends on crate getrandom v0.4.3 multiple
+      # times with different names". Nor would the clash have been the whole
+      # problem: 0.3.4 stays in the lockfile via libsignal-core either way, and
+      # would have been left with no `wasm_js` backend, because the retargeted
+      # declaration was the only thing enabling it. That is a `compile_error!`
+      # in `make build-web`, not a silent weakening — see the comment at
+      # rust/Cargo.toml:50-56. The 0.3 line stays on 0.3 until libsignal-core
+      # moves off it.
+      #
+      # A range rather than a blanket ignore, so 0.3.x patches still arrive.
+      # NOT measured: whether an ignore keyed on the dependency name also
+      # withholds 0.4.x patches for `getrandom_04`. Assume it does — bump that
+      # one by hand if it lags; `cargo audit` still covers the security case.
+      - dependency-name: "getrandom"
+        versions: [">= 0.4.0"]
 
       # `rand` tracks libsignal's, not the newest. An `OsRng` is handed by
       # `&mut` straight into libsignal's own `Rng + CryptoRng` bounds at 19

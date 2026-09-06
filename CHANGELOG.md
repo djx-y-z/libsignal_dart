@@ -264,6 +264,31 @@
   aimed at majors would never fire — the same trap the group filter above it
   already documents.
 
+- **`getrandom` is ignored at `>= 0.4.0`, because the manifest declares it
+  twice** — two majors are live in the wasm32 graph at once and each needs its
+  browser backend enabled by name, so `rust/Cargo.toml` carries `getrandom` 0.3
+  (reached through `libsignal-core` and `rand_core` 0.9) alongside
+  `getrandom_04`, a renamed declaration of the same crate at 0.4 (reached
+  through `aes-gcm-siv` → `aead` → `crypto-common`). Dependabot sees one
+  dependency and raised the **0.3** one to 0.4, pointing both names at a single
+  version; cargo refuses that outright — *"depends on crate `getrandom v0.4.3`
+  multiple times with different names"* — which is why three jobs went red. The
+  name clash was not even the whole defect: `libsignal-core` keeps 0.3.4 in the
+  lockfile regardless, so it would have been left with no `wasm_js` backend,
+  because the retargeted declaration was the only thing enabling it — a
+  `compile_error!` inside `getrandom` on the next `make build-web`. A `versions`
+  range rather than a blanket ignore, so 0.3.x patches still arrive. Not
+  measured, and assumed against us: whether an ignore keyed on the dependency
+  name also withholds 0.4.x patches from `getrandom_04`.
+
+- **`anthropics/claude-code-action` moves to v1.0.213** (`ai-review.yml`,
+  `repair-build.yml`) — the pin sat at 1.0.210 because Dependabot's metadata
+  cache was behind the real releases when it last ran, not because 1.0.210 was
+  chosen on merit. Both SHAs were dereferenced against the upstream annotated
+  tags before merging, since comparing a `refs/tags/*` object id against a
+  pinned commit id compares two different things and would have reported a
+  mismatch that is not one.
+
 - **`lints` moves to `>=6.1.0 <6.2.0`** — the window slides onto the minor the
   matrix has already run green and stays one minor wide, so a new lint release
   still arrives as a pull request the four platforms evaluate rather than as a
