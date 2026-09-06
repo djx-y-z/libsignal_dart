@@ -126,7 +126,11 @@
   (depend on `hmac` directly with its `zeroize` feature, gated on
   `make build-web` because it moves the dependency graph). Nothing about the
   derived output changes. Found by replaying the AI reviewer over merged pull
-  requests.
+  requests. The correction reaches the **published** documentation with this
+  release and not before: it was written into the Rust source without a
+  `make codegen` run, so `lib/src/rust/api/crypto.dart` — which ships, being
+  outside `.pubignore` — went on carrying the retracted claim. How that
+  happened, and why no gate caught it, is under For Contributors.
 
 #### Fixed
 
@@ -213,6 +217,28 @@
   `hkdfDerive` takes whenever a caller passes `[]`, which maps to HKDF's "salt
   not provided" and so to 32 zero bytes — which is the PRK the RFC computed it
   against.
+
+- **The release profile's panic strategy has a test behind it**
+  (`rust/src/utils.rs`, `release_profile_must_not_abort_on_panic`) — the
+  manifest has said for several releases that the absence of a `panic` key in
+  `[profile.release]` is load-bearing: `panic = "abort"` skips unwinding, so
+  `Drop` never runs and every zeroize-on-Drop in this crate is silently
+  bypassed, leaving key material in memory after any panic. Nothing checked it,
+  and the surface is wide — ten files under `rust/src/api/` reach for
+  `zeroize`, mostly through `Zeroizing`, whose wipe *is* a `Drop` impl and so
+  exactly what unwinding runs. It reads the manifest rather than watching a
+  panic because it has to: Cargo forces `panic = "unwind"` on the `test` and
+  `bench` profiles and rejects the key on per-package overrides, so the setting
+  that actually ships is unobservable from inside a test binary. Beyond the
+  exact `[profile.release]` + `panic = "abort"` shape it rejects any
+  non-comment line naming both `panic` and `abort` — TOML gives several ways
+  around an exact header match, and enumerating them is the part that would
+  rot. Verified against this manifest rather than in the abstract: green as it
+  stands, red on the key planted inside `[profile.release]`, red on a
+  non-comment line naming both elsewhere, and red again when the section is
+  renamed away. The comment-stripping is proved by the pass rather than
+  asserted — five comment lines in this manifest name both words. Adopted from
+  the copier template, where it originated in a sibling project.
 
 #### Changed
 
@@ -326,12 +352,21 @@
   `make codegen`, which the agent is already permitted to run.
 
 - **The `getrandom` removal waited for a release branch** — nothing local
-  proves a wasm32 dependency change, because `make build` is host-only and CI
-  compiles wasm **only** on a `libsignal_frb-*` tag push. A graph change merged
-  without running `make build-web` first is one whose Web target is compiled
-  for the first time inside a release — which is how two crate versions were
-  already burned. This one was gated on `make build-web` before it was
-  committed.
+  proved a wasm32 dependency change at the time, because `make build` is
+  host-only and CI then compiled wasm **only** on a `libsignal_frb-*` tag push.
+  A graph change merged without running `make build-web` first is one whose Web
+  target is compiled for the first time inside a release — which is how two
+  crate versions were already burned. This one was gated on `make build-web`
+  before it was committed. The constraint itself is gone as of this release:
+  `Build WASM` and `Rust unit tests (browser)` run on every push and pull
+  request now, so the tag is no longer the first time wasm is compiled.
+
+- **`analysis_options.yaml` joins the test workflow's path filters**
+  (`.github/workflows/test.yml`, on `push` and `pull_request` both) — that file
+  decides what `make analyze` reports, so a commit changing only the lint
+  configuration was precisely the one that did not re-run the gate it changes.
+  The same reasoning already carries `dartdoc_options.yaml`, one entry above
+  it. Adopted from the copier template.
 
 #### Fixed
 
@@ -412,6 +447,57 @@
   from 1.8.0 on, so neither half is safe on its own. Nothing in this action
   runs `dart analyze` — that job uses the FVM-pinned SDK — so the matcher buys
   nothing here even when it works.
+
+- **Two version parsers could be answered by a comment**
+  (`scripts/src/common.dart`, `scripts/src/frb_pins.dart`) — both read a file
+  as text with an unanchored pattern and `firstMatch`, which takes whichever
+  match comes first rather than the declaration. `getUpstreamVersion` is the
+  one that mattered: a commented-out `libsignal-protocol = { … tag = "…" }` —
+  the shape an upgrade leaves behind — outranked the real pin below it, and in
+  the dangerous direction a comment naming a *newer* tag makes
+  `make check-new-libsignal-version` report the dependency as already current,
+  so an upstream release, security fixes included, silently never lands.
+  Nothing fails; the update just never happens. Measured rather than supposed:
+  against the old pattern a stale comment above the real pin read `v0.101.2`,
+  and a comment naming `v0.999.0` read `v0.999.0`. Both patterns are now
+  anchored to the start of a line, the inline table may no longer span lines,
+  and the parsing rule is split out of the disk read as `parseUpstreamTag` so
+  it is testable without a fixture tree — the way `frb_pins.dart` already
+  splits every reader from the disk. Seven tests cover the two, and four of
+  them fail against the previous patterns. The same fix went to the copier
+  template, which renders this file byte-identically, so no divergence is
+  introduced.
+
+- **Stage 2 would have accepted a stale native binary** (`scripts/src/release.dart`)
+  — the preflight checked only that a GitHub Release named
+  `libsignal_frb-<crate version>` *existed*. The crate version does not move
+  until stage 1 runs, so `make release` on its own found the release left by the
+  previous cut, passed, and would have published these bindings against that
+  binary. Not hypothetical here: `libsignal_frb-6.1.3` exists and was built from
+  libsignal v0.101.2 with flutter_rust_bridge 2.12.0 codegen, while this tree
+  generates 2.13.0 against v0.102.0. Neither runtime net would have caught it —
+  `rustContentHash` compares the FFI *surface*, which is byte-identical across
+  exactly this mismatch (450650216 both sides), and the codegen assert compares
+  the bindings against the flutter_rust_bridge *runtime package*, never against
+  the native library. What differs is the generator that decided the argument
+  marshalling, so the failure would be a wire mismatch inside a consumer's app —
+  the same shape as the `Option::unwrap()` arg-count panic behind 6.0.1. The
+  preflight now also reads `frb_generated.dart` and `rust/Cargo.toml` **at the
+  tag** and refuses when either the codegen version or the upstream pin differs
+  from the working tree, naming both. It reads them over the GitHub API rather
+  than fetching the tag, because over-fetching tags is what aborted a release
+  once already; it fails closed when it cannot read them; and `--skip-frb-check`
+  remains the escape hatch. The comparison is a pure function
+  (`describeFrbReleaseDrift`) so it is covered without a fixture tree, and it was
+  run against the real 6.1.3 tag: two refusals, both correct, and silent when the
+  tag matches the tree.
+
+- **`make verify-frb-pins` documented five sources and reads six**
+  (`scripts/src/frb_pins.dart`, `Makefile`) — the file header and the target
+  comment were left behind when `rust/fuzz/Cargo.toml` joined the gate;
+  `CONTRIBUTING.md` had already been updated. The count is the whole of what
+  those comments claim, so a wrong one is the same prose-versus-code drift the
+  gate itself exists to catch.
 
 ## [7.1.1] - 2026-09-01
 

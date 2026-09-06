@@ -1,6 +1,6 @@
 // Checks that every place recording the flutter_rust_bridge version agrees.
 //
-// Five files hold the same version and nothing but agreement makes the package
+// Six files hold the same version and nothing but agreement makes the package
 // work: `frb_generated.dart` records the codegen version and the runtime
 // asserts it equals its own with `==`, so a constraint admitting any other
 // version throws at init — in a consumer's app, not here. That is the incident
@@ -10,7 +10,7 @@
 // publication, on machines nobody could see.
 //
 // Shaped like `verify-third-party-notices`: read what is committed, compare,
-// report every disagreement at once. No build and no network — five file reads,
+// report every disagreement at once. No build and no network — six file reads,
 // so this can gate a pull request without costing a matrix leg.
 //
 // Everything that parses takes a string rather than a path, so the rules are
@@ -182,8 +182,15 @@ String? frbVersionFromMakefile(String content) {
 
 /// Reads the version the committed bindings record, which the runtime compares
 /// against its own with `==`.
-String? frbVersionFromGeneratedBindings(String content) =>
-    RegExp(r"codegenVersion\s*=>\s*'([^']+)'").firstMatch(content)?.group(1);
+///
+/// Anchored on the getter's own declaration, like every other reader here. The
+/// file is generated, so a stray earlier mention is unlikely rather than
+/// impossible — and `firstMatch` on an unanchored pattern would take it, which
+/// is the one way this gate could report agreement it had not checked.
+String? frbVersionFromGeneratedBindings(String content) => RegExp(
+  r"^\s*String get codegenVersion\s*=>\s*'([^']+)'",
+  multiLine: true,
+).firstMatch(content)?.group(1);
 
 /// Reads `frb_version` from `.copier-answers.yml`, caret and quotes and all.
 ///

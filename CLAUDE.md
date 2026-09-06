@@ -89,12 +89,20 @@ reads as a hang somewhere unrelated.
 ### Rust Quality
 ```bash
 make rust-check                   # Check Rust code compiles
+make rust-test                    # Crate unit tests (CI: Linux x86_64 leg)
 make rust-clippy                  # Lint Rust code with clippy (warnings = errors)
 make rust-doc                     # Rustdoc GATE: intra-doc links, -D warnings
 make rust-geiger                  # Unsafe-expression census (DIAGNOSTIC, not gated)
 make rust-audit                   # Audit Rust dependencies for vulnerabilities
 make rust-deny                    # Check advisories/licenses/sources (cargo-deny)
 ```
+
+`make rust-test` is not just scaffolding: it carries the SSv2 fan-out
+differential tests (`rust/src/ssv2_equivalence_tests.rs`, the only thing pinning
+our byte layout to upstream's) and `release_profile_must_not_abort_on_panic`,
+which reads `rust/Cargo.toml` to keep `panic = "abort"` out of the shipped
+profile — abort skips unwinding, and unwinding is what runs every
+zeroize-on-Drop in the crate.
 
 ### Fuzzing
 ```bash
@@ -432,7 +440,10 @@ make release ARGS="--version X.Y.Z --no-push"      # local only
 
 `make release` refuses to proceed until the stage-1 GitHub Release
 `libsignal_frb-<rust/Cargo.toml version>` exists (the published build hook
-downloads it; pass `--skip-frb-check` only if you verified it manually). It runs
+downloads it) **and was built from this tree** — a release left by an earlier cut
+carries the same version string with different bindings, and neither runtime
+check catches that. `--skip-frb-check` skips both checks; pass it only if you
+verified the binary by hand. It runs
 `make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`, then
 finalizes the CHANGELOG (renames `[Unreleased]` → `[X.Y.Z] - <today>` in place —
 no empty `[Unreleased]` is left behind — and rewrites the bottom `[Unreleased]:`
@@ -675,13 +686,41 @@ Rules:
 ## Publishing Checklist
 
 **Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
-existence check, the CHANGELOG finalization, and the publish dry-run. Use the
-two-stage flow documented above (see [Release Flow](#release-flow-two-stages)):
+existence check, the CHANGELOG finalization, and the publish dry-run. Both
+scripts require a clean tree and create a **signed** tag, which the
+`Protect release tags` ruleset requires; an unsigned `git tag -a` is rejected.
+Use the two-stage flow documented above (see
+[Release Flow](#release-flow-two-stages)).
+
+**What to have green before starting stage 1** — the release scripts run some of
+these, not all of them:
 
 ```bash
-# 0. (optional) quality gates — the release scripts also run these
-make analyze && make test && make format-check
+make analyze ARGS="--fatal-infos"
+make format-check
+make test
+make rust-test                  # incl. the release-profile panic guard
+make rust-clippy
+make doc                        # blocking: unresolved doc references
+make rust-doc                   # blocking: intra-doc links, host + wasm32
+make build-web                  # mandatory after ANY rust/** change
+make test-web                   # the crate's wasm32 tests, in a real browser
+make rust-audit
+make rust-deny
+make verify-frb-pins
+make verify-third-party-notices
+make publish-dry-run            # exits 65 on ANY warning, a dirty tree included
+```
 
+**Push first and let CI go green, then tag.** `make release-frb` only *warns*
+when local `main` is ahead of origin, and then pushes those commits together
+with the release tag — so commits CI has never seen would reach origin at the
+same moment the tag starts the native build. CI does compile and execute wasm on
+every push and pull request (`Build WASM` and `Rust unit tests (browser)`, Linux
+x86_64 leg), which is what makes "push first" a real gate rather than a
+formality; it was not always so, and that is how crates 6.1.0 and 6.1.2 burned.
+
+```bash
 # Stage 1 — native crate (bumps rust/Cargo.toml, tags libsignal_frb-X.Y.Z):
 make release-frb ARGS="--version X.Y.Z"
 # …wait for build-libsignal.yml to publish the native binaries…
