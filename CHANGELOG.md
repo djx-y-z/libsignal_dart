@@ -24,6 +24,27 @@
   `build/*/dart_build.stamp`; or `flutter clean`. Once `web/pkg/` holds the right
   files, `flutter run -d chrome` serves them.
 
+- **The Android libraries are built by a pinned cargo-ndk, and their 16 KB
+  alignment is measured on the bytes that get uploaded**
+  (`.github/workflows/build-libsignal.yml`, `scripts/verify_android_alignment.py`,
+  `Makefile`) — Google Play has required an app's bundled native libraries to be
+  16 KB-aligned, for apps targeting Android 15 or later, since 1 November 2025.
+  Nothing here would have noticed a regression: a misaligned `.so` fails no test
+  in this repository, it makes the **consuming** app unpublishable, which is the
+  worst place to find out and somebody else's release that it stops.
+
+  The alignment is supplied by cargo-ndk's linker flags —
+  `-Wl,-z,max-page-size=16384` and its `common-page-size` twin — and not by the
+  NDK: r26-built and r28-built artefacts measure `p_align=0x4000` alike, and
+  32-bit `armeabi-v7a` measures `0x1000` on both, correctly, the requirement
+  being a 64-bit one. So the property belonged to a tool the release job
+  installed with `cargo install cargo-ndk --locked` and no version, taking
+  whatever was newest that day. It is pinned to `4.1.2` now, the version whose
+  flags were read out of the binary, and the job verifies the result rather than
+  trusting the pin: `make verify-android-alignment` reads ELF program headers
+  directly — no `readelf`, no NDK — and fails closed on a non-ELF file, on a
+  file with no `PT_LOAD` segments, and on finding nothing to check at all.
+
 ### For Contributors
 
 #### Added
@@ -49,10 +70,45 @@
   `test / ` prefix is load-bearing, and why the Linux ARM64 leg stays out of the
   list while it times out on an arbitrary test.
 
-  Not applied — `make setup-repo-protections ARGS="--update"` reads these files,
-  so it wants the commit first. Checked before writing it that all four live
-  rulesets still match their committed JSON, including `signing-commit.json`'s
-  empty `bypass_actors`, so that `--update` re-PUTs nothing unintended.
+  Applied to `main` on 2026-09-07 and verified against the live API: the ruleset
+  now carries `deletion, non_fast_forward, pull_request, required_status_checks`
+  with that one context and `integration_id` 15368, the other three rulesets and
+  every bypass are unchanged, and a Dependabot branch still reports none. All
+  four live rulesets match their committed JSON — `signing-commit.json`'s empty
+  `bypass_actors` included — so a later `make setup-repo-protections
+  ARGS="--update"` re-PUTs nothing unintended.
+
+- **CI cross-compiles the three Android ABIs on every pull request**
+  (`.github/workflows/test-reusable.yml`) — Android was cross-compiled in exactly
+  one place, `build-libsignal.yml`, which runs on `workflow_dispatch` and on a
+  `libsignal_frb-*` release tag. Every leg of the test matrix runs `make build`,
+  which builds for the host. So an Android-only build failure was invisible on
+  `main` under every green gate, and the workflow that would discover it is the
+  one publishing binaries — at a moment when the tag has already been pushed and
+  a crate version is already spent. All three ABIs rather than one, because a
+  vendored-assembly failure can be architecture-specific while the same
+  dependency carries assembly the other legs never reach. It builds and does not
+  test: nothing in CI can execute an Android artefact without an emulator, and a
+  compile-and-assemble failure is what this catches. The job reads
+  `android_ndk_version` and the API level from the same answers
+  `build-libsignal.yml` does, so the gate cannot run on a different toolchain
+  than the release.
+
+- **`make actionlint`, and a `Workflow Lint (actionlint)` job that runs it**
+  (`.github/actionlint.yaml`, `Makefile`, `.github/workflows/test-reusable.yml`) —
+  the workflows are the one part of this repository that nothing rehearses before
+  merge: a job is only ever executed by pushing it, so a typo in an expression, a
+  context that does not exist, or a `needs:` naming a renamed job all reach `main`
+  and then fail on the very run that was supposed to gate them. actionlint reads
+  them statically and hands every `run:` block to shellcheck, which is where most
+  of what it finds lives — so the job asserts shellcheck is present rather than
+  trusting the runner image, an absent one being a green gate that quietly
+  stopped checking its most productive half. It is pinned by version and by
+  checksum, because the step fetches an executable from a third-party release and
+  runs it over the repository, and nothing bumps that pin automatically.
+  Suppressions live in `.github/actionlint.yaml` rather than in flags, so a local
+  run reports exactly what CI reports. Clean on this repository's workflows,
+  divergent ones included, at the first run.
 
 #### Changed
 
@@ -108,6 +164,67 @@
   server serves `pkg/libsignal_frb.js` and `pkg/libsignal_frb_bg.wasm` in full.
   The comment above the target no longer claims the hook "*should* refresh on its
   own", and `CLAUDE.md` carries the same warning.
+
+- **The codegen guard regenerates the bindings instead of only reading a label**
+  (`.github/workflows/codegen-guard.yml`) — the job's name promised more than it
+  checked. It refused a pull request carrying `codegen-failed` and nothing else,
+  which is right for the case it was written for and blind to the neighbouring
+  one: a pull request that changes an existing signature is already caught,
+  because `frb_generated.rs` stops compiling and `make build` goes red on four
+  platforms — but one that *adds* a `pub fn`, or edits a docstring, compiles
+  perfectly and simply lacks the function on the Dart side. That is the gap
+  `bc0fdc9` fell through here, where a corrected Rust security note never reached
+  the generated Dart. `make codegen` appeared in CI in exactly one place, the
+  bot's own update workflow, and never as a gate on a human's pull request.
+
+  The two rules are a disjunction — label present *or* regeneration moves
+  something — which is worth stating because the file argues at length against
+  the conjunction, and that argument still holds. Drift is read from
+  `git status --porcelain`, not `git diff --exit-code`, because codegen can add a
+  file and `git diff` is blind to an untracked path. The job name is untouched on
+  purpose: `FRB bindings were regenerated` is the required status check in
+  `protect-main.json`, matched as a string, so a rename or a second job would
+  make the ruleset stop matching silently and leave every pull request waiting on
+  a report nobody files. For the same reason the trigger still carries no
+  `paths:` filter; the cost is avoided per step instead, with the regeneration
+  half running only when the pull request touches something that can move the
+  bindings.
+
+- **Adopted copier template v4.8.0 → v4.9.0** (`.copier-answers.yml`) — much of
+  the range is this repository's own work returning: the sixth pin source, the
+  required status check and the `dart_build` stamp fix are the entries above,
+  and they came back byte-identical, so `protect-main.json`, `frb_pins.dart`,
+  `verify_frb_pins.dart` and `frb_pins_test.dart` were not touched at all. What
+  actually arrived is the four items already listed plus two sweeps: every
+  `$GITHUB_OUTPUT`, `$GITHUB_ENV`, `$GITHUB_PATH` and `$GITHUB_STEP_SUMMARY`
+  redirection is quoted, in the composite actions as well as the workflows — the
+  reason the new lint gate is green at full strength rather than green because
+  its noisiest check was off — and `.github/rulesets/README.md` gains the
+  `actionlint` and three `Cross-compile (Android …)` contexts, which the runbook
+  had been due to grow by hand.
+
+  Two hand-merges. `README.md` and `CONTRIBUTING.md` conflicted and resolved to
+  ours in full, both misalignments rather than disagreements: copier paired the
+  template's new *Known Limitations* text against an unrelated heading, and its
+  rewritten pin section against the security checklist. Both additions are
+  already here, and this repository's wording of the fuzz-crate paragraph is the
+  accurate one — our fuzz crate does name `flutter_rust_bridge`, where the
+  template describes a generated one that does not. `.github/rulesets/README.md`
+  merged with no conflict marker and a duplicated section: the template's
+  rewritten runbook was appended beside the existing one, leaving two
+  `### Required status checks` and two `### Why Dependabot branches are excluded`
+  with contradictory context lists. The template's copy is kept — it is the one
+  carrying the new contexts — with `test / Test (Linux ARM64)` pruned from it and
+  named as pruned, which is what its own caution about flaky legs asks each
+  project to do.
+
+  `android_ndk_version` deliberately stays at r26. The template moved its
+  *default* to r28 because OpenSSL 3.6 emits Intel SM3 assembly that r26's Clang
+  17 cannot assemble, reached through `openssl-src` by projects that vendor
+  SQLCipher; `rust/Cargo.lock` here contains no `openssl-src`, `openssl-sys`,
+  `rusqlite` or `libsqlite3-sys`, so the reason does not apply and an update
+  keeps a recorded answer regardless. The new Android job reads that same answer,
+  so gate and release stay on one toolchain either way.
 
 #### Fixed
 

@@ -60,8 +60,7 @@ GitHub ever rejects `required_signatures` on a tag target, drop that one rule �
 
 `protect-main.json` requires one check, **`FRB bindings were regenerated`** —
 the job in `codegen-guard.yml`. That is not the first instalment of a longer
-list. It is the only check in this repository that *can* be required as things
-stand.
+list. It is the only check a generated project can require as it stands.
 
 A required check is satisfied by a check run reporting on the head commit. A job
 that runs and is skipped by a job-level `if:` still reports, as `skipped`, and
@@ -79,9 +78,9 @@ by *any* status of that name, including one posted through the API by a token
 holding `repo:status`.
 
 `strict_required_status_checks_policy` is `false` deliberately: `true` requires
-every open pull request to be re-tested against the tip of `main` after each
-merge, which against a weekly grouped Dependabot batch is a rebase treadmill and
-not a safety property.
+every open pull request to be re-tested against the tip of the default branch
+after each merge, which against a weekly grouped Dependabot batch is a rebase
+treadmill and not a safety property.
 
 Read this rule together with `bypass_actors` above. Admin is `always`, so it
 turns a red check into something an admin has to click past on purpose — worth
@@ -100,55 +99,35 @@ test / Test (Windows x86_64)
 test / Security Audit (Rust)
 test / Dependency Policy (cargo-deny)
 test / MSRV (rust-version from Cargo.toml)
+test / Workflow Lint (actionlint)
+test / Cross-compile (Android arm64-v8a)
+test / Cross-compile (Android armeabi-v7a)
+test / Cross-compile (Android x86_64)
 ```
 
-The `test / ` prefix is part of the context and comes from the **job id** in
-`test.yml` that calls the reusable workflow. Rename that job and every context
-here stops matching silently — which shows up as "waiting for status", not as an
-error. `test / Test (Linux ARM64)` is left out on purpose: it times out on an
-arbitrary test often enough to be documented, and a required check that fails by
-itself teaches people to merge past required checks, which costs more than the
-leg is worth. `test / Update Coverage Badge` is left out because it is skipped
-on pull requests — it would be satisfied, and requiring a badge job asserts
-nothing.
+Two cautions. The `test / ` prefix is part of the context and comes from the
+**job id** in `test.yml` that calls the reusable workflow — rename that job and
+every context here stops matching silently, which shows up as "waiting for
+status" rather than as an error. And leave out any leg this project has found to
+be flaky: a required check that fails by itself teaches people to merge past
+required checks, which costs more than the leg is worth. Here that is
+`test / Test (Linux ARM64)`, absent from the list above on purpose — it times
+out on an arbitrary test, a different one each run, often enough to be
+documented. `test / Update Coverage Badge` belongs in neither list — it is
+skipped on pull requests, so it would be satisfied, and requiring a badge job
+asserts nothing.
 
-### Why Dependabot branches are excluded
+`Workflow Lint (actionlint)` is worth requiring for a reason the other legs do
+not share: it is the only check that reads the workflows themselves, so it is
+the one that can still report on a pull request whose other jobs never start
+because the file that defines them does not parse.
 
-**Signing commit** and **Delete branches** target `~ALL` branches, and the
-former has no bypass actors at all — so no human, not even an admin, may
-force-push. That silently breaks Dependabot: it refreshes an open PR
-by force-pushing a rewritten commit, so `non_fast_forward` makes it impossible
-for a grouped action-bump PR to ever be rebased onto a moved `main` (it comments
-"because the branch … is protected it was unable to do so" and gives up), and
-`deletion` blocks `@dependabot recreate` and post-merge branch cleanup.
-
-Excluding `refs/heads/dependabot/**/*` costs nothing in practice: Dependabot's
-commits carry a valid GitHub signature regardless of the rule, and the branches
-still have to pass `~DEFAULT_BRANCH`'s `pull_request` gate plus `main`'s own
-`required_signatures` — which this ruleset still supplies, since `main` is not a
-Dependabot branch. Scope this with `ref_name.exclude`, **not** with a bypass
-actor: the rulesets target `~ALL`, so a bypass actor would also be exempt on
-`main` itself, which is the opposite of what is wanted.
-
-Mind the pattern's trailing `/*`. These are `fnmatch` patterns in pathname mode,
-where a bare `**` does **not** cross a `/`: `refs/heads/dependabot/**` matches
-`dependabot/foo` but *not* `dependabot/github_actions/github-actions-1f84650690`,
-which is the shape Dependabot actually uses (and it goes deeper still when a
-config scopes updates to a directory). Only `**/*` matches at any depth. Verify a
-change to these patterns against the real branch name rather than by eye:
-
-```bash
-gh api repos/djx-y-z/libsignal_dart/rules/branches/dependabot%2Fgithub_actions%2Fsome-branch \
-  --jq '[.[] | .type] | join(", ")'    # expect empty
-gh api repos/djx-y-z/libsignal_dart/rules/branches/main \
-  --jq '[.[] | .type] | join(", ")'    # expect the full set, unchanged
-```
-
-Branches from `peter-evans/create-pull-request` (`update-libsignal-*`,
-`update-template-*`) are deliberately *not* excluded: those PRs are recreated per
-version rather than refreshed in place, so the force-push path has never been
-exercised. If an update PR is ever seen failing to refresh, extend the same
-`exclude` list rather than adding a bypass actor.
+The three `Cross-compile (Android …)` contexts are the newest entries and the
+easiest to forget, because nothing else in a generated project cross-compiles
+Android: leaving them out is how the gap they were added to close comes back
+with the ruleset saying CI is required. They also run under `publish.yml`, which
+calls the same reusable workflow — so they sit between "start publishing" and
+"published", not only on pull requests.
 
 ### Why Dependabot branches are excluded
 
