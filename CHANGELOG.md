@@ -49,34 +49,33 @@
 
 #### Added
 
-- **`main` requires one status check, and the runbook says why only one**
+- **`main` requires the whole CI matrix, not just a codegen guard**
   (`.github/rulesets/protect-main.json`, `.github/rulesets/README.md`) — none of
   the four rulesets carried a `required_status_checks` rule, so a red CI run
-  never blocked a merge. `FRB bindings were regenerated` is now required, which
-  closes the loop the guard was written for: it exists because replaying the AI
-  reviewer over 47 merged pull requests put its recall on that one condition at
-  21%, and the two-line shell check that replaced it has reported ever since
-  with nothing depending on it.
+  never blocked a merge. Eleven contexts are required now: `FRB bindings were
+  regenerated` plus ten legs of the test matrix.
 
-  It is the only check that *can* be required here, and that is a finding rather
-  than a starting point. A workflow filtered out by `paths:` reports nothing at
-  all, and a required context with no report leaves the pull request waiting
-  forever with nothing to fix — unlike a job skipped by a job-level `if:`, which
-  reports `skipped` and counts as satisfied. `test.yml` filters `pull_request`
-  by path, so requiring any `test / …` context would permanently block every
-  documentation-only pull request. `codegen-guard.yml` has no such filter.
-  Requiring the matrix therefore needs that filter dropped from the
-  `pull_request` trigger first; the runbook records the exact contexts, why the
-  `test / ` prefix is load-bearing, and why the Linux ARM64 leg stays out of the
-  list while it times out on an arbitrary test.
+  Requiring the guard alone came first, and it closed the loop that guard was
+  written for: it exists because replaying the AI reviewer over 47 merged pull
+  requests put its recall on that one condition at 21%, and the two-line shell
+  check that replaced it had reported ever since with nothing depending on it.
+  Requiring the matrix as well was blocked on a mechanism rather than on a
+  preference — see the `test.yml` entry under *Changed* for what had to move and
+  why the two are inseparable.
 
-  Applied to `main` on 2026-09-07 and verified against the live API: the ruleset
-  now carries `deletion, non_fast_forward, pull_request, required_status_checks`
-  with that one context and `integration_id` 15368, the other three rulesets and
-  every bypass are unchanged, and a Dependabot branch still reports none. All
-  four live rulesets match their committed JSON — `signing-commit.json`'s empty
-  `bypass_actors` included — so a later `make setup-repo-protections
-  ARGS="--update"` re-PUTs nothing unintended.
+  Two legs stay out of the ruleset while still running in the workflow.
+  `test / Test (Linux ARM64)` times out on an arbitrary test, a different one
+  each run, and a required check that fails by itself teaches people to merge
+  past required checks. `test / Update Coverage Badge` is skipped on pull
+  requests, so requiring it would assert nothing.
+
+  Every context string was read off the head commit of a real pull request
+  rather than off a push to `main`: the two triggers do not produce the same set
+  of check runs — `Update Coverage Badge` reports `success` on one and `skipped`
+  on the other — and it is the pull-request set that a merge gate is measured
+  against. The runbook records that check, and records that applying an edited
+  ruleset takes `make setup-repo-protections ARGS="--update"`, plain
+  `setup-repo-protections` skipping one that already exists.
 
 - **CI cross-compiles the three Android ABIs on every pull request**
   (`.github/workflows/test-reusable.yml`) — Android was cross-compiled in exactly
@@ -111,6 +110,28 @@
   divergent ones included, at the first run.
 
 #### Changed
+
+- **`test.yml` no longer filters pull requests by path, so every pull request
+  runs the matrix** (`.github/workflows/test.yml`) — this is what let the ruleset
+  above grow past one context, and it is not a preference. A required check is
+  satisfied by a check run reporting on the pull request's head commit, and the
+  two ways a job can fail to run are not equivalent: a job excluded by a
+  job-level `if:` still reports, as `skipped`, and counts as satisfied, while a
+  workflow excluded by a workflow-level `paths:` reports nothing at all — and no
+  setting reads a missing check as passed. While `test.yml` filtered
+  `pull_request` by path, requiring any `test / …` context would have left every
+  documentation-only pull request waiting forever with nothing to fix.
+
+  The filter stays on `push`, where it guards the cache scope rather than a
+  gate: a pull-request run can read the base branch's cache scope but never the
+  reverse. The cost of dropping it was measured before it was paid — of the
+  fifteen most recently merged pull requests, fifteen already matched it, so
+  what changes in practice is that the rare documentation-only pull request now
+  runs the matrix too.
+
+  `test.yml`'s header states that asymmetry forward rather than only recording
+  the decision, because the tempting repair if the cost ever bites is the filter
+  coming back, and the correct one is a job-level `if:` on the expensive legs.
 
 - **`make verify-frb-pins` tells a fuzz crate with nothing to say from one it
   cannot read** (`scripts/src/frb_pins.dart`, `scripts/verify_frb_pins.dart`,
@@ -182,7 +203,7 @@
   the conjunction, and that argument still holds. Drift is read from
   `git status --porcelain`, not `git diff --exit-code`, because codegen can add a
   file and `git diff` is blind to an untracked path. The job name is untouched on
-  purpose: `FRB bindings were regenerated` is the required status check in
+  purpose: `FRB bindings were regenerated` is a required status check in
   `protect-main.json`, matched as a string, so a rename or a second job would
   make the ruleset stop matching silently and leave every pull request waiting on
   a report nobody files. For the same reason the trigger still carries no
