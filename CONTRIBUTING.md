@@ -565,7 +565,7 @@ See [dart.dev/tools/pub/automated-publishing](https://dart.dev/tools/pub/automat
 
 ## The flutter_rust_bridge pin
 
-Six files record it, and two of them are compared with `==` at runtime:
+Six files can record it, and two of them are compared with `==` at runtime:
 `frb_generated.dart` carries the version of the generator that produced it, and
 `RustLib.init()` throws unless the runtime package's version is the same string.
 So the constraint in `pubspec.yaml` is one version written as a range,
@@ -582,9 +582,16 @@ together at all, and every fuzz target stops building. Nothing else notices —
 through it, and the `Fuzz` workflow runs only on `rust/**` pull requests and a
 weekly cron, never on a push.
 
-`make verify-frb-pins` checks all six agree and that the constraint is written
-in that form. It runs in CI on the Linux leg and costs six file reads — no
-build, no network. Moving the version means moving `frb_version` in
+Two of the six are read only when they exist to be read: the bindings do not
+exist until `make codegen` has run, and a fuzz crate that does not name
+`flutter_rust_bridge` has none of the coupling above and nothing to check. A
+manifest that *does* name it but writes the version in some other form is
+neither — that is a failure, because a source the gate cannot read is not a
+source that agrees.
+
+`make verify-frb-pins` checks that every one of them that has something to say
+agrees, and that the constraint is written in that form. It runs in CI on the
+Linux leg and costs six file reads at most — no build, no network. Moving the version means moving `frb_version` in
 `.copier-answers.yml` and the `=` pin in both cargo manifests, then
 `make setup-frb-codegen` and `make codegen` so the installed generator and the
 committed bindings match; a pull request that edits one of the six is wrong by

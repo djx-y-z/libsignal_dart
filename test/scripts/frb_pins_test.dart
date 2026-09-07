@@ -112,7 +112,7 @@ void main() {
     });
   });
 
-  group('the other five sources', () {
+  group('the readers the pubspec rule does not cover', () {
     test('reads the string form in Cargo.toml', () {
       expect(
         frbVersionFromCargoToml(
@@ -171,6 +171,53 @@ void main() {
             contains('rust/fuzz/Cargo.toml'),
           ),
         ),
+      );
+    });
+
+    test('sees a dependency in every shape cargo accepts', () {
+      expect(cargoTomlDeclaresFrb('flutter_rust_bridge = "=2.13.0"\n'), isTrue);
+      expect(
+        cargoTomlDeclaresFrb('flutter_rust_bridge = { version = "=2.13.0" }\n'),
+        isTrue,
+      );
+      expect(
+        cargoTomlDeclaresFrb(
+          '[dependencies.flutter_rust_bridge]\nversion = "=2.13.0"\n',
+        ),
+        isTrue,
+      );
+      expect(
+        cargoTomlDeclaresFrb(
+          '[target.\'cfg(target_arch = "wasm32")\'.dependencies]\n'
+          'flutter_rust_bridge = "=2.13.0"\n',
+        ),
+        isTrue,
+      );
+    });
+
+    // The predicate decides whether the manifest is asked for a version at all,
+    // so anything it counts as a dependency that is not one turns a project
+    // with nothing to check into a failure — and anything it misses turns a
+    // real pin into a source the gate silently skips. This is the test that
+    // goes red if it is ever "simplified" to a substring search.
+    test('does not count a comment or a differently named crate', () {
+      expect(
+        cargoTomlDeclaresFrb(
+          '# flutter_rust_bridge = "=2.13.0" — pinned in the main crate\n',
+        ),
+        isFalse,
+      );
+      expect(
+        cargoTomlDeclaresFrb('# see flutter_rust_bridge for the pin\n'),
+        isFalse,
+      );
+      expect(
+        cargoTomlDeclaresFrb('flutter_rust_bridge_codegen = "2.13.0"\n'),
+        isFalse,
+      );
+      expect(
+        cargoTomlDeclaresFrb('[dependencies]\nlibfuzzer-sys = "0.4"\n'),
+        isFalse,
       );
     });
 
@@ -348,6 +395,37 @@ void main() {
 
     test('tolerates a project with no fuzz crate', () {
       expect(frbPinReport(collectFrbPins(packageDir: dir)), isNull);
+    });
+
+    // The shape a project is generated in: the scaffold writes a fuzz crate
+    // that takes the main crate by path and nothing else. There is no pin to
+    // disagree with, and reporting the manifest as unreadable would make the
+    // gate red on a first run in every project that has one.
+    test('tolerates a fuzz crate that does not depend on FRB', () {
+      Directory('${dir.path}/rust/fuzz').createSync(recursive: true);
+      File('${dir.path}/rust/fuzz/Cargo.toml').writeAsStringSync(
+        '[dependencies]\nlibfuzzer-sys = "0.4"\n'
+        '\n[dependencies.the_crate]\npath = ".."\n',
+      );
+      final pins = collectFrbPins(packageDir: dir);
+      final fuzz = pins.firstWhere((p) => p.source == 'rust/fuzz/Cargo.toml');
+      expect(fuzz.isAbsent, isTrue);
+      expect(fuzz.detail, contains('dependency'));
+      expect(frbPinReport(pins), isNull);
+    });
+
+    // The one shape that must not be read as absence: the crate is depended on,
+    // so the versions are coupled, but the pin is written in a form no reader
+    // here accepts. Silence there would be the gate reporting agreement it
+    // never checked.
+    test('reports a fuzz crate whose pin is not the accepted form', () {
+      Directory('${dir.path}/rust/fuzz').createSync(recursive: true);
+      File(
+        '${dir.path}/rust/fuzz/Cargo.toml',
+      ).writeAsStringSync('[dependencies]\nflutter_rust_bridge = "2.13.0"\n');
+      final report = frbPinReport(collectFrbPins(packageDir: dir))!;
+      expect(report, contains('rust/fuzz/Cargo.toml'));
+      expect(report, contains('flutter_rust_bridge = "=X.Y.Z"'));
     });
   });
 }

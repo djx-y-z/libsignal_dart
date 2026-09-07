@@ -26,7 +26,70 @@
 
 ### For Contributors
 
+#### Added
+
+- **`main` requires one status check, and the runbook says why only one**
+  (`.github/rulesets/protect-main.json`, `.github/rulesets/README.md`) — none of
+  the four rulesets carried a `required_status_checks` rule, so a red CI run
+  never blocked a merge. `FRB bindings were regenerated` is now required, which
+  closes the loop the guard was written for: it exists because replaying the AI
+  reviewer over 47 merged pull requests put its recall on that one condition at
+  21%, and the two-line shell check that replaced it has reported ever since
+  with nothing depending on it.
+
+  It is the only check that *can* be required here, and that is a finding rather
+  than a starting point. A workflow filtered out by `paths:` reports nothing at
+  all, and a required context with no report leaves the pull request waiting
+  forever with nothing to fix — unlike a job skipped by a job-level `if:`, which
+  reports `skipped` and counts as satisfied. `test.yml` filters `pull_request`
+  by path, so requiring any `test / …` context would permanently block every
+  documentation-only pull request. `codegen-guard.yml` has no such filter.
+  Requiring the matrix therefore needs that filter dropped from the
+  `pull_request` trigger first; the runbook records the exact contexts, why the
+  `test / ` prefix is load-bearing, and why the Linux ARM64 leg stays out of the
+  list while it times out on an arbitrary test.
+
+  Not applied — `make setup-repo-protections ARGS="--update"` reads these files,
+  so it wants the commit first. Checked before writing it that all four live
+  rulesets still match their committed JSON, including `signing-commit.json`'s
+  empty `bypass_actors`, so that `--update` re-PUTs nothing unintended.
+
 #### Changed
+
+- **`make verify-frb-pins` tells a fuzz crate with nothing to say from one it
+  cannot read** (`scripts/src/frb_pins.dart`, `scripts/verify_frb_pins.dart`,
+  `test/scripts/frb_pins_test.dart`) — the sixth source `2761886` added was
+  required outright. That is right here, where `rust/fuzz/Cargo.toml` pins
+  `flutter_rust_bridge` and cargo refuses to resolve the fuzz crate against the
+  main one when the two drift, and wrong everywhere else: the copier template
+  generates a fuzz crate that takes the main crate by path and names
+  flutter_rust_bridge nowhere, so the same file carried over unchanged turns the
+  gate red on the first run of every generated project. Measured in a render
+  rather than reasoned about: dropped into one, the old file fails the manifest
+  for holding no readable pin, and the new one reports it as declaring no such
+  dependency.
+
+  A manifest that does not declare the crate is absent now, the way bindings are
+  absent until `make codegen` has run. One that declares it but writes the
+  version in a form the reader does not accept is still a failure: collapsing
+  those two is how a gate ends up reporting agreement it never checked. The
+  predicate that separates them is anchored to the start of a line, so a
+  commented-out dependency does not count as one and `flutter_rust_bridge_codegen`
+  is not mistaken for it, and both directions are covered by tests that go red
+  on the substring version somebody would otherwise simplify it to.
+
+  Nothing about this repository's own check changes: all six sources still say
+  2.13.0 and a fuzz crate left behind on an older pin still fails by name. The
+  success line measures its own column instead of assuming eighteen characters,
+  because two of the reasons a source can be absent are wider than that.
+
+- **The pin's prose no longer counts files a particular checkout happens to
+  have** (`CONTRIBUTING.md`, `Makefile`, `.github/dependabot.yml`) — six files
+  can record the version and two of them are conditional, so "five files" and
+  "the version has to move in four places at once" were each true of one
+  project. The Dependabot comment now names `make verify-frb-pins` as the thing
+  that enumerates them, which is the part that cannot go stale, instead of
+  repeating a list beside it.
 
 - **`make run-example-web` clears the stale `dart_build` stamp before it runs**
   (`Makefile`, `CLAUDE.md`) — the target wiped `example/web/pkg/` and trusted the
@@ -45,6 +108,16 @@
   server serves `pkg/libsignal_frb.js` and `pkg/libsignal_frb_bg.wasm` in full.
   The comment above the target no longer claims the hook "*should* refresh on its
   own", and `CLAUDE.md` carries the same warning.
+
+#### Fixed
+
+- **The rulesets runbook described a bypass actor that is not there**
+  (`.github/rulesets/README.md`) — it said **Signing commit** "is bypassed only
+  by the update GitHub App" while its own table two paragraphs above said "none
+  by default", the committed JSON has an empty `bypass_actors`, and so does the
+  live ruleset. The conclusion the sentence draws — that not even an admin may
+  force-push — is a consequence of the empty array, not of an actor, and the
+  file says as much about `delete-branches.json` in the next section.
 
 ## [7.2.0] - 2026-09-06
 

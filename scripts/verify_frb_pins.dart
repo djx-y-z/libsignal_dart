@@ -5,8 +5,9 @@
 /// Usage:
 ///   fvm dart scripts/verify_frb_pins.dart
 ///
-/// Exits 0 when they agree, 1 when they do not. Reads six files and nothing
-/// else — no build, no network — so it is cheap enough to gate every push.
+/// Exits 0 when they agree, 1 when they do not. Reads at most six files and
+/// nothing else — no build, no network — so it is cheap enough to gate every
+/// push.
 ///
 /// See `scripts/src/frb_pins.dart` for why the agreement matters: the runtime
 /// asserts the codegen version recorded in the committed bindings equals its
@@ -56,8 +57,12 @@ void main(List<String> args) {
   }
 
   final version = pins.firstWhere((p) => p.version != null).version;
-  for (final pin in pins) {
-    logInfo('${(pin.version ?? pin.detail).padRight(18)} ${pin.source}');
+  // Absent sources report a sentence rather than a version, and a fixed column
+  // is narrower than several of them; measure it instead of guessing.
+  final found = pins.map((p) => p.version ?? p.detail).toList();
+  final width = found.map((f) => f.length).reduce((a, b) => a > b ? a : b);
+  for (var i = 0; i < pins.length; i++) {
+    logInfo('${found[i].padRight(width)}  ${pins[i].source}');
   }
   logInfo('All flutter_rust_bridge pins agree on $version');
 }

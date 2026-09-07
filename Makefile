@@ -537,9 +537,9 @@ third-party-notices:
 verify-third-party-notices:
 	@$(FVM) dart scripts/generate_third_party_notices.dart --check
 
-# Six files record the flutter_rust_bridge version and the runtime asserts two
-# of them are equal, so a disagreement ships as a package that throws on init.
-# File reads only — no build, no network.
+# Six files can record the flutter_rust_bridge version and the runtime asserts
+# two of them are equal, so a disagreement ships as a package that throws on
+# init. File reads only — no build, no network.
 verify-frb-pins:
 	@$(FVM) dart scripts/verify_frb_pins.dart $(ARGS)
 
