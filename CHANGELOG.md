@@ -77,6 +77,16 @@
   ruleset takes `make setup-repo-protections ARGS="--update"`, plain
   `setup-repo-protections` skipping one that already exists.
 
+  Applied to `main` on 2026-09-07 and verified against the live API: the rule
+  carries all eleven contexts, each with `integration_id` 15368 and
+  `strict_required_status_checks_policy` still `false`; the Admin bypass and the
+  other three rulesets are untouched; `rules/branches/main` reports the rule as
+  effective, and a Dependabot branch still reports none. All four live rulesets
+  match their committed JSON, and the `--update` PUT preserved
+  `require_extra_approval_for_unattributed_changes`, a field GitHub stores as a
+  default and the committed file does not carry — worth confirming rather than
+  assuming, since a PUT sends the file and not the difference.
+
 - **CI cross-compiles the three Android ABIs on every pull request**
   (`.github/workflows/test-reusable.yml`) — Android was cross-compiled in exactly
   one place, `build-libsignal.yml`, which runs on `workflow_dispatch` and on a
