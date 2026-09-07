@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets third-party-notices verify-third-party-notices verify-frb-pins rust-audit rust-deny rust-check rust-test rust-clippy rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets third-party-notices verify-third-party-notices verify-frb-pins verify-android-alignment actionlint rust-audit rust-deny rust-check rust-test rust-clippy rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -65,6 +65,8 @@ help:
 	@echo "    make third-party-notices          - Regenerate THIRD_PARTY_NOTICES.txt from the dep graph"
 	@echo "    make verify-third-party-notices   - Verify THIRD_PARTY_NOTICES.txt is up to date"
 	@echo "    make verify-frb-pins              - Verify every file names the same flutter_rust_bridge version"
+	@echo "    make verify-android-alignment     - Verify built Android libraries are 16 KB-aligned"
+	@echo "    make actionlint                   - Lint the GitHub Actions workflows (actionlint)"
 	@echo "    make check-targets                - Check deployment target consistency (iOS/macOS/Android)"
 	@echo "                                        Example: make check-targets ARGS=\"--ios --set 14.0\""
 	@echo "    make rust-update                  - Update Cargo.lock (cargo update)"
@@ -186,11 +188,17 @@ setup-fuzz:
 	@echo ""
 	@echo "Fuzzing setup complete! Try: make fuzz-list"
 
+# `--locked` builds cargo-ndk from its own committed lockfile. The VERSION is
+# deliberately NOT pinned here the way the Android CI jobs pin it: a local
+# Android build is never the artefact that ships, and this recipe skips the
+# install entirely when any cargo-ndk is already on PATH, so a pin here could
+# not correct a wrong one anyway. What ships is gated on the bytes, by
+# `make verify-android-alignment`.
 setup-android:
 	@echo "Installing Android build tools..."
 	@if ! command -v cargo-ndk >/dev/null 2>&1; then \
 		echo "Installing cargo-ndk..."; \
-		cargo install cargo-ndk; \
+		cargo install cargo-ndk --locked; \
 	else \
 		echo "cargo-ndk already installed"; \
 	fi
@@ -285,6 +293,13 @@ build:
 	@echo ""
 	@echo "Build complete! Library at: rust/target/"
 
+# ARGS goes AFTER `build`, and that position is load-bearing rather than
+# accidental. cargo-ndk's own options are recognised anywhere on the line —
+# measured against 4.1.2: `--target arm64-v8a` placed after `build` is still
+# consumed by cargo-ndk, which then builds that one ABI. Cargo's options are
+# not: move ARGS before `build` and `make build-android ARGS="--features x"`
+# dies on `error: unexpected argument '--features' found`. This position
+# accepts both kinds; the other accepts only one.
 build-android:
 	@echo "Building Rust library for Android..."
 	@PLATFORM=$$(dart scripts/get_android_min_sdk.dart) && \
@@ -479,6 +494,26 @@ rust-geiger:
 rust-audit:
 	cargo audit --file rust/Cargo.lock
 
+# The workflows are the one part of this repository that nothing else
+# rehearses: a job is only executed by pushing it, so a typo in an expression, a
+# context that does not exist, or a `needs:` naming a job somebody renamed all
+# reach main and then fail on the very run that was supposed to gate them.
+# actionlint reads them statically, and shells out to shellcheck for every
+# `run:` block — which is where most of what it finds actually lives, so a
+# missing shellcheck quietly makes this a weaker check than it looks.
+#
+# Suppressions live in `.github/actionlint.yaml`, not in flags here, so this
+# and a bare `actionlint` report the same thing.
+actionlint:
+	@command -v actionlint >/dev/null 2>&1 || { \
+		echo "actionlint not found. Install it (brew install actionlint) or take a"; \
+		echo "release from https://github.com/rhysd/actionlint/releases — CI pins 1.7.12."; \
+		exit 1; \
+	}
+	@command -v shellcheck >/dev/null 2>&1 || \
+		echo "warning: shellcheck not found — actionlint will skip every run: block."
+	@actionlint $(ARGS)
+
 rust-deny:
 	cargo deny --manifest-path rust/Cargo.toml check $(ARGS)
 
@@ -542,6 +577,17 @@ verify-third-party-notices:
 # init. File reads only — no build, no network.
 verify-frb-pins:
 	@$(FVM) dart scripts/verify_frb_pins.dart $(ARGS)
+
+# Google Play has required an app's bundled native libraries to be 16 KB-aligned,
+# for apps targeting Android 15 or later, since 1 November 2025 — and the
+# alignment is supplied by cargo-ndk's linker flags, not by the NDK and not by
+# anything in this source. That makes it a property of the TOOL, held by a
+# version pin that nothing bumps automatically, so it is measured here on the
+# built artefacts rather than assumed. Reads ELF program headers only — no
+# build, no network. Run it after `make build-android`; with no ARGS it checks
+# every Android library present and fails when there are none.
+verify-android-alignment:
+	@python3 scripts/verify_android_alignment.py $(ARGS)
 
 # Updating the lockfile changes the dependency graph, which invalidates the
 # third-party notice inventory. Regenerating here keeps the two in lockstep

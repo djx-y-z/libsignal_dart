@@ -42,8 +42,25 @@ make build                              # Build for current platform (always rel
 make build ARGS="--target <target>"     # Build for specific Rust target
 make build-android                      # Build for Android (all ABIs)
 make build-android ARGS="--target arm64-v8a"  # Build for specific Android ABI
+make verify-android-alignment           # Check the built .so files are 16 KB-aligned
 make build-web                          # Build WASM for web
 ```
+
+`ARGS` reaches `build-android` **after** the `build` word, and that is
+deliberate: cargo-ndk's own options (`--target arm64-v8a`) are recognised
+anywhere on the line, cargo's are not, so this position takes both kinds and the
+other one takes only cargo-ndk's.
+
+⚠ **The 16 KB alignment of the Android libraries comes from `cargo-ndk`, not
+from the NDK.** cargo-ndk passes `-Wl,-z,max-page-size=16384`; artefacts built
+with r26 and r28 measure `p_align=0x4000` alike. Google Play has required it of
+an app's bundled native libraries, for apps targeting Android 15 or later, since
+1 November 2025 — so a cargo-ndk that stopped passing the flag would not break
+anything here, it would make **consumers'** apps unpublishable. The version is
+therefore pinned by hand in both Android jobs (`build-libsignal.yml`
+and `test-reusable.yml`, together — a gate on a different tool than the release
+is not a gate), and `make verify-android-alignment` measures the result rather
+than trusting the pin. Both jobs run it.
 
 ### Web
 
@@ -174,6 +191,8 @@ make rust-update                  # Update Cargo.lock + regenerate notices
 make third-party-notices          # Regenerate THIRD_PARTY_NOTICES.txt
 make verify-third-party-notices   # Check it matches the dependency graph
 make verify-frb-pins              # Check every file names the same FRB version
+make verify-android-alignment     # Check built Android libraries are 16 KB-aligned
+make actionlint                   # Lint the GitHub Actions workflows
 make check-new-libsignal-version  # Check for new upstream libsignal version
 make check-new-libsignal-version ARGS="--update"  # Apply update
 make check-template-updates       # Check for copier template updates
@@ -536,6 +555,10 @@ described as our features.
 - All native libraries are built from source in GitHub Actions
 - SHA256 checksums verify downloaded libraries
 - Pin to specific upstream releases
+- Tools that shape or inspect the shipped binary are pinned by version, and by
+  checksum where CI downloads them (`cargo-ndk`, `actionlint`). Neither pin is
+  moved by Dependabot — it does not read `cargo install` or `curl` lines — so
+  both move by hand
 
 ### Code Review Checklist
 1. No hardcoded keys or secrets
@@ -726,6 +749,7 @@ make rust-audit
 make rust-deny
 make verify-frb-pins
 make verify-third-party-notices
+make actionlint                 # workflows: static + shellcheck (CI runs it too)
 make publish-dry-run            # exits 65 on ANY warning, a dirty tree included
 ```
 

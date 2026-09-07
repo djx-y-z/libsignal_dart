@@ -56,6 +56,39 @@
 
 #### Changed
 
+- **copier template adopted: v4.8.0 -> v4.9.0** — adds workflow linting, Android build and alignment gates, and a stronger binding-regeneration guard
+  (`.github/workflows/test-reusable.yml`, `.github/workflows/codegen-guard.yml`,
+  `scripts/verify_android_alignment.py`); it also updates the Android toolchain
+  defaults and hardens workflow output handling.
+
+  `.github/actionlint.yaml` and `Makefile` add `make actionlint`, while
+  `.github/workflows/test-reusable.yml` runs actionlint and shellcheck in CI.
+  Quoting the `$GITHUB_OUTPUT`, `$GITHUB_ENV`, `$GITHUB_PATH` and
+  `$GITHUB_STEP_SUMMARY` redirections in the generated workflows and composite
+  actions prevents shell expansion from turning valid workflow output into a
+  shellcheck failure. `.github/rulesets/README.md` records the resulting status
+  contexts and why path-filtered workflows must not be required checks.
+
+  The reusable test workflow now cross-compiles all three Android ABIs and runs
+  `make verify-android-alignment`; the release workflow checks the artefacts it
+  will publish as well. `scripts/verify_android_alignment.py` reads ELF program
+  headers directly, so a misaligned native library is caught before a consumer
+  reaches an Android release. `cargo-ndk` is pinned to `4.1.2` in both Android
+  workflows, keeping the pull-request gate on the same tool as the release
+  build. The recorded Android NDK default moves to `28.2.13676358`, with the
+  corresponding documentation and `.copier-answers.yml` update, so the default
+  assembler can handle the OpenSSL sources reached by the native dependency
+  graph.
+
+  `.github/workflows/codegen-guard.yml` now regenerates bindings and checks
+  `git status --porcelain` under `lib/src/rust/` and `rust/src/frb_generated.rs`,
+  in addition to retaining the `codegen-failed` label path. That catches newly
+  added Rust APIs and documentation changes whose existing bindings would still
+  compile, while preserving the `FRB bindings were regenerated` job name used by
+  the ruleset. The six-source fuzz pin reader and the required status-check rule
+  themselves were already present in this project, so those template changes
+  arrive byte-identical rather than as new file changes here.
+
 - **`make verify-frb-pins` tells a fuzz crate with nothing to say from one it
   cannot read** (`scripts/src/frb_pins.dart`, `scripts/verify_frb_pins.dart`,
   `test/scripts/frb_pins_test.dart`) — the sixth source `2761886` added was

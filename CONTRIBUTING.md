@@ -673,6 +673,7 @@ Instead, report security issues privately:
 
 For cryptographic code changes:
 
+<<<<<<< before updating
 - [ ] No hardcoded keys or secrets
 - [ ] No key material in logs or error messages
 - [ ] Cryptographic comparisons done via library methods (avoid raw byte comparison in Dart)
@@ -689,6 +690,70 @@ This library wraps [libsignal](https://github.com/signalapp/libsignal). When upd
 **Automatic (CI):** A daily workflow checks for new libsignal releases and creates a PR with all updates automatically.
 
 **Manual update:**
+=======
+Six files can record it, and two of them are compared with `==` at runtime:
+`frb_generated.dart` carries the version of the generator that produced it, and
+`RustLib.init()` throws unless the runtime package's version is the same string.
+So the constraint in `pubspec.yaml` is one version written as a range,
+`>=X.Y.Z <X.Y.Z+1` — a caret admits versions that assert rejects, and a bare
+`X.Y.Z` admits only the right one but makes the package unpublishable, because
+`dart pub publish` warns that a single-version constraint "should allow more
+than one version" and exits 65 on any warning.
+
+The sixth, `rust/fuzz/Cargo.toml`, is read only if the fuzz crate names
+`flutter_rust_bridge` — the generated one does not, and until it does there is
+nothing there to disagree. Add the dependency (fuzz targets that build FRB
+types need it) and the pin joins the set, for a reason of its own: the fuzz
+crate takes the main crate by path as well, so a stale pin there does not
+drift — cargo cannot resolve the two together at all, and every fuzz target
+stops building. Nothing else notices, either. `rust/fuzz` is its own workspace
+root, so no resolution under `rust/` passes through it, and the `Fuzz` workflow
+runs only on `rust/**` pull requests and a weekly cron, never on a push.
+
+Two of the six are therefore read only when they exist to be read: the bindings
+do not exist until `make codegen` has run, and the fuzz crate need not name the
+package at all. A manifest that *does* name it but writes the version in some
+other form is neither — that is a failure, because a source the gate cannot
+read is not a source that agrees.
+
+`make verify-frb-pins` checks that every one of them that has something to say
+agrees, and that the constraint is written in that form. It runs in CI on the
+Linux leg and costs six file reads at most — no build, no network. Moving the
+version means moving `frb_version` in `.copier-answers.yml` and the `=` pin in
+every cargo manifest that carries one, then `make setup-frb-codegen` and
+`make codegen` so the installed generator and the committed bindings match; a
+pull request that edits one of them is wrong by construction, which is why
+Dependabot is told to leave `flutter_rust_bridge` alone.
+
+## Makefile Commands Reference
+
+`make help` prints every target with a one-line description and is the list
+that cannot go stale. These are the ones a change usually needs:
+
+| Command | What it does |
+|---------|--------------|
+| `make setup` | Install the toolchain: fvm + pinned Flutter, Rust tools, FRB codegen |
+| `make codegen` | Regenerate the bindings under `lib/src/rust/` |
+| `make build` | Build the native library for this machine |
+| `make test` | Run the Dart test suite |
+| `make analyze` / `make format-check` | The two gates CI runs on every platform |
+| `make doc` / `make rust-doc` | The documentation gates — both BLOCK in CI |
+| `make rust-check` / `make rust-clippy` / `make rust-test` | The Rust gates |
+| `make rust-audit` / `make rust-deny` | Advisories, licences, sources |
+| `make third-party-notices` | Regenerate the notice inventory CI verifies |
+| `make clean` | Remove build artifacts, including `rust/target` |
+
+Run tasks through `make` rather than calling the underlying tool: the targets
+set the arguments and environment the scripts expect, and several of them exist
+precisely because the bare command does the wrong thing.
+
+## Code Style
+
+- Follow the [Dart Style Guide](https://dart.dev/guides/language/effective-dart/style)
+- Use meaningful variable and function names
+- Add documentation comments for public APIs
+- Write tests for new functionality
+>>>>>>> after updating
 
 1. Review the libsignal changelog for security fixes
 2. Update libsignal version:
