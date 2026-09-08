@@ -103,16 +103,13 @@ class TestParty {
     final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
 
     // Sign using our identity key
-    final identityPrivate = PrivateKey.deserialize(
-      bytes: identityKeyPair.privateKey.toList(),
-    );
-    final signedPreKeySignature = identityPrivate.sign(
+    final signedPreKeySignature = identityKeyPair.sign(
       message: signedPreKeyPublic.serialize().toList(),
     );
 
     final kyberKeyPair = KyberKeyPair.generate();
     final kyberPreKey = kyberKeyPair.getPublicKey();
-    final kyberPreKeySignature = identityPrivate.sign(
+    final kyberPreKeySignature = identityKeyPair.sign(
       message: kyberPreKey.serialize().toList(),
     );
 

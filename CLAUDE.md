@@ -636,7 +636,8 @@ Stores are **required** for Signal Protocol operations due to Double Ratchet:
 ### What Works WITHOUT Stores
 
 - Key generation (`PrivateKey.generate()`, `IdentityKeyPair.generate()`)
-- Signing and verification (`privateKey.sign()`, `publicKey.verifySignature()`)
+- Signing and verification (`privateKey.sign()`, `identityKeyPair.sign()`,
+  `publicKey.verify()`)
 - Message parsing — `SignalMessage`, `PreKeySignalMessage`, `SenderKeyMessage`,
   `SenderKeyDistributionMessage`, `PlaintextContent`,
   `UnidentifiedSenderMessageContent` (construct *and* parse), and

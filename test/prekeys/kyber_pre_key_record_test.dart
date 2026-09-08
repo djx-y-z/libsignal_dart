@@ -19,10 +19,7 @@ void main() {
     }) {
       final keyPair = KyberKeyPair.generate();
       final publicKey = keyPair.getPublicKey();
-      final identityPrivKey = PrivateKey.deserialize(
-        bytes: identityKeyPair.privateKey.toList(),
-      );
-      final signature = identityPrivKey.sign(
+      final signature = identityKeyPair.sign(
         message: publicKey.serialize().toList(),
       );
 
@@ -40,10 +37,7 @@ void main() {
       test('creates valid Kyber pre-key record', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 
@@ -82,10 +76,7 @@ void main() {
       test('created Kyber pre-key returns correct signature', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 
@@ -102,10 +93,7 @@ void main() {
       test('signature is verifiable by identity public key', () {
         final keyPair = KyberKeyPair.generate();
         final publicKey = keyPair.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 

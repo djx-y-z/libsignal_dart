@@ -2983,6 +2983,31 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__keys__IdentityKeyPair_serializePtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  WireSyncRust2DartDco wire__crate__api__keys__IdentityKeyPair_sign(
+    int that,
+    ffi.Pointer<wire_cst_list_prim_u_8_loose> message,
+  ) {
+    return _wire__crate__api__keys__IdentityKeyPair_sign(that, message);
+  }
+
+  late final _wire__crate__api__keys__IdentityKeyPair_signPtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(
+            ffi.UintPtr,
+            ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+          )
+        >
+      >('frbgen_libsignal_wire__crate__api__keys__IdentityKeyPair_sign');
+  late final _wire__crate__api__keys__IdentityKeyPair_sign =
+      _wire__crate__api__keys__IdentityKeyPair_signPtr
+          .asFunction<
+            WireSyncRust2DartDco Function(
+              int,
+              ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            )
+          >();
+
   WireSyncRust2DartDco
   wire__crate__api__keys__IdentityKeyPair_sign_alternate_identity(
     int that,

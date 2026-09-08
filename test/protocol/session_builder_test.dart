@@ -156,15 +156,12 @@ void main() {
         final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
 
         // Sign with wrong identity
-        final wrongPrivate = PrivateKey.deserialize(
-          bytes: wrongIdentity.privateKey.toList(),
-        );
-        final signature = wrongPrivate.sign(
+        final signature = wrongIdentity.sign(
           message: signedPreKeyPublic.serialize().toList(),
         );
 
         final kyberKeyPair = KyberKeyPair.generate();
-        final kyberSignature = wrongPrivate.sign(
+        final kyberSignature = wrongIdentity.sign(
           message: kyberKeyPair.getPublicKey().serialize().toList(),
         );
 

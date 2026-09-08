@@ -71,10 +71,7 @@ Future<void> runSessionDemo() async {
   // Signed pre-key
   final signedPreKeyPrivate = PrivateKey.generate();
   final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
-  final bobPrivate = PrivateKey.deserialize(
-    bytes: bobIdentity.privateKey.toList(),
-  );
-  final signedPreKeySignature = bobPrivate.sign(
+  final signedPreKeySignature = bobIdentity.sign(
     message: signedPreKeyPublic.serialize().toList(),
   );
   final timestamp = BigInt.from(DateTime.now().millisecondsSinceEpoch);
@@ -93,7 +90,7 @@ Future<void> runSessionDemo() async {
   // Kyber pre-key (post-quantum)
   final kyberKeyPair = KyberKeyPair.generate();
   final kyberPreKey = kyberKeyPair.getPublicKey();
-  final kyberPreKeySignature = bobPrivate.sign(
+  final kyberPreKeySignature = bobIdentity.sign(
     message: kyberPreKey.serialize().toList(),
   );
   final kyberPreKeyRecord = KyberPreKeyRecord.create(

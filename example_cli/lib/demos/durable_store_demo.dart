@@ -56,9 +56,6 @@ Future<void> runDurableStoreDemo() async {
     // 2. Bob publishes pre-keys. Each store call returns only after the record
     //    is on disk, so a crash here cannot leave a bundle advertising keys Bob
     //    no longer has.
-    final bobPrivate = PrivateKey.deserialize(
-      bytes: bobIdentity.privateKey.toList(),
-    );
     final timestamp = BigInt.from(
       DateTime.now().toUtc().millisecondsSinceEpoch,
     );
@@ -76,7 +73,7 @@ Future<void> runDurableStoreDemo() async {
 
     final signedPreKeyPrivate = PrivateKey.generate();
     final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
-    final signedPreKeySignature = bobPrivate.sign(
+    final signedPreKeySignature = bobIdentity.sign(
       message: signedPreKeyPublic.serialize().toList(),
     );
     await bob.signedPreKey.storeSignedPreKey(
@@ -92,7 +89,7 @@ Future<void> runDurableStoreDemo() async {
 
     final kyberKeyPair = KyberKeyPair.generate();
     final kyberPreKeyPublic = kyberKeyPair.getPublicKey();
-    final kyberPreKeySignature = bobPrivate.sign(
+    final kyberPreKeySignature = bobIdentity.sign(
       message: kyberPreKeyPublic.serialize().toList(),
     );
     await bob.kyberPreKey.storeKyberPreKey(
@@ -290,7 +287,7 @@ Future<void> runDurableStoreDemo() async {
 
     final lastResortKeyPair = KyberKeyPair.generate();
     final lastResortPublic = lastResortKeyPair.getPublicKey();
-    final lastResortSignature = bobPrivate.sign(
+    final lastResortSignature = bobIdentity.sign(
       message: lastResortPublic.serialize().toList(),
     );
     // The flag lives here, not in the record: libsignal does not carry it, so

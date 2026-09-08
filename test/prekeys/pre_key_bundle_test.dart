@@ -29,16 +29,13 @@ void main() {
 
       final signedPreKeyPriv = PrivateKey.generate();
       final signedPreKey = signedPreKeyPriv.getPublicKey();
-      final identityPrivKey = PrivateKey.deserialize(
-        bytes: identityKeyPair.privateKey.toList(),
-      );
-      final signedPreKeySignature = identityPrivKey.sign(
+      final signedPreKeySignature = identityKeyPair.sign(
         message: signedPreKey.serialize().toList(),
       );
 
       final kyberKeyPair = KyberKeyPair.generate();
       final kyberPreKey = kyberKeyPair.getPublicKey();
-      final kyberPreKeySignature = identityPrivKey.sign(
+      final kyberPreKeySignature = identityKeyPair.sign(
         message: kyberPreKey.serialize().toList(),
       );
 
@@ -167,16 +164,13 @@ void main() {
 
         final signedPreKeyPriv = PrivateKey.generate();
         final signedPreKey = signedPreKeyPriv.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signedPreKeySignature = identityPrivKey.sign(
+        final signedPreKeySignature = identityKeyPair.sign(
           message: signedPreKey.serialize().toList(),
         );
 
         final kyberKeyPair = KyberKeyPair.generate();
         final kyberPreKey = kyberKeyPair.getPublicKey();
-        final kyberPreKeySignature = identityPrivKey.sign(
+        final kyberPreKeySignature = identityKeyPair.sign(
           message: kyberPreKey.serialize().toList(),
         );
 

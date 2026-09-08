@@ -4,6 +4,30 @@
 
 #### Changed
 
+- **`IdentityKeyPair.sign()` signs without copying the identity secret into the
+  Dart heap** (`rust/src/api/keys.rs`, `README.md`) — signing a signed pre-key or
+  a Kyber pre-key with the long-term identity key had exactly one route:
+  `PrivateKey.deserialize(bytes: identity.privateKey.toList())`, then `.sign()`
+  on the result. That is what the README documented and what every call site in
+  this repository did. It materialises the long-term identity private key as a
+  `Vec<u8>` handed across FFI, and from there nothing can reach it: no `zeroize`
+  in Rust, no `dispose()` on the Dart side, only the garbage collector at a time
+  of its choosing. `identityKeyPair.sign(message: ...)` does the same work with
+  the secret never leaving Rust.
+
+  It grants no capability that was not already reachable: the `privateKey`
+  getter it replaces can sign the same arbitrary bytes today, so this narrows the
+  surface a secret is exposed on rather than widening what the key can do.
+  Signatures from it are not interchangeable with `signAlternateIdentity`, which
+  signs a domain-separated message — a fixed 32-byte prefix and a label ahead of
+  the other identity key — and a serialized public key cannot begin with that
+  prefix, so the two uses overlap only if a caller deliberately builds it.
+
+  Upstream libsignal's `IdentityKeyPair` has no general-purpose `sign`; this is a
+  deliberate addition on our side, and the `privateKey` getter still works, so
+  nothing that relied on the old route breaks. The getter's own documentation now
+  points at this method.
+
 - **The README names the Flutter build-system skip that leaves `web/pkg/`
   unprovisioned** (`README.md`) — the build hook copies the WASM module into the
   consuming app's `web/pkg/`, and `flutter run -d chrome` reaches the hook only

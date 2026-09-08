@@ -225,6 +225,146 @@ void main() {
       });
     });
 
+    group('sign()', () {
+      test('produces a signature the identity public key verifies', () {
+        final identity = IdentityKeyPair.generate();
+        final message = Uint8List.fromList('signed pre-key'.codeUnits);
+
+        final signature = identity.sign(message: message.toList());
+
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+        expect(
+          publicKey.verify(
+            message: message.toList(),
+            signature: signature.toList(),
+          ),
+          isTrue,
+        );
+        expect(signature.length, equals(64));
+      });
+
+      test('accepts an empty message', () {
+        final identity = IdentityKeyPair.generate();
+
+        final signature = identity.sign(message: <int>[]);
+
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+        expect(
+          publicKey.verify(message: <int>[], signature: signature.toList()),
+          isTrue,
+        );
+      });
+
+      // The point of the method: it replaces materializing the identity
+      // private key in the Dart heap. Both paths must stay interchangeable,
+      // or migrating a call site would change what a bundle carries.
+      // Ed25519 signing here is randomized, so the signatures differ byte for
+      // byte; what has to match is that either one verifies under the same
+      // identity public key.
+      test('is interchangeable with signing via the privateKey getter', () {
+        final identity = IdentityKeyPair.generate();
+        final message = Uint8List.fromList(
+          PrivateKey.generate().getPublicKey().serialize(),
+        );
+
+        final viaPair = identity.sign(message: message.toList());
+        final viaGetter = PrivateKey.deserialize(
+          bytes: identity.privateKey.toList(),
+        ).sign(message: message.toList());
+
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+        expect(
+          publicKey.verify(
+            message: message.toList(),
+            signature: viaPair.toList(),
+          ),
+          isTrue,
+        );
+        expect(
+          publicKey.verify(
+            message: message.toList(),
+            signature: viaGetter.toList(),
+          ),
+          isTrue,
+        );
+      });
+
+      test('signature does not verify over a different message', () {
+        final identity = IdentityKeyPair.generate();
+        final message = Uint8List.fromList('original'.codeUnits);
+        final other = Uint8List.fromList('tampered'.codeUnits);
+
+        final signature = identity.sign(message: message.toList());
+
+        final publicKey = PublicKey.deserialize(
+          bytes: identity.publicKey.toList(),
+        );
+        expect(
+          publicKey.verify(
+            message: other.toList(),
+            signature: signature.toList(),
+          ),
+          isFalse,
+        );
+      });
+
+      test('signature does not verify under a different identity', () {
+        final identity = IdentityKeyPair.generate();
+        final otherIdentity = IdentityKeyPair.generate();
+        final message = Uint8List.fromList('signed pre-key'.codeUnits);
+
+        final signature = identity.sign(message: message.toList());
+
+        final otherPublicKey = PublicKey.deserialize(
+          bytes: otherIdentity.publicKey.toList(),
+        );
+        expect(
+          otherPublicKey.verify(
+            message: message.toList(),
+            signature: signature.toList(),
+          ),
+          isFalse,
+        );
+      });
+
+      // signAlternateIdentity() signs a domain-separated message, so a raw
+      // sign() over the bare identity key is not a substitute for it.
+      test('is not a substitute for signAlternateIdentity', () {
+        final mainIdentity = IdentityKeyPair.generate();
+        final alternate = IdentityKeyPair.generate();
+
+        final rawSignature = mainIdentity.sign(
+          message: alternate.publicKey.toList(),
+        );
+        final domainSeparated = mainIdentity.signAlternateIdentity(
+          otherIdentity: PublicKey.deserialize(
+            bytes: alternate.publicKey.toList(),
+          ),
+        );
+
+        expect(rawSignature, isNot(equals(domainSeparated)));
+
+        final mainPublicKey = PublicKey.deserialize(
+          bytes: mainIdentity.publicKey.toList(),
+        );
+        // The domain-separated signature is over a prefixed message, so it
+        // does not verify as a plain signature over the identity key bytes.
+        expect(
+          mainPublicKey.verify(
+            message: alternate.publicKey.toList(),
+            signature: domainSeparated.toList(),
+          ),
+          isFalse,
+        );
+      });
+    });
+
     group('signAlternateIdentity()', () {
       test('signs alternate identity key', () {
         final mainIdentity = IdentityKeyPair.generate();

@@ -19,10 +19,7 @@ void main() {
     }) {
       final privateKey = PrivateKey.generate();
       final publicKey = privateKey.getPublicKey();
-      final identityPrivKey = PrivateKey.deserialize(
-        bytes: identityKeyPair.privateKey.toList(),
-      );
-      final signature = identityPrivKey.sign(
+      final signature = identityKeyPair.sign(
         message: publicKey.serialize().toList(),
       );
 
@@ -41,10 +38,7 @@ void main() {
       test('creates valid signed pre-key record', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 
@@ -84,10 +78,7 @@ void main() {
       test('created signed pre-key returns correct signature', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 
@@ -105,10 +96,7 @@ void main() {
       test('signature is verifiable by identity public key', () {
         final privateKey = PrivateKey.generate();
         final publicKey = privateKey.getPublicKey();
-        final identityPrivKey = PrivateKey.deserialize(
-          bytes: identityKeyPair.privateKey.toList(),
-        );
-        final signature = identityPrivKey.sign(
+        final signature = identityKeyPair.sign(
           message: publicKey.serialize().toList(),
         );
 

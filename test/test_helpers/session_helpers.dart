@@ -92,18 +92,15 @@ RemotePartyKeys generateRemotePartyKeys({
   final signedPreKeyPrivate = PrivateKey.generate();
   final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
 
-  // Sign the signed pre-key with the identity key - need to use PrivateKey from identity
-  final identityPrivate = PrivateKey.deserialize(
-    bytes: identityKeyPair.privateKey.toList(),
-  );
-  final signedPreKeySignature = identityPrivate.sign(
+  // Sign the signed pre-key with the identity key
+  final signedPreKeySignature = identityKeyPair.sign(
     message: signedPreKeyPublic.serialize().toList(),
   );
 
   // Generate Kyber pre-key (required by libsignal)
   final kyberKeyPair = KyberKeyPair.generate();
   final kyberPreKey = kyberKeyPair.getPublicKey();
-  final kyberPreKeySignature = identityPrivate.sign(
+  final kyberPreKeySignature = identityKeyPair.sign(
     message: kyberPreKey.serialize().toList(),
   );
 
@@ -176,17 +173,14 @@ RemotePartyKeys generateRemotePartyKeysWithIdentity({
   final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
 
   // Sign the signed pre-key with the identity key
-  final identityPrivate = PrivateKey.deserialize(
-    bytes: identityKeyPair.privateKey.toList(),
-  );
-  final signedPreKeySignature = identityPrivate.sign(
+  final signedPreKeySignature = identityKeyPair.sign(
     message: signedPreKeyPublic.serialize().toList(),
   );
 
   // Generate Kyber pre-key (required by libsignal)
   final kyberKeyPair = KyberKeyPair.generate();
   final kyberPreKey = kyberKeyPair.getPublicKey();
-  final kyberPreKeySignature = identityPrivate.sign(
+  final kyberPreKeySignature = identityKeyPair.sign(
     message: kyberPreKey.serialize().toList(),
   );
 

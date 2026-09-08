@@ -243,9 +243,45 @@ impl IdentityKeyPair {
     /// The returned bytes contain sensitive private key material.
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
+    ///
+    /// If all you need is a signature by the identity key — signing a signed
+    /// pre-key or a Kyber pre-key, say — call `identityKeyPair.sign` instead.
+    /// It does the same work without copying the long-term secret out of Rust.
     #[flutter_rust_bridge::frb(sync, getter)]
     pub fn private_key(&self) -> Result<Vec<u8>, String> {
         Ok(self.inner.private_key().serialize())
+    }
+
+    /// Sign a message with this identity key pair's private key.
+    ///
+    /// This is how a signed pre-key or a Kyber pre-key gets its identity-key
+    /// signature, which is what X3DH requires of a published pre-key bundle.
+    ///
+    /// # Security
+    /// Prefer this over reading the `privateKey` getter and rebuilding a
+    /// `PrivateKey` from those bytes. The getter copies the long-term identity
+    /// secret into the Dart heap, where nothing can zeroize it and it survives
+    /// until the garbage collector happens to reclaim it; this method keeps the
+    /// secret in Rust for the whole operation.
+    ///
+    /// It grants no capability the pair did not already have — signing
+    /// arbitrary bytes with the identity key is reachable through that same
+    /// `privateKey` getter today. It removes a copy of the secret, nothing else.
+    ///
+    /// Signatures made here are not interchangeable with those from
+    /// `signAlternateIdentity`, which signs a domain-separated message rather
+    /// than the bytes it is given: a fixed 32-byte prefix and a label precede
+    /// the other identity key. A serialized public key cannot begin with that
+    /// prefix, so the two uses of the identity key overlap only if a caller
+    /// deliberately builds the prefix and passes it as `message`.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn sign(&self, message: Vec<u8>) -> Result<Vec<u8>, String> {
+        let signature = self
+            .inner
+            .private_key()
+            .calculate_signature(&message, &mut OsRng.unwrap_err())
+            .map_err(|e| e.to_string())?;
+        Ok(signature.into_vec())
     }
 
     /// Sign an alternate identity key.

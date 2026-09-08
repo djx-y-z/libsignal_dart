@@ -2619,6 +2619,10 @@ class RustLibWire implements BaseWire {
       wasmModule.wire__crate__api__keys__IdentityKeyPair_serialize(that);
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__keys__IdentityKeyPair_sign(int that, JSAny message) =>
+      wasmModule.wire__crate__api__keys__IdentityKeyPair_sign(that, message);
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__keys__IdentityKeyPair_sign_alternate_identity(
     int that,
     int other_identity,
@@ -4249,6 +4253,9 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__keys__IdentityKeyPair_serialize(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__keys__IdentityKeyPair_sign(int that, JSAny message);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__keys__IdentityKeyPair_sign_alternate_identity(

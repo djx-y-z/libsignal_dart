@@ -197,8 +197,7 @@ final preKey = PreKeyRecord(
 // Signed Pre-Key
 final signedPreKeyPrivate = PrivateKey.generate();
 final signedPreKeyPublic = signedPreKeyPrivate.getPublicKey();
-final identityPrivate = PrivateKey.deserialize(bytes: identity.privateKey.toList());
-final signature = identityPrivate.sign(message: signedPreKeyPublic.serialize().toList());
+final signature = identity.sign(message: signedPreKeyPublic.serialize().toList());
 final signedPreKey = SignedPreKeyRecord(
   id: 1,
   timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
@@ -209,7 +208,7 @@ final signedPreKey = SignedPreKeyRecord(
 
 // Kyber Pre-Key (post-quantum key exchange)
 final kyberKeyPair = KyberKeyPair.generate();
-final kyberSignature = identityPrivate.sign(
+final kyberSignature = identity.sign(
   message: kyberKeyPair.getPublicKey().serialize().toList(),
 );
 final kyberPreKey = KyberPreKeyRecord.create(
