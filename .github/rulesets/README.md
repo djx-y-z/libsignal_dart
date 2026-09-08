@@ -101,11 +101,30 @@ changed in practice except that the rare docs-only pull request now reports.
 
 #### What is deliberately absent
 
-`test / Test (Linux ARM64)` runs, is green often enough to look requirable, and
-is left out anyway: it times out on an arbitrary test, a different one each run.
+`test / Test (Linux ARM64)` is left out over a flake, but the flake is **not**
+its property. It is a 30-second per-test timeout whose victim changes from run
+to run: across the 25 most recent `Tests` runs the signature
+`TimeoutException after 0:00:30` produced three isolated leg failures —
+`Windows x86_64` twice, `Linux ARM64` once. Every other red run in that window
+failed several jobs at once and was a real breakage, not a flake.
+
+Three events across four legs is not enough to blame a platform, and the
+tempting explanation does not survive the numbers either: the slowest leg by
+wall clock is `Linux x86_64` — 248 s on average over the last twelve runs
+against `Linux ARM64`'s 91 s — and it has never flaked. "Slow runner" is
+therefore not the cause, the cause is not known, and the counts above must not
+be read as a ranking.
+
+What the exclusion IS chosen by is what its absence costs. Dropping
+`Linux ARM64` still leaves Linux required through `test / Test (Linux x86_64)`;
+dropping Windows would leave that platform with no required coverage at all.
+Windows therefore stays required and will occasionally fail on its own until the
+timeout is understood — a cost paid deliberately, with the Admin bypass as the
+release valve, not an oversight.
+
 A required check that fails by itself teaches people to merge past required
-checks, which costs more than the leg is worth. Add it back when the flakiness is
-fixed, not before.
+checks, so diagnosing that timeout is worth more than either exclusion. Add
+`Linux ARM64` back when it is fixed, not before.
 
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.

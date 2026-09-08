@@ -64,10 +64,20 @@
   why the two are inseparable.
 
   Two legs stay out of the ruleset while still running in the workflow.
-  `test / Test (Linux ARM64)` times out on an arbitrary test, a different one
-  each run, and a required check that fails by itself teaches people to merge
-  past required checks. `test / Update Coverage Badge` is skipped on pull
-  requests, so requiring it would assert nothing.
+  `test / Update Coverage Badge` is skipped on pull requests, so requiring it
+  would assert nothing. `test / Test (Linux ARM64)` is out because of a flake —
+  but the flake is not its property, and the runbook now says so on measured
+  ground rather than on reputation. Across the 25 most recent `Tests` runs the
+  signature `TimeoutException after 0:00:30` produced three isolated leg
+  failures: `Windows x86_64` twice and `Linux ARM64` once, every other red run
+  in that window being a genuine multi-job breakage. Three events over four legs
+  cannot single out a platform, and "the slowest runner flakes" is not the
+  answer either — the slowest leg by wall clock is `Linux x86_64` (248 s average
+  against ARM64's 91 s) and it has never flaked. So the exclusion is chosen by
+  what its absence costs — Linux stays required through
+  `test / Test (Linux x86_64)`, while dropping Windows would leave that platform
+  with no required coverage at all — and Windows stays required knowing it will
+  occasionally fail on its own until the timeout is understood.
 
   Every context string was read off the head commit of a real pull request
   rather than off a push to `main`: the two triggers do not produce the same set
