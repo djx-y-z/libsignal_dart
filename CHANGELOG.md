@@ -2,6 +2,15 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **`IdentityKeyPair.sign()` signs with the identity key without copying it into
+  the Dart heap** — the one route that existed read the `privateKey` getter and
+  rebuilt a `PrivateKey` from those bytes, putting the long-term identity secret
+  somewhere nothing can zeroize it. The getter still works, so nothing breaks;
+  every call site in this package moved to the new method
+- **libsignal v0.102.0** — unchanged this release
+
 #### Changed
 
 - **`PrivateKey.agree()` documents what it does not do** (`rust/src/api/keys.rs`)
