@@ -111,10 +111,35 @@ abstract class IdentityKeyPair implements RustOpaqueInterface {
 abstract class PrivateKey implements RustOpaqueInterface {
   /// Perform X25519 key agreement with a public key.
   ///
+  /// This is the raw Diffie-Hellman primitive and nothing more: 32 bytes out,
+  /// no derivation, no ratchet, no replay protection. Ordinary Signal
+  /// Protocol use never needs it — `SessionBuilder` and `SessionCipher`
+  /// perform every agreement the protocol calls for, together with the
+  /// derivation and ratcheting that make those agreements safe. Reach for
+  /// this only when building a protocol this package does not implement.
+  ///
   /// # Security
   /// The returned shared secret is highly sensitive cryptographic material.
   /// The caller is responsible for securely zeroing these bytes when done.
   /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
+  ///
+  /// **The result is not a key.** X25519 returns the x-coordinate of a curve
+  /// point, which is a field element rather than a uniformly distributed
+  /// 32-byte string, so using it directly to encrypt is a mistake even though
+  /// the bytes look random. Put it through a KDF first and use that output —
+  /// `hkdfDerive` on this same surface takes it as `inputKeyMaterial`.
+  ///
+  /// One agreement between two long-lived keys yields the same secret every
+  /// time it is computed, so on its own this offers no forward secrecy: a
+  /// private key compromised later opens everything ever derived from it.
+  /// Forward secrecy comes from ratcheting over ephemeral keys, which is what
+  /// the session API does and what a caller of this method must build.
+  ///
+  /// An all-zero shared secret — what a low-order public key produces — is
+  /// rejected in constant time and surfaces as a thrown error rather than as
+  /// 32 zero bytes. That check catches the degenerate result only; validating
+  /// that the peer's public key is the one expected remains the caller's job,
+  /// and this method authenticates nothing.
   Uint8List agree({required PublicKey publicKey});
 
   /// Create a copy of this private key.

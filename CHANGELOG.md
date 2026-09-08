@@ -4,6 +4,28 @@
 
 #### Changed
 
+- **`PrivateKey.agree()` documents what it does not do** (`rust/src/api/keys.rs`)
+  — it is the raw X25519 primitive, and its docstring said only that the output
+  is sensitive and should be zeroed. That is true and insufficient: the three
+  ways this method is misused are not memory-hygiene mistakes.
+
+  The result is not a key. X25519 returns the x-coordinate of a curve point, a
+  field element rather than a uniformly distributed 32-byte string, so
+  encrypting with it directly is wrong even though the bytes look random — it
+  belongs in a KDF first, and `hkdfDerive` on this same surface takes it as
+  `inputKeyMaterial`. A single agreement between two long-lived keys returns the
+  same secret forever, so on its own it provides no forward secrecy; that comes
+  from ratcheting over ephemeral keys, which is what `SessionBuilder` and
+  `SessionCipher` already do and what a caller of this method has to build.
+  And the method authenticates nothing: libsignal rejects the all-zero shared
+  secret a low-order public key produces, in constant time and as a thrown
+  error rather than 32 zero bytes, but checking that the peer's public key is
+  the expected one stays the caller's job.
+
+  The docstring now says so, and says plainly that ordinary Signal Protocol use
+  never needs this method. No behaviour changed — `rustContentHash` is
+  unmoved, which is the mechanical confirmation that the FFI surface did not.
+
 - **`IdentityKeyPair.sign()` signs without copying the identity secret into the
   Dart heap** (`rust/src/api/keys.rs`, `README.md`) — signing a signed pre-key or
   a Kyber pre-key with the long-term identity key had exactly one route:
