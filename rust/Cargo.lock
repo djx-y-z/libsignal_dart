@@ -1226,7 +1226,7 @@ dependencies = [
 
 [[package]]
 name = "libsignal_frb"
-version = "6.2.0"
+version = "6.3.0"
 dependencies = [
  "aes-gcm-siv",
  "async-trait",

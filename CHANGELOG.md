@@ -10,6 +10,7 @@
   somewhere nothing can zeroize it. The getter still works, so nothing breaks;
   every call site in this package moved to the new method
 - **libsignal v0.102.0** — unchanged this release
+- **libsignal_frb v6.3.0** — Rust FFI bindings
 
 #### Changed
 
