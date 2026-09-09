@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.102.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- Update libsignal native library to v0.102.1 ([compare](https://github.com/signalapp/libsignal/compare/v0.102.0...v0.102.1))
+  - Upstream changes cover release metadata, generated FFI typedef naming, tinyvec dependency maintenance, and WebP sanitization — none of which this library exposes
+  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
+  - `make codegen` produced no changes to `lib/src/rust/`; the FFI surface did not move
+  - Note: These changes do not affect this library's public API
+
 ## [7.3.0] - 2026-09-08
 
 ### For Users
