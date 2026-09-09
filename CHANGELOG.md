@@ -1,3 +1,33 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.9.0 -> v4.10.0** — updates template guidance
+  and protection rules
+
+  `.copier-answers.yml` records the new template version. The
+  `frb-patterns` skill now explains that `rust/src/api/` is a scanned directory
+  reached from `crate::api`, not a general-purpose folder: helpers used only by
+  the bridge belong at the crate root and must be declared in
+  `rust/src/lib.rs`, or codegen can expose them as accidental FFI surface and
+  change `rustContentHash`.
+
+  `protect-main.json` now includes the complete twelve-check matrix, adding
+  the previously omitted required leg while retaining the generated-project
+  protection policy. `README.md` documents why workflow-level path filters
+  cannot be used with required checks, how to inspect contexts from a real pull
+  request, how to apply an edited ruleset with
+  `make setup-repo-protections ARGS="--update"`, and how to choose a flaky leg
+  to remove from the required list without stopping it from running. It also
+  warns that this ruleset is for generated projects and must not be applied to
+  this repository.
+
+  The template's `test.yml` change to remove the pull-request path filter is
+  byte-identical here and therefore produces no diff; this adoption changes the
+  associated ruleset and runbook rather than that workflow.
+
 ## [7.3.0] - 2026-09-08
 
 ### For Users

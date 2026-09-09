@@ -47,6 +47,7 @@ Maintain = 4, **Admin = 5**.
 
 The load-bearing new one is **Protect release tags**. It targets **all tags**
 (`~ALL`), so `creation` restricts creating *any* tag to Admin/Maintain — which
+<<<<<<< before updating
 covers the release-triggering `libsignal_frb-*` (native build) and `v*` (pub.dev)
 tags and every other tag, so no `write` collaborator can mint a tag that starts a
 publish. (Only `libsignal_frb-*`/`v*` actually trigger a workflow; the `~ALL`
@@ -60,6 +61,21 @@ GitHub ever rejects `required_signatures` on a tag target, drop that one rule �
 
 `protect-main.json` requires eleven checks — **`FRB bindings were regenerated`**,
 the job in `codegen-guard.yml`, plus ten legs of the test matrix:
+=======
+covers the release-triggering `libsignal_frb-*` (native build) and `v*`
+(pub.dev) tags and every other tag, so no `write` collaborator can mint a tag
+that starts a publish. (Only `libsignal_frb-*`/`v*` actually trigger a
+workflow; the `~ALL` scope is defense-in-depth so the rule never lags behind a
+new trigger pattern.) `update`+`deletion` make tags immutable;
+`required_signatures` is belt-and-suspenders (`make release-frb` / `make release`
+already sign tags). If GitHub ever rejects `required_signatures` on a tag target,
+drop that one rule.
+
+### Required status checks
+
+`protect-main.json` requires twelve checks — **`FRB bindings were regenerated`**,
+the job in `codegen-guard.yml`, plus the whole test matrix:
+>>>>>>> after updating
 
 ```
 FRB bindings were regenerated
@@ -95,6 +111,7 @@ cost, the fix is a job-level `if:` on the expensive legs, never the path filter
 back. `codegen-guard.yml` has never had one, for the same reason, and no
 job-level condition on the job that reports.
 
+<<<<<<< before updating
 Removing that filter was measured before it was done: of the fifteen most
 recently merged pull requests, fifteen already matched it, so nothing much
 changed in practice except that the rare docs-only pull request now reports.
@@ -125,6 +142,28 @@ release valve, not an oversight.
 A required check that fails by itself teaches people to merge past required
 checks, so diagnosing that timeout is worth more than either exclusion. Add
 `Linux ARM64` back when it is fixed, not before.
+=======
+#### Drop any leg this project finds flaky
+
+A required check that fails by itself teaches people to merge past required
+checks, which costs more than the leg is worth. Remove such a leg from
+`protect-main.json` — leaving it in the workflow, where it still reports — and
+put it back the moment it is fixed, not before.
+
+Two cautions before deciding which leg that is. **Count, do not rank on
+reputation** — a flake gets attached to one leg early and stays attached; count
+isolated failures (one leg red, the rest green) over recent runs instead. Expect
+the count to be small and to prove less than it looks: three events spread over
+four legs cannot tell a platform problem from chance, and the plausible
+explanations are worth checking against the numbers rather than assumed — "the
+slowest runner flakes" is the usual one, and in the project this comes from it
+was false, the slowest leg by wall clock being the one that never flaked.
+
+**Choose by what the absence costs**, which is knowable even when the cause is
+not: a leg whose platform another required leg already covers is cheap to drop,
+while the only leg covering its platform is not, however often it flakes.
+Diagnosing the flake beats either exclusion.
+>>>>>>> after updating
 
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.
@@ -143,10 +182,18 @@ one that can still report on a pull request whose other jobs never start because
 the file that defines them does not parse.
 
 The three `Cross-compile (Android …)` contexts are the easiest to forget, because
+<<<<<<< before updating
 nothing else here cross-compiles Android: leaving them out is how the gap they
 were added to close comes back with the ruleset saying CI is required. They also
 run under `publish.yml`, which calls the same reusable workflow — so they sit
 between "start publishing" and "published", not only on pull requests.
+=======
+nothing else in a generated project cross-compiles Android: leaving them out is
+how the gap they were added to close comes back with the ruleset saying CI is
+required. They also run under `publish.yml`, which calls the same reusable
+workflow — so they sit between "start publishing" and "published", not only on
+pull requests.
+>>>>>>> after updating
 
 `integration_id: 15368` is GitHub Actions. Without it the context is satisfied by
 *any* status of that name, including one posted through the API by a token
@@ -168,8 +215,13 @@ rather than a lockout. `make release-frb` / `make release` push their commit to
 
 Verify a context string against a real **pull request** before requiring it. A
 name read off a push to `main` is not proof, because the two triggers do not
+<<<<<<< before updating
 produce the same set of check runs — `test / Update Coverage Badge` is the local
 example, `success` on a push and `skipped` on a pull request — and it is the
+=======
+produce the same set of check runs — `test / Update Coverage Badge` is the
+example, reporting on a push and `skipped` on a pull request — and it is the
+>>>>>>> after updating
 pull-request set a merge gate is measured against.
 
 ```bash
