@@ -4,15 +4,48 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.102.1** — internal/dependency update, no public-API impact
+- **libsignal v0.102.1** — upstream bump. Of the four crates from that
+  repository in this package's dependency graph, the range changes exactly one
+  file, and it is the version string
 
 #### Changed
 
-- Update libsignal native library to v0.102.1 ([compare](https://github.com/signalapp/libsignal/compare/v0.102.0...v0.102.1))
-  - Upstream changes cover release metadata, generated FFI typedef naming, tinyvec dependency maintenance, and WebP sanitization — none of which this library exposes
-  - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
-  - `make codegen` produced no changes to `lib/src/rust/`; the FFI surface did not move
-  - Note: These changes do not affect this library's public API
+- **libsignal moves to v0.102.1, and nothing it changed is reachable from here**
+  (`rust/Cargo.toml`) — five commits upstream ([compare](https://github.com/signalapp/libsignal/compare/v0.102.0...v0.102.1)),
+  and upstream's own release notes carry a single line: "Allow unknown chunks in
+  webp sanitization". That relaxation is in `rust/media/src/sanitize/webp.rs`,
+  and `libsignal-media` is not in this package's dependency graph. The other
+  three land the same way and for the same reason: the `SignalType_` typedef
+  rename is in `rust/bridge/shared/types`, the C FFI surface the Swift, Java and
+  Node bindings compile against, which this package does not use — it binds the
+  pure-Rust crates directly — and the two tinyvec commits drop a
+  `>=1.11.0, <1.13.0` workspace cap and a dev-dependency in `rust/net/infra`,
+  neither of which is a crate this package resolves.
+
+  Four crates from that repository do reach the graph: `libsignal-protocol`,
+  `libsignal-core` and `signal-crypto`, which this package names, and
+  `libsignal-debug`, which arrives transitively. Between them the range changes
+  exactly one file — `rust/core/src/version.rs`, the version string. So the
+  weaker claim is the true one and the stronger one is not: they are not
+  unchanged, but nothing they changed reaches the surface this package exposes.
+  Regenerating the bindings produced no change under `lib/src/rust/`; the FFI
+  surface did not move. Upstream's workspace `rust-version` stays at 1.93.1, so
+  the build floor does not move either.
+
+  Asked at the lockfile rather than the file tree, the answer holds:
+  `rust/Cargo.lock` carries 226 packages before and after, with **none added and
+  none removed**. Beside the four retagged libsignal crates, twenty registry
+  versions move, and eleven of them put code in a shipped artifact — `aes`
+  0.9.2 → 0.9.3 under `aes-gcm-siv`, `zerocopy` 0.8.56 → 0.8.57 under
+  `libsignal-core`, `indexmap` 2.14.1 → 2.14.2 under `libsignal-protocol`,
+  `hybrid-array` under `block-buffer`, the three `crossbeam` crates under
+  `rayon-core`, and, in the WASM module only, `wasm-bindgen` 0.2.127 → 0.2.128
+  with `js-sys`, `web-sys` and `wasm-bindgen-futures`. The remaining nine are
+  proc-macro or test-only. `minicov` moves **backwards**, 0.3.9 → 0.3.8, which
+  is not a resolver regression: `wasm-bindgen-test` 0.3.78 tightened its
+  requirement from `^0.3.8` to `=0.3.8`, and it is a dev-dependency that reaches
+  no artifact. `THIRD_PARTY_NOTICES.txt` records the seventeen moves that are
+  not test-only
 
 ## [7.3.0] - 2026-09-08
 
