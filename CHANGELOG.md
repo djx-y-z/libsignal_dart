@@ -1,3 +1,28 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.9.0 -> v4.11.0** — brings the template's repository guidance and protection rules into sync, and adds the Dependabot cargo-notices repair workflow.
+
+  `.claude/skills/frb-patterns/SKILL.md` now makes clear that `rust/src/api/`
+  is scanned FFI surface, so bridge-only helpers belong at the crate root rather
+  than becoming accidental published bindings. `.github/rulesets/protect-main.json`
+  and `.github/rulesets/README.md` carry the template's required CI matrix and
+  its instructions for applying and safely changing that generated-project
+  ruleset.
+
+  `.github/workflows/refresh-notices.yml` adds the scheduled and manually
+  dispatched repair for `THIRD_PARTY_NOTICES.txt` after Dependabot cargo updates.
+  It matters because those pull requests change the resolved Rust dependency
+  graph without running `make third-party-notices`, leaving the required
+  `verify-third-party-notices` check red until the inventory is regenerated.
+
+  The `test.yml` pull-request path-filter change from v4.10.0 was already
+  present here, so it produces no diff in this adoption. `.copier-answers.yml`
+  records the new template version.
+
 ## [7.3.0] - 2026-09-08
 
 ### For Users
