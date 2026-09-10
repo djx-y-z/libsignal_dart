@@ -44,7 +44,7 @@ aes-gcm-siv 0.12.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T80]
 
-aes 0.9.2
+aes 0.9.3
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T69]
 
@@ -190,15 +190,15 @@ crabgrind 0.2.6
   Notice:  ships no licence file of its own; canonical MIT terms [C2]
   Source:  https://github.com/2dav/crabgrind
 
-crossbeam-deque 0.8.7
+crossbeam-deque 0.8.8
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T125]
 
-crossbeam-epoch 0.9.20
+crossbeam-epoch 0.9.21
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T125]
 
-crossbeam-utils 0.8.22
+crossbeam-utils 0.8.23
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T125]
 
@@ -439,11 +439,11 @@ hpke-rs 0.7.0
   Notice:  ships no licence file of its own; canonical MPL-2.0 text [C4]
   Source:  https://github.com/celabshq/libcrux
 
-hybrid-array 0.4.14
+hybrid-array 0.4.15
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T87]
 
-indexmap 2.14.1
+indexmap 2.14.2
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T50]
 
@@ -467,7 +467,7 @@ itoa 1.0.18
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
-js-sys 0.3.104
+js-sys 0.3.105
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.102.0
+libsignal-debug 0.102.1
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -835,7 +835,7 @@ syn 2.0.119
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
-syn 3.0.4
+syn 3.0.5
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
@@ -895,27 +895,27 @@ wasip2 1.0.4+wasi-0.2.12
   License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-Apache-2.0_WITH_LLVM-exception [T7], LICENSE-MIT [T115]
 
-wasm-bindgen-futures 0.4.77
+wasm-bindgen-futures 0.4.78
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro-support 0.2.127
+wasm-bindgen-macro-support 0.2.128
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro 0.2.127
+wasm-bindgen-macro 0.2.128
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-shared 0.2.127
+wasm-bindgen-shared 0.2.128
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen 0.2.127
+wasm-bindgen 0.2.128
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-web-sys 0.3.104
+web-sys 0.3.105
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -939,11 +939,11 @@ x25519-dalek 3.0.0
   License: BSD-3-Clause
   Texts:   LICENSE [T60]
 
-zerocopy-derive 0.8.56
+zerocopy-derive 0.8.57
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
-zerocopy 0.8.56
+zerocopy 0.8.57
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
@@ -1608,8 +1608,8 @@ Apache License
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.56
-  zerocopy@0.8.56
+  zerocopy-derive@0.8.57
+  zerocopy@0.8.57
 
 Apache License
                            Version 2.0, January 2004
@@ -2493,7 +2493,7 @@ Crates:
   serde_derive@1.0.229
   serde_json@1.0.151
   syn@2.0.119
-  syn@3.0.4
+  syn@3.0.5
   thiserror-impl@2.0.20
   thiserror@2.0.20
   unicode-ident@1.0.24
@@ -3535,9 +3535,9 @@ Crates:
   cc@1.4.5
   cexpr@0.6.0
   cfg-if@1.0.4
-  crossbeam-deque@0.8.7
-  crossbeam-epoch@0.9.20
-  crossbeam-utils@0.8.22
+  crossbeam-deque@0.8.8
+  crossbeam-epoch@0.9.21
+  crossbeam-utils@0.8.23
   curve25519-dalek-derive@0.1.1
   displaydoc@0.2.7
   either@1.18.0
@@ -3553,11 +3553,11 @@ Crates:
   hashbrown@0.17.1
   heck@0.5.0
   hermit-abi@0.5.3
-  indexmap@2.14.1
+  indexmap@2.14.2
   itertools@0.13.0
   itertools@0.14.0
   itertools@0.15.0
-  js-sys@0.3.104
+  js-sys@0.3.105
   lazy_static@1.5.0
   linux-raw-sys@0.12.1
   lock_api@0.4.14
@@ -3592,12 +3592,12 @@ Crates:
   uuid@1.26.0
   version_check@0.9.5
   wasip2@1.0.4+wasi-0.2.12
-  wasm-bindgen-futures@0.4.77
-  wasm-bindgen-macro-support@0.2.127
-  wasm-bindgen-macro@0.2.127
-  wasm-bindgen-shared@0.2.127
-  wasm-bindgen@0.2.127
-  web-sys@0.3.104
+  wasm-bindgen-futures@0.4.78
+  wasm-bindgen-macro-support@0.2.128
+  wasm-bindgen-macro@0.2.128
+  wasm-bindgen-shared@0.2.128
+  wasm-bindgen@0.2.128
+  web-sys@0.3.105
   wit-bindgen@0.57.1
 
 Apache License
@@ -4018,7 +4018,7 @@ limitations under the License.
 Crates:
   aead@0.6.1
   aes-gcm-siv@0.12.1
-  aes@0.9.2
+  aes@0.9.3
   block-buffer@0.10.4
   block-buffer@0.12.1
   block-padding@0.4.2
@@ -4036,7 +4036,7 @@ Crates:
   ghash@0.6.0
   hkdf@0.13.0
   hmac@0.13.0
-  hybrid-array@0.4.14
+  hybrid-array@0.4.15
   inout@0.2.2
   md-5@0.10.6
   polyval@0.7.3
@@ -6117,15 +6117,15 @@ Crates:
   cc@1.4.5
   cfg-if@1.0.4
   find-msvc-tools@0.1.12
-  js-sys@0.3.104
+  js-sys@0.3.105
   pkg-config@0.3.34
   rustc-demangle@0.1.28
-  wasm-bindgen-futures@0.4.77
-  wasm-bindgen-macro-support@0.2.127
-  wasm-bindgen-macro@0.2.127
-  wasm-bindgen-shared@0.2.127
-  wasm-bindgen@0.2.127
-  web-sys@0.3.104
+  wasm-bindgen-futures@0.4.78
+  wasm-bindgen-macro-support@0.2.128
+  wasm-bindgen-macro@0.2.128
+  wasm-bindgen-shared@0.2.128
+  wasm-bindgen@0.2.128
+  web-sys@0.3.105
 
 Copyright (c) 2014 Alex Crichton
 
@@ -6760,7 +6760,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  indexmap@2.14.1
+  indexmap@2.14.2
 
 Copyright (c) 2016--2017
 
@@ -7407,7 +7407,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  aes@0.9.2
+  aes@0.9.3
 
 Copyright (c) 2018-2024 The RustCrypto Project Developers
 Copyright (c) 2018 Artyom Pavlov
@@ -7999,7 +7999,7 @@ DEALINGS IN THE SOFTWARE.
 
 Crates:
   cmov@0.5.4
-  hybrid-array@0.4.14
+  hybrid-array@0.4.15
 
 Copyright (c) 2022-2026 The RustCrypto Project Developers
 
@@ -8303,8 +8303,8 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.56
-  zerocopy@0.8.56
+  zerocopy-derive@0.8.57
+  zerocopy@0.8.57
 
 Copyright 2019 The Fuchsia Authors.
 
@@ -8336,8 +8336,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.56
-  zerocopy@0.8.56
+  zerocopy-derive@0.8.57
+  zerocopy@0.8.57
 
 Copyright 2023 The Fuchsia Authors
 
@@ -8391,7 +8391,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.102.0
+  libsignal-debug@0.102.1
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3
@@ -9465,7 +9465,7 @@ Crates:
   serde_derive@1.0.229
   serde_json@1.0.151
   syn@2.0.119
-  syn@3.0.4
+  syn@3.0.5
   thiserror-impl@2.0.20
   thiserror@2.0.20
   unicode-ident@1.0.24
@@ -9763,9 +9763,9 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  crossbeam-deque@0.8.7
-  crossbeam-epoch@0.9.20
-  crossbeam-utils@0.8.22
+  crossbeam-deque@0.8.8
+  crossbeam-epoch@0.9.21
+  crossbeam-utils@0.8.23
 
 The MIT License (MIT)
 
