@@ -4,12 +4,16 @@
 
 #### ✨ Highlights
 
+- - **libsignal v0.102.2** — internal/dependency update, no public-API impact
 - **libsignal v0.102.1** — upstream bump. Of the four crates from that
   repository in this package's dependency graph, the range changes exactly one
   file, and it is the version string
 
 #### Changed
 
+- **The v0.102.2 dependency bump leaves the bound protocol surface unchanged** — upstream has no published release notes; the included commits cover SVR and backups modules, which are absent from this package's dependency graph, networking/chat, connection-wrapper, DNS-resolver and Gaussian-padding work in the unbound networking modules, and export-name changes in the bridge/tooling code rather than the Rust protocol API ([compare](https://github.com/signalapp/libsignal/compare/v0.102.1...v0.102.2)).
+
+  The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes. `make codegen` produced no changes under `lib/src/rust/`, so these changes do not affect this library's public API.
 - **libsignal moves to v0.102.1, and nothing it changed is reachable from here**
   (`rust/Cargo.toml`) — five commits upstream ([compare](https://github.com/signalapp/libsignal/compare/v0.102.0...v0.102.1)),
   and upstream's own release notes carry a single line: "Allow unknown chunks in

@@ -163,9 +163,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "2.13.1"
+version = "2.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b588b76d00fde79687d7646a9b5bdf3cc0f655e0bbd080335a95d7e96f3587da"
+checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
 
 [[package]]
 name = "block-buffer"
@@ -1161,7 +1161,7 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.1#ea42ed0ed3e2ae119282d98253c35a28cce02414"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1179,8 +1179,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.102.1"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.1#ea42ed0ed3e2ae119282d98253c35a28cce02414"
+version = "0.102.2"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
 dependencies = [
  "cfg-if",
 ]
@@ -1188,7 +1188,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.1#ea42ed0ed3e2ae119282d98253c35a28cce02414"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1879,7 +1879,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.1#ea42ed0ed3e2ae119282d98253c35a28cce02414"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
 dependencies = [
  "aes",
  "cbc",
@@ -2032,9 +2032,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.25.13+spec-1.1.0"
+version = "0.25.15+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6975367e4d2ef766d86af01ffad14b622fecc8d4357a998fbc4deb6e9bacaf9b"
+checksum = "1340ea94a5856333492c9064b02c778b191dd2c853778d9609debdcdfea3a614"
 dependencies = [
  "indexmap",
  "toml_datetime",
@@ -2075,9 +2075,9 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "1.26.0"
+version = "1.26.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5772d71c9be8a8a6ac2117d949c5b224c1b72241bb611d9a3012edcf8af7812"
+checksum = "2ef6dac1e96601b4fb3acccccff2139741fcb757cb9a36089bf5be91cfb285ce"
 dependencies = [
  "getrandom 0.4.3",
  "js-sys",
