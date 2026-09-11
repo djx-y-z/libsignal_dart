@@ -47,6 +47,22 @@
   no artifact. `THIRD_PARTY_NOTICES.txt` records the seventeen moves that are
   not test-only
 
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.9.0 -> v4.12.0** — refreshes the contributor guidance and repository protections, and adds the Dependabot notice workflow
+  (`.claude/skills/frb-patterns/SKILL.md`, `.github/rulesets/README.md`,
+  `.github/rulesets/protect-main.json`, `.github/workflows/refresh-notices.yml`) —
+  `SKILL.md` now keeps helper modules out of the scanned `rust/src/api/`
+  directory, while the ruleset and its README require the generated project's
+  CI contexts and explain how to update them. The matching workflow refreshes
+  `THIRD_PARTY_NOTICES.txt` for cargo dependency pull requests, so the required
+  notice check does not remain stale after Dependabot changes
+  `Cargo.toml` or `Cargo.lock`. The corresponding `test.yml` change from the
+  template is byte-identical here and therefore is not a new file change in
+  this adoption; `.copier-answers.yml` records the new template version.
+
 ## [7.3.0] - 2026-09-08
 
 ### For Users
