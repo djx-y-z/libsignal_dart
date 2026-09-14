@@ -4,12 +4,41 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.102.1** — upstream bump. Of the four crates from that
-  repository in this package's dependency graph, the range changes exactly one
-  file, and it is the version string
+- **libsignal v0.102.2** — two upstream bumps since v0.102.0. Of the four crates
+  from that repository in this package's dependency graph, the accumulated range
+  changes exactly one file, and it is the version string
 
 #### Changed
 
+- **libsignal moves to v0.102.2, and again nothing it changed is reachable from
+  here** (`rust/Cargo.toml`) — nine commits upstream
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.102.1...v0.102.2)).
+  Upstream's own notes for the tag name three of them: SVR production moving
+  to 2026Q3, and two backup validations — the `sharedName` field on `Contact`
+  together with `aci`, `nickname` and `note` on `ContactAttachment`, and the
+  `sharedName` option in `LearnedProfileChatUpdate.previousName`. The first is
+  in `rust/net` and the other two in `rust/message-backup`, and neither
+  `libsignal-net` nor `libsignal-message-backup` appears in `rust/Cargo.lock`
+  at all — not as a direct dependency and not transitively.
+
+  The five the notes do not mention land in the same two places or in the
+  bridge. Removing the `send_raw_grpc` endpoints, adding a per-wrapper
+  `LOG_TAG` and dropping the unused UDP DNS stub resolver are `rust/net`; the
+  Gaussian padding calculations are `rust/message-backup`, and also add a
+  `rand_distr` entry to the upstream workspace, which this package does not
+  resolve. The `export_name` syntax change is in `rust/bridge`, as are the
+  bridge halves of the `send_raw_grpc` removal and the padding change — that is
+  the C FFI surface the Swift, Java and Node bindings compile against, which
+  this package does not use: it binds the pure-Rust crates directly. The ninth
+  commit is upstream's own `Reset for version v0.102.2`.
+
+  Four crates from that repository do reach the graph: `libsignal-protocol`,
+  `libsignal-core` and `signal-crypto`, which this package names, and
+  `libsignal-debug`, which arrives transitively. Between them the range changes
+  exactly one file — `rust/core/src/version.rs`, the version string.
+  Regenerating the bindings produced no change under `lib/src/rust/`, so these
+  changes do not affect this library's public API. Upstream's workspace
+  `rust-version` stays at 1.93.1, so the build floor does not move either.
 - **libsignal moves to v0.102.1, and nothing it changed is reachable from here**
   (`rust/Cargo.toml`) — five commits upstream ([compare](https://github.com/signalapp/libsignal/compare/v0.102.0...v0.102.1)),
   and upstream's own release notes carry a single line: "Allow unknown chunks in

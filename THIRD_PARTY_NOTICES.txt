@@ -92,7 +92,7 @@ bindgen 0.72.1
   License: BSD-3-Clause
   Texts:   LICENSE [T26]
 
-bitflags 2.13.1
+bitflags 2.13.2
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T33]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.102.1
+libsignal-debug 0.102.2
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -863,7 +863,7 @@ toml_datetime 1.1.1+spec-1.1.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T8], LICENSE-MIT [T91]
 
-toml_edit 0.25.13+spec-1.1.0
+toml_edit 0.25.15+spec-1.1.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T8], LICENSE-MIT [T91]
 
@@ -883,7 +883,7 @@ universal-hash 0.6.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T79]
 
-uuid 1.26.0
+uuid 1.26.1
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T34]
 
@@ -2265,7 +2265,7 @@ Crates:
   env_filter@0.1.4
   hex@0.4.3
   toml_datetime@1.1.1+spec-1.1.0
-  toml_edit@0.25.13+spec-1.1.0
+  toml_edit@0.25.15+spec-1.1.0
   toml_parser@1.1.3+spec-1.1.0
 
 Apache License
@@ -3530,7 +3530,7 @@ Crates:
   atomic@0.5.3
   autocfg@1.5.1
   backtrace@0.3.76
-  bitflags@2.13.1
+  bitflags@2.13.2
   bumpalo@3.20.3
   cc@1.4.5
   cexpr@0.6.0
@@ -3589,7 +3589,7 @@ Crates:
   smallvec@1.16.0
   tempfile@3.27.0
   threadpool@1.8.1
-  uuid@1.26.0
+  uuid@1.26.1
   version_check@0.9.5
   wasip2@1.0.4+wasi-0.2.12
   wasm-bindgen-futures@0.4.78
@@ -6191,7 +6191,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  bitflags@2.13.1
+  bitflags@2.13.2
   glob@0.3.4
   log@0.4.34
   num-bigint@0.4.8
@@ -6233,7 +6233,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  uuid@1.26.0
+  uuid@1.26.1
 
 Copyright (c) 2014 The Rust Project Developers
 Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
@@ -8127,7 +8127,7 @@ DEALINGS IN THE SOFTWARE.
 Crates:
   env_filter@0.1.4
   toml_datetime@1.1.1+spec-1.1.0
-  toml_edit@0.25.13+spec-1.1.0
+  toml_edit@0.25.15+spec-1.1.0
   toml_parser@1.1.3+spec-1.1.0
 
 Copyright (c) Individual contributors
@@ -8391,7 +8391,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.102.1
+  libsignal-debug@0.102.2
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3
