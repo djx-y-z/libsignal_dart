@@ -72,6 +72,16 @@ Future<AiModel> updateChangelog({
 
   // Step 5: Update CHANGELOG.
   logStep('Updating CHANGELOG.md...');
+  // The new Highlights line supersedes this script's own default from an
+  // earlier bump, but never a rewritten one — so say when one is left standing.
+  // Both then name a version, and the section would ship claiming two.
+  if (hasRewrittenNativeHighlight(currentChangelog)) {
+    logWarning(
+      '[Unreleased] already carries a rewritten libsignal Highlights line. '
+      'It was kept, so the section now names two upstream versions — collapse '
+      'them by hand before releasing.',
+    );
+  }
   final updatedChangelog = insertChangelogEntry(
     currentChangelog: currentChangelog,
     nativeHighlight: nativeHighlight,
@@ -84,7 +94,15 @@ Future<AiModel> updateChangelog({
   return entry.model;
 }
 
-/// Fetch release notes from the GitHub API.
+/// What [releaseNotesFrom] returns when the release exists but carries no body.
+///
+/// A constant rather than a literal because [_fetchReleaseNotes] tests for it
+/// to decide whether to go looking in the repository itself.
+const emptyReleaseNotesPlaceholder =
+    'No release notes were published for this release.';
+
+/// Fetch release notes, from the GitHub release if it has a body and from the
+/// upstream repository's own `RELEASE_NOTES.md` if it does not.
 Future<String> _fetchReleaseNotes(String version) async {
   final result = await Process.run('curl', [
     '-s',
@@ -95,10 +113,70 @@ Future<String> _fetchReleaseNotes(String version) async {
     throw Exception('Failed to fetch release from GitHub');
   }
 
-  return releaseNotesFrom(
+  final fromRelease = releaseNotesFrom(
     jsonDecode(result.stdout as String) as Map<String, dynamic>,
     version,
   );
+  if (fromRelease != emptyReleaseNotesPlaceholder) return fromRelease;
+
+  final fromRepo = await _fetchInRepoReleaseNotes(version);
+  if (fromRepo == null) return fromRelease;
+  logInfo('Release body was empty; using RELEASE_NOTES.md at $version');
+  return fromRepo;
+}
+
+/// Fetch `RELEASE_NOTES.md` at [version] from the upstream repository.
+///
+/// Best-effort by design: an upstream that keeps no such file, a network
+/// failure and a rate-limited reply all land as null and leave the caller with
+/// the release body it already had.
+Future<String?> _fetchInRepoReleaseNotes(String version) async {
+  final result = await Process.run('curl', [
+    '-s',
+    '-H',
+    'Accept: application/vnd.github.raw',
+    'https://api.github.com/repos/signalapp/libsignal/contents/RELEASE_NOTES.md'
+        '?ref=$version',
+  ]);
+  if (result.exitCode != 0) return null;
+  return inRepoReleaseNotesFrom(result.stdout as String, version);
+}
+
+/// Read release notes out of the upstream repository's own `RELEASE_NOTES.md`.
+///
+/// Some upstreams publish every GitHub release with an EMPTY body while
+/// maintaining the notes as a file at the repository root. The releases API
+/// alone therefore makes every one of their bumps look like an unannounced one,
+/// and the model then reports that absence as a fact about the release:
+/// "upstream has no published release notes" has reached a pull request that
+/// way, for a tag whose own file named three changes.
+///
+/// The file is overwritten each release, so the copy at a tag holds that tag's
+/// bullets and nothing else. That is also the trap: a tag whose release commit
+/// did not update it would hand back the PREVIOUS release's notes, which is
+/// worse than none — it is wrong rather than missing. The first line is the
+/// version, so the claim is checkable, and anything that does not name
+/// [version] is discarded instead of guessed at.
+///
+/// Returns null when the file is absent, is an API error payload, or names a
+/// different release. Pure; exposed for testing.
+String? inRepoReleaseNotesFrom(String content, String version) {
+  final text = content.trim();
+  if (text.isEmpty) return null;
+  // With `Accept: application/vnd.github.raw` a miss still answers JSON.
+  if (text.startsWith('{')) return null;
+
+  final lines = text.split('\n');
+  final heading = lines.first.trim();
+  final wanted = version.trim();
+  final matches =
+      heading == wanted ||
+      heading == 'v$wanted' ||
+      (wanted.startsWith('v') && heading == wanted.substring(1));
+  if (!matches) return null;
+
+  final body = lines.skip(1).join('\n').trim();
+  return body.isEmpty ? null : body;
 }
 
 /// Read the release body out of a decoded `releases/tags/<v>` response.
@@ -138,9 +216,7 @@ String releaseNotesFrom(Map<String, dynamic> json, String version) {
   // section under a "release notes" heading reads to a model as "nothing
   // changed", when what it means is that the commit list below it is the input.
   final body = json['body'] as String? ?? '';
-  return body.trim().isEmpty
-      ? 'No release notes were published for this release.'
-      : body;
+  return body.trim().isEmpty ? emptyReleaseNotesPlaceholder : body;
 }
 
 /// Fetch the commit list between two upstream tags via the GitHub compare API.
@@ -257,6 +333,105 @@ String readChangelogScope({Directory? packageDir}) {
 /// one it recognises.
 const noImpactPhrase = "do not affect this library's public API";
 
+/// Where [_defaultHighlightTemplate] carries the version.
+const _highlightVersionSlot = '<version>';
+
+/// The Highlights line the prompt mandates when nothing in the update reaches
+/// the exposed surface — the common case, and so the line most [Unreleased]
+/// sections already carry from the previous bump.
+///
+/// Interpolated into rule 2 of the highlight rules AND matched by
+/// [isOwnDefaultHighlight], on the same reasoning as [noImpactPhrase]: the
+/// check exists to recognise this script's own boilerplate, and it can only do
+/// that while the prompt and the check name one string between them.
+const _defaultHighlightTemplate =
+    '**libsignal $_highlightVersionSlot** — internal/dependency update, '
+    'no public-API impact';
+
+/// The mandated default Highlights line for [version].
+String defaultHighlightFor(String version) =>
+    _defaultHighlightTemplate.replaceFirst(_highlightVersionSlot, version);
+
+/// Whether [line] is a Highlights bullet this script wrote on an earlier bump.
+///
+/// Deliberately exact. Dependency bumps now accumulate on the main branch
+/// between releases, so the second bump in a release window meets the first
+/// one's Highlights line and the section ends up naming two upstream versions
+/// at once, which has happened for real. That line is a STATE line, one per
+/// release section, so the new one supersedes the old.
+///
+/// What it must never supersede is a REWRITTEN one. Rewrites of this entry are
+/// multi-line and say something the default cannot, and dropping one by line
+/// match would also leave its continuation lines behind as a dangling
+/// paragraph. So the test is the prompt's mandated default at any version and
+/// nothing else: anything reworded, extended or continued onto a second line
+/// fails it and is left alone. Pure; exposed for testing.
+bool isOwnDefaultHighlight(String line) {
+  final at = _defaultHighlightTemplate.indexOf(_highlightVersionSlot);
+  final prefix = '- ${_defaultHighlightTemplate.substring(0, at)}';
+  final suffix = _defaultHighlightTemplate.substring(
+    at + _highlightVersionSlot.length,
+  );
+  final trimmed = line.trimRight();
+  return trimmed.length > prefix.length + suffix.length &&
+      trimmed.startsWith(prefix) &&
+      trimmed.endsWith(suffix);
+}
+
+/// Whether `[Unreleased]` already carries a native-library Highlights line that
+/// [isOwnDefaultHighlight] will NOT supersede — a rewritten one.
+///
+/// Reported by the caller rather than resolved here: leaving both lines is the
+/// safe outcome, but it is also a silent one, and the section would ship naming
+/// two upstream versions. Pure; exposed for testing.
+bool hasRewrittenNativeHighlight(String currentChangelog) {
+  var inUnreleased = false;
+  var inHighlights = false;
+  for (final line in currentChangelog.split('\n')) {
+    if (line.startsWith('## ')) {
+      inUnreleased = line.startsWith('## [Unreleased]');
+      inHighlights = false;
+      continue;
+    }
+    if (!inUnreleased) continue;
+    if (line.startsWith('### ')) {
+      inHighlights = false;
+      continue;
+    }
+    if (line.startsWith('#### ')) {
+      inHighlights = line.contains('Highlights');
+      continue;
+    }
+    if (inHighlights &&
+        line.startsWith('- **libsignal ') &&
+        !isOwnDefaultHighlight(line)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/// Strip a leading Markdown list marker from a model-returned Highlights line.
+///
+/// [insertChangelogEntry] writes that line as `'- $nativeHighlight'`, so a
+/// marker in the model's own answer renders as a nested list under an empty
+/// parent bullet. It has reached a pull request that way:
+/// `- - **libsignal v1.2.3** — …`.
+///
+/// Normalised here rather than argued about in the prompt, because the prompt
+/// asks for two things at once and the model is not wrong to follow either:
+/// rule 1 of the highlight rules gives the line WITHOUT a marker, while the
+/// current CHANGELOG is pasted above it under "match this house style exactly",
+/// and every Highlights line in it begins with one.
+///
+/// Every `insertChangelogEntry` test feeds an already-clean string, which is
+/// why the suite stayed green while this shipped. Pure; exposed for testing.
+String stripLeadingListMarker(String highlight) {
+  final trimmed = highlight.trim();
+  final marker = RegExp(r'^(?:[-*+][ \t]+)+').firstMatch(trimmed);
+  return marker == null ? trimmed : trimmed.substring(marker.end).trim();
+}
+
 /// The fields the model must return, and what each one is.
 ///
 /// Doubles as the schema every provider enforces natively, so the JSON contract
@@ -352,7 +527,9 @@ Return a JSON object with EXACTLY two string fields:
 ## Rules for "libsignal_highlight"
 1. Format exactly: "**libsignal $version** — <brief 3-7 word description>".
 2. If nothing in this update touches our exposed surface (the common case), use:
-   "**libsignal $version** — internal/dependency update, no public-API impact".
+   "${defaultHighlightFor(version)}".
+3. Return the line WITHOUT a leading "- ". The list marker is added when the
+   line is written into the file; one in your answer makes it "- - **…".
 
 ## Rules for "changed" (THIS IS THE IMPORTANT PART — match the house style)
 1. Write ONE bullet in the house format every bullet in the entries above
@@ -417,6 +594,15 @@ Return a JSON object with EXACTLY two string fields:
    `make codegen`, binding diffs or the FFI surface, however often the entries
    above mention them: a human ran those and you did not. Copy the style, never
    a finding.
+7. The sections above are your INPUTS. Their state is a fact about this
+   script's fetch, never a fact about the release, so the entry must not
+   narrate it. "Upstream has no published release notes", "the commit list was
+   truncated", "no compare link was available" tell a reader something about
+   how this ran and nothing about the dependency — and the first of those is
+   not even reliable: some upstreams publish every release with an empty body
+   while maintaining the notes elsewhere. When the release-notes section says
+   nothing was published, write the entry from the commit list and do not
+   remark on the absence.
 
 ## The shape of "changed" (the SHAPE is fixed; the wording is yours every time)
 
@@ -505,7 +691,7 @@ code blocks.
   }
 
   return (
-    highlight: highlight.trim(),
+    highlight: stripLeadingListMarker(highlight),
     changed: changed.trimRight(),
     model: response.model,
   );
@@ -566,6 +752,9 @@ String _insertIntoUnreleased(
   var inForUsers = false;
   var insertedHighlights = false;
   var insertedChanged = false;
+  // Whether the line being read sits under `#### ✨ Highlights`, which is the
+  // only block a superseded native-library line may be dropped from.
+  var inHighlights = false;
   // Index of the `## [Unreleased]` heading within [result], so a missing
   // `### For Users` can be spliced at the top of the section, not the bottom.
   var unreleasedIdx = -1;
@@ -652,6 +841,7 @@ String _insertIntoUnreleased(
       }
       inUnreleased = false;
       inForUsers = false;
+      inHighlights = false;
       result.add(line);
       continue;
     }
@@ -671,6 +861,7 @@ String _insertIntoUnreleased(
         flushForUsers();
       }
       inForUsers = false;
+      inHighlights = false;
       result.add(line);
       continue;
     }
@@ -681,6 +872,7 @@ String _insertIntoUnreleased(
       result.add('');
       result.add('- $nativeHighlight');
       insertedHighlights = true;
+      inHighlights = true;
       // Skip the next empty line if present.
       if (i + 1 < lines.length && lines[i + 1].trim().isEmpty) {
         i++;
@@ -694,6 +886,21 @@ String _insertIntoUnreleased(
     // missing `#### ✨ Highlights` is NOT created here — the flush puts it at
     // the top of the block, which is where the documented order wants it even
     // when `#### Changed` is preceded by the breaking one.
+    // A native-library Highlights line from an earlier bump in the same release
+    // window is superseded by the one just inserted: that line names the
+    // version the section ships, so two of them make the section name two.
+    // Only this script's own mandated default matches — see
+    // [isOwnDefaultHighlight] — so a rewritten line is never dropped here.
+    if (inHighlights && insertedHighlights && isOwnDefaultHighlight(line)) {
+      continue;
+    }
+
+    if (inForUsers &&
+        line.startsWith('#### ') &&
+        !line.contains('Highlights')) {
+      inHighlights = false;
+    }
+
     if (inForUsers && line.trimRight() == '#### Changed') {
       result.addAll([line, '', changed]);
       insertedChanged = true;

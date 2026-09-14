@@ -398,4 +398,252 @@ void _breakingContradictionTests() {
       expect(breakingContradictsNoImpact(changed), isFalse);
     });
   });
+
+  group('stripLeadingListMarker', () {
+    // The regression. `insertChangelogEntry` writes the line as
+    // `'- $nativeHighlight'`, so a marker in the model's own answer renders as
+    // a nested list under an empty parent bullet. It reached a pull request
+    // that way for real. Every `insertChangelogEntry` test above
+    // feeds an already-clean string, which is why the suite stayed green.
+    test('strips the marker a model copies from the pasted house style', () {
+      expect(
+        stripLeadingListMarker(
+          '- **libsignal v0.102.2** — internal/dependency update',
+        ),
+        equals('**libsignal v0.102.2** — internal/dependency update'),
+      );
+    });
+
+    test('leaves a correctly formatted line alone', () {
+      const clean = '**libsignal v0.102.2** — internal/dependency update';
+      expect(stripLeadingListMarker(clean), equals(clean));
+    });
+
+    test('strips `*` and `+` markers, and a doubled one', () {
+      expect(
+        stripLeadingListMarker('* **libsignal v1.0** — x'),
+        equals('**libsignal v1.0** — x'),
+      );
+      expect(
+        stripLeadingListMarker('+ **libsignal v1.0** — x'),
+        equals('**libsignal v1.0** — x'),
+      );
+      expect(
+        stripLeadingListMarker('- - **libsignal v1.0** — x'),
+        equals('**libsignal v1.0** — x'),
+      );
+    });
+
+    // The em-dash the house format puts after the bold summary is not a list
+    // marker, and neither is the `*` that opens bold text — only a marker
+    // followed by whitespace is one.
+    test('does not eat an em-dash or the opening of bold text', () {
+      expect(
+        stripLeadingListMarker('**libsignal v1.0** — x'),
+        equals('**libsignal v1.0** — x'),
+      );
+      expect(
+        stripLeadingListMarker('*italic* start'),
+        equals('*italic* start'),
+      );
+    });
+  });
+
+  group('inRepoReleaseNotesFrom', () {
+    // Some upstreams publish every release with an EMPTY body and keep the
+    // notes in `RELEASE_NOTES.md` instead. Without this the prompt is told
+    // nothing was published, and the model reports that absence as a fact
+    // about the release — which is how "upstream has no published release
+    // notes" reached a pull request for a tag whose own file named three
+    // changes.
+    test('returns the bullets when the file names the tag', () {
+      const file =
+          'v0.102.2\n'
+          '\n'
+          '- SVR: Update production SVRB/SVR2 to use 2026Q3.\n'
+          '- Backups: Validate the new sharedName field on Contact.\n';
+      final notes = inRepoReleaseNotesFrom(file, 'v0.102.2');
+      expect(notes, contains('SVR: Update production'));
+      expect(notes, contains('Backups: Validate'));
+      // The version heading is not part of the notes.
+      expect(notes, isNot(startsWith('v0.102.2')));
+    });
+
+    // The file is overwritten each release, so a tag whose release commit did
+    // not update it would hand back the PREVIOUS release's notes. That is worse
+    // than having none — it is wrong rather than missing — so the heading is
+    // checked and a mismatch is discarded.
+    test('discards a file that names a different release', () {
+      const stale = 'v0.102.1\n\n- Allow unknown chunks in webp sanitization\n';
+      expect(inRepoReleaseNotesFrom(stale, 'v0.102.2'), isNull);
+    });
+
+    test('tolerates a heading that omits or adds the leading v', () {
+      expect(
+        inRepoReleaseNotesFrom('0.102.2\n\n- A change\n', 'v0.102.2'),
+        equals('- A change'),
+      );
+      expect(
+        inRepoReleaseNotesFrom('v0.102.2\n\n- A change\n', '0.102.2'),
+        equals('- A change'),
+      );
+    });
+
+    // `Accept: application/vnd.github.raw` still answers JSON on a miss, and an
+    // upstream that keeps no such file must land as "no notes", not as notes
+    // reading `{"message":"Not Found"}`.
+    test('an API error payload is not release notes', () {
+      expect(
+        inRepoReleaseNotesFrom('{"message":"Not Found"}', 'v0.102.2'),
+        isNull,
+      );
+    });
+
+    test('a heading with no bullets under it is not release notes', () {
+      expect(inRepoReleaseNotesFrom('v0.102.2\n', 'v0.102.2'), isNull);
+      expect(inRepoReleaseNotesFrom('', 'v0.102.2'), isNull);
+    });
+  });
+
+  group('isOwnDefaultHighlight', () {
+    test('matches the prompt default at any version', () {
+      expect(
+        isOwnDefaultHighlight('- ${defaultHighlightFor('v0.102.1')}'),
+        isTrue,
+      );
+      expect(
+        isOwnDefaultHighlight('- ${defaultHighlightFor('v1.2.3')}'),
+        isTrue,
+      );
+    });
+
+    // What it must never match. This entry gets replaced by hand whenever a
+    // release deserves more than the default; superseding one of those would
+    // delete prose the default cannot reproduce.
+    test('does not match a rewritten line', () {
+      expect(
+        isOwnDefaultHighlight(
+          '- **libsignal v0.102.1** — upstream bump. Of the four crates from '
+          'that',
+        ),
+        isFalse,
+      );
+    });
+
+    test('does not match the crate line or a Changed bullet', () {
+      expect(
+        isOwnDefaultHighlight('- **libsignal_frb v1.5.2** — Rust FFI bindings'),
+        isFalse,
+      );
+      expect(isOwnDefaultHighlight('- Update libsignal to v0.8.2'), isFalse);
+    });
+  });
+
+  group('hasRewrittenNativeHighlight', () {
+    test('is false when the only native line is the prompt default', () {
+      final changelog = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- ${defaultHighlightFor('v0.8.1')}',
+      );
+      expect(hasRewrittenNativeHighlight(changelog), isFalse);
+    });
+
+    test('is true when a rewritten line is standing', () {
+      final changelog = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **libsignal v0.8.1** — upstream bump. Of the four crates from that\n'
+            '  repository in this package, the range changes one file',
+      );
+      expect(hasRewrittenNativeHighlight(changelog), isTrue);
+    });
+
+    // Released sections are immutable and are not the caller's business.
+    test('ignores highlights in released sections', () {
+      const changelog =
+          '# Changelog\n'
+          '\n'
+          '## [Unreleased]\n'
+          '\n'
+          '### For Users\n'
+          '\n'
+          '#### ✨ Highlights\n'
+          '\n'
+          '- **libsignal_frb v1.5.2** — Rust FFI bindings\n'
+          '\n'
+          '## [1.4.2] - 2026-07-20\n'
+          '\n'
+          '### For Users\n'
+          '\n'
+          '#### ✨ Highlights\n'
+          '\n'
+          '- **libsignal v0.8.0** — shipped then, hand-written\n';
+      expect(hasRewrittenNativeHighlight(changelog), isFalse);
+    });
+  });
+
+  group('insertChangelogEntry supersedes its own native highlight', () {
+    // Dependency bumps accumulate on the main branch between releases now, so
+    // the second bump in a window meets the first one's Highlights line. That
+    // line names the version the section ships, so two of them make the
+    // section name two, which has happened for real.
+    test('drops the previous default and keeps the new one', () {
+      final before = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings\n'
+            '- ${defaultHighlightFor('v0.8.1')}',
+      );
+      final result = insertChangelogEntry(
+        currentChangelog: before,
+        nativeHighlight: defaultHighlightFor('v0.8.2'),
+        changed: '- **Bumped** — detail',
+      );
+
+      expect(result, contains(defaultHighlightFor('v0.8.2')));
+      expect(result, isNot(contains(defaultHighlightFor('v0.8.1'))));
+      // The crate line is a different Highlights line and stays.
+      expect(result, contains('**libsignal_frb v1.5.2**'));
+    });
+
+    // The safe half of the rule, and the one with the sharp edge: a rewritten
+    // highlight runs onto continuation lines, so dropping it by line match
+    // would leave those behind as a dangling paragraph. It is not dropped.
+    test('keeps a rewritten multi-line highlight intact', () {
+      const rewritten =
+          '- **libsignal v0.8.1** — upstream bump. Of the four crates from that\n'
+          '  repository in this package, the range changes exactly one file,\n'
+          '  and it is the version string';
+      final before = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings\n$rewritten',
+      );
+      final result = insertChangelogEntry(
+        currentChangelog: before,
+        nativeHighlight: defaultHighlightFor('v0.8.2'),
+        changed: '- **Bumped** — detail',
+      );
+
+      expect(result, contains(rewritten));
+      expect(result, contains(defaultHighlightFor('v0.8.2')));
+    });
+
+    // Nothing outside [Unreleased] is rewritten, ever.
+    test('leaves an identical line in a released section alone', () {
+      final before = _withUnreleased.replaceFirst(
+        '## [1.4.2] - 2026-07-20',
+        '## [1.4.2] - 2026-07-20\n'
+            '\n'
+            '### For Users\n'
+            '\n'
+            '#### ✨ Highlights\n'
+            '\n'
+            '- ${defaultHighlightFor('v0.8.0')}',
+      );
+      final result = insertChangelogEntry(
+        currentChangelog: before,
+        nativeHighlight: defaultHighlightFor('v0.8.2'),
+        changed: '- **Bumped** — detail',
+      );
+      expect(result, contains(defaultHighlightFor('v0.8.0')));
+    });
+  });
 }
