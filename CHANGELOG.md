@@ -76,6 +76,88 @@
   no artifact. `THIRD_PARTY_NOTICES.txt` records the seventeen moves that are
   not test-only
 
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.9.0 → v4.12.0** (`.copier-answers.yml`,
+  `.claude/skills/frb-patterns/SKILL.md`, `.github/rulesets/README.md`, new
+  `.github/workflows/refresh-notices.yml`) — three template releases in one
+  pass, and taking them separately was not an option: v4.10.0 required the whole
+  CI matrix in a generated project and, in doing so, made every cargo pull
+  request unmergeable, while v4.11.0 is the repair.
+
+  `refresh-notices.yml` regenerates `THIRD_PARTY_NOTICES.txt` on Dependabot's
+  cargo pull requests. Dependabot edits `rust/Cargo.toml` and `rust/Cargo.lock`
+  with no way to run `make third-party-notices` afterwards, so its pull requests
+  always arrive carrying a stale inventory — cosmetic while nothing depended on
+  it, a hard block once `verify-third-party-notices` sat inside a required
+  context. The `.github/rulesets/README.md` paragraph records why the Dependabot
+  branch exclusions cannot simply be narrowed: that workflow pushes an ordinary
+  **unsigned** commit to those branches, which is legal only because
+  `required_signatures` does not reach them. And `SKILL.md` gains a section
+  saying that `rust/src/api/` is the directory codegen scans, so a helper that
+  exists only to serve the bridge — a test double, a wrapper that records what
+  an upstream call did — belongs at the crate root instead; what decides is
+  whether the module is reachable from the `rust_input` root, not whether it
+  sits in the folder.
+
+  One file the template offers was deliberately **not** taken:
+  `.github/rulesets/protect-main.json`. This repository's required-contexts list
+  is its own — eleven contexts, with the ARM64 leg excluded as flaky — and
+  adopting the template's copy would have rewritten the live ruleset. That is
+  why the adoption is four files rather than five, and why the bot's own pull
+  request for it was closed rather than merged.
+
+#### Fixed
+
+- **Three defects in the automated CHANGELOG entry, every one of them fixed in
+  code rather than in the prompt** (`scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`) — the v0.102.2 update pull request
+  arrived with a doubled list marker, a false statement about upstream, and a
+  second Highlights line contradicting the first. All three are decidable from
+  the text or from one extra request, which is the same reasoning
+  `noImpactPhrase` already carries.
+
+  `insertChangelogEntry` writes the Highlights line as `'- $nativeHighlight'`,
+  and the model returned one carrying its own marker, so the entry read
+  `- - **libsignal v0.102.2**` — in GFM a nested list under an empty parent
+  bullet. Neither side is at fault: rule 1 of the highlight rules gives that
+  line without a marker, and four lines above it the current CHANGELOG is pasted
+  under "match this house style exactly", where every Highlights line begins
+  with one. `stripLeadingListMarker` normalises the answer and a third highlight
+  rule states where the marker comes from. Worth recording how this shipped
+  green — all five `insertChangelogEntry` tests fed an already-clean string, so
+  the suite could not have caught it.
+
+  The entry then opened "upstream has no published release notes". libsignal
+  publishes every GitHub release with an empty body, which is all
+  `_fetchReleaseNotes` read, so the prompt was handed a placeholder and the
+  model reported that absence as a fact about the release — for a tag whose own
+  `RELEASE_NOTES.md` named three changes. The fetch now falls back to that file,
+  whose first line must name the tag: upstream overwrites it each release, so a
+  tag whose release commit missed it would return the previous release's notes,
+  wrong rather than missing. A seventh prompt rule closes the rest of the case —
+  the sections above the prompt are its inputs, their state is a fact about the
+  fetch and never about the release, and an entry must not narrate it.
+
+  Third, Highlights lines accumulated: `[Unreleased]` named v0.102.1 and
+  v0.102.2 at once. That line states which upstream version the section ships,
+  one per release section, and since dependency bumps now accumulate on `main`
+  between releases the second bump in a window meets the first one's line. The
+  new line supersedes the old — but only when the old one is the prompt's own
+  mandated default, now a shared constant read by both the rule and the check.
+  A rewritten line is never touched: those run onto continuation lines, so a
+  line match would strand them as a dangling paragraph. When one is left
+  standing the section does name two versions, so that case warns instead of
+  passing silently.
+
+  Still open, and what made the same entry settle for a verdict where a
+  mechanism was available and put one upstream commit in the wrong crate: the
+  prompt is given commit subject lines, and neither the compare API's file list
+  — which arrives in the response it already makes — nor the `rust/Cargo.lock`
+  diff.
+
 ## [7.3.0] - 2026-09-08
 
 ### For Users
