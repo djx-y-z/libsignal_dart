@@ -38,13 +38,17 @@ Future<AiModel> updateChangelog({
   // Step 2: Fetch the actual commit list between the two tags — release notes
   // alone are often terse, which produced incomplete changelog entries.
   var upstreamCommits = '';
+  var upstreamFiles = '';
   if (fromVersion != null && fromVersion != version) {
-    logStep('Fetching upstream commits $fromVersion...$version...');
+    logStep('Fetching upstream compare $fromVersion...$version...');
     try {
-      upstreamCommits = await _fetchUpstreamCommits(fromVersion, version);
+      final compare = await _fetchUpstreamCompare(fromVersion, version);
+      upstreamCommits = compare.commits;
+      upstreamFiles = compare.files;
       logInfo('Got ${upstreamCommits.length} characters of commit history');
+      logInfo('Got ${upstreamFiles.length} characters of changed-file list');
     } catch (e) {
-      logWarning('Could not fetch upstream commit list: $e');
+      logWarning('Could not fetch upstream compare: $e');
     }
   }
 
@@ -60,6 +64,7 @@ Future<AiModel> updateChangelog({
     fromVersion: fromVersion,
     releaseNotes: releaseNotes,
     upstreamCommits: upstreamCommits,
+    upstreamFiles: upstreamFiles,
     currentChangelog: currentChangelog,
     codegenResult: codegenResult,
     models: models,
@@ -219,11 +224,17 @@ String releaseNotesFrom(Map<String, dynamic> json, String version) {
   return body.trim().isEmpty ? emptyReleaseNotesPlaceholder : body;
 }
 
-/// Fetch the commit list between two upstream tags via the GitHub compare API.
+/// Fetch the commit list AND the changed-file list between two upstream tags.
 ///
-/// Returns a newline-separated list of first-line commit messages (merge
-/// commits excluded), capped to keep the AI prompt within limits.
-Future<String> _fetchUpstreamCommits(String from, String to) async {
+/// One request answers both: the compare API returns `commits` and `files` in
+/// the same payload, and the file list is what tells a reader WHERE a change
+/// landed. Without it the model has only commit subject lines to go on, and a
+/// subject line is not evidence of location — an entry written from one put an
+/// upstream commit in the wrong crate.
+Future<({String commits, String files})> _fetchUpstreamCompare(
+  String from,
+  String to,
+) async {
   final result = await Process.run('curl', [
     '-s',
     'https://api.github.com/repos/signalapp/libsignal/compare/$from...$to?per_page=250',
@@ -238,6 +249,64 @@ Future<String> _fetchUpstreamCommits(String from, String to) async {
     throw Exception(json['message'] ?? 'No commits in compare response');
   }
 
+  return (commits: upstreamCommitsFrom(json), files: upstreamFilesFrom(json));
+}
+
+/// Render the changed-file list out of a decoded compare response.
+///
+/// Returns an empty string when the payload carries no usable list, in which
+/// case the prompt gets no file section at all rather than an empty heading.
+///
+/// The header says whether the list is COMPLETE, and that word is load-bearing
+/// rather than decorative. The compare API caps `files` at 300 and says so
+/// nowhere in the payload, so on a big range absence from this list is not
+/// evidence of absence from the range — and the entry this exists to
+/// improve is built on exactly that kind of negative claim ("nothing in the
+/// crates we bind changed"). A model told only "here are some files" would
+/// make that claim from a truncated list and be wrong. So completeness is
+/// computed here, where the counts are, and stated in the text the model
+/// reads: `total` against what was returned, and whether the char cap bit.
+///
+/// Pure; exposed for testing.
+String upstreamFilesFrom(Map<String, dynamic> json) {
+  final files = json['files'];
+  if (files is! List || files.isEmpty) return '';
+
+  final lines = <String>[];
+  for (final file in files) {
+    if (file is! Map<String, dynamic>) continue;
+    final name = file['filename'];
+    if (name is! String) continue;
+    final status = file['status'] as String? ?? 'changed';
+    final previous = file['previous_filename'];
+    lines.add(
+      previous is String ? '$status $previous -> $name' : '$status $name',
+    );
+  }
+  if (lines.isEmpty) return '';
+
+  const maxChars = 12000;
+  var listing = lines.join('\n');
+  var capped = false;
+  if (listing.length > maxChars) {
+    listing = listing.substring(0, listing.lastIndexOf('\n', maxChars));
+    capped = true;
+  }
+
+  // `files` is capped at 300 by the API; a payload at that ceiling is assumed
+  // incomplete even when no count says so.
+  final complete = !capped && lines.length < 300;
+  final header = complete
+      ? 'COMPLETE — every file the range touches is listed below '
+            '(${lines.length}).'
+      : 'TRUNCATED — this is only part of what the range touches. Nothing '
+            'below supports a claim that some path was NOT changed.';
+  return '$header\n$listing';
+}
+
+/// Render the commit list out of a decoded compare response. Pure; exposed for
+/// testing.
+String upstreamCommitsFrom(Map<String, dynamic> json) {
   final commits = json['commits'] as List<Object?>;
   final totalCommits = json['total_commits'] as int? ?? commits.length;
   final messages = <String>[];
@@ -456,6 +525,7 @@ _generateChangelogEntry({
   required String? fromVersion,
   required String releaseNotes,
   required String upstreamCommits,
+  required String upstreamFiles,
   required String currentChangelog,
   required String? codegenResult,
   required List<ResolvedAiModel> models,
@@ -514,6 +584,22 @@ $upstreamCommits
 
 Use BOTH the release notes and the commit list — release notes are often
 incomplete, and the commit list shows what actually changed.'''}
+${upstreamFiles.isEmpty ? '' : '''
+
+## Files the upstream range changed
+$upstreamFiles
+
+This is the compare API's own file list, and it is the ONLY evidence here about
+WHERE a change landed. A commit subject is not: many name a change and no place
+at all, and an entry that inferred the place from one put an upstream commit in
+the wrong crate. Read the location off this list.
+
+Read the first line before you rely on it. COMPLETE means the range touches
+nothing else, so you may reason from a path's ABSENCE — "the crates we bind
+changed only <file>" is then a checkable statement, and it is a better one than
+any verdict. TRUNCATED means the opposite: the list still proves that what it
+names DID change, and proves nothing at all about what it does not name, so
+write no negative claim from it.'''}
 
 ## Current CHANGELOG.md (match this house style exactly):
 $changelogContext
@@ -573,6 +659,10 @@ Return a JSON object with EXACTLY two string fields:
    even one this package never calls — it is FALSE and must not be written.
    Naming such a symbol and saying why it does not reach us is better than
    claiming nothing changed.
+   Where a COMPLETE file list appears above, neither stock sentence is your best
+   answer: say which files in those crates the range actually changed, because
+   that is checkable and a verdict is not. "Between them the range changes
+   exactly one file, and it is the version string" is the shape to aim for.
 4. When it is true, state that conclusion ONCE, and in these exact words:
        $noImpactPhrase
    Write that phrase verbatim, as the close of a sentence you are already

@@ -152,11 +152,28 @@
   standing the section does name two versions, so that case warns instead of
   passing silently.
 
-  Still open, and what made the same entry settle for a verdict where a
-  mechanism was available and put one upstream commit in the wrong crate: the
-  prompt is given commit subject lines, and neither the compare API's file list
-  — which arrives in the response it already makes — nor the `rust/Cargo.lock`
-  diff.
+  That left one cause standing, and it was the one behind the other two faults
+  in the same entry — the weak verdict where a checkable claim was available,
+  and the Gaussian-padding commit filed under `rust/net` when it landed in
+  `rust/message-backup` and `rust/bridge`. A commit subject names a change and
+  not a place, and subject lines were all the prompt had. **The compare API's
+  file list is now fed to it**, at no extra cost: `files` and `commits` arrive
+  in the same payload, and the fetch was already discarding half of it.
+
+  The list carries a header saying whether it is COMPLETE, and that is the part
+  that had to be designed rather than the list. The entry rests on a negative
+  claim — the crates we bind changed only this file — which is sound only from
+  an exhaustive list, and the API caps `files` at 300 while saying so nowhere
+  in the payload. So completeness is decided in code, where the counts are, and
+  stated in the words the model reads: COMPLETE licenses reasoning from
+  absence, TRUNCATED withdraws it. Replayed against the range that produced the
+  bad entry, the header reads `COMPLETE … (71)` and the only line in the bound
+  crates is `modified rust/core/src/version.rs` — the claim a human had to
+  write by hand.
+
+  Still open: the `rust/Cargo.lock` diff, which the prompt also never sees
+  though `make rust-update` runs before the changelog step. Same family,
+  smaller payoff.
 
 ## [7.3.0] - 2026-09-08
 

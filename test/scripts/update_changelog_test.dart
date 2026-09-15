@@ -646,4 +646,132 @@ void _breakingContradictionTests() {
       expect(result, contains(defaultHighlightFor('v0.8.0')));
     });
   });
+
+  group('upstreamFilesFrom', () {
+    Map<String, dynamic> compare(List<Map<String, dynamic>> files) => {
+      'commits': <Object?>[],
+      'files': files,
+    };
+
+    // The whole point of the section. A dependency bump's entry is built on a
+    // NEGATIVE claim — "the crates we bind changed only this file" — and that
+    // claim is only sound when the list is exhaustive. So the header states it
+    // rather than leaving the model to assume.
+    test('a short list announces itself COMPLETE and lists every path', () {
+      final out = upstreamFilesFrom(
+        compare([
+          {'filename': 'rust/core/src/version.rs', 'status': 'modified'},
+          {'filename': 'rust/net/src/chat.rs', 'status': 'modified'},
+        ]),
+      );
+      expect(out, startsWith('COMPLETE'));
+      expect(out, contains('(2)'));
+      expect(out, contains('modified rust/core/src/version.rs'));
+      expect(out, contains('modified rust/net/src/chat.rs'));
+    });
+
+    // The compare API caps `files` at 300 and says so nowhere in the payload,
+    // so a list sitting exactly at the ceiling is assumed incomplete. Calling
+    // that COMPLETE would licence a false negative claim.
+    test('a list at the API ceiling is TRUNCATED, not COMPLETE', () {
+      final files = [
+        for (var i = 0; i < 300; i++)
+          {'filename': 'rust/net/src/f$i.rs', 'status': 'modified'},
+      ];
+      final out = upstreamFilesFrom(compare(files));
+      expect(out, startsWith('TRUNCATED'));
+      expect(out, contains('NOT changed'));
+    });
+
+    test('299 files is still COMPLETE', () {
+      final files = [
+        for (var i = 0; i < 299; i++)
+          {'filename': 'a/b$i.rs', 'status': 'modified'},
+      ];
+      expect(upstreamFilesFrom(compare(files)), startsWith('COMPLETE'));
+    });
+
+    // The char cap is the other way the list stops being exhaustive, and it
+    // has to reach the same verdict as the count cap.
+    test('hitting the char cap also downgrades to TRUNCATED', () {
+      final files = [
+        for (var i = 0; i < 250; i++)
+          {
+            'filename': 'rust/${'deep/' * 12}module$i/source_file.rs',
+            'status': 'modified',
+          },
+      ];
+      final out = upstreamFilesFrom(compare(files));
+      expect(out, startsWith('TRUNCATED'));
+      // Cut on a line boundary, so no half path is presented as a real one.
+      expect(out.split('\n').last, isNot(endsWith('source_file')));
+    });
+
+    test('a rename shows both names', () {
+      final out = upstreamFilesFrom(
+        compare([
+          {
+            'filename': 'rust/core/src/new.rs',
+            'previous_filename': 'rust/core/src/old.rs',
+            'status': 'renamed',
+          },
+        ]),
+      );
+      expect(
+        out,
+        contains('renamed rust/core/src/old.rs -> rust/core/src/new.rs'),
+      );
+    });
+
+    // No section beats an empty section: a heading with nothing under it reads
+    // to a model as "nothing changed", which is the same failure the empty
+    // release-notes placeholder exists to prevent.
+    test('an absent, empty or malformed list yields no section at all', () {
+      expect(upstreamFilesFrom({'commits': <Object?>[]}), isEmpty);
+      expect(upstreamFilesFrom(compare([])), isEmpty);
+      expect(
+        upstreamFilesFrom({'commits': <Object?>[], 'files': 'nope'}),
+        isEmpty,
+      );
+      expect(
+        upstreamFilesFrom({
+          'commits': <Object?>[],
+          'files': [
+            {'status': 'modified'},
+          ],
+        }),
+        isEmpty,
+      );
+    });
+  });
+
+  group('upstreamCommitsFrom', () {
+    Map<String, dynamic> withCommits(List<String> subjects, {int? total}) => {
+      'commits': [
+        for (final s in subjects)
+          {
+            'commit': {'message': '$s\n\nbody line'},
+          },
+      ],
+      'total_commits': ?total,
+    };
+
+    test('keeps first lines and drops merge commits', () {
+      final out = upstreamCommitsFrom(
+        withCommits([
+          'Reset for version v1.2.3',
+          'Merge pull request #1',
+          'Fix a thing',
+        ]),
+      );
+      expect(out, contains('- Reset for version v1.2.3'));
+      expect(out, contains('- Fix a thing'));
+      expect(out, isNot(contains('Merge pull request')));
+    });
+
+    test('says when the compare page did not carry every commit', () {
+      final out = upstreamCommitsFrom(withCommits(['One'], total: 260));
+      expect(out, contains('and 259 more commits'));
+    });
+  });
 }
