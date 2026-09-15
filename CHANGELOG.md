@@ -111,6 +111,29 @@
 
 #### Fixed
 
+- **The Android CI legs stopped asking the SDK for a package Google deleted**
+  (`.github/workflows/test-reusable.yml`,
+  `.github/workflows/build-libsignal.yml`) — all three
+  `test / Cross-compile (Android …)` jobs went red at once on 2026-09-15 with
+  no change on this side, and because they are required contexts, `main` was
+  red and nothing was mergeable.
+
+  `android-actions/setup-android` takes a `packages:` input whose default is
+  `tools platform-tools`. `tools` is the legacy SDK Tools package, obsoleted by
+  `cmdline-tools` years ago and now absent from `repository2-3.xml`, Google's
+  own index, while `platform-tools` is still in it. The action asks for it
+  regardless, `sdkmanager` exits 1, and the action fails before the job reaches
+  a step of its own — the `sdkmanager --install "ndk;…"` below it never ran,
+  which is why the failure looked nothing like a build error. Upstream had no
+  fixed release: v4.0.1 is the latest and `android-actions/setup-android#537`,
+  opened the same day, is filed against exactly this. Passing
+  `packages: platform-tools` drops the dead name and nothing else.
+
+  Both call sites moved together, and that is the point rather than tidiness:
+  `build-libsignal.yml` runs the same action, so the next `libsignal_frb-*` tag
+  would have failed its Android matrix the same way — after the tag was pushed,
+  which is the expensive moment to find out.
+
 - **Three defects in the automated CHANGELOG entry, every one of them fixed in
   code rather than in the prompt** (`scripts/src/update_changelog.dart`,
   `test/scripts/update_changelog_test.dart`) — the v0.102.2 update pull request
