@@ -242,9 +242,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.4.5"
+version = "1.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "005ec2760ca554fae18df7a11195552ec576cd665632a881bc011d5bb2fd4d80"
+checksum = "a3eb0f42d6c360dc3f8a821f6bf2fdea7f72bfd36b3076eb0e6d1e9e0752fff4"
 dependencies = [
  "find-msvc-tools",
  "shlex 2.0.1",
@@ -517,13 +517,13 @@ dependencies = [
 
 [[package]]
 name = "derive-where"
-version = "1.6.1"
+version = "1.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d08b3a0bcc0d079199cd476b2cae8435016ec11d1c0986c6901c5ac223041534"
+checksum = "2e2b94854e8576378ccda7c8de8a66ed8b4e8acbd2c50ec3418ea6c8aaf4b567"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.119",
+ "syn 3.0.5",
 ]
 
 [[package]]
@@ -1161,7 +1161,7 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 [[package]]
 name = "libsignal-core"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.3#91abf5000783cbc131701ea20bafd5f8f8158720"
 dependencies = [
  "curve25519-dalek",
  "derive_more",
@@ -1179,8 +1179,8 @@ dependencies = [
 
 [[package]]
 name = "libsignal-debug"
-version = "0.102.2"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
+version = "0.102.3"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.3#91abf5000783cbc131701ea20bafd5f8f8158720"
 dependencies = [
  "cfg-if",
 ]
@@ -1188,7 +1188,7 @@ dependencies = [
 [[package]]
 name = "libsignal-protocol"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.3#91abf5000783cbc131701ea20bafd5f8f8158720"
 dependencies = [
  "aes",
  "aes-gcm-siv",
@@ -1879,7 +1879,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 [[package]]
 name = "signal-crypto"
 version = "0.1.0"
-source = "git+https://github.com/signalapp/libsignal?tag=v0.102.2#8fc2113bda042fc972a166a24b974b0d34155c6c"
+source = "git+https://github.com/signalapp/libsignal?tag=v0.102.3#91abf5000783cbc131701ea20bafd5f8f8158720"
 dependencies = [
  "aes",
  "cbc",
@@ -1910,9 +1910,9 @@ checksum = "0c790de23124f9ab44544d7ac05d60440adc586479ce501c1d6d7da3cd8c9cf5"
 
 [[package]]
 name = "smallvec"
-version = "1.16.0"
+version = "1.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b9be42f50aa861c555654aa3a37f52f4b1074bacf4e48fe0ef7fa584e80f1f0f"
+checksum = "ba467056f1b547ed52077911161fc86985becbc60e8e1857c8a144dab0def891"
 
 [[package]]
 name = "sorted-vec"

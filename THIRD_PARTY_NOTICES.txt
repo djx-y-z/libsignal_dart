@@ -132,7 +132,7 @@ cbc 0.2.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T68]
 
-cc 1.4.5
+cc 1.4.6
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -252,7 +252,7 @@ delegate-attr 0.3.1
   License: MIT
   Texts:   LICENSE [T82]
 
-derive-where 1.6.1
+derive-where 1.7.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T108]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.102.2
+libsignal-debug 0.102.3
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -815,7 +815,7 @@ slab 0.4.12
   License: MIT
   Texts:   LICENSE [T75]
 
-smallvec 1.16.0
+smallvec 1.16.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T65]
 
@@ -1822,7 +1822,7 @@ Crates:
   clang-sys@1.9.1
   cmov@0.5.4
   ctutils@0.4.2
-  derive-where@1.6.1
+  derive-where@1.7.0
   zeroize@1.9.0
   zeroize_derive@1.5.0
 
@@ -3532,7 +3532,7 @@ Crates:
   backtrace@0.3.76
   bitflags@2.13.2
   bumpalo@3.20.3
-  cc@1.4.5
+  cc@1.4.6
   cexpr@0.6.0
   cfg-if@1.0.4
   crossbeam-deque@0.8.8
@@ -3586,7 +3586,7 @@ Crates:
   rustc_version@0.4.1
   rustix@1.1.4
   scopeguard@1.2.0
-  smallvec@1.16.0
+  smallvec@1.16.1
   tempfile@3.27.0
   threadpool@1.8.1
   uuid@1.26.1
@@ -6114,7 +6114,7 @@ SOFTWARE.
 
 Crates:
   backtrace@0.3.76
-  cc@1.4.5
+  cc@1.4.6
   cfg-if@1.0.4
   find-msvc-tools@0.1.12
   js-sys@0.3.105
@@ -7270,7 +7270,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  smallvec@1.16.0
+  smallvec@1.16.1
 
 Copyright (c) 2018 The Servo Project Developers
 
@@ -8391,7 +8391,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.102.2
+  libsignal-debug@0.102.3
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.5.3
@@ -9242,7 +9242,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  derive-where@1.6.1
+  derive-where@1.7.0
 
 MIT License
 

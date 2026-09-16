@@ -4,12 +4,37 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.102.2** — two upstream bumps since v0.102.0. Of the four crates
-  from that repository in this package's dependency graph, the accumulated range
-  changes exactly one file, and it is the version string
+- **libsignal v0.102.3** — a repeated pre-key message that carries a different
+  identity key is now rejected instead of being accepted into the session that
+  is already established
 
 #### Changed
 
+- **libsignal moves to v0.102.3** (`rust/Cargo.toml`) — ten commits upstream
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.102.2...v0.102.3)).
+  Upstream's own notes for the tag name only the four new `AuthKeysService`
+  pre-key APIs, and the one change in this range that does reach this package is
+  not among them — it is under **Security** below.
+
+  Of the four crates from that repository in this package's dependency graph,
+  the range touches two source files beyond the version string, and they come
+  from **different** commits. `rust/protocol/src/session.rs`, with its test
+  `rust/protocol/tests/session.rs`, is `08b7ba68`, the stricter pre-key
+  validation. `rust/protocol/src/state/prekey.rs` is `2a569601`, one of the
+  `AuthKeysService` commits, and all it does there is add `#[repr(transparent)]`
+  to `PreKeyId(u32)` — a memory-layout attribute, which changes no behaviour, no
+  serialization and nothing this package exposes.
+
+  The `AuthKeysService` work itself lands in `rust/net/chat` and `rust/net/grpc`,
+  crates outside this package's dependency graph, and its Swift, Java and Node
+  halves land in the upstream bridge and language-binding directories, which this
+  package does not use — it binds the pure-Rust crates directly.
+  `rust/core/src/version.rs` changes only the version string, and no source file
+  under `signal-crypto` is listed. Upstream's workspace `rust-version` stays at
+  1.93.1, so the build floor does not move. `make codegen` produced no change
+  under `lib/src/rust/`, so the FFI surface did not move — but this time that is
+  not the same as "nothing reaches the surface", because the behaviour behind an
+  unchanged signature did change.
 - **libsignal moves to v0.102.2, and again nothing it changed is reachable from
   here** (`rust/Cargo.toml`) — nine commits upstream
   ([compare](https://github.com/signalapp/libsignal/compare/v0.102.1...v0.102.2)).
@@ -75,6 +100,26 @@
   requirement from `^0.3.8` to `=0.3.8`, and it is a dev-dependency that reaches
   no artifact. `THIRD_PARTY_NOTICES.txt` records the seventeen moves that are
   not test-only
+
+#### Security
+
+- **A repeated pre-key message carrying a different identity key is now
+  rejected** — upstream `08b7ba68`, reached from here through
+  `messageDecryptPrekeyWithCallbacks` and `sealedSenderDecryptWithCallbacks`,
+  both exported from `libsignal.dart`. When a pre-key message arrives for a
+  session that is already established, libsignal used to read it as a replay and
+  return early, accepting it into that session whatever identity key it carried;
+  a mismatch surfaced later at the MAC check, if it surfaced at all. It now
+  compares the message's identity key against the one stored for the session —
+  a constant-time comparison, upstream notes, as long as the two keys are of the
+  same type — and returns `InvalidMessage` with "remote identity key not
+  consistent with previously-established session" straight away.
+
+  **What a caller may see:** a decrypt that previously failed later, differently,
+  or not at all can now throw at this point instead. No signature changed and no
+  caller has to change code, so this is not breaking; but a caller that branches
+  on error text rather than catching the exception should know the message is
+  new. Upstream's release notes for v0.102.3 do not mention this change.
 
 ### For Contributors
 
