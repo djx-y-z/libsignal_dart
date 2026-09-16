@@ -4,12 +4,16 @@
 
 #### ✨ Highlights
 
+- **libsignal v0.102.3** — stricter pre-key validation
 - **libsignal v0.102.2** — two upstream bumps since v0.102.0. Of the four crates
   from that repository in this package's dependency graph, the accumulated range
   changes exactly one file, and it is the version string
 
 #### Changed
 
+- **Pre-key session validation is stricter for this package** — libsignal moves to v0.102.3 ([compare](https://github.com/signalapp/libsignal/compare/v0.102.2...v0.102.3)). The new `AuthKeysService` APIs and account-protocol changes landed in `rust/net/chat` and `rust/net/grpc`, crates outside this package's dependency graph; their Swift, Java and Node wrappers landed in the upstream bridge and language-binding directories, which this package does not use. The remaining workspace, lockfile, acknowledgment and release-metadata changes likewise do not add to the bound crates or exposed surface.
+
+  Within the bound crates, the range changes `rust/protocol/src/session.rs`, `rust/protocol/src/state/prekey.rs` and `rust/protocol/tests/session.rs`, where pre-key messages that change identity keys are validated more strictly, affecting the exposed X3DH session-establishment path and its serialization. `rust/core/src/version.rs` changes only the version string, and no source file under `signal-crypto` is listed. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API
 - **libsignal moves to v0.102.2, and again nothing it changed is reachable from
   here** (`rust/Cargo.toml`) — nine commits upstream
   ([compare](https://github.com/signalapp/libsignal/compare/v0.102.1...v0.102.2)).
