@@ -400,6 +400,14 @@ String readChangelogScope({Directory? packageDir}) {
 /// report that the guard had stopped guarding: its tests feed the function a
 /// string directly and would keep passing while the prompt no longer produced
 /// one it recognises.
+///
+/// Rule 4 carries a second precondition that is NOT checked here: the phrase is
+/// false when the range changed shipped code in a bound crate. Deciding that in
+/// code needs a crate-name-to-path mapping (`libsignal-protocol` lives under
+/// `rust/protocol/`), and that is project knowledge this script does not hold —
+/// [changelogScopePath] names the crates, not their paths. A check that needed
+/// a line every existing project's scope file lacks would silently pass for all
+/// of them, which is worse than asking the model, so it is asked.
 const noImpactPhrase = "do not affect this library's public API";
 
 /// Where [_defaultHighlightTemplate] carries the version.
@@ -599,7 +607,16 @@ nothing else, so you may reason from a path's ABSENCE — "the crates we bind
 changed only <file>" is then a checkable statement, and it is a better one than
 any verdict. TRUNCATED means the opposite: the list still proves that what it
 names DID change, and proves nothing at all about what it does not name, so
-write no negative claim from it.'''}
+write no negative claim from it.
+
+What this list does NOT carry is which commit changed which file. It is flat
+across the whole range, and the commit list above carries no file list of its
+own, so nothing here joins the two. Never attribute a file to a named commit,
+and never take the REASON a file changed from a commit subject that happens to
+sound related: a range holds unrelated commits, and pairing one commit's subject
+with another commit's file invents a change nobody made. Write "the range
+changes <file>" and stop there. Where the entry would turn on why a file
+changed, say that this material does not say.'''}
 
 ## Current CHANGELOG.md (match this house style exactly):
 $changelogContext
@@ -676,6 +693,16 @@ Return a JSON object with EXACTLY two string fields:
    this conclusion are three different statements; repeating the same verdict in
    more than one of them is padding, and it is what makes these entries read as
    filled-in boilerplate. Omit the phrase entirely when it is not true.
+   Two things above can make it false, and you can check both. First, a
+   COMPLETE file list in which a crate named under "Crates bound:" has any
+   SOURCE file changed — source meaning a file that is neither a version string
+   nor a test. That is the update reaching this package, whatever you conclude
+   about which surface it reaches. Second, an unchanged FFI surface offered as
+   the ground for the phrase: a signature can stay identical while the
+   behaviour behind it changes, and a caller sees that change, so clean codegen
+   alone never licenses it. What does license it is the file list — a COMPLETE
+   list whose bound crates show nothing but version strings and tests. Where
+   either failing case holds, drop the phrase and say what moved instead.
 5. Judge relevance from the release notes AND the commit list, NOT from the
    version numbers.
 6. Claim only what the material above supports. Where a "Binding

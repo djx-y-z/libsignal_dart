@@ -242,6 +242,48 @@
   Still open: the `rust/Cargo.lock` diff, which the prompt also never sees
   though `make rust-update` runs before the changelog step. Same family,
   smaller payoff.
+- **The same automated entry then mis-attributed a file, and this one is fixed
+  in the prompt rather than in code** (`scripts/src/update_changelog.dart`) —
+  feeding the file list bought a real improvement and opened a new way to be
+  wrong. The v0.102.3 entry read the list correctly and then guessed which
+  commit had changed what.
+
+  That range holds ten commits. `08b7ba68` ("be stricter for pre-key messages
+  that change identity keys") touches `rust/protocol/src/session.rs`;
+  `2a569601` ("Expose AuthKeysService.setOneTimeEcPreKeys") touches
+  `rust/protocol/src/state/prekey.rs`. Both files sit in a bound crate, the list
+  names both, and nothing in the material says which commit brought which. The
+  entry paired the second file with the first subject, concluded the stricter
+  validation reached serialization, and reported as fact something no commit
+  did: that file's entire change is `#[repr(transparent)]` on `PreKeyId(u32)`, a
+  memory-layout attribute.
+
+  The compare payload is flat by construction — `commits[]` carries no files and
+  `files[]` carries no commits — so the prompt now says exactly that and forbids
+  attribution outright: name what the range changed, never which commit changed
+  it, and where the reason matters, say the data does not carry it. Per-commit
+  requests would turn attribution into data; they were considered and deferred,
+  because one request per commit is the expensive half and earns nothing if
+  stating the gap is enough. A cap on commit count was considered and rejected
+  outright — it withdraws the attribution data exactly when a range is large,
+  which is when attribution is hardest. The next update pull request measures
+  whether the prompt rule suffices.
+
+  Rule 4 gained a second precondition at the same time, for a contradiction in
+  that same entry: it said the change reaches the exposed X3DH path and closed
+  with "these changes do not affect this library's public API". Both cannot
+  hold. `breakingContradictsNoImpact` stayed quiet because it keys on
+  `**BREAKING:**`, which the entry never wrote. The phrase is now false by
+  construction in two checkable cases — when a COMPLETE file list shows a bound
+  crate's source changing, source meaning a file that is neither a version
+  string nor a test, and when the only ground offered is an unchanged FFI
+  surface, because an unchanged signature is not unchanged behaviour. v0.102.3 was precisely that: same signature, a
+  call that can now throw where it used to return. This one stays in the prompt
+  rather than joining the code checks for a reason worth recording — deciding it
+  in code needs a crate-name-to-path mapping the script does not hold
+  (`changelog-scope.md` names crates, not paths), and a check keyed on a line no
+  existing scope file carries would pass silently for every project that has
+  one.
 
 ## [7.3.0] - 2026-09-08
 
