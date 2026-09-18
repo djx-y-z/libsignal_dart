@@ -123,6 +123,48 @@
 
 ### For Contributors
 
+#### Added
+
+- **The repair agent can reach the branch it has to repair**
+  (`.github/workflows/repair-build.yml`,
+  `.github/agent-prompts/repair-build.md`,
+  `.github/agent-config/opencode.json`) — `repair-build.yml` watched `main` and
+  nothing else, and the failure this package actually gets is the one that can
+  never appear there. When an `update-libsignal-*` pull request pins a version
+  whose API has changed shape, the required checks fail, so it never merges, so
+  `main` stays green and the workflow sees nothing. It has happened three times
+  — `bc081c7` (v0.87.0, `IdentityKey` lost its comparison), `4a28ea8` (v0.93.1,
+  two functions gained `local_address`) and `fc80c5b` (v0.94.0, `verify_mac` →
+  `verify_mac_with_addresses`) — each fixed by hand.
+
+  The workflow gains a second mode rather than a wider trigger: it takes the
+  head of a red bot pull request as its base and lands the repair as a commit on
+  that branch, signed, through `createCommitOnBranch`. Most of those never reach
+  a model — 31 pull requests here have carried `codegen-failed` and 3 were
+  genuine API changes, so the job runs `make codegen` first and asks a model only
+  when the generator itself fails against the new pin.
+
+  Two checks were added that a model cannot argue with, and the first closes a
+  hole this repository has already fallen into. The generated files are
+  **regenerated after the agent and refused if they move** — the one pull request
+  this workflow ever opened (#67) made a red build green by hand-editing
+  `lib/src/rust/frb_generated.dart`, which compiled, passed the tests, and was
+  caught by the AI reviewer rather than by anything deterministic. The same run
+  explains why: the repair job never installed `flutter_rust_bridge_codegen`, so
+  `make codegen` exited 127 and hand-editing was the only move left. It installs
+  it now. Second, whether this package's own Dart API moved is **measured** from
+  the generated bindings rather than taken from the agent's account of it;
+  replayed against the three commits above, the measurement separates the one
+  that was not breaking from the two that were.
+
+  That measurement is what the boundary rests on: a value available in scope is
+  repaired silently, a value that exists only at the caller means the public API
+  widens, which is breaking and not an agent's decision. There the whole change
+  is prepared and the pull request is labelled `needs-decision` — the version
+  number stays where it belongs. Two of the three historical cases land there,
+  and structurally: `local_name`/`local_device_id` are parameters of our own FRB
+  functions arriving from Dart, and no store callback supplies a local address.
+
 #### Changed
 
 - **copier template adopted: v4.9.0 → v4.12.0** (`.copier-answers.yml`,
