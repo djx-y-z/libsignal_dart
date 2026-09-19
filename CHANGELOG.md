@@ -4,12 +4,16 @@
 
 #### ✨ Highlights
 
+- **libsignal v0.103.0** — SPQR ratchet update in Double Ratchet
 - **libsignal v0.102.3** — a repeated pre-key message that carries a different
   identity key is now rejected instead of being accepted into the session that
   is already established
 
 #### Changed
 
+- **The exposed Double Ratchet picks up SPQR v1.6.0** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.102.3...v0.103.0)) updates `spqr`, which runs transitively inside the exposed Double Ratchet and can change its wire bytes and the number of messages in an epoch. The WebAuthn, MFA, key-transparency gRPC and username-service work lands under `rust/net` and the Java, Node and Swift binding directories; those crates and language bindings are not in this package's dependency graph. The media sanitizer upgrade belongs to a media dependency rather than one of the three crates this package builds.
+
+  Among the bound crates, the complete range changes `rust/protocol/src/protocol.rs` and `rust/core/src/version.rs`; the latter is the version string, and no source file under `signal-crypto` is listed. The file list does not join either source-file change to a named commit. `make codegen` produced no change under `lib/src/rust/`, so the FFI surface did not move.
 - **libsignal moves to v0.102.3** (`rust/Cargo.toml`) — ten commits upstream
   ([compare](https://github.com/signalapp/libsignal/compare/v0.102.2...v0.102.3)).
   Upstream's own notes for the tag name only the four new `AuthKeysService`
