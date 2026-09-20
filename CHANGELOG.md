@@ -4,12 +4,54 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.102.3** — a repeated pre-key message that carries a different
-  identity key is now rejected instead of being accepted into the session that
-  is already established
+- **libsignal v0.103.0** — two upstream hardenings reach the protocol this
+  package exposes: a peer can no longer turn post-quantum ratcheting off by
+  presenting an SPQR version this client does not support, and a repeated
+  pre-key message that carries a different identity key is rejected instead of
+  being accepted into the session that is already established
 
 #### Changed
 
+- **libsignal moves to v0.103.0** (`rust/Cargo.toml`) — fourteen commits
+  upstream ([compare](https://github.com/signalapp/libsignal/compare/v0.102.3...v0.103.0)).
+  Upstream's own notes for the tag list five items, and the one that reaches
+  this package is the first of them — the SPQR update, which is under
+  **Security** below.
+
+  The other four do not reach it. The WebAuthn registration flow, the
+  `OneTimePasswordNotVerified` → `MfaNotVerified` rename, the two MFA
+  verification APIs and key transparency over gRPC all land in `rust/net`,
+  twenty of the range's seventy-two files, and `libsignal-net` appears nowhere
+  in `rust/Cargo.lock` — not directly and not transitively. The `{webp,mp4}san`
+  0.5.4 upgrade changes no file under `rust/media` at all; it is a
+  `[workspace.dependencies]` bump, and `mp4san`, `webpsan` and
+  `mediasan-common` are absent from the lockfile too. Thirty-two more files are
+  the Swift, Java and Node bindings and nine are `rust/bridge`, the C FFI
+  surface those bindings compile against, which this package does not use — it
+  binds the pure-Rust crates directly. The rest are upstream's own
+  `acknowledgments/`, its podspec, and the notes, manifest and lockfile its
+  release commit touches.
+
+  Of the four crates from that repository in this package's dependency graph,
+  the complete file list touches two files. `rust/core/src/version.rs` is the
+  version string. `rust/protocol/src/protocol.rs` drops a `log::warn!` that
+  printed both MACs when a `SignalMessage` MAC check failed; the constant-time
+  comparison itself is unchanged, and this package installs no `log`
+  implementation, so those records already went nowhere here and nothing
+  observable changes. No source file under `signal-crypto` is listed, and the
+  file list does not join either change to a named commit. Upstream's workspace
+  `rust-version` stays at 1.93.1, so the build floor does not move.
+  `make codegen` produced no change under `lib/src/rust/`, so the FFI surface
+  did not move — and, as with v0.102.3, that is not the same as "nothing
+  reaches the surface".
+
+  Asked at the lockfile rather than the file tree, the transitive half appears,
+  and that is where this release's one user-visible change lives: `spqr` moves
+  1.5.3 → 1.6.0 and drops `curve25519-dalek` and `displaydoc` from its runtime
+  dependencies, keeping the former as a dev-dependency. Six registry crates
+  move — `cc`, `cfg-if`, `find-msvc-tools`, `rustix`, `syn` and
+  `unicode-ident` — and none is added or removed. `THIRD_PARTY_NOTICES.txt`
+  records the moves that are not test-only.
 - **libsignal moves to v0.102.3** (`rust/Cargo.toml`) — ten commits upstream
   ([compare](https://github.com/signalapp/libsignal/compare/v0.102.2...v0.102.3)).
   Upstream's own notes for the tag name only the four new `AuthKeysService`
@@ -103,6 +145,42 @@
 
 #### Security
 
+- **A peer can no longer turn off post-quantum ratcheting by presenting an
+  unsupported SPQR version** — upstream v0.103.0 moves `spqr`, the sparse
+  post-quantum ratchet, from 1.5.3 to 1.6.0. It is not a direct dependency and
+  no symbol in `lib/` or `rust/src/api/` names it, but it runs inside the
+  Double Ratchet this package exposes: `rust/protocol/src/triple_ratchet.rs`
+  mixes the key it returns into every message key, and
+  `test/protocol/spqr_ratchet_progress_test.dart` exercises it through the
+  ordinary encrypt/decrypt path.
+
+  libsignal creates every session — both `initialize_alice_session` and
+  `initialize_bob_session` — with `min_version: spqr::Version::V1`, commented
+  "Require that all clients speak SPQR". Under 1.5.3 that floor was not
+  consulted on the path that mattered. A message whose leading version byte was
+  not a version the client recognised returned `Ok` with the state unchanged
+  and **no key**, and a missing post-quantum key means the message keys are
+  derived from the classical chain alone. A peer could therefore opt the
+  session out of post-quantum ratcheting on its own, by presenting a version
+  number from the future. 1.6.0 checks the floor first, for every message, and
+  a version the client does not share is either answered with real chain-key
+  material or refused outright — never ignored. A refusal surfaces here as
+  `InvalidMessage` carrying "post-quantum ratchet error".
+
+  **The wire format did not change**, which is worth stating because a change
+  to this crate normally would. `spqr`'s encoder is byte-identical between the
+  two tags — `version || varint(epoch) || varint(index) || type || chunk` — and
+  the epoch cadence and chain parameters are untouched. What moved is the
+  decoder: version, epoch and index are now parsed ahead of the
+  version-specific body, so a message from a *higher* SPQR version can still be
+  read far enough to return the epoch-0 chain key for its index, where 1.5.3
+  could return nothing usable. Sessions between two clients on this release are
+  unaffected, and so is compatibility with clients on the previous one.
+
+  **What a caller may see:** a decrypt from a peer presenting an SPQR version
+  this client does not support now either derives proper post-quantum material
+  or throws, where it used to succeed with none mixed in. No signature changed
+  and no caller has to change code.
 - **A repeated pre-key message carrying a different identity key is now
   rejected** — upstream `08b7ba68`, reached from here through
   `messageDecryptPrekeyWithCallbacks` and `sealedSenderDecryptWithCallbacks`,
@@ -326,6 +404,92 @@
   (`changelog-scope.md` names crates, not paths), and a check keyed on a line no
   existing scope file carries would pass silently for every project that has
   one.
+- **The scope file was asserting as fact the one thing it should have asked to
+  be checked** (`.github/agent-prompts/changelog-scope.md`) — the v0.103.0
+  entry arrived claiming the update "can change its wire bytes and the number of
+  messages in an epoch". It cannot: `spqr`'s encoder is byte-identical between
+  1.5.3 and 1.6.0, and the entry missed the security hardening that was the
+  release's one user-visible change.
+
+  The model did not invent that sentence. This file carried it, unconditionally
+  — "a change to it changes the bytes on the wire and the number of messages an
+  epoch takes" — as a standing property of any `spqr` change, and the model
+  restated it, hedged to "can". So this is the third distinct source of a bad
+  entry in as many bumps, after the prompt and the flat file list, and the only
+  one that lives in the project's own material rather than in the template's.
+
+  What makes the premise unverifiable from the prompt's inputs is worth
+  recording, because no enrichment of the libsignal compare would fix it:
+  **`spqr` is a different repository.** A bump leaves exactly one trace in the
+  material the prompt is given — a version number in a manifest — and its
+  contents appear nowhere in that compare, per-commit file lists or not. The
+  paragraph now says "can", names acceptance alongside wire bytes and epoch
+  cadence, and tells the model to report the version move and then say the
+  material does not carry what changed inside — the honest answer, where it
+  used to hand down a conclusion.
+
+  It first said something else, and the repository's own AI reviewer caught it:
+  "read the `spqr` range itself (`gh api …/compare/<old>...<new>`)". The client
+  that sends this prompt sends a plain completion with **no tools at all**, so
+  that is an instruction the model cannot follow and can only appear to satisfy
+  by inventing the answer — the very failure the paragraph was being rewritten
+  to stop, reintroduced one level up, and contradicting the prompt rule added
+  beside it. The command now lives in `CLAUDE.md`, addressed to whoever
+  finishes the pull request, together with the reason the file list alone is
+  not enough: on 1.5.3 → 1.6.0 `serialize.rs` appears in the diff and the
+  serializer is byte-identical all the same.
+- **The one warning that would have caught the stacked Highlights lines reached
+  only the run log** (`scripts/src/update_changelog.dart`,
+  `scripts/update_changelog.dart`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `test/scripts/update_changelog_test.dart`) — the v0.102.2 fix that stopped
+  Highlights lines from stacking deliberately does **not** supersede a
+  *rewritten* line, because those run onto continuation lines a line match
+  would strand. It warns instead, and on v0.103.0 it warned exactly right:
+  "the section now names two upstream versions — collapse them by hand before
+  releasing". Nobody saw it. It is printed by the script, `CHANGELOG_OK` stays
+  `true`, and the pull request renders a clean "AI-generated entry" line with
+  no caveat anywhere.
+
+  That is worse than cosmetic, because nothing downstream collapses them
+  either: `make release` finalizes `[Unreleased]` by renaming the heading **in
+  place**, so a section left naming two upstream versions is frozen into a
+  released one, and released sections are immutable.
+
+  The condition is now returned rather than only logged — `updateChangelog`
+  hands back a `ChangelogUpdate` carrying it beside the model — and published
+  through the `--ci-output` channel that already carried `ai_provider`. The
+  pull request body gains a warning and a "Before Merge" action, the run gains
+  an annotation, and the step summary gains a line. The key is written on
+  **both** outcomes: one that appeared only when true could not be told apart
+  from a script too old to emit it, and `false` is what lets a reader treat the
+  silence as "checked". `ciOutputsFor` renders the block as a separate,
+  testable function for the reason the `insertChangelogEntry` tests already
+  demonstrated — the format is what breaks silently, and a test that exercises
+  the predicate alone proves nothing about what reaches the file. One of its
+  four cases is the trailing newline, since that file is appended to by several
+  writers and an unterminated block takes the next one down with it.
+- **The prompt never said how to read the one input it calls CRITICAL**
+  (`scripts/src/update_changelog.dart`) — the scope section is pasted under
+  "CRITICAL for classification" and rule 2 classifies every upstream change
+  against it, but nothing told the model what kind of statement it was reading.
+  A sentence there describing what a dependency's changes *do* is a statement
+  about what such a change can REACH; handed over unqualified, in that
+  position, it reads as a fact available to assert. That is the whole mechanism
+  behind the v0.103.0 entry.
+
+  Two paragraphs now travel with the block, in the idiom the file list beside
+  it already uses — instructions attached to their data rather than filed in
+  the rules list, so an edit to the rules cannot separate them. The first says
+  the section states reachability and never a report about this release, and
+  that a claim found there is the question to answer from the material, not the
+  answer. The second states the limit that no enrichment of this pipeline can
+  lift: **the compare covers ONE repository**, so a dependency living in
+  another leaves a single trace in it — a version number in a manifest — and
+  nothing about what changed inside. Where an entry would turn on that, it must
+  say the material does not carry it rather than infer the change from the
+  bump, from the dependency's name, or from what the scope section says such a
+  change can reach.
 
 ## [7.3.0] - 2026-09-08
 

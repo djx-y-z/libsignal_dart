@@ -34,11 +34,33 @@ list, so it needs saying explicitly: the sparse post-quantum ratchet (`spqr`,
 its own repository, pulled in transitively by `libsignal-protocol`) runs
 *inside* the Double Ratchet that is exposed. No symbol in `lib/` or
 `rust/src/api/` mentions it, and it is not a direct dependency — but a change to
-it changes the bytes on the wire and the number of messages an epoch takes, and
+it can reach the bytes on the wire, the number of messages an epoch takes, and
+whether a message is accepted at all, and
 `test/protocol/spqr_ratchet_progress_test.dart` exercises it through the
 ordinary encrypt/decrypt path. So an upstream change to the ratchet's
 post-quantum machinery **is** user-visible here even though it satisfies neither
 of the two conditions in rule 2. Treat it as in scope and say what moved.
+
+⚠️ **"Can" is the whole word there, and this paragraph used to say "does".**
+That wording cost an entry: the v0.103.0 bump (`spqr` 1.5.3 → 1.6.0) was
+written up as changing the wire bytes and the epoch cadence because this file
+asserted it as a standing fact, when the encoder was byte-identical across the
+two tags and the real change was a security hardening — a peer could no longer
+turn post-quantum ratcheting off by presenting a version the client does not
+recognise. The model hedged the claim it was handed; the premise was still
+wrong. **`spqr` is a different repository, so a version bump here is the only
+trace it leaves in the libsignal compare the prompt is given — its contents are
+never in that material.** So treat the bump as in scope and report it as the
+version move it is, then say the material does not carry what changed inside.
+Do not infer that from the bump, from the dependency's name, or from this
+paragraph.
+
+⚠️ And nothing here may tell the model to go and fetch that range. This file is
+pasted into a prompt whose client sends a plain completion with **no tools at
+all**, so an instruction to run a command is one it cannot follow and can only
+appear to satisfy by inventing the answer — the same failure, one level up.
+Reading the range by hand is the job of whoever finishes the pull request;
+CLAUDE.md carries the command.
 
 ## Not bound or exposed
 
