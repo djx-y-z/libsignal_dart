@@ -346,6 +346,8 @@ All development tasks should be done via Makefile:
 | `make rust-audit` | Check Rust dependencies for vulnerabilities |
 | `make rust-check` | Quick Rust type check (updates Cargo.lock) |
 | `make rust-test` | Run the crate's own Rust unit tests |
+| `make rust-clippy` | Lint the Rust crate — warnings are errors. Host target only |
+| `make rust-clippy-web` | The same lint over the wasm32 half, which `make rust-clippy` cannot see — BLOCKS in CI |
 | `make format` | Format code |
 | `make format-check` | Check formatting |
 | `make codegen` | Regenerate FRB bindings |
@@ -504,11 +506,11 @@ only oracle those pull requests have — silently absent.
 
 ### Setting up the repair and review agents
 
-Two workflows run an agent: `repair-build.yml` attempts a fix when `main` goes
-red and reports when it cannot, and `ai-review.yml` reviews pull requests and
-leaves one comment. Both are **off entirely** until an engine is named — an
-unset `AGENT_ENGINE` produces a notice and no run, which is what an
-unconfigured repository is supposed to look like.
+Two workflows run an agent: `repair-build.yml` attempts a fix when CI goes red
+and reports when it cannot, and `ai-review.yml` reviews pull requests and leaves
+one comment. Both are **off entirely** until an engine is named — an unset
+`AGENT_ENGINE` produces a notice and no run, which is what an unconfigured
+repository is supposed to look like.
 
 1. Choose the engine: variable `AGENT_ENGINE` = `claude-code` or `opencode`
 2. Name the model — there is deliberately no default:
@@ -530,6 +532,54 @@ unconfigured repository is supposed to look like.
 Both agents hold no write credential: the job that runs the agent cannot reach
 the repository, and the job that publishes runs no agent. Read the header of
 either workflow before changing that split.
+
+#### What the repair agent does on an update branch
+
+`repair-build.yml` watches two things, and the second is the one worth knowing
+about. When the update bot pins a newer upstream version and that version has
+changed the shape of an API this package calls, the resulting pull request
+cannot reach `main` — the checks that fail are required ones — so the breakage
+never appears on the default branch and nothing watching `main` would ever see
+it. The workflow therefore also looks at open, bot-authored pull requests and
+repairs them **by committing to their own branch**.
+
+Most of those never reach a model. The commonest reason such a pull request is
+red is that the update workflow could not RUN the binding generator and left the
+branch labelled `codegen-failed`; the repair simply runs it, commits whatever it
+writes, and removes the label. A model is asked only when the generator itself
+fails against the new pin, which is what an upstream change of shape looks like
+from the inside.
+
+When a model is asked, one question decides the outcome: **is the value the
+adaptation needs available in scope, or does it exist only at the caller?**
+Available — a rename, a moved path, a narrowed type — and the agent repairs it
+to green like any other fix. Caller-only, and this package's public API has to
+widen, which changes every consumer's code. That is a breaking release and is
+not an agent's decision, so it prepares the whole change (Rust, Dart, tests,
+docs, CHANGELOG) and stops at the two things that are yours: confirming the
+decision, and choosing the version number at release time. Nothing it writes
+sets a version.
+
+Whether the API moved is **measured** from the generated bindings rather than
+taken from the agent's own account of it; a disagreement between the two is
+reported on the pull request rather than resolved quietly.
+
+Three labels carry state here, and one of them is a contract:
+
+| label | meaning |
+|---|---|
+| `codegen-failed` | the bindings do not correspond to this branch's pin. A required check refuses the pull request while it is present, and this workflow is the only thing that removes it. |
+| `agent-repaired` | an agent has committed to this branch. |
+| `needs-decision` | the repair widened the public API. Waiting on a person, not on more work. |
+
+`agent-repaired` exists because of something that is not obvious: the repair
+commits with the App token, so its commits are authored by the same bot as the
+branch's own. Any automation that reasons about "were all the commits here the
+bot's" — closing superseded update pull requests, for instance — will answer
+yes and cannot tell a branch an agent has worked on from one it has not. That
+label, and a `repair-build: <sha> (agent)` line in the commit message, are what
+can. **A branch carrying it must not be closed automatically**: it holds
+reasoning nobody has confirmed.
 
 The reviewer **gates nothing** and has no verdict meaning "approved". Before
 wiring it to anything that blocks a merge, measure its false-positive rate by

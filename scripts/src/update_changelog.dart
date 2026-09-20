@@ -441,11 +441,12 @@ String readChangelogScope({Directory? packageDir}) {
 ///
 /// Rule 4 carries a second precondition that is NOT checked here: the phrase is
 /// false when the range changed shipped code in a bound crate. Deciding that in
-/// code needs a crate-name-to-path mapping (`libsignal-protocol` lives under
-/// `rust/protocol/`), and that is project knowledge this script does not hold —
-/// [changelogScopePath] names the crates, not their paths. A check that needed
-/// a line every existing project's scope file lacks would silently pass for all
-/// of them, which is worse than asking the model, so it is asked.
+/// code needs a crate-name-to-path mapping — a crate's name need not be its
+/// directory in the upstream tree — and that is project knowledge this script
+/// does not hold: [changelogScopePath] names the crates, not their paths. A
+/// check that needed a line every existing project's scope file lacks would
+/// silently pass for all of them, which is worse than asking the model, so it
+/// is asked.
 const noImpactPhrase = "do not affect this library's public API";
 
 /// Where [_defaultHighlightTemplate] carries the version.
@@ -1082,15 +1083,20 @@ String _insertIntoUnreleased(
       continue;
     }
 
-    // Any other `####` heading inside For Users (`#### Security`,
-    // `#### Fixed`, …) follows `#### Changed` in the documented order, so a
-    // `#### Changed` that has to be created belongs just before the first of
-    // them. `#### Changed (Breaking)` precedes it and so does not anchor.
+    // A `#### Changed` that has to be created belongs just before the first
+    // heading that FOLLOWS it in the documented order (`#### Security`,
+    // `#### Fixed`, `#### Documentation`, …), so that first one anchors it.
+    //
+    // ⚠ [precedesChanged] is therefore not a courtesy list: a subsection that
+    // comes BEFORE `#### Changed` and is missing from it becomes the anchor,
+    // and the created `#### Changed` is then filed above it — out of the order
+    // this script and CLAUDE.md both state. `#### ✨ Highlights` cannot reach
+    // here (it is consumed above), but `#### Added` can, and did.
     if (inForUsers &&
         !insertedChanged &&
         changedAnchorIdx < 0 &&
         line.startsWith('#### ') &&
-        !line.startsWith('#### Changed (')) {
+        !precedesChanged(line)) {
       changedAnchorIdx = trimmedEnd();
     }
 
@@ -1099,6 +1105,18 @@ String _insertIntoUnreleased(
 
   return result.join('\n');
 }
+
+/// Whether `line` is a `### For Users` subsection that precedes `#### Changed`
+/// in the order `CLAUDE.md` documents (Highlights → Added → Changed (Breaking)
+/// → Changed → Security → Fixed → Documentation).
+///
+/// Used to decide what may anchor a created `#### Changed`. Keep it in step
+/// with that order: a subsection added before `#### Changed` and not listed
+/// here silently files new entries above it.
+bool precedesChanged(String line) =>
+    line.startsWith('#### Changed (') ||
+    line.trimRight() == '#### Added' ||
+    line.contains('Highlights');
 
 /// Create a new [Unreleased] section at the top.
 String _createUnreleasedSection(

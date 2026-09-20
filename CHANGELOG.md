@@ -245,6 +245,60 @@
 
 #### Changed
 
+- **copier template adopted: v4.12.0 → v4.14.0** (`.copier-answers.yml`,
+  `Makefile`, `CLAUDE.md`, `CONTRIBUTING.md`,
+  `.github/workflows/build-libsignal.yml`,
+  `.github/workflows/test-reusable.yml`, `scripts/src/update_changelog.dart`,
+  new `scripts/verify_release_artifacts.py` and
+  `scripts/verify_library_loads.py`) — two releases, and v4.13.0 is only half
+  of one: every commit in it was written in this repository first, so its
+  adoption moved `_commit` and nothing else, landed as `0471f7a`, and was never
+  written up. This entry covers both.
+
+  Three gates arrive. `make rust-clippy-web` lints the wasm32 half of the crate
+  and blocks on the Linux x86_64 leg — `make rust-clippy` runs under the host
+  target, and a `cfg(target_arch = "wasm32")` body is a *different
+  implementation* of the same function rather than the same code on another
+  host, so the host pass reads none of its lines while its green reads as if it
+  had. The other two first run at the next stage 1.
+  `verify_release_artifacts.py` refuses a release archive that does not hold
+  what its name says; it reads the libc in ELF `DT_NEEDED` and the platform in
+  Mach-O `LC_BUILD_VERSION` rather than calling `file`, because a Linux and an
+  Android arm64 `.so` share an ELF header and a macOS, an iOS and an
+  iOS-simulator `.dylib` share a Mach-O cputype — exactly the pairs a
+  copy-paste slip in the workflow's hand-written `tar` list produces. It runs as
+  a job placed **before** `create-release`, so a wrong build is caught without
+  spending a reviewer's approval on it, and again over the packed archives
+  before the provenance attestation, since a signed attestation for a mispacked
+  archive is a mispacked archive that is harder to argue with.
+  `verify_library_loads.py` loads the library each build job just produced and
+  looks up `frb_init_frb_dart_api_dl`, on the legs whose runner matches the
+  target; that covers the one failure every other check here is blind to — a
+  library that compiles, packs, checksums and attests, and then does not load.
+
+  Both release gates were measured here before adoption rather than left to
+  prove themselves during a release: run against the published
+  `libsignal_frb-6.3.0` archives they report green on all twelve platforms, and
+  the loader was additionally given a negative control — a Linux `.so` on
+  macOS, which it refuses — so its green is known to mean something.
+
+  `insertChangelogEntry` also stops filing a `#### Changed` it has to create
+  *above* an existing `#### Added`. It anchors on the first `#### ` heading
+  under `### For Users`, and only `#### Changed (Breaking)` was excluded from
+  anchoring — but `#### Added` precedes it in the documented order too, and so
+  silently took later entries above itself. The exclusion is now a named
+  predicate, `precedesChanged`, and the order `CLAUDE.md` documents gains the
+  two subsections it was missing, `#### Added` and `#### Documentation`.
+
+  Two things the template offered were **not** taken. It rewrites the released
+  `## [1.0.0]` section from `### Added` to `### For Users` / `#### Added`:
+  released sections are immutable, and three further sections of that vintage
+  carry the same old shape, so normalizing one of the four would have edited
+  history in order to make this file *less* consistent. And it adds a paragraph
+  describing the audience split to the changelog preamble — which this file
+  does not have, which is why the paragraph merged into the middle of the
+  history instead. `CLAUDE.md` already documents the split.
+
 - **copier template adopted: v4.9.0 → v4.12.0** (`.copier-answers.yml`,
   `.claude/skills/frb-patterns/SKILL.md`, `.github/rulesets/README.md`, new
   `.github/workflows/refresh-notices.yml`) — three template releases in one
