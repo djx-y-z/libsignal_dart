@@ -1,3 +1,47 @@
+## [Unreleased]
+
+### For Users
+
+#### Fixed
+
+- **A local WASM build left over from an older crate version is no longer
+  served silently** (`hook/build.dart`, `Makefile`) — the web path of the build
+  hook prefers a local `rust/target/wasm32/` build over the released module,
+  and it took that directory on the sole condition that the two files *exist*.
+  It then recorded `local-dev` in `web/pkg/.wasm-version` rather than a
+  version, so the staleness check that guards the download path — added in
+  6.1.0 for exactly this failure — was unreachable on the local one. A wasm
+  module built before a crate bump was therefore copied into `web/pkg/` and
+  served, announced by nothing louder than `Using local WASM build from …`.
+
+  Measured in this repository rather than reasoned about: after the 6.3.1
+  release, `rust/target/wasm32/` still held a module built on 2026-09-08, when
+  the crate was 6.3.0 and the vendored libsignal was v0.102.0. A web build
+  would have run that module against a package whose native side is v0.103.0 —
+  that is, without the two hardenings 7.3.1 is about.
+
+  ⚠ **`rustContentHash` cannot catch this**, which is the reason the fix is a
+  version stamp rather than a reuse of the existing check. That value compares
+  the FFI *surface*, and the surface was byte-identical across 6.3.0 → 6.3.1 —
+  precisely why that release was a patch. The one value already crossing the
+  Dart-to-binary boundary is blind to this case by construction. Timestamps are
+  no better: a checkout or a stash moves them in either direction without the
+  content changing.
+
+  `make build-web` now stamps the crate version into
+  `rust/target/wasm32/.crate-version`, and the hook refuses a local build whose
+  stamp is missing or disagrees with `rust/Cargo.toml`, naming the command that
+  fixes it. A directory built before this release carries no stamp and is
+  rejected, which is the intended answer rather than an accident.
+
+  **Who this reaches:** `rust/target/` is `.pubignore`d and absent from the
+  published archive, so a consumer installing from pub.dev never takes this
+  path. It affects work in this repository and anyone depending on it by path
+  or git who has run `make build-web`. It was also latent rather than active —
+  `make run-example-web` depends on `build-web`, so the module is rebuilt
+  before every run through it; the exposed routes are `flutter build web` and a
+  hand-run `flutter run -d chrome`.
+
 ## [7.3.1] - 2026-09-20
 
 ### For Users
