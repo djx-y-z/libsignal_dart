@@ -9,6 +9,7 @@
   presenting an SPQR version this client does not support, and a repeated
   pre-key message that carries a different identity key is rejected instead of
   being accepted into the session that is already established
+- **libsignal_frb v6.3.1** — Rust FFI bindings
 
 #### Changed
 
