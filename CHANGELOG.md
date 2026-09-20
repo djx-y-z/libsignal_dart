@@ -4,6 +4,21 @@
 
 #### Fixed
 
+- **The example app reports why it failed to start instead of spinning
+  forever** (`example/lib/main.dart`) — `_initLibSignal()` is fire-and-forget
+  from `initState()` and caught nothing, so any `LibSignal.init()` failure left
+  the initialized flag false and the progress indicator running, with the
+  exception visible only in the console. The body now branches three ways and
+  renders the error, the raw message included, plus a hint that names the
+  usual web cause and `make run-example-web`.
+
+  It is the same failure a consumer meets. On web `init()` throws when
+  `web/pkg/` was never provisioned, and the most common way to reach that is
+  documented under *Known Limitations*: `flutter run -d chrome` after a run for
+  another platform reuses that run's `dart_build` stamp — the build directory
+  key does not include the target platform — and skips the build hook outright.
+  A spinner says none of that.
+
 - **A local WASM build left over from an older crate version is no longer
   served silently** (`hook/build.dart`, `Makefile`) — the web path of the build
   hook prefers a local `rust/target/wasm32/` build over the released module,
