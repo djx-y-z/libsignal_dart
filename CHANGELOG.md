@@ -426,6 +426,58 @@
   paragraph now says "can", names acceptance alongside wire bytes and epoch
   cadence, and points at the `spqr` compare API as the thing to go and read —
   an instruction to look, where it used to hand down a conclusion.
+- **The one warning that would have caught the stacked Highlights lines reached
+  only the run log** (`scripts/src/update_changelog.dart`,
+  `scripts/update_changelog.dart`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `test/scripts/update_changelog_test.dart`) — the v0.102.2 fix that stopped
+  Highlights lines from stacking deliberately does **not** supersede a
+  *rewritten* line, because those run onto continuation lines a line match
+  would strand. It warns instead, and on v0.103.0 it warned exactly right:
+  "the section now names two upstream versions — collapse them by hand before
+  releasing". Nobody saw it. It is printed by the script, `CHANGELOG_OK` stays
+  `true`, and the pull request renders a clean "AI-generated entry" line with
+  no caveat anywhere.
+
+  That is worse than cosmetic, because nothing downstream collapses them
+  either: `make release` finalizes `[Unreleased]` by renaming the heading **in
+  place**, so a section left naming two upstream versions is frozen into a
+  released one, and released sections are immutable.
+
+  The condition is now returned rather than only logged — `updateChangelog`
+  hands back a `ChangelogUpdate` carrying it beside the model — and published
+  through the `--ci-output` channel that already carried `ai_provider`. The
+  pull request body gains a warning and a "Before Merge" action, the run gains
+  an annotation, and the step summary gains a line. The key is written on
+  **both** outcomes: one that appeared only when true could not be told apart
+  from a script too old to emit it, and `false` is what lets a reader treat the
+  silence as "checked". `ciOutputsFor` renders the block as a separate,
+  testable function for the reason the `insertChangelogEntry` tests already
+  demonstrated — the format is what breaks silently, and a test that exercises
+  the predicate alone proves nothing about what reaches the file. One of its
+  four cases is the trailing newline, since that file is appended to by several
+  writers and an unterminated block takes the next one down with it.
+- **The prompt never said how to read the one input it calls CRITICAL**
+  (`scripts/src/update_changelog.dart`) — the scope section is pasted under
+  "CRITICAL for classification" and rule 2 classifies every upstream change
+  against it, but nothing told the model what kind of statement it was reading.
+  A sentence there describing what a dependency's changes *do* is a statement
+  about what such a change can REACH; handed over unqualified, in that
+  position, it reads as a fact available to assert. That is the whole mechanism
+  behind the v0.103.0 entry.
+
+  Two paragraphs now travel with the block, in the idiom the file list beside
+  it already uses — instructions attached to their data rather than filed in
+  the rules list, so an edit to the rules cannot separate them. The first says
+  the section states reachability and never a report about this release, and
+  that a claim found there is the question to answer from the material, not the
+  answer. The second states the limit that no enrichment of this pipeline can
+  lift: **the compare covers ONE repository**, so a dependency living in
+  another leaves a single trace in it — a version number in a manifest — and
+  nothing about what changed inside. Where an entry would turn on that, it must
+  say the material does not carry it rather than infer the change from the
+  bump, from the dependency's name, or from what the scope section says such a
+  change can reach.
 
 ## [7.3.0] - 2026-09-08
 

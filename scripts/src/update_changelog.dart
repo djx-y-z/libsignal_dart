@@ -18,10 +18,44 @@ import 'dart:io';
 import 'ai_client.dart';
 import 'common.dart';
 
+/// What [updateChangelog] reports back to its caller.
+///
+/// Two facts, and both exist because only this run can observe them: which
+/// model wrote the entry, and whether the section was left naming two upstream
+/// versions.
+class ChangelogUpdate {
+  /// Creates a result from the two facts a caller needs.
+  const ChangelogUpdate({required this.model, required this.highlightsStacked});
+
+  /// The model that wrote the entry, so a caller can publish it.
+  final AiModel model;
+
+  /// Whether `[Unreleased]` was left naming two upstream versions.
+  ///
+  /// True when a REWRITTEN libsignal Highlights line was standing and this
+  /// run's line was therefore added beside it instead of superseding it — see
+  /// [hasRewrittenNativeHighlight] for why a rewritten one is never replaced.
+  /// The condition is legitimate; going unreported is not.
+  final bool highlightsStacked;
+}
+
+/// The `key=value` block [ChangelogUpdate] contributes to a `--ci-output` file.
+///
+/// Separated from the write so the format is checkable without running the
+/// update: this is a GitHub Actions output file, appended to by several
+/// writers, so a missing trailing newline joins this block to the next one and
+/// both keys are lost. Both keys are emitted on BOTH outcomes — a key that
+/// appears only when true cannot be told apart from a script too old to emit
+/// it, and the false case is the one a reader relies on to mean "checked, and
+/// the section is fine".
+String ciOutputsFor(ChangelogUpdate update) =>
+    'ai_provider=${update.model}\n'
+    'highlights_stacked=${update.highlightsStacked}\n';
+
 /// Update CHANGELOG.md with a new libsignal version entry.
 ///
-/// Returns the model that wrote the entry, so a caller can publish it.
-Future<AiModel> updateChangelog({
+/// Returns what the caller has to publish — see [ChangelogUpdate].
+Future<ChangelogUpdate> updateChangelog({
   required String version,
   required List<ResolvedAiModel> models,
   String? fromVersion,
@@ -80,7 +114,8 @@ Future<AiModel> updateChangelog({
   // The new Highlights line supersedes this script's own default from an
   // earlier bump, but never a rewritten one — so say when one is left standing.
   // Both then name a version, and the section would ship claiming two.
-  if (hasRewrittenNativeHighlight(currentChangelog)) {
+  final highlightsStacked = hasRewrittenNativeHighlight(currentChangelog);
+  if (highlightsStacked) {
     logWarning(
       '[Unreleased] already carries a rewritten libsignal Highlights line. '
       'It was kept, so the section now names two upstream versions — collapse '
@@ -96,7 +131,10 @@ Future<AiModel> updateChangelog({
   await changelogFile.writeAsString(updatedChangelog);
   logInfo('CHANGELOG.md updated');
 
-  return entry.model;
+  return ChangelogUpdate(
+    model: entry.model,
+    highlightsStacked: highlightsStacked,
+  );
 }
 
 /// What [releaseNotesFrom] returns when the release exists but carries no body.
@@ -582,6 +620,22 @@ updated its libsignal native dependency to $version.
 
 ## What this package binds and exposes (CRITICAL for classification)
 $scope
+
+Read that section for what it is: a statement of what this package can REACH —
+which crates it builds, which surface it exposes — and never a report about the
+release you are writing up. Where it describes what a dependency's changes
+"do", it is naming what such a change is ABLE to touch, not what this version
+touched. Never restate one of those sentences as a finding. If it says a
+dependency can change the bytes on the wire, that is the question to answer
+from the material below; it is not the answer.
+
+Note also what that material cannot settle. The range above covers ONE
+repository. A dependency that lives in a different one leaves a single trace in
+it — a version number in a manifest — and nothing whatever about what changed
+inside it. So where the entry would turn on that, say the material does not
+carry it, and name the version move as the version move it is. Do not infer the
+change from the bump, from the dependency's name, or from what the section
+above says such a change can reach.
 
 ## libsignal release notes for $version:
 $releaseNotes
