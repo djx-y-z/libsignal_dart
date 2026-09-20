@@ -54,6 +54,43 @@ String ciOutputsFor(ChangelogUpdate update) =>
 
 /// Update CHANGELOG.md with a new libsignal version entry.
 ///
+<<<<<<< before updating
+=======
+/// What [updateChangelog] reports back to its caller.
+///
+/// Two facts, and both exist because only this run can observe them: which
+/// model wrote the entry, and whether the section was left naming two upstream
+/// versions.
+class ChangelogUpdate {
+  /// Creates a result from the two facts a caller needs.
+  const ChangelogUpdate({required this.model, required this.highlightsStacked});
+
+  /// The model that wrote the entry, so a caller can publish it.
+  final AiModel model;
+
+  /// Whether `[Unreleased]` was left naming two upstream versions.
+  ///
+  /// True when a REWRITTEN libsignal Highlights line was
+  /// standing and this run's line was therefore added beside it instead of
+  /// superseding it — see [hasRewrittenNativeHighlight] for why a rewritten one
+  /// is never replaced. The condition is legitimate; going unreported is not.
+  final bool highlightsStacked;
+}
+
+/// The `key=value` block [ChangelogUpdate] contributes to a `--ci-output` file.
+///
+/// Separated from the write so the format is checkable without running the
+/// update: this is a GitHub Actions output file, appended to by several
+/// writers, so a missing trailing newline joins this block to the next one and
+/// both keys are lost. Both keys are emitted on BOTH outcomes — a key that
+/// appears only when true cannot be told apart from a script too old to emit
+/// it, and the false case is the one a reader relies on to mean "checked, and
+/// the section is fine".
+String ciOutputsFor(ChangelogUpdate update) =>
+    'ai_provider=${update.model}\n'
+    'highlights_stacked=${update.highlightsStacked}\n';
+
+>>>>>>> after updating
 /// Returns what the caller has to publish — see [ChangelogUpdate].
 Future<ChangelogUpdate> updateChangelog({
   required String version,
@@ -441,11 +478,20 @@ String readChangelogScope({Directory? packageDir}) {
 ///
 /// Rule 4 carries a second precondition that is NOT checked here: the phrase is
 /// false when the range changed shipped code in a bound crate. Deciding that in
+<<<<<<< before updating
 /// code needs a crate-name-to-path mapping (`libsignal-protocol` lives under
 /// `rust/protocol/`), and that is project knowledge this script does not hold —
 /// [changelogScopePath] names the crates, not their paths. A check that needed
 /// a line every existing project's scope file lacks would silently pass for all
 /// of them, which is worse than asking the model, so it is asked.
+=======
+/// code needs a crate-name-to-path mapping — a crate's name need not be its
+/// directory in the upstream tree — and that is project knowledge this script
+/// does not hold: [changelogScopePath] names the crates, not their paths. A
+/// check that needed a line every existing project's scope file lacks would
+/// silently pass for all of them, which is worse than asking the model, so it
+/// is asked.
+>>>>>>> after updating
 const noImpactPhrase = "do not affect this library's public API";
 
 /// Where [_defaultHighlightTemplate] carries the version.
@@ -1082,15 +1128,20 @@ String _insertIntoUnreleased(
       continue;
     }
 
-    // Any other `####` heading inside For Users (`#### Security`,
-    // `#### Fixed`, …) follows `#### Changed` in the documented order, so a
-    // `#### Changed` that has to be created belongs just before the first of
-    // them. `#### Changed (Breaking)` precedes it and so does not anchor.
+    // A `#### Changed` that has to be created belongs just before the first
+    // heading that FOLLOWS it in the documented order (`#### Security`,
+    // `#### Fixed`, `#### Documentation`, …), so that first one anchors it.
+    //
+    // ⚠ [precedesChanged] is therefore not a courtesy list: a subsection that
+    // comes BEFORE `#### Changed` and is missing from it becomes the anchor,
+    // and the created `#### Changed` is then filed above it — out of the order
+    // this script and CLAUDE.md both state. `#### ✨ Highlights` cannot reach
+    // here (it is consumed above), but `#### Added` can, and did.
     if (inForUsers &&
         !insertedChanged &&
         changedAnchorIdx < 0 &&
         line.startsWith('#### ') &&
-        !line.startsWith('#### Changed (')) {
+        !precedesChanged(line)) {
       changedAnchorIdx = trimmedEnd();
     }
 
@@ -1099,6 +1150,18 @@ String _insertIntoUnreleased(
 
   return result.join('\n');
 }
+
+/// Whether `line` is a `### For Users` subsection that precedes `#### Changed`
+/// in the order `CLAUDE.md` documents (Highlights → Added → Changed (Breaking)
+/// → Changed → Security → Fixed → Documentation).
+///
+/// Used to decide what may anchor a created `#### Changed`. Keep it in step
+/// with that order: a subsection added before `#### Changed` and not listed
+/// here silently files new entries above it.
+bool precedesChanged(String line) =>
+    line.startsWith('#### Changed (') ||
+    line.trimRight() == '#### Added' ||
+    line.contains('Highlights');
 
 /// Create a new [Unreleased] section at the top.
 String _createUnreleasedSection(

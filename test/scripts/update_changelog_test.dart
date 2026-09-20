@@ -308,6 +308,47 @@ void main() {
       expect(result, contains('- Existing change'));
     });
 
+    test('creates #### Changed below #### Added, not above it', () {
+      // `#### Added` precedes `#### Changed` in the documented order, so it
+      // must not anchor the created one. Before this was handled it did, and
+      // the new entry was filed above an Added section — silently, since
+      // nothing rereads the order afterwards.
+      const withAdded = '''
+# Changelog
+
+## [Unreleased]
+
+### For Users
+
+#### Added
+
+- A new public method
+
+#### Fixed
+
+- Bug fix
+
+## [1.4.2] - 2026-07-20
+
+- Prior release
+''';
+      final result = insertChangelogEntry(
+        currentChangelog: withAdded,
+        nativeHighlight: '**libsignal v0.8.2** — protocol update',
+        changed: '- Update libsignal native library to v0.8.2',
+      );
+
+      final lines = result.split('\n');
+      final addedIdx = lines.indexOf('#### Added');
+      final changedIdx = lines.indexOf('#### Changed');
+      final fixedIdx = lines.indexOf('#### Fixed');
+
+      expect(changedIdx, greaterThan(addedIdx));
+      expect(changedIdx, lessThan(fixedIdx));
+      expect(result, contains('- A new public method'));
+      expect(result, contains('- Bug fix'));
+    });
+
     test('creates #### Changed after the breaking one, before #### Fixed', () {
       // Only the breaking variant exists, so `#### Changed` has to be created.
       // It belongs between them, per the documented subsection order.
@@ -612,6 +653,7 @@ void _breakingContradictionTests() {
     // GITHUB_OUTPUT is one file appended to by several writers in the same
     // step. Without a trailing newline this block joins whatever is appended
     // next, and both the joined keys are then lost rather than one.
+<<<<<<< before updating
     test(
       'terminates every line, so an appended block cannot join the next',
       () {
@@ -624,6 +666,17 @@ void _breakingContradictionTests() {
         }
       },
     );
+=======
+    test('terminates every line, so an appended block cannot join the next', () {
+      for (final stacked in const [true, false]) {
+        final outputs = ciOutputsFor(
+          ChangelogUpdate(model: model, highlightsStacked: stacked),
+        );
+        expect(outputs, endsWith('\n'));
+        expect(outputs.trimRight().split('\n'), hasLength(2));
+      }
+    });
+>>>>>>> after updating
 
     test('publishes the provider half as the id the PR body prints', () {
       expect(
