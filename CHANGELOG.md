@@ -57,6 +57,37 @@
   before every run through it; the exposed routes are `flutter build web` and a
   hand-run `flutter run -d chrome`.
 
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.14.0 → v4.14.1** (`.copier-answers.yml`) — the
+  adoption moved `_commit` and nothing else, and that is the finding rather
+  than an absence of one: of the release's four commits, the two that reach a
+  generated project were both written here first. The action pins
+  (`anthropics/claude-code-action` v1.0.222 → v1.0.228,
+  `android-actions/setup-android` v4.0.1 → v4.0.4) arrived as Dependabot's
+  grouped bump `f58bbcc`, and the local-WASM version stamp is the `#### Fixed`
+  entry above, `9f0c86c`. The other two commits — moving the template's *own*
+  release workflow to `actions/checkout@v7`, and the release preparation —
+  live at the template root rather than under `template/`, so they reach no
+  generated project at all.
+
+  Three files conflicted, `Makefile`, `hook/build.dart` and
+  `test/hook/build_hook_test.dart`, and all three resolved to ours on wording
+  alone: our comments name the vendored *crypto* and the concrete 6.3.0 →
+  6.3.1 that motivated the stamp where the template generalises to "native
+  code" and "a patch release", and our tests assert against the real crate
+  versions where the template's skeleton uses `1.5.0` / `1.4.0`. The mechanical
+  check that guards a keep-ours resolution — resolve every block to ours, then
+  diff against `HEAD` — came back empty on all three, so nothing the template
+  had merged cleanly outside the conflict brackets was discarded.
+
+  One thing was checked by hand because no gate can report it.
+  `.github/agent-prompts/changelog-scope.md` is `_skip_if_exists`, so a
+  template change to it can never arrive: its absence from a change list is a
+  dropped change rather than an identical one. It did not move in this range.
+
 ## [7.3.1] - 2026-09-20
 
 ### For Users
