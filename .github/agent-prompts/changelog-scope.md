@@ -50,10 +50,17 @@ turn post-quantum ratcheting off by presenting a version the client does not
 recognise. The model hedged the claim it was handed; the premise was still
 wrong. **`spqr` is a different repository, so a version bump here is the only
 trace it leaves in the libsignal compare the prompt is given — its contents are
-never in that material.** So this is an instruction to go and look, not a
-conclusion: read the `spqr` range itself
-(`gh api repos/signalapp/SparsePostQuantumRatchet/compare/<old>...<new>`) and
-say which of the three actually moved, naming the mechanism.
+never in that material.** So treat the bump as in scope and report it as the
+version move it is, then say the material does not carry what changed inside.
+Do not infer that from the bump, from the dependency's name, or from this
+paragraph.
+
+⚠️ And nothing here may tell the model to go and fetch that range. This file is
+pasted into a prompt whose client sends a plain completion with **no tools at
+all**, so an instruction to run a command is one it cannot follow and can only
+appear to satisfy by inventing the answer — the same failure, one level up.
+Reading the range by hand is the job of whoever finishes the pull request;
+CLAUDE.md carries the command.
 
 ## Not bound or exposed
 

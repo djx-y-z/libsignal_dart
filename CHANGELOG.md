@@ -424,8 +424,20 @@
   material the prompt is given — a version number in a manifest — and its
   contents appear nowhere in that compare, per-commit file lists or not. The
   paragraph now says "can", names acceptance alongside wire bytes and epoch
-  cadence, and points at the `spqr` compare API as the thing to go and read —
-  an instruction to look, where it used to hand down a conclusion.
+  cadence, and tells the model to report the version move and then say the
+  material does not carry what changed inside — the honest answer, where it
+  used to hand down a conclusion.
+
+  It first said something else, and the repository's own AI reviewer caught it:
+  "read the `spqr` range itself (`gh api …/compare/<old>...<new>`)". The client
+  that sends this prompt sends a plain completion with **no tools at all**, so
+  that is an instruction the model cannot follow and can only appear to satisfy
+  by inventing the answer — the very failure the paragraph was being rewritten
+  to stop, reintroduced one level up, and contradicting the prompt rule added
+  beside it. The command now lives in `CLAUDE.md`, addressed to whoever
+  finishes the pull request, together with the reason the file list alone is
+  not enough: on 1.5.3 → 1.6.0 `serialize.rs` appears in the diff and the
+  serializer is byte-identical all the same.
 - **The one warning that would have caught the stacked Highlights lines reached
   only the run log** (`scripts/src/update_changelog.dart`,
   `scripts/update_changelog.dart`,

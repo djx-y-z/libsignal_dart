@@ -536,6 +536,25 @@ template writes that file once and never overwrites it, so keeping it current is
 this project's job — a stale list is how somebody else's release notes end up
 described as our features.
 
+**The `spqr` range is read by hand, and this is where the command lives.** The
+sparse post-quantum ratchet runs inside the exposed Double Ratchet but is its
+own repository, so a bump leaves exactly one trace in the libsignal compare the
+prompt is given — a version number in a manifest. The model is sent a plain
+completion with no tools, so it cannot go and look, and the scope file is
+deliberately written so that it never asks it to. Whoever finishes the update
+pull request does:
+
+```bash
+gh api repos/signalapp/SparsePostQuantumRatchet/compare/<old>...<new> \
+  --jq '.files[] | "\(.status) +\(.additions)/-\(.deletions) \(.filename)"'
+```
+
+⚠ **Then diff the encoder, not just the file list.** On 1.5.3 → 1.6.0 the
+serializer moved in the diff and was byte-identical all the same — the parsing
+was regrouped so a message from an unsupported version could still be read. A
+changed `serialize.rs` is not a changed wire format; compare the function at
+both tags before writing either claim.
+
 ## Supported Platforms
 
 | Platform | Architecture |
