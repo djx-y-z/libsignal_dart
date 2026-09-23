@@ -2,6 +2,16 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.103.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **The v0.103.1 bump leaves Dart's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.0...v0.103.1)) adds `BackupJsonExporter` and adjusts bridge and Swift handling in `swift/` and `rust/bridge/`; those are language-binding and bridge layers that this package does not use because it binds the pure-Rust protocol crates directly. The Java and Node binding changes likewise land under `java/` and `node/`, while the remaining podspec, package metadata, release notes and lockfile changes are packaging or release metadata rather than the exposed protocol surface.
+
+  Among the complete file list, the only file under a bound crate is `rust/core/src/version.rs`, which is a version string; no source file under `libsignal-protocol` or `signal-crypto` is listed. `make codegen` produced no change to `lib/src/rust/`, so the FFI surface did not move. With the bound crates changing only by version metadata and no exposed protocol implementation changing, these changes do not affect this library's public API.
+
 #### Fixed
 
 - **The example app reports why it failed to start instead of spinning
