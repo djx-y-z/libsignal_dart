@@ -155,6 +155,76 @@
 
 #### Changed
 
+- **copier template adopted: v4.14.1 → v4.15.0** (`.copier-answers.yml`,
+  `.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`,
+  `.github/workflows/check-template-updates.yml`,
+  `.github/workflows/build-libsignal.yml`,
+  `.github/workflows/test-reusable.yml`, `.gitignore`, `CLAUDE.md`) — the CI
+  agents change in two ways that matter here. The repair and review workflows
+  now read `.github/agent-config/opencode.json` from the **default branch**
+  rather than from the tree being checked out: the permission assertion that
+  validates it is baked into the workflow, which always comes from the default
+  branch, so the agent's permissions used to travel with the checkout while the
+  assertion about them did not. It failed closed, and the class it blocked was
+  exactly `update-template-*` — the branch carrying the template's new config
+  while the workflow judging it is the old one, which is what every template
+  release produces. And the template-update checker now closes the update pull
+  requests it supersedes, gated on the branch shape, an older version, the
+  `agent-repaired` label, a `repair-build:` commit trailer and any non-bot
+  commit author; `dry_run` defaults to on for a manual run and off for a
+  scheduled one.
+
+  Both were verified against this repository's own runs rather than by reading.
+  Run `35428400857` had stopped at `commands this workflow expects that are not
+  allowed: ['make doc', 'make rust-doc']`, naming the workspace path it read;
+  run `35582021377`, dispatched with the same `run_id` from a branch carrying
+  the fix, reports `repair permissions resolve as intended: 15 commands,
+  exactly the documented set` and goes on to run the model — a path that had
+  never executed live before. The closing rule was replayed over all 63 bot
+  pull requests here: it selects exactly the five superseded
+  `update-template-*` ones, ignores all 57 of the other class, and is held back
+  by both the label and a real human commit.
+
+  ⚠ **The trailer it looks for is a commit-message trailer, not a pull-request
+  body one**, and the difference was measured here: the update bot's body
+  embeds the generated CHANGELOG entry, and a CHANGELOG entry quotes
+  `repair-build: <sha> (agent)` verbatim while describing the feature, so a body
+  search vetoes #99 — which was never repaired.
+
+  The rest is smaller. `build-libsignal.yml` and `test-reusable.yml` get the
+  corrected `setup-android` comment: both said upstream had no fixed release
+  two lines above a pin at v4.0.4, when `android-actions/setup-android#537`
+  closed on 2026-09-17 and v4.0.2 shipped six minutes later. The `packages:`
+  input is unchanged — it names exactly the package those jobs need, which is
+  the property whose absence made the original outage possible. `.gitignore`
+  gains `__pycache__/` and `*.py[cod]`, latent until somebody runs one of the
+  Python gates locally. `CLAUDE.md` gains the block explaining that
+  `make build-web` stamps `rust/target/wasm32/.crate-version` and that the hook
+  refuses a local build whose stamp is missing or disagrees — behaviour this
+  repository already had, from `9f0c86c`, and did not document.
+
+  **A new template question arrived and was answered empty.**
+  `forbidden_features` names cargo features that must never be enabled in the
+  shipped dependency graph, keyed by crate. Empty renders **no gate at all**
+  rather than a gate with nothing to check, so the three files behind it are
+  not created here and nothing in the build changes. Setting it is a separate
+  decision that needs a measured answer — which feature on which crate, and
+  why shipping it would be wrong — and there is no such finding for this
+  package yet.
+
+  copier merged all eight files with **no conflicts**, which on a file like
+  `CLAUDE.md` is not by itself evidence, so the checks that catch a false-clean
+  merge were run anyway: no heading in `CLAUDE.md` is duplicated that was not
+  already duplicated at `HEAD` (`#### Added` and `#### Changed` appear twice in
+  the changelog-format documentation, under both audiences, and did before),
+  and every one of the eight was compared byte-for-byte against a fresh render
+  of v4.15.0 made with this project's own answers. Five are identical to it.
+  The two that differ are the standing divergences and differ by exactly the
+  line counts they did before: all of `CLAUDE.md`'s project-specific content,
+  and one comment in `test-reusable.yml` that names `libsignal` where the
+  template generalises to "the native library" — a fourth instance of the same
+  wording pattern the previous adoption recorded three of.
+
 - **copier template adopted: v4.14.0 → v4.14.1** (`.copier-answers.yml`) — the
   adoption moved `_commit` and nothing else, and that is the finding rather
   than an absence of one: of the release's four commits, the two that reach a
