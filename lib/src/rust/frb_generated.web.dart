@@ -2637,6 +2637,15 @@ class RustLibWire implements BaseWire {
       wasmModule.wire__crate__api__kyber__KyberKeyPair_clone_key(that);
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__kyber__KyberKeyPair_from_keys(
+    int public_key,
+    int secret_key,
+  ) => wasmModule.wire__crate__api__kyber__KyberKeyPair_from_keys(
+    public_key,
+    secret_key,
+  );
+
+  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__kyber__KyberKeyPair_generate() =>
       wasmModule.wire__crate__api__kyber__KyberKeyPair_generate();
 
@@ -4265,6 +4274,12 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__kyber__KyberKeyPair_clone_key(int that);
+
+  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
+  wire__crate__api__kyber__KyberKeyPair_from_keys(
+    int public_key,
+    int secret_key,
+  );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__kyber__KyberKeyPair_generate();

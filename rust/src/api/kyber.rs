@@ -5,7 +5,8 @@ use libsignal_protocol::{
     kem::{KeyType, KeyPair as NativeKeyPair, PublicKey as NativePublicKey, SecretKey as NativeSecretKey},
 };
 use rand::{TryRngCore as _, rngs::OsRng};
-use zeroize::Zeroize;
+use subtle::ConstantTimeEq as _;
+use zeroize::{Zeroize, Zeroizing};
 
 /// A Kyber public key for post-quantum key encapsulation.
 pub struct KyberPublicKey {
@@ -128,6 +129,83 @@ impl KyberKeyPair {
         // Default to Kyber1024 for post-quantum security
         let native = NativeKeyPair::generate(KeyType::Kyber1024, &mut OsRng.unwrap_err());
         Ok(KyberKeyPair { inner: native })
+    }
+
+    /// Create a Kyber key pair from its two halves.
+    ///
+    /// For keys stored apart: each half has its own serialized form,
+    /// `KyberPublicKey.serialize()` and `KyberSecretKey.serialize()`, while the
+    /// pair has none — upstream libsignal defines no encoding for it. Deserialize
+    /// both halves and join them here to get the key pair
+    /// `KyberPreKeyRecord.create` takes. A Kyber pre-key kept whole needs none of
+    /// this: `KyberPreKeyRecord.serialize()` carries both halves together with
+    /// the id, timestamp and signature.
+    ///
+    /// The halves are checked to belong together: a shared secret encapsulated
+    /// to `publicKey` has to decapsulate to the same value under `secretKey`.
+    /// That is stricter than upstream libsignal, which compares only the key
+    /// types, and nothing later would catch a mismatch. Creating a record and
+    /// reading it back do not check the pairing, and decapsulating under the
+    /// wrong secret key does not fail — it yields a different shared secret. A
+    /// record built from mismatched halves would be accepted and published, and
+    /// the mismatch would surface only when a peer's first message failed to
+    /// decrypt, with nothing pointing back to this call.
+    ///
+    /// # Errors
+    /// Fails if the two keys are for different KEM types, or are not halves of
+    /// the same key pair.
+    ///
+    /// # Security
+    /// Unlike `IdentityKeyPair.fromKeys`, this consumes neither argument: the
+    /// pair holds its own copy of the secret key, and the `KyberSecretKey` passed
+    /// in stays valid. Call `dispose()` on it as soon as it is no longer needed
+    /// rather than waiting for the garbage collector — as with `cloneKey()`, each
+    /// copy keeps the secret in native memory until it is dropped, and dropping
+    /// does not wipe it.
+    #[flutter_rust_bridge::frb(sync)]
+    pub fn from_keys(
+        public_key: &KyberPublicKey,
+        secret_key: &KyberSecretKey,
+    ) -> Result<KyberKeyPair, String> {
+        let (public_key, secret_key) = (&public_key.inner, &secret_key.inner);
+        // Checked first so a mismatch fails with an error naming both types;
+        // `decapsulate` below would refuse it too, with `WrongKEMKeyType`. The
+        // pair is built as a struct literal, so `NativeKeyPair::new`, which
+        // asserts on this condition, is never reached.
+        if public_key.key_type() != secret_key.key_type() {
+            return Err(format!(
+                "Kyber key type mismatch: public key is {:?}, secret key is {:?}",
+                public_key.key_type(),
+                secret_key.key_type()
+            ));
+        }
+
+        // SECURITY: `Zeroizing` wipes the two copies of the shared secret this
+        // function holds, on every return path; the copies inside the upstream
+        // KEM calls are out of its reach. The comparison is constant-time, as
+        // pair-wise consistency tests conventionally are, even though whether
+        // the secrets match is exactly what this call reports.
+        let (sent, ciphertext) = public_key
+            .encapsulate(&mut OsRng.unwrap_err())
+            .map_err(|e| e.to_string())?;
+        let sent = Zeroizing::new(sent);
+        let received = Zeroizing::new(
+            secret_key
+                .decapsulate(&ciphertext)
+                .map_err(|e| e.to_string())?,
+        );
+        if !bool::from(sent[..].ct_eq(&received[..])) {
+            return Err(
+                "Kyber public key and secret key are not halves of the same key pair".to_string(),
+            );
+        }
+
+        Ok(KyberKeyPair {
+            inner: NativeKeyPair {
+                public_key: public_key.clone(),
+                secret_key: secret_key.clone(),
+            },
+        })
     }
 
     /// Get the public key from this key pair.

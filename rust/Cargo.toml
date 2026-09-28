@@ -32,6 +32,11 @@ aes-gcm-siv = "0.12"
 # Secure memory zeroing
 zeroize = "1.7"
 
+# Constant-time comparison of secret values. Already in the graph through
+# libsignal-protocol, libsignal-core and curve25519-dalek; declared here only
+# because this crate's own code calls it.
+subtle = "2.6"
+
 # UUID support for group distribution IDs
 uuid = { version = "1", features = ["v4", "serde", "js"] }
 

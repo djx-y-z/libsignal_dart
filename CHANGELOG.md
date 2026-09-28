@@ -2,6 +2,56 @@
 
 ### For Users
 
+#### Added
+
+- **`KyberKeyPair.fromKeys()` rebuilds a Kyber key pair from its two halves**
+  ([#103](https://github.com/djx-y-z/libsignal_dart/issues/103))
+  (`rust/src/api/kyber.rs`, `rust/Cargo.toml`, `README.md`) —
+  `KyberPreKeyRecord.create` takes a `KyberKeyPair`, and the only ways to get
+  one were `KyberKeyPair.generate()`, or `getKeyPair()` and `cloneKey()` on a
+  record or pair already held. An application that stores the public and
+  secret keys apart — each has its own `serialize()` — therefore had no way
+  back from those bytes to a record through the API. The EC records never had
+  this gap: `PreKeyRecord` and `SignedPreKeyRecord` take their public and
+  private keys separately. Signal's own bindings share it — none of them builds
+  a key pair from its two halves — so this is an addition on our side,
+  performing the same join libsignal does when it reads a stored Kyber record
+  back.
+
+  There is still no serialized form of the pair itself, and that is deliberate:
+  upstream defines none, and a format this package invented would be one it had
+  to keep reading forever. The halves' own encodings are the format. A pre-key
+  kept whole needs none of this — `KyberPreKeyRecord.serialize()` carries both
+  halves together with the id, timestamp and signature.
+
+  `fromKeys()` also checks that the halves belong together, which upstream does
+  not: its key pair compares only the key types. The check encapsulates a
+  shared secret to the public key, decapsulates it under the secret key and
+  compares the two in constant time. That is the pair-wise consistency test
+  FIPS 203 (§7.1) and FIPS 140-3 IG 10.3.A define for ML-KEM, applied to
+  round-3 Kyber by analogy rather than by requirement — and only that step, not
+  FIPS 203's full key-pair check. Nothing later would catch a mismatch: creating
+  a record and reading it back do not check the pairing, and Kyber
+  decapsulation does not fail under the wrong key — it returns a different
+  secret. A mixed-up record would be accepted and published, and the mismatch
+  would surface only when a peer's first message failed to decrypt. Observed
+  rather than inferred: a record whose secret key is not the partner of the
+  published public key makes that first message fail with a bare
+  `invalid PreKey message: decryption failed`, naming no key, and
+  `test/kyber/kyber_key_pair_test.dart` pins that it fails to decrypt, next to a
+  record rebuilt through `fromKeys()` that succeeds. The test stores a foreign
+  pair rather than mixed halves; to the recipient the two are the same case,
+  since it reads only the record's secret key. It follows that every session
+  started against a mixed-up last-resort key would fail until the key was
+  rotated.
+
+  Unlike `IdentityKeyPair.fromKeys`, it borrows its arguments instead of moving
+  them, so both handles stay usable after the call, whether or not the check
+  passes. The pair holds its own copy of the secret key: `dispose()` the
+  `KyberSecretKey` you passed in once you are done with it. `subtle`, already in
+  the dependency graph through libsignal, is now a direct dependency for the
+  comparison. The README's key table gains a `KyberKeyPair` row.
+
 #### Fixed
 
 - **The example app reports why it failed to start instead of spinning
