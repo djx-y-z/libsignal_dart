@@ -107,6 +107,50 @@
   before every run through it; the exposed routes are `flutter build web` and a
   hand-run `flutter run -d chrome`.
 
+#### Documentation
+
+- **Every store interface's example compiles again**
+  (`lib/src/stores/pre_key_store.dart`, `signed_pre_key_store.dart`,
+  `session_store.dart`, `kyber_pre_key_store.dart`) — each class doc showed
+  `…Record.deserialize(data)`, but all four constructors take a named
+  argument, so the example a store implementer starts from did not compile. It
+  reads `deserialize(bytes: data)` now.
+
+- **`KyberPreKeyStore` names its two kinds of key correctly**
+  (`lib/src/stores/kyber_pre_key_store.dart`) — the class doc called the
+  one-time Kyber pre-keys "last resort" and the reusable ones "signed": the
+  wrong way round, and the wrong distinction, since the last-resort key is the
+  one that is reused and both kinds are signed. The doc of
+  `markKyberPreKeyUsed` always had it right; the class doc now agrees with it
+  and points there.
+
+- **SECURITY.md no longer says libsignal zeroizes keys** (`SECURITY.md`) —
+  three places credited libsignal's Rust code with `zeroize` for sensitive
+  data, and the plaintext section said "Keys ARE zeroized", all against the
+  document's own §A. libsignal-core's `PrivateKey` is `Copy` and has no
+  `Drop`, the Kyber secret key has no `ZeroizeOnDrop`, and neither
+  libsignal-protocol nor libsignal-core calls `zeroize` in its own code — it
+  appears only as a feature of the cipher crates underneath. What this package
+  can promise is that it wipes its own copies of the serialized key material
+  it receives, and the four places now say exactly that.
+
+- **SECURITY.md §B's example calls methods that exist** (`SECURITY.md`) — it
+  verified with `publicKey.verifySignature(...)`, which `PublicKey` never had
+  (the method is `verify()`; `verifySignature` belongs to `SenderKeyMessage`),
+  and its "AVOID" line compared two `Uint8List`s with `==`, which in Dart
+  compares identity rather than content — false even for equal keys, so
+  timing was not its problem. The section also credited every operation to
+  libsignal-protocol, where `hkdfDerive` and `Aes256GcmSiv` run on the
+  RustCrypto crates, and it now names the one comparison this package makes
+  itself (`KyberKeyPair.fromKeys`, through `subtle`). Its pointer to
+  `package:crypto` became concrete: `Digest(a) == Digest(b)` is the
+  constant-time comparison that package offers.
+
+- **The README's crypto table lists API that exists** (`README.md`) —
+  `Hkdf.deriveSecrets` and `Fingerprint.compare` have been gone since the move
+  to Flutter Rust Bridge; the table now names `hkdfDerive` and
+  `fingerprintCompare`, both free functions.
+
 ### For Contributors
 
 #### Changed
@@ -137,6 +181,15 @@
   `.github/agent-prompts/changelog-scope.md` is `_skip_if_exists`, so a
   template change to it can never arrive: its absence from a change list is a
   dropped change rather than an identical one. It did not move in this range.
+
+#### Fixed
+
+- **The `security-review` skill's example calls methods that exist**
+  (`.claude/skills/security-review/SKILL.md`) — it carried the same
+  `publicKey.verifySignature(...)` and `Uint8List ==` example as SECURITY.md
+  §B, corrected the same way, and gains one checklist line: a new Rust-side
+  comparison of secret values goes through `subtle::ConstantTimeEq`, as
+  `KyberKeyPair.fromKeys` does.
 
 ## [7.3.1] - 2026-09-20
 

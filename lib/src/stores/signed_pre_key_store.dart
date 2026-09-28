@@ -20,7 +20,7 @@ import '../rust/api/signed_prekey.dart';
 ///   @override
 ///   Future<SignedPreKeyRecord?> loadSignedPreKey(int signedPreKeyId) async {
 ///     final data = _signedPreKeys[signedPreKeyId];
-///     return data != null ? SignedPreKeyRecord.deserialize(data) : null;
+///     return data != null ? SignedPreKeyRecord.deserialize(bytes: data) : null;
 ///   }
 ///   // ... other methods
 /// }

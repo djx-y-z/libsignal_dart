@@ -18,7 +18,7 @@ import '../rust/api/session.dart';
 ///   Future<SessionRecord?> loadSession(ProtocolAddress address) async {
 ///     final key = '${address.name}:${address.deviceId}';
 ///     final data = _sessions[key];
-///     return data != null ? SessionRecord.deserialize(data) : null;
+///     return data != null ? SessionRecord.deserialize(bytes: data) : null;
 ///   }
 ///   // ... other methods
 /// }
