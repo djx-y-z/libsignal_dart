@@ -58,8 +58,8 @@
 
 #### Changed
 
-- **libsignal v0.103.0 → v0.103.1 changes nothing this package ships except
-  the version constant, and `rand` moves 0.10.2 → 0.10.3**
+- **libsignal v0.103.0 → v0.103.1 moves only its version constant here; the
+  one change that reaches the binary is `rand` 0.10.2 → 0.10.3**
   (`rust/Cargo.toml`, `rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`) — upstream's
   own notes name one item, "Swift: BackupJsonExporter is now available", and
   the five commits in the
