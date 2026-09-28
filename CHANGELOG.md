@@ -2,6 +2,10 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.103.1** — internal/dependency update, no public-API impact
+
 #### Added
 
 - **`KyberKeyPair.fromKeys()` rebuilds a Kyber key pair from its two halves**
@@ -51,6 +55,29 @@
   `KyberSecretKey` you passed in once you are done with it. `subtle`, already in
   the dependency graph through libsignal, is now a direct dependency for the
   comparison. The README's key table gains a `KyberKeyPair` row.
+
+#### Changed
+
+- **libsignal v0.103.0 → v0.103.1 moves only its version constant here; the
+  one change that reaches the binary is `rand` 0.10.2 → 0.10.3**
+  (`rust/Cargo.toml`, `rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`) — upstream's
+  own notes name one item, "Swift: BackupJsonExporter is now available", and
+  the five commits in the
+  [range](https://github.com/signalapp/libsignal/compare/v0.103.0...v0.103.1)
+  land in `swift/`, `java/`, `node/` and `rust/bridge/`, none of which is in
+  this package's dependency graph. Four libsignal crates are: in the lockfile
+  `libsignal-protocol`, `libsignal-core` and `signal-crypto` change only their
+  source revision, and `libsignal-debug` only its version, 0.103.0 → 0.103.1.
+  The one file touched under any of them is `rust/core/src/version.rs`, the
+  version string. `spqr` stays at 1.6.0.
+
+  `rand` 0.10.3 is a crates.io patch release, not part of libsignal, and it
+  does reach the binary — through `hpke-rs-crypto` (under `signal-crypto`) and
+  `libcrux-traits` (under the ML-KEM and HMAC code). Its source changes are
+  confined to `distr/` and `seq/` (`Uniform`, `WeightedIndex`, `Bernoulli`,
+  index sampling); both crates use only its RNG traits, which it did not
+  touch. `make codegen` leaves `lib/src/rust/` unchanged, so the FFI surface
+  did not move.
 
 #### Fixed
 

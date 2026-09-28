@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.103.0
+libsignal-debug 0.103.1
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -703,7 +703,7 @@ r-efi 6.0.0
   Notice:  ships no licence file of its own; canonical Apache-2.0 text [C1]
   Source:  https://github.com/r-efi/r-efi
 
-rand 0.10.2
+rand 0.10.3
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T18], LICENSE-MIT [T96]
 
@@ -4460,7 +4460,7 @@ limitations under the License.
 ------------------------------------------------------------------------------
 
 Crates:
-  rand@0.10.2
+  rand@0.10.3
   rand@0.9.5
   rand_chacha@0.9.0
 
@@ -8266,7 +8266,7 @@ limitations under the License.
 ------------------------------------------------------------------------------
 
 Crates:
-  rand@0.10.2
+  rand@0.10.3
   rand@0.9.5
   rand_chacha@0.9.0
   rand_core@0.9.5
@@ -8391,7 +8391,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.103.0
+  libsignal-debug@0.103.1
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.6.0
