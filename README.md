@@ -59,6 +59,7 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 | `PrivateKey` | generate, sign, agree, serialize |
 | `PublicKey` | verify, serialize, compare |
 | `IdentityKeyPair` | generate, serialize, signAlternateIdentity |
+| `KyberKeyPair` | generate, fromKeys, getPublicKey, getSecretKey |
 
 #### Protocol
 

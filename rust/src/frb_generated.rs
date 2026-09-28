@@ -49,7 +49,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 2022262221;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1630330622;
 
 // Section: executor
 
@@ -835,6 +835,57 @@ fn wire__crate__api__kyber__KyberKeyPair_clone_key_impl(
                 }
                 let api_that_guard = api_that_guard.unwrap();
                 let output_ok = crate::api::kyber::KyberKeyPair::clone_key(&*api_that_guard)?;
+                std::result::Result::Ok(output_ok)
+            })())
+        },
+    )
+}
+fn wire__crate__api__kyber__KyberKeyPair_from_keys_impl(
+    public_key: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KyberPublicKey>>,
+    >,
+    secret_key: impl CstDecode<
+        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<KyberSecretKey>>,
+    >,
+) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "KyberKeyPair_from_keys",
+            port: None,
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
+        },
+        move || {
+            let api_public_key = public_key.cst_decode();
+            let api_secret_key = secret_key.cst_decode();
+            transform_result_dco::<_, _, String>((move || {
+                let mut api_public_key_guard = None;
+                let mut api_secret_key_guard = None;
+                let decode_indices_ =
+                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_public_key,
+                            0,
+                            false,
+                        ),
+                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
+                            &api_secret_key,
+                            1,
+                            false,
+                        ),
+                    ]);
+                for i in decode_indices_ {
+                    match i {
+                        0 => api_public_key_guard = Some(api_public_key.lockable_decode_sync_ref()),
+                        1 => api_secret_key_guard = Some(api_secret_key.lockable_decode_sync_ref()),
+                        _ => unreachable!(),
+                    }
+                }
+                let api_public_key_guard = api_public_key_guard.unwrap();
+                let api_secret_key_guard = api_secret_key_guard.unwrap();
+                let output_ok = crate::api::kyber::KyberKeyPair::from_keys(
+                    &*api_public_key_guard,
+                    &*api_secret_key_guard,
+                )?;
                 std::result::Result::Ok(output_ok)
             })())
         },
@@ -9576,6 +9627,14 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
+    pub extern "C" fn frbgen_libsignal_wire__crate__api__kyber__KyberKeyPair_from_keys(
+        public_key: usize,
+        secret_key: usize,
+    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+        wire__crate__api__kyber__KyberKeyPair_from_keys_impl(public_key, secret_key)
+    }
+
+    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_libsignal_wire__crate__api__kyber__KyberKeyPair_generate(
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__kyber__KyberKeyPair_generate_impl()
@@ -12833,6 +12892,14 @@ mod web {
         that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
         wire__crate__api__kyber__KyberKeyPair_clone_key_impl(that)
+    }
+
+    #[wasm_bindgen]
+    pub fn wire__crate__api__kyber__KyberKeyPair_from_keys(
+        public_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+        secret_key: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
+    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
+        wire__crate__api__kyber__KyberKeyPair_from_keys_impl(public_key, secret_key)
     }
 
     #[wasm_bindgen]

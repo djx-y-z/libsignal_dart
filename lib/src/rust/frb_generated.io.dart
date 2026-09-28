@@ -3045,6 +3045,26 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__kyber__KyberKeyPair_clone_keyPtr
           .asFunction<WireSyncRust2DartDco Function(int)>();
 
+  WireSyncRust2DartDco wire__crate__api__kyber__KyberKeyPair_from_keys(
+    int public_key,
+    int secret_key,
+  ) {
+    return _wire__crate__api__kyber__KyberKeyPair_from_keys(
+      public_key,
+      secret_key,
+    );
+  }
+
+  late final _wire__crate__api__kyber__KyberKeyPair_from_keysPtr =
+      _lookup<
+        ffi.NativeFunction<
+          WireSyncRust2DartDco Function(ffi.UintPtr, ffi.UintPtr)
+        >
+      >('frbgen_libsignal_wire__crate__api__kyber__KyberKeyPair_from_keys');
+  late final _wire__crate__api__kyber__KyberKeyPair_from_keys =
+      _wire__crate__api__kyber__KyberKeyPair_from_keysPtr
+          .asFunction<WireSyncRust2DartDco Function(int, int)>();
+
   WireSyncRust2DartDco wire__crate__api__kyber__KyberKeyPair_generate() {
     return _wire__crate__api__kyber__KyberKeyPair_generate();
   }
