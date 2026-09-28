@@ -59,6 +59,7 @@ Overview of wrapped functionality from the native [libsignal](https://github.com
 | `PrivateKey` | generate, sign, agree, serialize |
 | `PublicKey` | verify, serialize, compare |
 | `IdentityKeyPair` | generate, serialize, signAlternateIdentity |
+| `KyberKeyPair` | generate, fromKeys, getPublicKey, getSecretKey |
 
 #### Protocol
 
@@ -99,11 +100,12 @@ structure only. See [SECURITY.md](SECURITY.md#message-inspection-is-not-authenti
 
 #### Crypto
 
-| Class | Key Methods |
+| Class / Function | Key Methods |
 |-------|-------------|
-| `Hkdf` | deriveSecrets |
+| `hkdfDerive` | HKDF-SHA256 key derivation *(free function)* |
 | `Aes256GcmSiv` | encrypt, decrypt |
-| `Fingerprint` | displayString, scannableEncoding, compare |
+| `Fingerprint` | displayString, scannableEncoding |
+| `fingerprintCompare` | compare two scannable encodings *(free function)* |
 
 #### Stores
 

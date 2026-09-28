@@ -21,6 +21,45 @@ abstract class KyberKeyPair implements RustOpaqueInterface {
   /// for the garbage collector, and avoid making copies you do not need.
   KyberKeyPair cloneKey();
 
+  /// Create a Kyber key pair from its two halves.
+  ///
+  /// For keys stored apart: each half has its own serialized form,
+  /// `KyberPublicKey.serialize()` and `KyberSecretKey.serialize()`, while the
+  /// pair has none — upstream libsignal defines no encoding for it. Deserialize
+  /// both halves and join them here to get the key pair
+  /// `KyberPreKeyRecord.create` takes. A Kyber pre-key kept whole needs none of
+  /// this: `KyberPreKeyRecord.serialize()` carries both halves together with
+  /// the id, timestamp and signature.
+  ///
+  /// The halves are checked to belong together: a shared secret encapsulated
+  /// to `publicKey` has to decapsulate to the same value under `secretKey`.
+  /// That is stricter than upstream libsignal, which compares only the key
+  /// types, and nothing later would catch a mismatch. Creating a record and
+  /// reading it back do not check the pairing, and decapsulating under the
+  /// wrong secret key does not fail — it yields a different shared secret. A
+  /// record built from mismatched halves would be accepted and published, and
+  /// the mismatch would surface only when a peer's first message failed to
+  /// decrypt, with nothing pointing back to this call.
+  ///
+  /// # Errors
+  /// Fails if the two keys are for different KEM types, or are not halves of
+  /// the same key pair.
+  ///
+  /// # Security
+  /// Unlike `IdentityKeyPair.fromKeys`, this consumes neither argument: the
+  /// pair holds its own copy of the secret key, and the `KyberSecretKey` passed
+  /// in stays valid. Call `dispose()` on it as soon as it is no longer needed
+  /// rather than waiting for the garbage collector — as with `cloneKey()`, each
+  /// copy keeps the secret in native memory until it is dropped, and dropping
+  /// does not wipe it.
+  static KyberKeyPair fromKeys({
+    required KyberPublicKey publicKey,
+    required KyberSecretKey secretKey,
+  }) => RustLib.instance.api.crateApiKyberKyberKeyPairFromKeys(
+    publicKey: publicKey,
+    secretKey: secretKey,
+  );
+
   /// Generate a new random Kyber key pair.
   static KyberKeyPair generate() =>
       RustLib.instance.api.crateApiKyberKyberKeyPairGenerate();

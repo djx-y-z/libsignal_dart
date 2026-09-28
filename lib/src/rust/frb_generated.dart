@@ -77,7 +77,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 2022262221;
+  int get rustContentHash => 1630330622;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -195,6 +195,11 @@ abstract class RustLibApi extends BaseApi {
   });
 
   KyberKeyPair crateApiKyberKyberKeyPairCloneKey({required KyberKeyPair that});
+
+  KyberKeyPair crateApiKyberKyberKeyPairFromKeys({
+    required KyberPublicKey publicKey,
+    required KyberSecretKey secretKey,
+  });
 
   KyberKeyPair crateApiKyberKyberKeyPairGenerate();
 
@@ -1928,6 +1933,45 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "KyberKeyPair_clone_key",
         argNames: ["that"],
+      );
+
+  @override
+  KyberKeyPair crateApiKyberKyberKeyPairFromKeys({
+    required KyberPublicKey publicKey,
+    required KyberSecretKey secretKey,
+  }) {
+    return handler.executeSync(
+      SyncTask(
+        callFfi: () {
+          var arg0 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey(
+                publicKey,
+              );
+          var arg1 =
+              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey(
+                secretKey,
+              );
+          return wire.wire__crate__api__kyber__KyberKeyPair_from_keys(
+            arg0,
+            arg1,
+          );
+        },
+        codec: DcoCodec(
+          decodeSuccessData:
+              dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair,
+          decodeErrorData: dco_decode_String,
+        ),
+        constMeta: kCrateApiKyberKyberKeyPairFromKeysConstMeta,
+        argValues: [publicKey, secretKey],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiKyberKyberKeyPairFromKeysConstMeta =>
+      const TaskConstMeta(
+        debugName: "KyberKeyPair_from_keys",
+        argNames: ["publicKey", "secretKey"],
       );
 
   @override

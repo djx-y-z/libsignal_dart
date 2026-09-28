@@ -134,22 +134,24 @@ first place (keep them behind opaque handles).
 
 ### B: Timing Attack Prevention
 
-All cryptographic operations and comparisons are handled by Rust's libsignal-protocol, which uses constant-time implementations internally.
+Cryptographic operations happen in Rust: in libsignal-protocol, and — for `hkdfDerive` and `Aes256GcmSiv` — in the RustCrypto `hkdf` and `aes-gcm-siv` crates, all of which use constant-time implementations internally. The one comparison of secret values this package makes itself, the pairing check in `KyberKeyPair.fromKeys`, goes through `subtle`'s constant-time equality.
 
 **Best practice:** Avoid comparing cryptographic data in Dart code. Let the library handle it:
 
 ```dart
 // CORRECT - let Rust handle cryptographic verification
-final isValid = publicKey.verifySignature(message: data, signature: sig);
+final isValid = publicKey.verify(message: data, signature: sig);
 
 // CORRECT - compare public keys using library methods
 final keysMatch = key1.compare(other: key2) == 0;
 
-// AVOID - comparing serialized cryptographic data in Dart
-if (key1.serialize() == key2.serialize()) { ... }  // Not constant-time
+// AVOID - comparing serialized cryptographic data in Dart. An element-wise
+// loop is not constant-time, and `==` on two Uint8Lists compares identity,
+// not content — this one is false even for equal keys.
+if (key1.serialize() == key2.serialize()) { ... }
 ```
 
-If you must compare bytes in Dart (e.g., for non-cryptographic purposes), use a constant-time implementation from a crypto package like `package:crypto`.
+If you must compare secret bytes in Dart, do it without an early exit. `package:crypto`'s `Digest` does exactly that in its `==`, so `Digest(a) == Digest(b)` compares two equal-length lists in constant time.
 
 ### C: DateTime UTC Consistency
 
@@ -353,10 +355,14 @@ These concerns from the old C FFI architecture are now handled automatically:
 | Double-free prevention | Rust borrow checker |
 | Buffer overflow prevention | Rust bounds checking |
 | Use-after-free | Rust ownership |
-| Memory zeroing (Rust-side only) | Rust (zeroize crate in libsignal) |
+| Memory zeroing (Rust-side only, partial) | this package's `zeroize` calls on the key material it receives — not libsignal's key objects |
 
-> **Memory zeroing covers Rust memory only.** libsignal's `zeroize` guarantees
-> apply to secrets *while they live inside Rust*. As soon as a value crosses the
+> **Memory zeroing covers Rust memory only, and only part of it.** This
+> package zeroizes the serialized key material it receives in Rust — the input
+> to `deserialize`, the identity key pair bytes a store callback returns — but
+> libsignal's own key objects are not wiped on drop (see
+> [Cleanup timing and secret material](#cleanup-timing-and-secret-material)).
+> And whatever is wiped is wiped *inside Rust* only. As soon as a value crosses the
 > FFI boundary into Dart — every `serialize()` / `private_key()` call returns a
 > `Vec<u8>` that becomes a Dart `Uint8List` — those bytes live on the Dart GC
 > heap, which is **never zeroed on collection** (freed blocks go back on the VM
@@ -1057,9 +1063,9 @@ provided in-memory store does). A store that always returns `null` from
 
 ## Known Limitations
 
-1. **Dart VM memory:** Dart's garbage collector may copy data before Rust can zero it. This is a platform limitation, but libsignal's Rust code uses the `zeroize` crate for sensitive data.
+1. **Dart VM memory:** Dart's garbage collector may copy data before Rust can zero it. This is a platform limitation, and the Rust side is covered only in part: this package zeroizes the serialized key material it receives, but libsignal's key objects are not wiped on drop (see [Cleanup timing and secret material](#cleanup-timing-and-secret-material)).
 
-2. **Timing side channels:** All cryptographic operations use constant-time implementations in libsignal-protocol (Rust). Avoid comparing cryptographic data directly in Dart.
+2. **Timing side channels:** All cryptographic operations run in Rust on constant-time implementations — libsignal-protocol, and the RustCrypto crates behind `hkdfDerive` and `Aes256GcmSiv` (see [B: Timing Attack Prevention](#b-timing-attack-prevention)). Avoid comparing cryptographic data directly in Dart.
 
 3. **Store persistence:** In-memory stores lose all state on app restart. Production apps must implement persistent stores.
 
@@ -1073,6 +1079,6 @@ After decryption, plaintext is intentionally NOT zeroized because:
 
 1. **Plaintext is application data** - per NIST guidelines, zeroization applies to cryptographic keys and secret data, not application plaintext
 2. **Responsibility transfer** - once decrypted, data belongs to the application layer
-3. **Keys ARE zeroized** - identity key pairs and session keys are properly zeroized after use
+3. **Keys are treated differently, though only partly zeroized** - the serialized key material this package receives in Rust (the input to `deserialize`, the identity key pair bytes a store callback returns) is zeroized after use, but libsignal's key and session objects are not wiped when dropped (see [Cleanup timing and secret material](#cleanup-timing-and-secret-material))
 
 If your application requires plaintext zeroization, implement it at the Dart layer after processing.

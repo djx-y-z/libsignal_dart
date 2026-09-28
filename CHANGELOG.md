@@ -6,11 +6,78 @@
 
 - **libsignal v0.103.1** — internal/dependency update, no public-API impact
 
+#### Added
+
+- **`KyberKeyPair.fromKeys()` rebuilds a Kyber key pair from its two halves**
+  ([#103](https://github.com/djx-y-z/libsignal_dart/issues/103))
+  (`rust/src/api/kyber.rs`, `rust/Cargo.toml`, `README.md`) —
+  `KyberPreKeyRecord.create` takes a `KyberKeyPair`, and the only ways to get
+  one were `KyberKeyPair.generate()`, or `getKeyPair()` and `cloneKey()` on a
+  record or pair already held. An application that stores the public and
+  secret keys apart — each has its own `serialize()` — therefore had no way
+  back from those bytes to a record through the API. The EC records never had
+  this gap: `PreKeyRecord` and `SignedPreKeyRecord` take their public and
+  private keys separately. Signal's own bindings share it — none of them builds
+  a key pair from its two halves — so this is an addition on our side,
+  performing the same join libsignal does when it reads a stored Kyber record
+  back.
+
+  There is still no serialized form of the pair itself, and that is deliberate:
+  upstream defines none, and a format this package invented would be one it had
+  to keep reading forever. The halves' own encodings are the format. A pre-key
+  kept whole needs none of this — `KyberPreKeyRecord.serialize()` carries both
+  halves together with the id, timestamp and signature.
+
+  `fromKeys()` also checks that the halves belong together, which upstream does
+  not: its key pair compares only the key types. The check encapsulates a
+  shared secret to the public key, decapsulates it under the secret key and
+  compares the two in constant time. That is the pair-wise consistency test
+  FIPS 203 (§7.1) and FIPS 140-3 IG 10.3.A define for ML-KEM, applied to
+  round-3 Kyber by analogy rather than by requirement — and only that step, not
+  FIPS 203's full key-pair check. Nothing later would catch a mismatch: creating
+  a record and reading it back do not check the pairing, and Kyber
+  decapsulation does not fail under the wrong key — it returns a different
+  secret. A mixed-up record would be accepted and published, and the mismatch
+  would surface only when a peer's first message failed to decrypt. Observed
+  rather than inferred: a record whose secret key is not the partner of the
+  published public key makes that first message fail with a bare
+  `invalid PreKey message: decryption failed`, naming no key, and
+  `test/kyber/kyber_key_pair_test.dart` pins that it fails to decrypt, next to a
+  record rebuilt through `fromKeys()` that succeeds. The test stores a foreign
+  pair rather than mixed halves; to the recipient the two are the same case,
+  since it reads only the record's secret key. It follows that every session
+  started against a mixed-up last-resort key would fail until the key was
+  rotated.
+
+  Unlike `IdentityKeyPair.fromKeys`, it borrows its arguments instead of moving
+  them, so both handles stay usable after the call, whether or not the check
+  passes. The pair holds its own copy of the secret key: `dispose()` the
+  `KyberSecretKey` you passed in once you are done with it. `subtle`, already in
+  the dependency graph through libsignal, is now a direct dependency for the
+  comparison. The README's key table gains a `KyberKeyPair` row.
+
 #### Changed
 
-- **The v0.103.1 bump leaves Dart's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.0...v0.103.1)) adds `BackupJsonExporter` and adjusts bridge and Swift handling in `swift/` and `rust/bridge/`; those are language-binding and bridge layers that this package does not use because it binds the pure-Rust protocol crates directly. The Java and Node binding changes likewise land under `java/` and `node/`, while the remaining podspec, package metadata, release notes and lockfile changes are packaging or release metadata rather than the exposed protocol surface.
+- **libsignal v0.103.0 → v0.103.1 changes nothing this package ships except
+  the version constant, and `rand` moves 0.10.2 → 0.10.3**
+  (`rust/Cargo.toml`, `rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`) — upstream's
+  own notes name one item, "Swift: BackupJsonExporter is now available", and
+  the five commits in the
+  [range](https://github.com/signalapp/libsignal/compare/v0.103.0...v0.103.1)
+  land in `swift/`, `java/`, `node/` and `rust/bridge/`, none of which is in
+  this package's dependency graph. Four libsignal crates are: in the lockfile
+  `libsignal-protocol`, `libsignal-core` and `signal-crypto` change only their
+  source revision, and `libsignal-debug` only its version, 0.103.0 → 0.103.1.
+  The one file touched under any of them is `rust/core/src/version.rs`, the
+  version string. `spqr` stays at 1.6.0.
 
-  Among the complete file list, the only file under a bound crate is `rust/core/src/version.rs`, which is a version string; no source file under `libsignal-protocol` or `signal-crypto` is listed. `make codegen` produced no change to `lib/src/rust/`, so the FFI surface did not move. With the bound crates changing only by version metadata and no exposed protocol implementation changing, these changes do not affect this library's public API.
+  `rand` 0.10.3 is a crates.io patch release, not part of libsignal, and it
+  does reach the binary — through `hpke-rs-crypto` (under `signal-crypto`) and
+  `libcrux-traits` (under the ML-KEM and HMAC code). Its source changes are
+  confined to `distr/` and `seq/` (`Uniform`, `WeightedIndex`, `Bernoulli`,
+  index sampling); both crates use only its RNG traits, which it did not
+  touch. `make codegen` leaves `lib/src/rust/` unchanged, so the FFI surface
+  did not move.
 
 #### Fixed
 
@@ -67,9 +134,123 @@
   before every run through it; the exposed routes are `flutter build web` and a
   hand-run `flutter run -d chrome`.
 
+#### Documentation
+
+- **Every store interface's example compiles again**
+  (`lib/src/stores/pre_key_store.dart`, `signed_pre_key_store.dart`,
+  `session_store.dart`, `kyber_pre_key_store.dart`) — each class doc showed
+  `…Record.deserialize(data)`, but all four constructors take a named
+  argument, so the example a store implementer starts from did not compile. It
+  reads `deserialize(bytes: data)` now.
+
+- **`KyberPreKeyStore` names its two kinds of key correctly**
+  (`lib/src/stores/kyber_pre_key_store.dart`) — the class doc called the
+  one-time Kyber pre-keys "last resort" and the reusable ones "signed": the
+  wrong way round, and the wrong distinction, since the last-resort key is the
+  one that is reused and both kinds are signed. The doc of
+  `markKyberPreKeyUsed` always had it right; the class doc now agrees with it
+  and points there.
+
+- **SECURITY.md no longer says libsignal zeroizes keys** (`SECURITY.md`) —
+  three places credited libsignal's Rust code with `zeroize` for sensitive
+  data, and the plaintext section said "Keys ARE zeroized", all against the
+  document's own §A. libsignal-core's `PrivateKey` is `Copy` and has no
+  `Drop`, the Kyber secret key has no `ZeroizeOnDrop`, and neither
+  libsignal-protocol nor libsignal-core calls `zeroize` in its own code — it
+  appears only as a feature of the cipher crates underneath. What this package
+  can promise is that it wipes its own copies of the serialized key material
+  it receives, and the four places now say exactly that.
+
+- **SECURITY.md §B's example calls methods that exist** (`SECURITY.md`) — it
+  verified with `publicKey.verifySignature(...)`, which `PublicKey` never had
+  (the method is `verify()`; `verifySignature` belongs to `SenderKeyMessage`),
+  and its "AVOID" line compared two `Uint8List`s with `==`, which in Dart
+  compares identity rather than content — false even for equal keys, so
+  timing was not its problem. The section also credited every operation to
+  libsignal-protocol, where `hkdfDerive` and `Aes256GcmSiv` run on the
+  RustCrypto crates, and it now names the one comparison this package makes
+  itself (`KyberKeyPair.fromKeys`, through `subtle`). Its pointer to
+  `package:crypto` became concrete: `Digest(a) == Digest(b)` is the
+  constant-time comparison that package offers.
+
+- **The README's crypto table lists API that exists** (`README.md`) —
+  `Hkdf.deriveSecrets` and `Fingerprint.compare` have been gone since the move
+  to Flutter Rust Bridge; the table now names `hkdfDerive` and
+  `fingerprintCompare`, both free functions.
+
 ### For Contributors
 
 #### Changed
+
+- **copier template adopted: v4.14.1 → v4.15.0** (`.copier-answers.yml`,
+  `.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`,
+  `.github/workflows/check-template-updates.yml`,
+  `.github/workflows/build-libsignal.yml`,
+  `.github/workflows/test-reusable.yml`, `.gitignore`, `CLAUDE.md`) — the CI
+  agents change in two ways that matter here. The repair and review workflows
+  now read `.github/agent-config/opencode.json` from the **default branch**
+  rather than from the tree being checked out: the permission assertion that
+  validates it is baked into the workflow, which always comes from the default
+  branch, so the agent's permissions used to travel with the checkout while the
+  assertion about them did not. It failed closed, and the class it blocked was
+  exactly `update-template-*` — the branch carrying the template's new config
+  while the workflow judging it is the old one, which is what every template
+  release produces. And the template-update checker now closes the update pull
+  requests it supersedes, gated on the branch shape, an older version, the
+  `agent-repaired` label, a `repair-build:` commit trailer and any non-bot
+  commit author; `dry_run` defaults to on for a manual run and off for a
+  scheduled one.
+
+  Both were verified against this repository's own runs rather than by reading.
+  Run `35428400857` had stopped at `commands this workflow expects that are not
+  allowed: ['make doc', 'make rust-doc']`, naming the workspace path it read;
+  run `35582021377`, dispatched with the same `run_id` from a branch carrying
+  the fix, reports `repair permissions resolve as intended: 15 commands,
+  exactly the documented set` and goes on to run the model — a path that had
+  never executed live before. The closing rule was replayed over all 63 bot
+  pull requests here: it selects exactly the five superseded
+  `update-template-*` ones, ignores all 57 of the other class, and is held back
+  by both the label and a real human commit.
+
+  ⚠ **The trailer it looks for is a commit-message trailer, not a pull-request
+  body one**, and the difference was measured here: the update bot's body
+  embeds the generated CHANGELOG entry, and a CHANGELOG entry quotes
+  `repair-build: <sha> (agent)` verbatim while describing the feature, so a body
+  search vetoes #99 — which was never repaired.
+
+  The rest is smaller. `build-libsignal.yml` and `test-reusable.yml` get the
+  corrected `setup-android` comment: both said upstream had no fixed release
+  two lines above a pin at v4.0.4, when `android-actions/setup-android#537`
+  closed on 2026-09-17 and v4.0.2 shipped six minutes later. The `packages:`
+  input is unchanged — it names exactly the package those jobs need, which is
+  the property whose absence made the original outage possible. `.gitignore`
+  gains `__pycache__/` and `*.py[cod]`, latent until somebody runs one of the
+  Python gates locally. `CLAUDE.md` gains the block explaining that
+  `make build-web` stamps `rust/target/wasm32/.crate-version` and that the hook
+  refuses a local build whose stamp is missing or disagrees — behaviour this
+  repository already had, from `9f0c86c`, and did not document.
+
+  **A new template question arrived and was answered empty.**
+  `forbidden_features` names cargo features that must never be enabled in the
+  shipped dependency graph, keyed by crate. Empty renders **no gate at all**
+  rather than a gate with nothing to check, so the three files behind it are
+  not created here and nothing in the build changes. Setting it is a separate
+  decision that needs a measured answer — which feature on which crate, and
+  why shipping it would be wrong — and there is no such finding for this
+  package yet.
+
+  copier merged all eight files with **no conflicts**, which on a file like
+  `CLAUDE.md` is not by itself evidence, so the checks that catch a false-clean
+  merge were run anyway: no heading in `CLAUDE.md` is duplicated that was not
+  already duplicated at `HEAD` (`#### Added` and `#### Changed` appear twice in
+  the changelog-format documentation, under both audiences, and did before),
+  and every one of the eight was compared byte-for-byte against a fresh render
+  of v4.15.0 made with this project's own answers. Five are identical to it.
+  The two that differ are the standing divergences and differ by exactly the
+  line counts they did before: all of `CLAUDE.md`'s project-specific content,
+  and one comment in `test-reusable.yml` that names `libsignal` where the
+  template generalises to "the native library" — a fourth instance of the same
+  wording pattern the previous adoption recorded three of.
 
 - **copier template adopted: v4.14.0 → v4.14.1** (`.copier-answers.yml`) — the
   adoption moved `_commit` and nothing else, and that is the finding rather
@@ -97,6 +278,15 @@
   `.github/agent-prompts/changelog-scope.md` is `_skip_if_exists`, so a
   template change to it can never arrive: its absence from a change list is a
   dropped change rather than an identical one. It did not move in this range.
+
+#### Fixed
+
+- **The `security-review` skill's example calls methods that exist**
+  (`.claude/skills/security-review/SKILL.md`) — it carried the same
+  `publicKey.verifySignature(...)` and `Uint8List ==` example as SECURITY.md
+  §B, corrected the same way, and gains one checklist line: a new Rust-side
+  comparison of secret values goes through `subtle::ConstantTimeEq`, as
+  `KyberKeyPair.fromKeys` does.
 
 ## [7.3.1] - 2026-09-20
 
