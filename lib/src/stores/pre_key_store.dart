@@ -20,7 +20,7 @@ import '../rust/api/prekey.dart';
 ///   @override
 ///   Future<PreKeyRecord?> loadPreKey(int preKeyId) async {
 ///     final data = _preKeys[preKeyId];
-///     return data != null ? PreKeyRecord.deserialize(data) : null;
+///     return data != null ? PreKeyRecord.deserialize(bytes: data) : null;
 ///   }
 ///   // ... other methods
 /// }

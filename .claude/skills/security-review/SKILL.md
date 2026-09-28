@@ -42,20 +42,23 @@ final sessionStore = SecureSqliteSessionStore();
 
 ### C: Timing Attack Prevention
 
-All cryptographic operations are handled by Rust's libsignal-protocol with constant-time implementations.
+All cryptographic operations run in Rust on constant-time implementations — libsignal-protocol, and the RustCrypto crates behind `hkdfDerive` and `Aes256GcmSiv`. The one secret comparison this package makes itself (`KyberKeyPair.fromKeys`) uses `subtle`.
 
 - [ ] Let library handle cryptographic comparisons
 - [ ] Avoid comparing serialized cryptographic data directly in Dart
+- [ ] Any new Rust-side comparison of secret values uses `subtle::ConstantTimeEq`, not `==`
 
 ```dart
 // ✅ CORRECT - let Rust handle cryptographic verification
-final isValid = publicKey.verifySignature(message: data, signature: sig);
+final isValid = publicKey.verify(message: data, signature: sig);
 
 // ✅ CORRECT - compare public keys using library methods
 final keysMatch = key1.compare(other: key2) == 0;
 
-// ❌ AVOID - comparing serialized cryptographic data in Dart
-if (key1.serialize() == key2.serialize()) { ... }  // Not constant-time
+// ❌ AVOID - comparing serialized cryptographic data in Dart. An element-wise
+// loop is not constant-time, and `==` on two Uint8Lists compares identity,
+// not content — this one is false even for equal keys.
+if (key1.serialize() == key2.serialize()) { ... }
 ```
 
 ### D: DateTime UTC Consistency

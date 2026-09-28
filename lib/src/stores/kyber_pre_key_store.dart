@@ -10,8 +10,11 @@ import '../rust/api/kyber.dart';
 /// They work similarly to regular pre-keys but use Kyber KEM for
 /// key encapsulation.
 ///
-/// Like regular pre-keys, Kyber pre-keys are one-time use (for "last resort"
-/// keys) or can be reused (for signed Kyber pre-keys).
+/// They come in two kinds, and the record does not say which: **one-time**
+/// keys, each used for a single session and then retired, and a
+/// **last-resort** key, reused once the one-time keys have run out. Both kinds
+/// are signed with the identity key. Your store has to remember the kind
+/// itself — see [markKyberPreKeyUsed] for what each one needs.
 ///
 /// Example implementation:
 /// ```dart
@@ -22,7 +25,7 @@ import '../rust/api/kyber.dart';
 ///   @override
 ///   Future<KyberPreKeyRecord?> loadKyberPreKey(int kyberPreKeyId) async {
 ///     final data = _kyberPreKeys[kyberPreKeyId];
-///     return data != null ? KyberPreKeyRecord.deserialize(data) : null;
+///     return data != null ? KyberPreKeyRecord.deserialize(bytes: data) : null;
 ///   }
 ///   // ... other methods
 /// }
