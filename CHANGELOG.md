@@ -191,6 +191,14 @@
 
 #### Changed
 
+- **copier template adopted: v4.15.1 → v4.15.2** (`.copier-answers.yml`) —
+  the adoption moved `_commit` and nothing else, because every change in the
+  release was written here first: the three `refresh-notices.yml` fixes below
+  (`GH_REPO`, the unused `APP_SLUG`, and the `--rawfile` payload) and the
+  `claude-code-action` v1.0.236 pin. copier merged them as identical changes
+  on both sides and reported no conflicts; the two workflow files are
+  byte-identical to the template's.
+
 - **`anthropics/claude-code-action` moves to v1.0.236**
   (`.github/workflows/ai-review.yml`, `.github/workflows/repair-build.yml`) —
   v1.0.228 → v1.0.236, made on `main` directly, with the template's two copies
