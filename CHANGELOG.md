@@ -193,8 +193,8 @@
   `AGENT_ENGINE` is `opencode`, so nothing that runs here changes — the pin is
   kept current for the day the engine is switched.
 
-- **copier template adopted: v4.15.0 → v4.15.1, plus the one line it is
-  missing** (`.copier-answers.yml`, `.github/workflows/refresh-notices.yml`) —
+- **copier template adopted: v4.15.0 → v4.15.1, plus the two fixes it
+  needs to run** (`.copier-answers.yml`, `.github/workflows/refresh-notices.yml`) —
   the notices refresh pushed `THIRD_PARTY_NOTICES.txt` onto Dependabot's cargo
   branches as an ordinary, **unsigned** commit. `signing-commit.json` excludes
   `dependabot/**/*`, so the push was accepted, but `main`'s
@@ -215,6 +215,17 @@
   this: shellcheck treats upper-case names as coming from the environment. The
   same step also drops `APP_SLUG`, which only fed the `git config` identity the
   GraphQL route no longer needs.
+
+  ⚠ **The first live run found a second defect behind the first.** Dispatched
+  for #104 (run `36544895160`), it got past `GH_REPO` and stopped on
+  `/usr/bin/jq: Argument list too long`, exit 126: the step handed the whole
+  base64-encoded inventory to `jq` as one `--arg`, and this repository's
+  `THIRD_PARTY_NOTICES.txt` is 500 KB — 667 KB encoded — against the 128 KiB
+  Linux allows a single argument. The encoding now goes to a file under
+  `$RUNNER_TEMP` and reaches `jq` through `--rawfile`; built locally from the
+  real inventory, the payload decodes back to it byte for byte. Nothing short
+  of running it could have shown this either — it depends on the size of the
+  file, not on the script.
 
 - **copier template adopted: v4.14.1 → v4.15.0** (`.copier-answers.yml`,
   `.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`,
