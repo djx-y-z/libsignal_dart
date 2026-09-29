@@ -79,6 +79,15 @@
   touch. `make codegen` leaves `lib/src/rust/` unchanged, so the FFI surface
   did not move.
 
+- **`thiserror` 2.0.20 → 2.0.21** (`rust/Cargo.lock`,
+  `THIRD_PARTY_NOTICES.txt`) — Dependabot's bump (#104), inside the `"2.0"`
+  range `rust/Cargo.toml` already declares. Nothing under `rust/src/` uses it;
+  it reaches the binary through `libsignal-core` and `signal-crypto`, and the
+  release changes only compile-time parsing there: `thiserror-impl` now
+  tracks turbofish nesting (`::<…>`) inside `#[error(...)]` format arguments,
+  so code that used no turbofish there expands exactly as before. Its declared
+  floor rises to Rust 1.77, below this crate's 1.93.1.
+
 #### Fixed
 
 - **The example app reports why it failed to start instead of spinning

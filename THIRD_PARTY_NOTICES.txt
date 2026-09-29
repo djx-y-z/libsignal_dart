@@ -843,11 +843,11 @@ tempfile 3.27.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T37]
 
-thiserror-impl 2.0.20
+thiserror-impl 2.0.21
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
-thiserror 2.0.20
+thiserror 2.0.21
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
@@ -2494,8 +2494,8 @@ Crates:
   serde_json@1.0.151
   syn@2.0.119
   syn@3.0.6
-  thiserror-impl@2.0.20
-  thiserror@2.0.20
+  thiserror-impl@2.0.21
+  thiserror@2.0.21
   unicode-ident@1.0.26
 
 Apache License
@@ -9466,8 +9466,8 @@ Crates:
   serde_json@1.0.151
   syn@2.0.119
   syn@3.0.6
-  thiserror-impl@2.0.20
-  thiserror@2.0.20
+  thiserror-impl@2.0.21
+  thiserror@2.0.21
   unicode-ident@1.0.26
   wasip2@1.0.4+wasi-0.2.12
   wit-bindgen@0.57.1
