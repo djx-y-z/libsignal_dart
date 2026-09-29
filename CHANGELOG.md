@@ -182,6 +182,29 @@
 
 #### Changed
 
+- **copier template adopted: v4.15.0 → v4.15.1, plus the one line it is
+  missing** (`.copier-answers.yml`, `.github/workflows/refresh-notices.yml`) —
+  the notices refresh pushed `THIRD_PARTY_NOTICES.txt` onto Dependabot's cargo
+  branches as an ordinary, **unsigned** commit. `signing-commit.json` excludes
+  `dependabot/**/*`, so the push was accepted, but `main`'s
+  `required_signatures` is not excluded, so the pull request could then never
+  be merged. #104 is that case exactly: Dependabot's commit is
+  `verified: true`, the workflow's `1e251c6` is `unsigned`, and the pull
+  request sits `BLOCKED` with every required context green. v4.15.1 writes the
+  commit through GraphQL `createCommitOnBranch`, which signs it, and reads
+  `verification.verified` back to fail loudly if it did not.
+
+  ⚠ **As released, that step cannot run.** It passes `$GH_REPO` to the
+  mutation and to the verification call under `set -euo pipefail`, and nothing
+  sets it — not the step's `env:`, not `GITHUB_ENV`, not the runner — so it
+  would stop on `GH_REPO: unbound variable` before creating any commit. The
+  step's `env:` gains `GH_REPO: ${{ github.repository }}` here; the template
+  gets the same bytes, so the next adoption merges it as an identical change
+  on both sides. `make actionlint` was green on the broken file and cannot see
+  this: shellcheck treats upper-case names as coming from the environment. The
+  same step also drops `APP_SLUG`, which only fed the `git config` identity the
+  GraphQL route no longer needs.
+
 - **copier template adopted: v4.14.1 → v4.15.0** (`.copier-answers.yml`,
   `.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`,
   `.github/workflows/check-template-updates.yml`,
