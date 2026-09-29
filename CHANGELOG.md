@@ -182,6 +182,17 @@
 
 #### Changed
 
+- **`anthropics/claude-code-action` moves to v1.0.230**
+  (`.github/workflows/ai-review.yml`, `.github/workflows/repair-build.yml`) —
+  v1.0.228 → v1.0.230, the bump Dependabot proposed in #101, made on `main`
+  directly, with the template's two copies moved to the same SHA. The
+  annotated tag dereferences to `4036a180cf690f49529f5d8c79c998855287f590`,
+  checked against the upstream ref rather than taken from the pull request
+  body; the range only moves the bundled Claude Code, 2.1.275 → 2.1.277. Both
+  steps run only when the agent engine is `claude-code`, and this repository's
+  `AGENT_ENGINE` is `opencode`, so nothing that runs here changes — the pin is
+  kept current for the day the engine is switched.
+
 - **copier template adopted: v4.15.0 → v4.15.1, plus the one line it is
   missing** (`.copier-answers.yml`, `.github/workflows/refresh-notices.yml`) —
   the notices refresh pushed `THIRD_PARTY_NOTICES.txt` onto Dependabot's cargo
