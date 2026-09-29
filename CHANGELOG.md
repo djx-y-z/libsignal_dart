@@ -5,6 +5,7 @@
 #### ✨ Highlights
 
 - **libsignal v0.103.1** — internal/dependency update, no public-API impact
+- **libsignal_frb v6.4.0** — Rust FFI bindings
 
 #### Added
 
