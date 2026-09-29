@@ -1,4 +1,4 @@
-## [Unreleased]
+## [7.4.1] - 2026-09-29
 
 ### For Users
 
@@ -1312,7 +1312,8 @@
 7.2.0 and everything before it are in
 [CHANGELOG-ARCHIVE.md](https://github.com/djx-y-z/libsignal_dart/blob/main/CHANGELOG-ARCHIVE.md).
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v7.4.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v7.4.1...HEAD
+[7.4.1]: https://github.com/djx-y-z/libsignal_dart/compare/v7.4.0...v7.4.1
 [7.4.0]: https://github.com/djx-y-z/libsignal_dart/compare/v7.3.1...v7.4.0
 [7.3.1]: https://github.com/djx-y-z/libsignal_dart/compare/v7.3.0...v7.3.1
 [7.3.0]: https://github.com/djx-y-z/libsignal_dart/compare/v7.2.0...v7.3.0
