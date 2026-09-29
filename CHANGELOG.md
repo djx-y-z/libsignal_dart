@@ -4,6 +4,16 @@
 
 #### ✨ Highlights
 
+- **`KyberKeyPair.fromKeys()` rebuilds a Kyber key pair from a public and a
+  secret key stored apart** — the way back from the halves' own `serialize()`
+  to a `KyberPreKeyRecord`, which the API did not offer. It checks that the two
+  belong together, which upstream does not, because a mismatched record would
+  otherwise be accepted and fail only on a peer's first message
+  ([#103](https://github.com/djx-y-z/libsignal_dart/issues/103))
+- **Secrets a store hands to Rust are cleared even when a store throws** — the
+  identity key pair, session, pre-key and sender-key records loaded through
+  store callbacks are now zeroized on every exit, where a throwing store used
+  to skip the wipe and some of them were never wiped at all
 - **libsignal v0.103.1** — internal/dependency update, no public-API impact
 - **libsignal_frb v6.4.0** — Rust FFI bindings
 
