@@ -567,37 +567,42 @@ where
         let pre_key_id: Option<u32> = prekey_message.pre_key_id().map(|id| id.into());
         let kyber_pre_key_id: Option<u32> = prekey_message.kyber_pre_key_id().map(|id| id.into());
 
-        // Load pre-keys
-        let mut signed_pre_key_bytes = load_signed_pre_key(signed_pre_key_id)
-            .await
-            .ok_or_else(|| format!("Signed pre-key {} not found", signed_pre_key_id))?;
+        // Load pre-keys. SECURITY: each record carries a private key, so each
+        // is held in `Zeroizing` — a trailing `zeroize()` would be skipped by
+        // the `?` on its own deserialize/store, and by an unwind.
+        let signed_pre_key_bytes = Zeroizing::new(
+            load_signed_pre_key(signed_pre_key_id)
+                .await
+                .ok_or_else(|| format!("Signed pre-key {} not found", signed_pre_key_id))?,
+        );
         let signed_prekey_record = SignedPreKeyRecord::deserialize(&signed_pre_key_bytes)
             .map_err(|e: SignalProtocolError| e.to_string())?;
         block_on(async {
             signed_prekey_store.save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record).await
         }).map_err(|e| e.to_string())?;
-        signed_pre_key_bytes.zeroize();
+        // Clear now rather than across the pre-key loads below.
+        drop(signed_pre_key_bytes);
 
         if let Some(id) = pre_key_id
-            && let Some(mut bytes) = load_pre_key(id).await
+            && let Some(bytes) = load_pre_key(id).await
         {
+            let bytes = Zeroizing::new(bytes);
             let prekey_record = PreKeyRecord::deserialize(&bytes)
                 .map_err(|e| e.to_string())?;
             block_on(async {
                 prekey_store.save_pre_key(PreKeyId::from(id), &prekey_record).await
             }).map_err(|e| e.to_string())?;
-            bytes.zeroize();
         }
 
         if let Some(id) = kyber_pre_key_id
-            && let Some(mut bytes) = load_kyber_pre_key(id).await
+            && let Some(bytes) = load_kyber_pre_key(id).await
         {
+            let bytes = Zeroizing::new(bytes);
             let kyber_prekey_record = KyberPreKeyRecord::deserialize(&bytes)
                 .map_err(|e: SignalProtocolError| e.to_string())?;
             block_on(async {
                 kyber_prekey_store.save_kyber_pre_key(KyberPreKeyId::from(id), &kyber_prekey_record).await
             }).map_err(|e| e.to_string())?;
-            bytes.zeroize();
         }
 
         // Decrypt pre-key message

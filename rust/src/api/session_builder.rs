@@ -13,7 +13,7 @@ use libsignal_protocol::{
     SessionRecord as NativeSessionRecord, SessionStore, SignalProtocolError,
 };
 use rand::{rngs::OsRng, TryRngCore as _};
-use zeroize::Zeroize;
+use zeroize::Zeroizing;
 
 use super::bundle::PreKeyBundle;
 
@@ -61,9 +61,13 @@ pub async fn process_prekey_bundle_with_callbacks(
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<(), String> {
     // Step 1: Load data via callbacks
-    let mut existing_session_bytes =
-        load_session(remote_name.clone(), remote_device_id).await;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
+    // A Dart store callback that throws panics the worker thread (FRB declares
+    // these callbacks non-failable), and a manual zeroize placed after the work
+    // is skipped by that unwind. `Drop` is not.
+    let existing_session_bytes =
+        Zeroizing::new(load_session(remote_name.clone(), remote_device_id).await);
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
     let local_registration_id = get_local_registration_id().await;
     // The previously-trusted identity for this remote address (None on first
     // contact). Used to enforce identity-trust below.
@@ -82,11 +86,9 @@ pub async fn process_prekey_bundle_with_callbacks(
         &known_remote_identity,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
-    if let Some(ref mut bytes) = existing_session_bytes {
-        bytes.zeroize();
-    }
+    // Clear now rather than across the write-back awaits below.
+    drop(existing_session_bytes);
+    drop(identity_key_pair_bytes);
 
     let bundle_result = result?;
 

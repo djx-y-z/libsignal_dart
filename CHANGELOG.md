@@ -88,6 +88,40 @@
   so code that used no turbofish there expands exactly as before. Its declared
   floor rises to Rust 1.77, below this crate's 1.93.1.
 
+#### Security
+
+- **Secrets from store callbacks are cleared on every exit, including when a
+  store throws** (`rust/src/api/session_cipher.rs`,
+  `rust/src/api/group_session.rs`, `rust/src/api/session_builder.rs`,
+  `rust/src/api/sealed_sender.rs`, `SECURITY.md`) — FRB declares every Dart
+  store callback non-failable, so a store that throws — a locked SQLite
+  database, say — panics the Rust worker, and the unwind skipped any
+  `zeroize()` still ahead of it. In `session_cipher.rs` (all three paths) and
+  `session_builder.rs` the identity key pair is fetched first and further
+  store callbacks run after it (`getLocalRegistrationId`, `getIdentity`, the
+  pre-key loads), so a throwing store left the serialized identity key pair in
+  freed memory. In `group_session.rs` the sender-key record was the exposed
+  one: encryption and distribution-message creation load it before calling
+  `getIdentityKeyPair`. Some secrets were never cleared at all: the session
+  record on the encrypt and Signal-message decrypt paths, and on the pre-key
+  decrypt path the existing session plus the signed, one-time and Kyber
+  pre-key records, each carrying a private key. In the sealed-sender pre-key
+  path those three records were cleared only after a `?` that could skip it.
+
+  Every secret a store callback returns is now held in `Zeroizing`, whose
+  `Drop` runs on return, on error and on unwind alike — the shape
+  `sealed_sender.rs`'s entry points already used — and is dropped as soon as
+  the work is done, before the write-back callbacks, where the old `zeroize()`
+  ran. The two group-session functions that call no other store callback
+  before the work gain it for consistency and to cover a panic inside the work
+  itself. Function bodies
+  only: no signature changes, `make codegen` leaves `lib/src/rust/` untouched,
+  and the FFI surface does not move. The exception still reaches Dart as
+  before. This covers what the stores *hand in*; the records Rust produces for
+  the write-back (the updated session and sender-key record) are handed to
+  Dart as before and are not wrapped. `SECURITY.md` now says which callback
+  results are cleared and on which exits.
+
 #### Fixed
 
 - **The example app reports why it failed to start instead of spinning

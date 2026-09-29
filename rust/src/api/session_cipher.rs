@@ -14,7 +14,7 @@ use libsignal_protocol::{
     SignedPreKeyId, SignedPreKeyRecord, SignedPreKeyStore,
 };
 use rand::{rngs::OsRng, TryRngCore as _};
-use zeroize::Zeroize;
+use zeroize::Zeroizing;
 
 /// Result of encrypting a message.
 pub struct EncryptResult {
@@ -91,16 +91,24 @@ pub async fn message_encrypt_with_callbacks(
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<EncryptResult, String> {
     // Step 1: Load data via callbacks
-    let session_bytes = load_session(remote_name.clone(), remote_device_id)
-        .await
-        .ok_or_else(|| {
-            format!(
-                "No session for {}:{}",
-                remote_name.clone(),
-                remote_device_id
-            )
-        })?;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
+    // A Dart store callback that throws panics the worker thread (FRB declares
+    // these callbacks non-failable), and a manual zeroize placed after the work
+    // is skipped by that unwind — as it is by every `?` in between. `Drop` is
+    // not. A serialized SessionRecord carries root, chain and message keys, so
+    // it is held the same way as the identity key pair.
+    let session_bytes = Zeroizing::new(
+        load_session(remote_name.clone(), remote_device_id)
+            .await
+            .ok_or_else(|| {
+                format!(
+                    "No session for {}:{}",
+                    remote_name.clone(),
+                    remote_device_id
+                )
+            })?,
+    );
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
     let local_registration_id = get_local_registration_id().await;
     // Previously-trusted identity for this recipient (None on first contact).
     let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
@@ -118,8 +126,9 @@ pub async fn message_encrypt_with_callbacks(
         &known_remote_identity,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
+    // Clear now rather than across the write-back awaits below.
+    drop(session_bytes);
+    drop(identity_key_pair_bytes);
 
     let (encrypt_result, updated_session) = result?;
 
@@ -248,16 +257,24 @@ pub async fn message_decrypt_signal_with_callbacks(
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, String> {
     // Step 1: Load data via callbacks
-    let session_bytes = load_session(remote_name.clone(), remote_device_id)
-        .await
-        .ok_or_else(|| {
-            format!(
-                "No session for {}:{}",
-                remote_name.clone(),
-                remote_device_id
-            )
-        })?;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
+    // A Dart store callback that throws panics the worker thread (FRB declares
+    // these callbacks non-failable), and a manual zeroize placed after the work
+    // is skipped by that unwind — as it is by every `?` in between. `Drop` is
+    // not. A serialized SessionRecord carries root, chain and message keys, so
+    // it is held the same way as the identity key pair.
+    let session_bytes = Zeroizing::new(
+        load_session(remote_name.clone(), remote_device_id)
+            .await
+            .ok_or_else(|| {
+                format!(
+                    "No session for {}:{}",
+                    remote_name.clone(),
+                    remote_device_id
+                )
+            })?,
+    );
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
     let local_registration_id = get_local_registration_id().await;
     // Previously-trusted identity for this sender (None on first contact).
     let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
@@ -275,8 +292,9 @@ pub async fn message_decrypt_signal_with_callbacks(
         &known_remote_identity,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
+    // Clear now rather than across the write-back awaits below.
+    drop(session_bytes);
+    drop(identity_key_pair_bytes);
 
     let (plaintext, updated_session, remote_identity_key) = result?;
 
@@ -430,28 +448,36 @@ pub async fn message_decrypt_prekey_with_callbacks(
     let kyber_pre_key_id = prekey_msg.kyber_pre_key_id();
 
     // Step 1: Load data via callbacks
-    let existing_session_bytes = load_session(remote_name.clone(), remote_device_id).await;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: every secret loaded here — the existing session, our identity
+    // key pair and the three pre-key records, each carrying a private key — is
+    // held in `Zeroizing`, so it is cleared on every exit: return, `?`, and the
+    // unwind a throwing Dart store callback causes (FRB declares these
+    // callbacks non-failable). A trailing `zeroize()` would miss the last two.
+    let existing_session_bytes =
+        Zeroizing::new(load_session(remote_name.clone(), remote_device_id).await);
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
     let local_registration_id = get_local_registration_id().await;
     // Previously-trusted identity for this sender (None on first contact).
     let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
     // Load pre-keys
-    let signed_pre_key_bytes = load_signed_pre_key(signed_pre_key_id)
-        .await
-        .ok_or_else(|| format!("Signed pre-key {} not found", signed_pre_key_id))?;
+    let signed_pre_key_bytes = Zeroizing::new(
+        load_signed_pre_key(signed_pre_key_id)
+            .await
+            .ok_or_else(|| format!("Signed pre-key {} not found", signed_pre_key_id))?,
+    );
 
-    let pre_key_bytes = if let Some(pk_id) = pre_key_id {
+    let pre_key_bytes = Zeroizing::new(if let Some(pk_id) = pre_key_id {
         load_pre_key(pk_id.into()).await
     } else {
         None
-    };
+    });
 
-    let kyber_pre_key_bytes = if let Some(kpk_id) = kyber_pre_key_id {
+    let kyber_pre_key_bytes = Zeroizing::new(if let Some(kpk_id) = kyber_pre_key_id {
         load_kyber_pre_key(kpk_id.into()).await
     } else {
         None
-    };
+    });
 
     // Step 2: Decrypt
     let result = message_decrypt_prekey_inner(
@@ -472,8 +498,12 @@ pub async fn message_decrypt_prekey_with_callbacks(
         &known_remote_identity,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
+    // Clear now rather than across the write-back awaits below.
+    drop(existing_session_bytes);
+    drop(identity_key_pair_bytes);
+    drop(signed_pre_key_bytes);
+    drop(pre_key_bytes);
+    drop(kyber_pre_key_bytes);
 
     let outcome = result?;
 

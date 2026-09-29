@@ -19,7 +19,7 @@ use libsignal_protocol::{
 };
 use rand::{TryRngCore as _, rngs::OsRng};
 use uuid::Uuid;
-use zeroize::Zeroize;
+use zeroize::Zeroizing;
 
 // ============================================================================
 // GROUP KEY DISTRIBUTION with DartFn callbacks
@@ -54,8 +54,12 @@ pub async fn create_sender_key_distribution_message_with_callbacks(
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
 ) -> Result<CreateSenderKeyDistributionResult, String> {
     // Step 1: Load data via callbacks
-    let mut existing_key_bytes = load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
+    // A Dart store callback that throws panics the worker thread (FRB declares
+    // these callbacks non-failable), and a manual zeroize placed after the work
+    // is skipped by that unwind. `Drop` is not.
+    let existing_key_bytes = Zeroizing::new(load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await);
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
 
     // Step 2: Call inner function
     let result = create_sender_key_distribution_inner(
@@ -66,11 +70,9 @@ pub async fn create_sender_key_distribution_message_with_callbacks(
         &identity_key_pair_bytes,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
-    if let Some(ref mut bytes) = existing_key_bytes {
-        bytes.zeroize();
-    }
+    // Clear now rather than across the write-back awaits below.
+    drop(existing_key_bytes);
+    drop(identity_key_pair_bytes);
 
     let (distribution_message, sender_key_record) = result?;
 
@@ -158,7 +160,8 @@ pub async fn process_sender_key_distribution_message_with_callbacks(
     store_sender_key: impl Fn(String, u32, String, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, String> {
     // Step 1: Load existing key if any
-    let mut existing_key_bytes = load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await;
+    // SECURITY: `Zeroizing`, so the key is cleared on every exit, unwind included.
+    let existing_key_bytes = Zeroizing::new(load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await);
 
     // Step 2: Process
     let result = process_sender_key_distribution_inner(
@@ -169,10 +172,8 @@ pub async fn process_sender_key_distribution_message_with_callbacks(
         &existing_key_bytes,
     );
 
-    // SECURITY: Zeroize existing key
-    if let Some(ref mut bytes) = existing_key_bytes {
-        bytes.zeroize();
-    }
+    // Clear now rather than across the write-back awaits below.
+    drop(existing_key_bytes);
 
     let sender_key_record = result?;
 
@@ -280,8 +281,12 @@ pub async fn group_encrypt_with_callbacks(
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
 ) -> Result<GroupEncryptResult, String> {
     // Step 1: Load data
-    let mut sender_key_bytes = load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await;
-    let mut identity_key_pair_bytes = get_identity_key_pair().await;
+    // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
+    // A Dart store callback that throws panics the worker thread (FRB declares
+    // these callbacks non-failable), and a manual zeroize placed after the work
+    // is skipped by that unwind. `Drop` is not.
+    let sender_key_bytes = Zeroizing::new(load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await);
+    let identity_key_pair_bytes = Zeroizing::new(get_identity_key_pair().await);
 
     // Step 2: Encrypt
     let result = group_encrypt_inner(
@@ -293,11 +298,9 @@ pub async fn group_encrypt_with_callbacks(
         &identity_key_pair_bytes,
     );
 
-    // SECURITY: Zeroize sensitive data
-    identity_key_pair_bytes.zeroize();
-    if let Some(ref mut bytes) = sender_key_bytes {
-        bytes.zeroize();
-    }
+    // Clear now rather than across the write-back awaits below.
+    drop(sender_key_bytes);
+    drop(identity_key_pair_bytes);
 
     let (ciphertext, sender_key_record) = result?;
 
@@ -391,7 +394,8 @@ pub async fn group_decrypt_with_callbacks(
     store_sender_key: impl Fn(String, u32, String, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
 ) -> Result<GroupDecryptResult, String> {
     // Step 1: Load sender key
-    let mut sender_key_bytes = load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await;
+    // SECURITY: `Zeroizing`, so the key is cleared on every exit, unwind included.
+    let sender_key_bytes = Zeroizing::new(load_sender_key(sender_name.clone(), sender_device_id, distribution_id.clone()).await);
 
     // Step 2: Decrypt
     let result = group_decrypt_inner(
@@ -402,10 +406,8 @@ pub async fn group_decrypt_with_callbacks(
         &sender_key_bytes,
     );
 
-    // SECURITY: Zeroize loaded key
-    if let Some(ref mut bytes) = sender_key_bytes {
-        bytes.zeroize();
-    }
+    // Clear now rather than across the write-back awaits below.
+    drop(sender_key_bytes);
 
     let (plaintext, sender_key_record) = result?;
 

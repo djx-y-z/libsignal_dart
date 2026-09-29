@@ -359,7 +359,9 @@ These concerns from the old C FFI architecture are now handled automatically:
 
 > **Memory zeroing covers Rust memory only, and only part of it.** This
 > package zeroizes the serialized key material it receives in Rust — the input
-> to `deserialize`, the identity key pair bytes a store callback returns — but
+> to `deserialize`, and every secret a store callback returns (identity key
+> pair, session, pre-key and sender-key records), on every exit including an
+> error and a store callback that throws — but
 > libsignal's own key objects are not wiped on drop (see
 > [Cleanup timing and secret material](#cleanup-timing-and-secret-material)).
 > And whatever is wiped is wiped *inside Rust* only. As soon as a value crosses the
