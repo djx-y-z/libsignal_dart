@@ -1244,7 +1244,6 @@ dependencies = [
  "sha2",
  "signal-crypto",
  "subtle",
- "thiserror",
  "uuid",
  "wasm-bindgen",
  "wasm-bindgen-futures",

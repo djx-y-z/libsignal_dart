@@ -34,6 +34,18 @@
   that has already counted to zero and not yet written the no-op, which only
   a lock inside flutter_rust_bridge can close.
 
+### For Contributors
+
+#### Changed
+
+- **`thiserror` is no longer a direct dependency of the crate**
+  (`rust/Cargo.toml`, `rust/Cargo.lock`) — nothing in `rust/src/` derives or
+  names it. It still reaches the binary at the same 2.0.21 through
+  `libsignal-core`, `libsignal-protocol`, `signal-crypto` and `spqr`, so the
+  set of compiled crates is identical on the host and on wasm32, and
+  `THIRD_PARTY_NOTICES.txt` does not move. The template keeps the line:
+  projects generated from it do use `thiserror`.
+
 ## [7.4.1] - 2026-09-29
 
 ### For Users

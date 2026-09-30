@@ -15,7 +15,6 @@ crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
 flutter_rust_bridge = "=2.13.0"
-thiserror = "2.0"
 log = "0.4"
 rand = "0.9"
 
