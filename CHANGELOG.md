@@ -1,3 +1,39 @@
+## [Unreleased]
+
+### For Users
+
+#### Fixed
+
+- **An async call no longer waits forever when another isolate shuts down
+  during `LibSignal.init()`** (`lib/src/libsignal.dart`, `lib/src/platform/`)
+  — flutter_rust_bridge sends every Rust-to-Dart message (the result of an
+  async call, the invocation of a store callback) through one process-wide
+  `Dart_PostCObject` pointer, and replaces it with a no-op once its count of
+  initialized isolates drops to zero. `RustLib.init()` installs the real
+  pointer *before* it counts the new isolate, so when the last other counted
+  isolate group shut down inside that window, the new isolate was left alive
+  with the no-op: its async calls waited for answers that had been dropped,
+  while sync calls kept working. `init()` now installs the real pointer again
+  once the isolate is counted.
+
+  Who could reach it: `dart test` runs every test file as an isolate group of
+  one process, so a consumer's own suite could hang on the first async call
+  of a file. `flutter test` starts a process per file and cannot. An
+  application that initializes libsignal in its main isolate keeps that
+  isolate counted for its whole life; one that initializes it only in
+  short-lived worker isolates could hit it.
+
+  Here it was the CI flake that picked a different test every time — a
+  `TimeoutException` on 7.5% of Windows runs and 4.5% of Linux ARM64 runs,
+  always on the first test of a file to make an async call. Reproduced
+  outside the test runner by shutting one isolate group down while another
+  initializes, timed across the window: 85 hung calls in 600 before this
+  change, none after, and in every hung isolate a new call was answered once
+  the pointer was installed again. flutter_rust_bridge
+  2.13.0 and 2.14.0-beta.2 share the ordering. What remains is a finalizer
+  that has already counted to zero and not yet written the no-op, which only
+  a lock inside flutter_rust_bridge can close.
+
 ## [7.4.1] - 2026-09-29
 
 ### For Users
