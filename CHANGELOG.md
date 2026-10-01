@@ -19,9 +19,28 @@
   Who could reach it: `dart test` runs every test file as an isolate group of
   one process, so a consumer's own suite could hang on the first async call
   of a file. `flutter test` starts a process per file and cannot. An
-  application that initializes libsignal in its main isolate keeps that
-  isolate counted for its whole life; one that initializes it only in
-  short-lived worker isolates could hit it.
+  application that initializes libsignal only in short-lived worker isolates
+  could hit it; one that initializes it in its main isolate keeps that isolate
+  counted for its whole life — **provided libsignal is the first
+  flutter_rust_bridge library that isolate initializes**, see below.
+
+  ⚠ **Not fixed by this change: several flutter_rust_bridge libraries in one
+  isolate.** flutter_rust_bridge keeps one shutdown watcher per isolate for
+  all of its libraries, while every native library counts isolates on its own
+  — so an isolate is counted only by the *first* library it initializes.
+  Measured with two libraries: when the main isolate initializes libsignal
+  second, and any other isolate — a `compute()` / `Isolate.run` worker
+  included — initializes libsignal alone and exits, libsignal's channel is
+  switched off for the whole process and every async call from the main
+  isolate waits forever, while sync calls keep working. No timing is
+  involved, and installing the pointer again in `init()` cannot help: nothing
+  is initializing when it happens. With libsignal initialized first in the
+  main isolate the same worker is harmless, and so is a worker that
+  initializes the libraries in the same order as the main isolate before it
+  uses libsignal — which is the rule to follow until this is fixed:
+  **initialize the flutter_rust_bridge libraries in the same order in every
+  isolate.** flutter_rust_bridge 2.13.0 behaves this way and the fix belongs
+  there.
 
   Here it was the CI flake that picked a different test every time — a
   `TimeoutException` on 7.5% of Windows runs and 4.5% of Linux ARM64 runs,
