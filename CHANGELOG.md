@@ -1,3 +1,17 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.104.0** — transitive SPQR dependency update
+
+#### Changed
+
+- **The update refreshes the transitive ratchet dependency without changing generated bindings** — the [libsignal v0.103.1 → v0.104.0 range](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0) changes `rust/core/src/version.rs` in the bound `libsignal-core` crate only as a version string, alongside dependency metadata in `Cargo.toml` and `Cargo.lock`. The lockfile also records the `spqr` version move; `spqr` is pulled in transitively by `libsignal-protocol`, and the supplied material does not carry what changed inside that separate repository, so the ratchet change cannot be characterized further here.
+
+  The other changed Rust code is under `rust/net/`, `rust/message-backup/`, and `rust/zkgroup/`, which are not crates in this package's dependency graph; the Java, Swift, Node, bridge, and build-tooling changes are likewise outside the crates and exposed surface listed here. `make codegen` produced no changes under `lib/src/rust/`, so the generated FFI surface did not move.
+
 ## [7.4.1] - 2026-09-29
 
 ### For Users
