@@ -1,5 +1,6 @@
 //! Kyber post-quantum key types API using libsignal-protocol.
 
+use crate::api::error::{LibSignalErrorCode, LibSignalException};
 use libsignal_protocol::{
     GenericSignedPreKey, KyberPreKeyId, KyberPreKeyRecord as NativeKyberPreKeyRecord, Timestamp,
     kem::{KeyType, KeyPair as NativeKeyPair, PublicKey as NativePublicKey, SecretKey as NativeSecretKey},
@@ -26,26 +27,26 @@ impl KyberPublicKey {
 
     /// Deserialize a Kyber public key from bytes.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<KyberPublicKey, String> {
-        let native = NativePublicKey::deserialize(&bytes).map_err(|e| e.to_string())?;
+    pub fn deserialize(bytes: Vec<u8>) -> Result<KyberPublicKey, LibSignalException> {
+        let native = NativePublicKey::deserialize(&bytes).map_err(LibSignalException::from)?;
         Ok(KyberPublicKey { inner: native })
     }
 
     /// Serialize this Kyber public key to bytes.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.serialize().into_vec())
     }
 
     /// Check if this Kyber public key equals another.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn equals(&self, other: &KyberPublicKey) -> Result<bool, String> {
+    pub fn equals(&self, other: &KyberPublicKey) -> Result<bool, LibSignalException> {
         Ok(self.inner == other.inner)
     }
 
     /// Clone this Kyber public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_key(&self) -> Result<KyberPublicKey, String> {
+    pub fn clone_key(&self) -> Result<KyberPublicKey, LibSignalException> {
         Ok(KyberPublicKey {
             inner: self.inner.clone(),
         })
@@ -73,8 +74,8 @@ impl KyberSecretKey {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberSecretKey, String> {
-        let result = NativeSecretKey::deserialize(&bytes).map_err(|e| e.to_string());
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberSecretKey, LibSignalException> {
+        let result = NativeSecretKey::deserialize(&bytes).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(KyberSecretKey { inner: result? })
     }
@@ -86,7 +87,7 @@ impl KyberSecretKey {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.serialize().into_vec())
     }
 
@@ -100,7 +101,7 @@ impl KyberSecretKey {
     /// each copy as soon as it is no longer needed rather than waiting for the
     /// garbage collector, and avoid making copies you do not need.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_key(&self) -> Result<KyberSecretKey, String> {
+    pub fn clone_key(&self) -> Result<KyberSecretKey, LibSignalException> {
         Ok(KyberSecretKey {
             inner: self.inner.clone(),
         })
@@ -125,7 +126,7 @@ impl KyberKeyPair {
 
     /// Generate a new random Kyber key pair.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<KyberKeyPair, String> {
+    pub fn generate() -> Result<KyberKeyPair, LibSignalException> {
         // Default to Kyber1024 for post-quantum security
         let native = NativeKeyPair::generate(KeyType::Kyber1024, &mut OsRng.unwrap_err());
         Ok(KyberKeyPair { inner: native })
@@ -166,17 +167,20 @@ impl KyberKeyPair {
     pub fn from_keys(
         public_key: &KyberPublicKey,
         secret_key: &KyberSecretKey,
-    ) -> Result<KyberKeyPair, String> {
+    ) -> Result<KyberKeyPair, LibSignalException> {
         let (public_key, secret_key) = (&public_key.inner, &secret_key.inner);
         // Checked first so a mismatch fails with an error naming both types;
         // `decapsulate` below would refuse it too, with `WrongKEMKeyType`. The
         // pair is built as a struct literal, so `NativeKeyPair::new`, which
         // asserts on this condition, is never reached.
         if public_key.key_type() != secret_key.key_type() {
-            return Err(format!(
-                "Kyber key type mismatch: public key is {:?}, secret key is {:?}",
-                public_key.key_type(),
-                secret_key.key_type()
+            return Err(LibSignalException::new(
+                LibSignalErrorCode::InvalidKey,
+                format!(
+                    "Kyber key type mismatch: public key is {:?}, secret key is {:?}",
+                    public_key.key_type(),
+                    secret_key.key_type()
+                ),
             ));
         }
 
@@ -187,17 +191,18 @@ impl KyberKeyPair {
         // the secrets match is exactly what this call reports.
         let (sent, ciphertext) = public_key
             .encapsulate(&mut OsRng.unwrap_err())
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         let sent = Zeroizing::new(sent);
         let received = Zeroizing::new(
             secret_key
                 .decapsulate(&ciphertext)
-                .map_err(|e| e.to_string())?,
+                .map_err(LibSignalException::from)?,
         );
         if !bool::from(sent[..].ct_eq(&received[..])) {
-            return Err(
-                "Kyber public key and secret key are not halves of the same key pair".to_string(),
-            );
+            return Err(LibSignalException::new(
+                LibSignalErrorCode::InvalidKey,
+                "Kyber public key and secret key are not halves of the same key pair",
+            ));
         }
 
         Ok(KyberKeyPair {
@@ -210,7 +215,7 @@ impl KyberKeyPair {
 
     /// Get the public key from this key pair.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_public_key(&self) -> Result<KyberPublicKey, String> {
+    pub fn get_public_key(&self) -> Result<KyberPublicKey, LibSignalException> {
         Ok(KyberPublicKey {
             inner: self.inner.public_key.clone(),
         })
@@ -223,7 +228,7 @@ impl KyberKeyPair {
     /// the caller is responsible for securely zeroing those bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_secret_key(&self) -> Result<KyberSecretKey, String> {
+    pub fn get_secret_key(&self) -> Result<KyberSecretKey, LibSignalException> {
         Ok(KyberSecretKey {
             inner: self.inner.secret_key.clone(),
         })
@@ -239,7 +244,7 @@ impl KyberKeyPair {
     /// side of each copy as soon as it is no longer needed rather than waiting
     /// for the garbage collector, and avoid making copies you do not need.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_key(&self) -> Result<KyberKeyPair, String> {
+    pub fn clone_key(&self) -> Result<KyberKeyPair, LibSignalException> {
         Ok(KyberKeyPair {
             inner: self.inner.clone(),
         })
@@ -269,7 +274,7 @@ impl KyberPreKeyRecord {
         timestamp: u64,
         key_pair: &KyberKeyPair,
         signature: Vec<u8>,
-    ) -> Result<KyberPreKeyRecord, String> {
+    ) -> Result<KyberPreKeyRecord, LibSignalException> {
         let kyber_id = KyberPreKeyId::from(id);
         let ts = Timestamp::from_epoch_millis(timestamp);
         let native =
@@ -282,9 +287,9 @@ impl KyberPreKeyRecord {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberPreKeyRecord, String> {
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<KyberPreKeyRecord, LibSignalException> {
         let result =
-            NativeKyberPreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string());
+            NativeKyberPreKeyRecord::deserialize(&bytes).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(KyberPreKeyRecord { inner: result? })
     }
@@ -296,34 +301,34 @@ impl KyberPreKeyRecord {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
-        self.inner.serialize().map_err(|e| e.to_string())
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
+        self.inner.serialize().map_err(LibSignalException::from)
     }
 
     /// Get the ID of this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn id(&self) -> Result<u32, String> {
-        let id = self.inner.id().map_err(|e| e.to_string())?;
+    pub fn id(&self) -> Result<u32, LibSignalException> {
+        let id = self.inner.id().map_err(LibSignalException::from)?;
         Ok(id.into())
     }
 
     /// Get the timestamp of this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn timestamp(&self) -> Result<u64, String> {
-        let ts = self.inner.timestamp().map_err(|e| e.to_string())?;
+    pub fn timestamp(&self) -> Result<u64, LibSignalException> {
+        let ts = self.inner.timestamp().map_err(LibSignalException::from)?;
         Ok(ts.epoch_millis())
     }
 
     /// Get the signature of this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn signature(&self) -> Result<Vec<u8>, String> {
-        self.inner.signature().map_err(|e| e.to_string())
+    pub fn signature(&self) -> Result<Vec<u8>, LibSignalException> {
+        self.inner.signature().map_err(LibSignalException::from)
     }
 
     /// Get the public key from this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_public_key(&self) -> Result<KyberPublicKey, String> {
-        let native = self.inner.public_key().map_err(|e| e.to_string())?;
+    pub fn get_public_key(&self) -> Result<KyberPublicKey, LibSignalException> {
+        let native = self.inner.public_key().map_err(LibSignalException::from)?;
         Ok(KyberPublicKey::from_native(native))
     }
 
@@ -334,21 +339,21 @@ impl KyberPreKeyRecord {
     /// the caller is responsible for securely zeroing those bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side after serialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_secret_key(&self) -> Result<KyberSecretKey, String> {
-        let native = self.inner.secret_key().map_err(|e| e.to_string())?;
+    pub fn get_secret_key(&self) -> Result<KyberSecretKey, LibSignalException> {
+        let native = self.inner.secret_key().map_err(LibSignalException::from)?;
         Ok(KyberSecretKey::from_native(native))
     }
 
     /// Get the key pair from this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_key_pair(&self) -> Result<KyberKeyPair, String> {
-        let native = self.inner.key_pair().map_err(|e| e.to_string())?;
+    pub fn get_key_pair(&self) -> Result<KyberKeyPair, LibSignalException> {
+        let native = self.inner.key_pair().map_err(LibSignalException::from)?;
         Ok(KyberKeyPair::from_native(native))
     }
 
     /// Clone this Kyber pre-key record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_record(&self) -> Result<KyberPreKeyRecord, String> {
+    pub fn clone_record(&self) -> Result<KyberPreKeyRecord, LibSignalException> {
         Ok(KyberPreKeyRecord {
             inner: self.inner.clone(),
         })

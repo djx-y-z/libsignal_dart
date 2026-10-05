@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
@@ -33,14 +34,17 @@ void main() {
       });
 
       test('deserialize rejects empty data', () {
-        expect(() => PublicKey.deserialize(bytes: []), throwsA(anything));
+        expect(
+          () => PublicKey.deserialize(bytes: []),
+          failsWith(LibSignalErrorCode.invalidKey),
+        );
       });
 
       test('deserialize rejects data with wrong length', () {
         final invalidData = [0x05, 1, 2, 3, 4, 5];
         expect(
           () => PublicKey.deserialize(bytes: invalidData),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidKey),
         );
       });
 
@@ -50,7 +54,7 @@ void main() {
         invalidData[0] = 0x99; // Wrong type
         expect(
           () => PublicKey.deserialize(bytes: invalidData),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidKey),
         );
       });
 
@@ -59,14 +63,20 @@ void main() {
           final data = List<int>.filled(33, 0);
           data[0] = 0x05; // Correct type prefix
           // Remaining 32 bytes are all zeros - low-order point
-          expect(() => PublicKey.deserialize(bytes: data), throwsA(anything));
+          expect(
+            () => PublicKey.deserialize(bytes: data),
+            failsWith(LibSignalErrorCode.invalidKey),
+          );
         });
 
         test('rejects one point (order 1)', () {
           final data = List<int>.filled(33, 0);
           data[0] = 0x05; // Correct type prefix
           data[1] = 0x01; // Low-order point: 1
-          expect(() => PublicKey.deserialize(bytes: data), throwsA(anything));
+          expect(
+            () => PublicKey.deserialize(bytes: data),
+            failsWith(LibSignalErrorCode.invalidKey),
+          );
         });
 
         test('rejects order-8 point', () {
@@ -78,7 +88,10 @@ void main() {
             0xda, 0x09, 0x8d, 0xeb, 0x9c, 0x32, 0xb1, 0xfd,
             0x86, 0x62, 0x05, 0x16, 0x5f, 0x49, 0xb8, 0x00,
           ];
-          expect(() => PublicKey.deserialize(bytes: data), throwsA(anything));
+          expect(
+            () => PublicKey.deserialize(bytes: data),
+            failsWith(LibSignalErrorCode.invalidKey),
+          );
         });
 
         test('rejects p-1 point (order 2)', () {
@@ -90,7 +103,10 @@ void main() {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
           ];
-          expect(() => PublicKey.deserialize(bytes: data), throwsA(anything));
+          expect(
+            () => PublicKey.deserialize(bytes: data),
+            failsWith(LibSignalErrorCode.invalidKey),
+          );
         });
 
         test('rejects non-canonical p encoding (order 4)', () {
@@ -102,7 +118,10 @@ void main() {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f,
           ];
-          expect(() => PublicKey.deserialize(bytes: data), throwsA(anything));
+          expect(
+            () => PublicKey.deserialize(bytes: data),
+            failsWith(LibSignalErrorCode.invalidKey),
+          );
         });
       });
 

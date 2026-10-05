@@ -1,6 +1,7 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
@@ -57,14 +58,17 @@ void main() {
       });
 
       test('deserialize rejects empty data', () {
-        expect(() => PrivateKey.deserialize(bytes: []), throwsA(anything));
+        expect(
+          () => PrivateKey.deserialize(bytes: []),
+          failsWith(LibSignalErrorCode.invalidKey),
+        );
       });
 
       test('deserialize rejects data with wrong length', () {
         final invalidData = [1, 2, 3, 4, 5];
         expect(
           () => PrivateKey.deserialize(bytes: invalidData),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidKey),
         );
       });
     });

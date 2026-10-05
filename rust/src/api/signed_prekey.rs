@@ -1,5 +1,6 @@
 //! Signed pre-key record API using libsignal-protocol.
 
+use crate::api::error::LibSignalException;
 use libsignal_protocol::{
     GenericSignedPreKey, KeyPair, SignedPreKeyId, SignedPreKeyRecord as NativeSignedPreKeyRecord,
     Timestamp,
@@ -39,7 +40,7 @@ impl SignedPreKeyRecord {
         public_key: &PublicKey,
         private_key: &PrivateKey,
         signature: Vec<u8>,
-    ) -> Result<SignedPreKeyRecord, String> {
+    ) -> Result<SignedPreKeyRecord, LibSignalException> {
         let signed_prekey_id = SignedPreKeyId::from(id);
         let ts = Timestamp::from_epoch_millis(timestamp);
         let key_pair = KeyPair::new(*public_key.native(), *private_key.native());
@@ -52,9 +53,9 @@ impl SignedPreKeyRecord {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<SignedPreKeyRecord, String> {
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<SignedPreKeyRecord, LibSignalException> {
         let result =
-            NativeSignedPreKeyRecord::deserialize(&bytes).map_err(|e| e.to_string());
+            NativeSignedPreKeyRecord::deserialize(&bytes).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(SignedPreKeyRecord { inner: result? })
     }
@@ -66,28 +67,28 @@ impl SignedPreKeyRecord {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
-        self.inner.serialize().map_err(|e| e.to_string())
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
+        self.inner.serialize().map_err(LibSignalException::from)
     }
 
     /// Get the signed pre-key ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn id(&self) -> Result<u32, String> {
-        let id = self.inner.id().map_err(|e| e.to_string())?;
+    pub fn id(&self) -> Result<u32, LibSignalException> {
+        let id = self.inner.id().map_err(LibSignalException::from)?;
         Ok(id.into())
     }
 
     /// Get the timestamp when this key was generated.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn timestamp(&self) -> Result<u64, String> {
-        let ts = self.inner.timestamp().map_err(|e| e.to_string())?;
+    pub fn timestamp(&self) -> Result<u64, LibSignalException> {
+        let ts = self.inner.timestamp().map_err(LibSignalException::from)?;
         Ok(ts.epoch_millis())
     }
 
     /// Get the public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn public_key(&self) -> Result<Vec<u8>, String> {
-        let key = self.inner.public_key().map_err(|e| e.to_string())?;
+    pub fn public_key(&self) -> Result<Vec<u8>, LibSignalException> {
+        let key = self.inner.public_key().map_err(LibSignalException::from)?;
         Ok(key.serialize().into_vec())
     }
 
@@ -98,14 +99,14 @@ impl SignedPreKeyRecord {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn private_key(&self) -> Result<Vec<u8>, String> {
-        let key = self.inner.private_key().map_err(|e| e.to_string())?;
+    pub fn private_key(&self) -> Result<Vec<u8>, LibSignalException> {
+        let key = self.inner.private_key().map_err(LibSignalException::from)?;
         Ok(key.serialize())
     }
 
     /// Get the signature.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn signature(&self) -> Result<Vec<u8>, String> {
-        self.inner.signature().map_err(|e| e.to_string())
+    pub fn signature(&self) -> Result<Vec<u8>, LibSignalException> {
+        self.inner.signature().map_err(LibSignalException::from)
     }
 }

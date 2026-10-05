@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
@@ -18,11 +19,11 @@ void main() {
         expect(result, isNotNull);
       });
 
-      test('throws for invalid protobuf data', () {
+      test('bytes that do not parse are invalidSession', () {
         final garbage = [0x12, 0x34, 0x56, 0x78, 0x9A];
         expect(
           () => SessionRecord.deserialize(bytes: garbage),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidSession),
         );
       });
     });

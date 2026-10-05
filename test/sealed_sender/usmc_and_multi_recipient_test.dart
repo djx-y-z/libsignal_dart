@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 // Sealed Sender v2 addresses recipients by service id, so these have to be
@@ -373,7 +374,7 @@ void main() {
             getLocalRegistrationId: () async => bob.registrationId,
             getIdentity: (name, deviceId) async => null,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidMessage),
           reason: 'a foreign trust root must not authenticate',
         );
       });
@@ -421,7 +422,7 @@ void main() {
             getLocalRegistrationId: () async => bob.registrationId,
             getIdentity: (name, deviceId) async => null,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.verificationFailure),
         );
       });
 
@@ -457,7 +458,7 @@ void main() {
             getLocalRegistrationId: () async => 99999,
             getIdentity: (name, deviceId) async => null,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidMessage),
         );
       });
     });
@@ -704,7 +705,39 @@ void main() {
                   ProtocolAddress(name: name, deviceId: deviceId),
                 ))?.serialize(),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidRegistrationId),
+        );
+      });
+
+      test('a destination session record with no current session is '
+          'invalidState', () async {
+        // An empty record deserializes, but holds no session to take the
+        // destination's registration id from.
+        final bob = await addPeer(_bobUuid, 2222);
+        await expectLater(
+          sealedSenderMultiRecipientEncryptWithCallbacks(
+            destinations: [
+              MultiRecipientDestination(
+                name: bob.address.name(),
+                deviceId: bob.address.deviceId(),
+                sessionRecord: Uint8List(0),
+              ),
+            ],
+            excludedRecipients: [],
+            usmc: UnidentifiedSenderMessageContent(
+              messageType: CiphertextMessageType.signal.value,
+              senderCertificate: aliceCertificate,
+              contents: utf8.encode('body'),
+              contentHint: 0,
+            ).serialize(),
+            getIdentityKeyPair: () async => aliceIdentity.serialize(),
+            getLocalRegistrationId: () async => 11111,
+            getIdentity: (name, deviceId) async =>
+                (await aliceIdentityStore.getIdentity(
+                  ProtocolAddress(name: name, deviceId: deviceId),
+                ))?.serialize(),
+          ),
+          failsWith(LibSignalErrorCode.invalidState),
         );
       });
 
@@ -735,7 +768,7 @@ void main() {
                   ProtocolAddress(name: name, deviceId: deviceId),
                 ))?.serialize(),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 
@@ -807,7 +840,7 @@ void main() {
                   ProtocolAddress(name: name, deviceId: deviceId),
                 ))?.serialize(),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 
@@ -839,7 +872,7 @@ void main() {
                   ProtocolAddress(name: name, deviceId: deviceId),
                 ))?.serialize(),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 
@@ -872,14 +905,14 @@ void main() {
             // An empty identity store: nothing is known about anyone.
             getIdentity: (name, deviceId) async => null,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.sessionNotFound),
         );
       });
 
       test('parsing rejects a message that is not Sealed Sender v2', () async {
         await expectLater(
           sealedSenderV2ParseSentMessage(data: <int>[0x11, 0x22]),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.unrecognizedMessageVersion),
         );
       });
 

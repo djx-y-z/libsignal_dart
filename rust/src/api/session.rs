@@ -1,5 +1,6 @@
 //! Session record API using libsignal-protocol.
 
+use crate::api::error::LibSignalException;
 use libsignal_protocol::{SessionRecord as NativeSessionRecord, SessionUsabilityRequirements};
 use std::time::{Duration, UNIX_EPOCH};
 use zeroize::Zeroize;
@@ -32,8 +33,8 @@ impl SessionRecord {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<SessionRecord, String> {
-        let result = NativeSessionRecord::deserialize(&bytes).map_err(|e| e.to_string());
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<SessionRecord, LibSignalException> {
+        let result = NativeSessionRecord::deserialize(&bytes).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(SessionRecord { inner: result? })
     }
@@ -45,54 +46,54 @@ impl SessionRecord {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
-        self.inner.serialize().map_err(|e| e.to_string())
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
+        self.inner.serialize().map_err(LibSignalException::from)
     }
 
     /// Archive the current session state.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn archive_current_state(&mut self) -> Result<(), String> {
+    pub fn archive_current_state(&mut self) -> Result<(), LibSignalException> {
         self.inner
             .archive_current_state()
-            .map_err(|e| e.to_string())
+            .map_err(LibSignalException::from)
     }
 
     /// Check if this session has a usable sender chain.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn has_usable_sender_chain(&self, now_millis: u64) -> Result<bool, String> {
+    pub fn has_usable_sender_chain(&self, now_millis: u64) -> Result<bool, LibSignalException> {
         let now = UNIX_EPOCH + Duration::from_millis(now_millis);
         self.inner
             .has_usable_sender_chain(now, SessionUsabilityRequirements::empty())
-            .map_err(|e| e.to_string())
+            .map_err(LibSignalException::from)
     }
 
     /// Check if the current ratchet key matches the given public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn current_ratchet_key_matches(&self, key: &PublicKey) -> Result<bool, String> {
+    pub fn current_ratchet_key_matches(&self, key: &PublicKey) -> Result<bool, LibSignalException> {
         self.inner
             .current_ratchet_key_matches(key.native())
-            .map_err(|e| e.to_string())
+            .map_err(LibSignalException::from)
     }
 
     /// Get the local registration ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn local_registration_id(&self) -> Result<u32, String> {
+    pub fn local_registration_id(&self) -> Result<u32, LibSignalException> {
         self.inner
             .local_registration_id()
-            .map_err(|e| e.to_string())
+            .map_err(LibSignalException::from)
     }
 
     /// Get the remote registration ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn remote_registration_id(&self) -> Result<u32, String> {
+    pub fn remote_registration_id(&self) -> Result<u32, LibSignalException> {
         self.inner
             .remote_registration_id()
-            .map_err(|e| e.to_string())
+            .map_err(LibSignalException::from)
     }
 
     /// Create a copy of this session record.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_record(&self) -> Result<SessionRecord, String> {
+    pub fn clone_record(&self) -> Result<SessionRecord, LibSignalException> {
         Ok(SessionRecord {
             inner: self.inner.clone(),
         })

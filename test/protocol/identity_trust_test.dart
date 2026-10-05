@@ -65,9 +65,10 @@ void main() {
       await expectLater(
         () => builder.processPreKeyBundle(bobAddress, bobKeys2.toBundle()),
         throwsA(
-          predicate<Object>(
-            (e) => e.toString().toLowerCase().contains('untrusted identity'),
-            'an UntrustedIdentity error (not a signature/session failure)',
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.untrustedIdentity,
           ),
         ),
       );
@@ -216,9 +217,10 @@ void main() {
         await expectLater(
           () => bobCipher.decrypt(aliceAddress, ciphertext),
           throwsA(
-            predicate<Object>(
-              (e) => e.toString().toLowerCase().contains('untrusted identity'),
-              'an UntrustedIdentity error (not a MAC/prekey failure)',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.untrustedIdentity,
             ),
           ),
         );
@@ -372,9 +374,10 @@ void main() {
         await expectLater(
           () => session.aliceCipher.encrypt(bobAddress, utf8.encode('secret')),
           throwsA(
-            predicate<Object>(
-              (e) => e.toString().toLowerCase().contains('untrusted identity'),
-              'an UntrustedIdentity error (not a session failure)',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.untrustedIdentity,
             ),
           ),
         );
@@ -403,9 +406,10 @@ void main() {
         await expectLater(
           () => session.bobCipher.decrypt(aliceAddress, whisper),
           throwsA(
-            predicate<Object>(
-              (e) => e.toString().toLowerCase().contains('untrusted identity'),
-              'an UntrustedIdentity error (not a MAC failure)',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.untrustedIdentity,
             ),
           ),
         );
@@ -572,9 +576,10 @@ void main() {
           timestamp: DateTime.now().millisecondsSinceEpoch,
         ),
         throwsA(
-          predicate<Object>(
-            (e) => e.toString().toLowerCase().contains('untrusted identity'),
-            'an UntrustedIdentity error (not a cert/MAC failure)',
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.untrustedIdentity,
           ),
         ),
       );
@@ -668,9 +673,10 @@ void main() {
             senderCertificate: aliceSenderCertificate,
           ),
           throwsA(
-            predicate<Object>(
-              (e) => e.toString().toLowerCase().contains('untrusted identity'),
-              'an UntrustedIdentity error (not a cert/session failure)',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.untrustedIdentity,
             ),
           ),
         );

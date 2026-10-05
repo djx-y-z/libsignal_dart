@@ -6,6 +6,7 @@
 import 'api/address.dart';
 import 'api/bundle.dart';
 import 'api/crypto.dart';
+import 'api/error.dart';
 import 'api/group_session.dart';
 import 'api/init.dart';
 import 'api/keys.dart';
@@ -1136,7 +1137,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoAes256GcmSivDecryptConstMeta,
         argValues: [that, ciphertext, nonce, associatedData],
@@ -1177,7 +1178,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoAes256GcmSivEncryptConstMeta,
         argValues: [that, plaintext, nonce, associatedData],
@@ -1203,7 +1204,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerAes256GcmSiv,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoAes256GcmSivNewConstMeta,
         argValues: [key],
@@ -1234,7 +1235,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageCloneMessageConstMeta,
         argValues: [that],
@@ -1266,7 +1267,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageDeserializeConstMeta,
         argValues: [bytes],
@@ -1300,7 +1301,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageDeviceIdConstMeta,
         argValues: [that],
@@ -1332,7 +1333,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageDecryptionErrorMessageExtractFromSerializedContentConstMeta,
@@ -1375,7 +1376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerDecryptionErrorMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageDecryptionErrorMessageForOriginalMessageConstMeta,
@@ -1420,7 +1421,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageRatchetKeyConstMeta,
         argValues: [that],
@@ -1453,7 +1454,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageSerializeConstMeta,
         argValues: [that],
@@ -1486,7 +1487,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_64,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageDecryptionErrorMessageTimestampConstMeta,
         argValues: [that],
@@ -1519,7 +1520,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFingerprint,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoFingerprintCloneFingerprintConstMeta,
         argValues: [that],
@@ -1549,7 +1550,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoFingerprintDisplayStringConstMeta,
         argValues: [that],
@@ -1594,7 +1595,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerFingerprint,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoFingerprintNewConstMeta,
         argValues: [
@@ -1640,7 +1641,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoFingerprintScannableEncodingConstMeta,
         argValues: [that],
@@ -1668,7 +1669,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairDeserializeConstMeta,
         argValues: [bytes],
@@ -1732,7 +1733,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerIdentityKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairGenerateConstMeta,
         argValues: [],
@@ -1759,7 +1760,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairPrivateKeyConstMeta,
         argValues: [that],
@@ -1789,7 +1790,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairPublicKeyConstMeta,
         argValues: [that],
@@ -1819,7 +1820,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairSerializeConstMeta,
         argValues: [that],
@@ -1851,7 +1852,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairSignConstMeta,
         argValues: [that, message],
@@ -1890,7 +1891,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeyPairSignAlternateIdentityConstMeta,
         argValues: [that, otherIdentity],
@@ -1920,7 +1921,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberKeyPairCloneKeyConstMeta,
         argValues: [that],
@@ -1959,7 +1960,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberKeyPairFromKeysConstMeta,
         argValues: [publicKey, secretKey],
@@ -1984,7 +1985,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberKeyPairGenerateConstMeta,
         argValues: [],
@@ -2014,7 +2015,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberKeyPairGetPublicKeyConstMeta,
         argValues: [that],
@@ -2047,7 +2048,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberKeyPairGetSecretKeyConstMeta,
         argValues: [that],
@@ -2080,7 +2081,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordCloneRecordConstMeta,
         argValues: [that],
@@ -2122,7 +2123,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordCreateConstMeta,
         argValues: [id, timestamp, keyPair, signature],
@@ -2152,7 +2153,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordDeserializeConstMeta,
         argValues: [bytes],
@@ -2185,7 +2186,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberKeyPair,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordGetKeyPairConstMeta,
         argValues: [that],
@@ -2218,7 +2219,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordGetPublicKeyConstMeta,
         argValues: [that],
@@ -2251,7 +2252,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordGetSecretKeyConstMeta,
         argValues: [that],
@@ -2279,7 +2280,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordIdConstMeta,
         argValues: [that],
@@ -2311,7 +2312,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordSerializeConstMeta,
         argValues: [that],
@@ -2343,7 +2344,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordSignatureConstMeta,
         argValues: [that],
@@ -2375,7 +2376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_64,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPreKeyRecordTimestampConstMeta,
         argValues: [that],
@@ -2406,7 +2407,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPublicKeyCloneKeyConstMeta,
         argValues: [that],
@@ -2434,7 +2435,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPublicKeyDeserializeConstMeta,
         argValues: [bytes],
@@ -2472,7 +2473,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPublicKeyEqualsConstMeta,
         argValues: [that, other],
@@ -2502,7 +2503,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberPublicKeySerializeConstMeta,
         argValues: [that],
@@ -2533,7 +2534,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberSecretKeyCloneKeyConstMeta,
         argValues: [that],
@@ -2561,7 +2562,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerKyberSecretKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberSecretKeyDeserializeConstMeta,
         argValues: [bytes],
@@ -2591,7 +2592,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKyberKyberSecretKeySerializeConstMeta,
         argValues: [that],
@@ -2621,7 +2622,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePlaintextContentBodyConstMeta,
         argValues: [that],
@@ -2654,7 +2655,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePlaintextContentCloneMessageConstMeta,
         argValues: [that],
@@ -2684,7 +2685,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePlaintextContentDeserializeConstMeta,
         argValues: [data],
@@ -2718,7 +2719,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPlaintextContent,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessagePlaintextContentFromDecryptionErrorMessageConstMeta,
@@ -2752,7 +2753,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePlaintextContentSerializeConstMeta,
         argValues: [that],
@@ -2780,7 +2781,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleDeviceIdConstMeta,
         argValues: [that],
@@ -2810,7 +2811,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleIdentityKeyConstMeta,
         argValues: [that],
@@ -2840,7 +2841,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleKyberPreKeyIdConstMeta,
         argValues: [that],
@@ -2873,7 +2874,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleKyberPreKeyPublicConstMeta,
         argValues: [that],
@@ -2906,7 +2907,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleKyberPreKeySignatureConstMeta,
         argValues: [that],
@@ -2966,7 +2967,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyBundle,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleNewConstMeta,
         argValues: [
@@ -3018,7 +3019,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundlePreKeyIdConstMeta,
         argValues: [that],
@@ -3050,7 +3051,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundlePreKeyPublicConstMeta,
         argValues: [that],
@@ -3080,7 +3081,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleRegistrationIdConstMeta,
         argValues: [that],
@@ -3110,7 +3111,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleSignedPreKeyIdConstMeta,
         argValues: [that],
@@ -3143,7 +3144,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleSignedPreKeyPublicConstMeta,
         argValues: [that],
@@ -3176,7 +3177,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiBundlePreKeyBundleSignedPreKeySignatureConstMeta,
         argValues: [that],
@@ -3204,7 +3205,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordDeserializeConstMeta,
         argValues: [bytes],
@@ -3232,7 +3233,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordIdConstMeta,
         argValues: [that],
@@ -3271,7 +3272,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordNewConstMeta,
         argValues: [id, publicKey, privateKey],
@@ -3299,7 +3300,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordPrivateKeyConstMeta,
         argValues: [that],
@@ -3327,7 +3328,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordPublicKeyConstMeta,
         argValues: [that],
@@ -3355,7 +3356,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiPrekeyPreKeyRecordSerializeConstMeta,
         argValues: [that],
@@ -3387,7 +3388,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageBaseKeyConstMeta,
         argValues: [that],
@@ -3421,7 +3422,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageCloneMessageConstMeta,
         argValues: [that],
@@ -3450,7 +3451,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeySignalMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageDeserializeConstMeta,
         argValues: [data],
@@ -3483,7 +3484,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageIdentityKeyConstMeta,
         argValues: [that],
@@ -3516,7 +3517,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageKyberCiphertextConstMeta,
         argValues: [that],
@@ -3550,7 +3551,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageKyberPreKeyIdConstMeta,
         argValues: [that],
@@ -3583,7 +3584,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageMessageConstMeta,
         argValues: [that],
@@ -3616,7 +3617,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageMessageVersionConstMeta,
         argValues: [that],
@@ -3649,7 +3650,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_box_autoadd_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessagePreKeyIdConstMeta,
         argValues: [that],
@@ -3682,7 +3683,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageRegistrationIdConstMeta,
         argValues: [that],
@@ -3715,7 +3716,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageSerializeConstMeta,
         argValues: [that],
@@ -3748,7 +3749,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessagePreKeySignalMessageSignedPreKeyIdConstMeta,
         argValues: [that],
@@ -3784,7 +3785,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeyAgreeConstMeta,
         argValues: [that, publicKey],
@@ -3813,7 +3814,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeyCloneKeyConstMeta,
         argValues: [that],
@@ -3839,7 +3840,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeyDeserializeConstMeta,
         argValues: [bytes],
@@ -3864,7 +3865,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPrivateKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeyGenerateConstMeta,
         argValues: [],
@@ -3890,7 +3891,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeyGetPublicKeyConstMeta,
         argValues: [that],
@@ -3918,7 +3919,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeySerializeConstMeta,
         argValues: [that],
@@ -3950,7 +3951,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPrivateKeySignConstMeta,
         argValues: [that, message],
@@ -3979,7 +3980,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiAddressProtocolAddressDeviceIdConstMeta,
         argValues: [that],
@@ -4007,7 +4008,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiAddressProtocolAddressNameConstMeta,
         argValues: [that],
@@ -4040,7 +4041,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerProtocolAddress,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiAddressProtocolAddressNewConstMeta,
         argValues: [name, deviceId],
@@ -4069,7 +4070,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyCloneKeyConstMeta,
         argValues: [that],
@@ -4101,7 +4102,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_i_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyCompareConstMeta,
         argValues: [that, other],
@@ -4127,7 +4128,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPublicKey,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyDeserializeConstMeta,
         argValues: [bytes],
@@ -4162,7 +4163,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyEqualsConstMeta,
         argValues: [that, other],
@@ -4192,7 +4193,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyGetPublicKeyBytesConstMeta,
         argValues: [that],
@@ -4220,7 +4221,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeySerializeConstMeta,
         argValues: [that],
@@ -4255,7 +4256,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysPublicKeyVerifyConstMeta,
         argValues: [that, message, signature],
@@ -4288,7 +4289,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyDistributionMessageChainIdConstMeta,
         argValues: [that],
@@ -4324,7 +4325,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageCloneMessageConstMeta,
@@ -4358,7 +4359,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyDistributionMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageDeserializeConstMeta,
@@ -4393,7 +4394,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageDistributionIdConstMeta,
@@ -4428,7 +4429,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageIterationConstMeta,
@@ -4463,7 +4464,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageMessageVersionConstMeta,
@@ -4498,7 +4499,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageSerializeConstMeta,
@@ -4533,7 +4534,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiMessageSenderKeyDistributionMessageSigningKeyConstMeta,
@@ -4565,7 +4566,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageChainIdConstMeta,
         argValues: [that],
@@ -4597,7 +4598,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageCiphertextConstMeta,
         argValues: [that],
@@ -4630,7 +4631,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageCloneMessageConstMeta,
         argValues: [that],
@@ -4660,7 +4661,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSenderKeyMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageDeserializeConstMeta,
         argValues: [data],
@@ -4693,7 +4694,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageDistributionIdConstMeta,
         argValues: [that],
@@ -4725,7 +4726,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageIterationConstMeta,
         argValues: [that],
@@ -4758,7 +4759,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageMessageVersionConstMeta,
         argValues: [that],
@@ -4790,7 +4791,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageSerializeConstMeta,
         argValues: [that],
@@ -4826,7 +4827,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSenderKeyMessageVerifySignatureConstMeta,
         argValues: [that, signatureKey],
@@ -4859,7 +4860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordArchiveCurrentStateConstMeta,
         argValues: [that],
@@ -4892,7 +4893,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordCloneRecordConstMeta,
         argValues: [that],
@@ -4931,7 +4932,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSessionSessionRecordCurrentRatchetKeyMatchesConstMeta,
@@ -4963,7 +4964,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSessionRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordDeserializeConstMeta,
         argValues: [bytes],
@@ -4999,7 +5000,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordHasUsableSenderChainConstMeta,
         argValues: [that, nowMillis],
@@ -5033,7 +5034,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordLocalRegistrationIdConstMeta,
         argValues: [that],
@@ -5066,7 +5067,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordRemoteRegistrationIdConstMeta,
         argValues: [that],
@@ -5097,7 +5098,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionSessionRecordSerializeConstMeta,
         argValues: [that],
@@ -5125,7 +5126,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageBodyConstMeta,
         argValues: [that],
@@ -5155,7 +5156,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageCloneMessageConstMeta,
         argValues: [that],
@@ -5183,7 +5184,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageCounterConstMeta,
         argValues: [that],
@@ -5213,7 +5214,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignalMessage,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageDeserializeConstMeta,
         argValues: [data],
@@ -5245,7 +5246,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageMessageVersionConstMeta,
         argValues: [that],
@@ -5275,7 +5276,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessagePqRatchetConstMeta,
         argValues: [that],
@@ -5308,7 +5309,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageSenderRatchetKeyConstMeta,
         argValues: [that],
@@ -5338,7 +5339,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageSerializeConstMeta,
         argValues: [that],
@@ -5391,7 +5392,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiMessageSignalMessageVerifyMacConstMeta,
         argValues: [
@@ -5440,7 +5441,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordDeserializeConstMeta,
         argValues: [bytes],
@@ -5473,7 +5474,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordIdConstMeta,
         argValues: [that],
@@ -5521,7 +5522,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordNewConstMeta,
         argValues: [id, timestamp, publicKey, privateKey, signature],
@@ -5554,7 +5555,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordPrivateKeyConstMeta,
         argValues: [that],
@@ -5588,7 +5589,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordPublicKeyConstMeta,
         argValues: [that],
@@ -5621,7 +5622,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordSerializeConstMeta,
         argValues: [that],
@@ -5654,7 +5655,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordSignatureConstMeta,
         argValues: [that],
@@ -5687,7 +5688,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_64,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSignedPrekeySignedPreKeyRecordTimestampConstMeta,
         argValues: [that],
@@ -5720,7 +5721,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentContentHintConstMeta,
@@ -5755,7 +5756,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentContentsConstMeta,
@@ -5789,7 +5790,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentDeserializeConstMeta,
@@ -5824,7 +5825,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_opt_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentGroupIdConstMeta,
@@ -5859,7 +5860,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_8,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentMessageTypeConstMeta,
@@ -5905,7 +5906,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         codec: DcoCodec(
           decodeSuccessData:
               dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerUnidentifiedSenderMessageContent,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentNewConstMeta,
@@ -5953,7 +5954,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentSenderCertificateConstMeta,
@@ -5988,7 +5989,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderUnidentifiedSenderMessageContentSerializeConstMeta,
@@ -6035,7 +6036,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderCreateSenderCertificateConstMeta,
         argValues: [
@@ -6106,7 +6107,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_create_sender_key_distribution_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiGroupSessionCreateSenderKeyDistributionMessageWithCallbacksConstMeta,
@@ -6158,7 +6159,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderCreateServerCertificateConstMeta,
         argValues: [keyId, serverPublicKey, trustRootPrivateKey],
@@ -6188,7 +6189,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_pre_key_message_ids,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionCipherExtractPrekeyMessageIdsConstMeta,
         argValues: [message],
@@ -6217,7 +6218,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoFingerprintCompareConstMeta,
         argValues: [fingerprint1, fingerprint2],
@@ -6270,7 +6271,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_group_decrypt_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiGroupSessionGroupDecryptWithCallbacksConstMeta,
         argValues: [
@@ -6343,7 +6344,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_group_encrypt_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiGroupSessionGroupEncryptWithCallbacksConstMeta,
         argValues: [
@@ -6397,7 +6398,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiCryptoHkdfDeriveConstMeta,
         argValues: [outputLength, inputKeyMaterial, salt, info],
@@ -6434,7 +6435,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiKeysIdentityKeypairSerializeRawConstMeta,
         argValues: [publicKey, privateKey],
@@ -6479,7 +6480,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiKeysIdentityKeypairSignAlternateIdentityRawConstMeta,
@@ -6506,7 +6507,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiInitInitLibsignalConstMeta,
         argValues: [libraryPath],
@@ -6633,7 +6634,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSessionCipherMessageDecryptPrekeyWithCallbacksConstMeta,
@@ -6747,7 +6748,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSessionCipherMessageDecryptSignalWithCallbacksConstMeta,
@@ -6845,7 +6846,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_encrypt_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSessionCipherMessageEncryptWithCallbacksConstMeta,
         argValues: [
@@ -6949,7 +6950,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_unit,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSessionBuilderProcessPrekeyBundleWithCallbacksConstMeta,
@@ -7029,7 +7030,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiGroupSessionProcessSenderKeyDistributionMessageWithCallbacksConstMeta,
@@ -7105,7 +7106,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSealedSenderDecryptToUsmcWithCallbacksConstMeta,
@@ -7233,7 +7234,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_sealed_sender_decrypt_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSealedSenderDecryptWithCallbacksConstMeta,
@@ -7324,7 +7325,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSealedSenderEncryptFromUsmcWithCallbacksConstMeta,
@@ -7410,7 +7411,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_sealed_sender_encrypt_result,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSealedSenderEncryptWithCallbacksConstMeta,
@@ -7487,7 +7488,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSealedSenderMultiRecipientEncryptWithCallbacksConstMeta,
@@ -7535,7 +7536,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_sealed_sender_v_2_sent_message,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderSealedSenderV2ParseSentMessageConstMeta,
         argValues: [data],
@@ -7566,7 +7567,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_64,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderSenderCertificateGetExpirationConstMeta,
         argValues: [certificate],
@@ -7597,7 +7598,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderSenderCertificateGetKeyConstMeta,
         argValues: [certificate],
@@ -7627,7 +7628,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_u_32,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta:
             kCrateApiSealedSenderSenderCertificateGetSenderDeviceIdConstMeta,
@@ -7659,7 +7660,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_String,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderSenderCertificateGetSenderNameConstMeta,
         argValues: [certificate],
@@ -7696,7 +7697,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         },
         codec: DcoCodec(
           decodeSuccessData: dco_decode_bool,
-          decodeErrorData: dco_decode_String,
+          decodeErrorData: dco_decode_lib_signal_exception,
         ),
         constMeta: kCrateApiSealedSenderValidateSenderCertificateConstMeta,
         argValues: [certificate, trustRoot, timestamp],
@@ -8962,6 +8963,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LibSignalErrorCode dco_decode_lib_signal_error_code(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return LibSignalErrorCode.values[raw as int];
+  }
+
+  @protected
+  LibSignalException dco_decode_lib_signal_exception(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return LibSignalException(
+      code: dco_decode_lib_signal_error_code(arr[0]),
+      message: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
@@ -10018,6 +10037,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LibSignalErrorCode sse_decode_lib_signal_error_code(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var inner = sse_decode_i_32(deserializer);
+    return LibSignalErrorCode.values[inner];
+  }
+
+  @protected
+  LibSignalException sse_decode_lib_signal_exception(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_code = sse_decode_lib_signal_error_code(deserializer);
+    var var_message = sse_decode_String(deserializer);
+    return LibSignalException(code: var_code, message: var_message);
+  }
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -11028,6 +11066,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int cst_encode_i_32(int raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return raw;
+  }
+
+  @protected
+  int cst_encode_lib_signal_error_code(LibSignalErrorCode raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return cst_encode_i_32(raw.index);
   }
 
   @protected
@@ -12107,6 +12151,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putPlatformInt64(self);
+  }
+
+  @protected
+  void sse_encode_lib_signal_error_code(
+    LibSignalErrorCode self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.index, serializer);
+  }
+
+  @protected
+  void sse_encode_lib_signal_exception(
+    LibSignalException self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_lib_signal_error_code(self.code, serializer);
+    sse_encode_String(self.message, serializer);
   }
 
   @protected

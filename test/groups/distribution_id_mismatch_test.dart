@@ -39,10 +39,13 @@ void main() {
       await expectLater(
         bob.processDistributionMessage(aliceAddress, _idA, skdmB),
         throwsA(
-          predicate(
-            (Object e) => e.toString().contains('Distribution ID mismatch'),
-            'throws a distribution id mismatch error',
-          ),
+          isA<LibSignalException>()
+              .having((e) => e.code, 'code', LibSignalErrorCode.invalidMessage)
+              .having(
+                (e) => e.message,
+                'message',
+                contains('Distribution ID mismatch'),
+              ),
         ),
       );
     });
@@ -60,10 +63,17 @@ void main() {
         await expectLater(
           bob.processDistributionMessage(aliceAddress, _idA, skdmB),
           throwsA(
-            predicate(
-              (Object e) => e.toString().contains('Distribution ID mismatch'),
-              'throws a distribution id mismatch error',
-            ),
+            isA<LibSignalException>()
+                .having(
+                  (e) => e.code,
+                  'code',
+                  LibSignalErrorCode.invalidMessage,
+                )
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('Distribution ID mismatch'),
+                ),
           ),
         );
       },
@@ -106,10 +116,17 @@ void main() {
       );
 
       // Both groups are known to bob, so this is a genuine routing mistake
-      // rather than a missing key.
+      // rather than a missing key: the record loaded for A holds no state for
+      // the message's group.
       await expectLater(
         bob.decrypt(aliceAddress, _idA, ciphertextB),
-        throwsA(anything),
+        throwsA(
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.sessionNotFound,
+          ),
+        ),
       );
       // And the id is now readable off the message, so the caller need not
       // guess in the first place.

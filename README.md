@@ -318,6 +318,81 @@ final plaintext = await groupSession.decrypt(
 );
 ```
 
+### Error Handling
+
+A call that fails in the native layer throws a `LibSignalException`. Act on its
+`code`, a `LibSignalErrorCode`, which changes only in a major release. Its
+`message` explains the failure for a log, in libsignal's wording where
+libsignal raised it, and can change in any release.
+
+```dart
+try {
+  final plaintext = await cipher.decrypt(senderAddress, ciphertext);
+  handle(plaintext);
+} on LibSignalException catch (e) {
+  switch (e.code) {
+    case LibSignalErrorCode.duplicatedMessage:
+      break; // decrypted before: nothing to do
+    case LibSignalErrorCode.untrustedIdentity:
+      // A key other than the one you trust for senderAddress. Not proof that
+      // the contact changed keys; see below.
+      flagIdentityForReview(senderAddress);
+    default:
+      logUndecryptable(senderAddress, e); // and drop the message
+  }
+}
+```
+
+`handle`, `flagIdentityForReview` and `logUndecryptable` stand for your own
+code.
+
+- **A failed decrypt proves nothing about the sender.** Most codes a decrypt
+  call returns are decided before anything in the message is authenticated, so
+  anyone who can deliver bytes to you can cause them: `invalidMessage`,
+  `protobufError`, `invalidKey`, the version codes, `duplicatedMessage`,
+  `sessionNotFound`, `invalidKeyIdentifier`, `invalidSignature` on a group
+  message, `untrustedIdentity` on a pre-key message and, in sealed sender,
+  `verificationFailure`. Drop the message. Do not reset, archive or rebuild a
+  session because of it, and limit how often anything you send back in
+  response, such as a request to resend, can be triggered.
+- **The version codes describe a byte anyone can set.** Show such a message as
+  one that could not be decrypted, not as a statement about the sender's app.
+- **`untrustedIdentity` is a claim, not a proof.** It means a key other than the
+  one stored for that address was presented. On a pre-key message that key comes
+  from the message itself and is compared before the message is authenticated.
+  Tell the user the safety number may have changed, and save the new key only
+  after they have compared safety numbers; never on your own.
+- **Codes change only in a major release.** A `switch` that lists every code
+  keeps compiling through minor and patch releases. Use `default` for the
+  codes you leave out, and leave it out when you list them all; the analyzer
+  reports it as unreachable then.
+- **`toString()` is `LibSignalException(<code>): <message>`.** A check such as
+  `e.toString().contains(...)`, written against the `String` these calls threw
+  before, still finds the message part, but it now sees the code name as well:
+  `contains('duplicate')` matches every `duplicatedMessage`. Move such checks
+  to `code`.
+- **Not every failure is a `LibSignalException`.**
+  - A store callback of yours that throws cannot be reported through it,
+    because the store interfaces cannot return an error across the bridge, so
+    the call panics. Every call that takes store callbacks is asynchronous: on
+    native platforms it fails with `flutter_rust_bridge`'s `PanicException`,
+    and on the web it never completes. A store callback must not throw on the
+    web.
+  - Any other panic in the native code is a `PanicException` too, except in an
+    asynchronous call on the web, which never completes.
+  - A call on an object after its `dispose()` throws `flutter_rust_bridge`'s
+    `DroppableDisposedException`. flutter_rust_bridge does not export that
+    type; catch it as `FrbException`.
+  - Checks that run in Dart before the native call throw `ArgumentError` or
+    `StateError`, as before.
+
+  `FrbException` and `PanicException` come from
+  `package:flutter_rust_bridge/flutter_rust_bridge.dart`; this package does not
+  re-export them.
+- **`message` can contain a protocol address.** `untrustedIdentity`, for one,
+  names the `name.deviceId` it was raised for, so log it as you would log the
+  address itself.
+
 ## Resource Management
 
 ### Basic Usage

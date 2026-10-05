@@ -258,9 +258,17 @@ void main() {
               encrypted.ciphertext,
             ),
             throwsA(
-              predicate(
-                (e) => e.toString().contains('Signed pre-key 99 not found'),
-              ),
+              isA<LibSignalException>()
+                  .having(
+                    (e) => e.code,
+                    'code',
+                    LibSignalErrorCode.invalidKeyIdentifier,
+                  )
+                  .having(
+                    (e) => e.message,
+                    'message',
+                    contains('Signed pre-key 99 not found'),
+                  ),
             ),
           );
         },

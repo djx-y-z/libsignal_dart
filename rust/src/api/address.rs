@@ -1,5 +1,6 @@
 //! Protocol address API using libsignal-protocol.
 
+use crate::api::error::LibSignalException;
 use libsignal_protocol::{DeviceId, ProtocolAddress as NativeProtocolAddress};
 
 /// A protocol address identifying a specific device of a user.
@@ -24,22 +25,27 @@ impl ProtocolAddress {
     /// * `name` - The user identifier (typically a phone number or UUID)
     /// * `device_id` - The device identifier (must be 1-127)
     #[flutter_rust_bridge::frb(sync)]
-    pub fn new(name: String, device_id: u32) -> Result<ProtocolAddress, String> {
+    pub fn new(name: String, device_id: u32) -> Result<ProtocolAddress, LibSignalException> {
         let dev_id = DeviceId::try_from(device_id)
-            .map_err(|_| format!("Invalid device ID: {} (must be 1-127)", device_id))?;
+            .map_err(|_| {
+                LibSignalException::invalid_argument(format!(
+                    "Invalid device ID: {} (must be 1-127)",
+                    device_id
+                ))
+            })?;
         let native = NativeProtocolAddress::new(name, dev_id);
         Ok(ProtocolAddress { inner: native })
     }
 
     /// Get the name (user identifier) of this address.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn name(&self) -> Result<String, String> {
+    pub fn name(&self) -> Result<String, LibSignalException> {
         Ok(self.inner.name().to_string())
     }
 
     /// Get the device ID of this address.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn device_id(&self) -> Result<u32, String> {
+    pub fn device_id(&self) -> Result<u32, LibSignalException> {
         Ok(self.inner.device_id().into())
     }
 }

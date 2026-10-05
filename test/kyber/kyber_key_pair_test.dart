@@ -118,11 +118,13 @@ void main() {
           () =>
               KyberKeyPair.fromKeys(publicKey: publicKey, secretKey: secretKey),
           throwsA(
-            predicate(
-              (Object e) =>
-                  e.toString().contains('not halves of the same key pair'),
-              'throws a key pair mismatch error',
-            ),
+            isA<LibSignalException>()
+                .having((e) => e.code, 'code', LibSignalErrorCode.invalidKey)
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('not halves of the same key pair'),
+                ),
           ),
         );
         // Borrowed, so a failed check leaves both handles usable too.
@@ -252,7 +254,9 @@ void main() {
       // fromKeys() exists to stop at construction: a record whose secret key is
       // not the partner of the public key the peer encapsulated to is accepted
       // by the store, and fails only when the peer's first message arrives —
-      // as a plain "decryption failed" that names no key.
+      // as an `invalidMessage` reading "decryption failed", which names no key.
+      // The text is checked too: `invalidMessage` alone would also accept a
+      // first message that is malformed in some other way.
       test(
         'a record with a mismatched secret key fails a first message',
         () async {
@@ -283,10 +287,17 @@ void main() {
           await expectLater(
             bob.sessionCipher.decrypt(alice.address, ciphertext),
             throwsA(
-              predicate(
-                (Object e) => e.toString().contains('decryption failed'),
-                'fails to decrypt',
-              ),
+              isA<LibSignalException>()
+                  .having(
+                    (e) => e.code,
+                    'code',
+                    LibSignalErrorCode.invalidMessage,
+                  )
+                  .having(
+                    (e) => e.message,
+                    'message',
+                    contains('decryption failed'),
+                  ),
             ),
           );
         },

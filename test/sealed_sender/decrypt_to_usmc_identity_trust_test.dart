@@ -198,18 +198,20 @@ void main() {
       await expectLater(
         fullDecrypt(sealed),
         throwsA(
-          predicate(
-            (Object e) => e.toString().contains('untrusted identity'),
-            'an untrusted identity error',
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.untrustedIdentity,
           ),
         ),
       );
       await expectLater(
         unseal(sealed),
         throwsA(
-          predicate(
-            (Object e) => e.toString().contains('untrusted identity'),
-            'an untrusted identity error',
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.untrustedIdentity,
           ),
         ),
         reason: 'the envelope path must not be the lenient one',
@@ -238,9 +240,10 @@ void main() {
         await expectLater(
           unseal(sealed),
           throwsA(
-            predicate(
-              (Object e) => e.toString().contains('untrusted identity'),
-              'an untrusted identity error',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.untrustedIdentity,
             ),
           ),
         );
@@ -332,11 +335,17 @@ void main() {
             },
           ),
           throwsA(
-            predicate(
-              (Object e) =>
-                  e.toString().contains('certificate validation failed'),
-              'a certificate validation failure',
-            ),
+            isA<LibSignalException>()
+                .having(
+                  (e) => e.code,
+                  'code',
+                  LibSignalErrorCode.verificationFailure,
+                )
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('Sender certificate validation failed'),
+                ),
           ),
         );
         expect(
@@ -371,21 +380,23 @@ void main() {
         await expectLater(
           unseal(reflected),
           throwsA(
-            predicate(
-              (Object e) => e.toString().contains('self send'),
-              'a self-send error',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.sealedSenderSelfSend,
             ),
           ),
         );
         await expectLater(
           fullDecrypt(reflected),
           throwsA(
-            predicate(
-              (Object e) => e.toString().contains('self send'),
-              'a self-send error',
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.sealedSenderSelfSend,
             ),
           ),
-          reason: 'both paths must agree, and on the same string',
+          reason: 'both paths must agree, and on the same code',
         );
       },
     );

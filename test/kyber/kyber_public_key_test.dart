@@ -1,5 +1,6 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
+import '../test_helpers/error_matchers.dart';
 
 void main() {
   setUpAll(LibSignal.init);
@@ -21,7 +22,10 @@ void main() {
       });
 
       test('deserialize rejects empty data', () {
-        expect(() => KyberPublicKey.deserialize(bytes: []), throwsA(anything));
+        expect(
+          () => KyberPublicKey.deserialize(bytes: []),
+          failsWith(LibSignalErrorCode.invalidKey),
+        );
       });
 
       // Note: Tests for invalid/garbage/wrong-size data are skipped because

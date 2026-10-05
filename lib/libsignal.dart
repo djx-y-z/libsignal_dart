@@ -68,6 +68,7 @@ export 'src/protocol/protocol.dart';
 export 'src/rust/api/address.dart';
 export 'src/rust/api/bundle.dart';
 export 'src/rust/api/crypto.dart';
+export 'src/rust/api/error.dart';
 export 'src/rust/api/group_session.dart';
 export 'src/rust/api/keys.dart';
 export 'src/rust/api/kyber.dart';

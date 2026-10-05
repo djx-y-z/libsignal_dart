@@ -1,5 +1,6 @@
 //! PreKey bundle API using libsignal-protocol.
 
+use crate::api::error::{LibSignalErrorCode, LibSignalException};
 use libsignal_protocol::{
     DeviceId, IdentityKey, KyberPreKeyId, PreKeyBundle as NativePreKeyBundle, PreKeyId,
     PublicKey as NativePublicKey, SignedPreKeyId, kem,
@@ -53,18 +54,26 @@ impl PreKeyBundle {
         kyber_pre_key_id: u32,
         kyber_pre_key_public: Vec<u8>,
         kyber_pre_key_signature: Vec<u8>,
-    ) -> Result<PreKeyBundle, String> {
+    ) -> Result<PreKeyBundle, LibSignalException> {
         // Parse the device ID
         let dev_id = DeviceId::try_from(device_id)
-            .map_err(|_| format!("Invalid device ID: {} (must be 1-127)", device_id))?;
+            .map_err(|_| {
+                LibSignalException::invalid_argument(format!(
+                    "Invalid device ID: {} (must be 1-127)",
+                    device_id
+                ))
+            })?;
 
         // Parse the optional pre-key
         let pre_key = match (pre_key_id, pre_key_public) {
             (Some(id), Some(bytes)) => {
                 let public_key =
-                    NativePublicKey::deserialize(&bytes).map_err(|e| e.to_string())?;
+                    NativePublicKey::deserialize(&bytes).map_err(LibSignalException::from)?;
                 if !public_key.is_canonical() {
-                    return Err("Pre-key public key is a low-order point".to_string());
+                    return Err(LibSignalException::new(
+                        LibSignalErrorCode::InvalidKey,
+                        "Pre-key public key is a low-order point",
+                    ));
                 }
                 Some((PreKeyId::from(id), public_key))
             }
@@ -73,22 +82,28 @@ impl PreKeyBundle {
 
         // Parse the signed pre-key
         let signed_pre_key_pub =
-            NativePublicKey::deserialize(&signed_pre_key_public).map_err(|e| e.to_string())?;
+            NativePublicKey::deserialize(&signed_pre_key_public).map_err(LibSignalException::from)?;
         if !signed_pre_key_pub.is_canonical() {
-            return Err("Signed pre-key public key is a low-order point".to_string());
+            return Err(LibSignalException::new(
+                LibSignalErrorCode::InvalidKey,
+                "Signed pre-key public key is a low-order point",
+            ));
         }
 
         // Parse the identity key
         let identity_pub =
-            NativePublicKey::deserialize(&identity_key).map_err(|e| e.to_string())?;
+            NativePublicKey::deserialize(&identity_key).map_err(LibSignalException::from)?;
         if !identity_pub.is_canonical() {
-            return Err("Identity public key is a low-order point".to_string());
+            return Err(LibSignalException::new(
+                LibSignalErrorCode::InvalidKey,
+                "Identity public key is a low-order point",
+            ));
         }
         let identity = IdentityKey::new(identity_pub);
 
         // Parse the Kyber pre-key
         let kyber_pub =
-            kem::PublicKey::deserialize(&kyber_pre_key_public).map_err(|e| e.to_string())?;
+            kem::PublicKey::deserialize(&kyber_pre_key_public).map_err(LibSignalException::from)?;
 
         // Create the bundle
         let native = NativePreKeyBundle::new(
@@ -103,37 +118,37 @@ impl PreKeyBundle {
             kyber_pre_key_signature,
             identity,
         )
-        .map_err(|e| e.to_string())?;
+        .map_err(LibSignalException::from)?;
 
         Ok(PreKeyBundle { inner: native })
     }
 
     /// Get the registration ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn registration_id(&self) -> Result<u32, String> {
-        self.inner.registration_id().map_err(|e| e.to_string())
+    pub fn registration_id(&self) -> Result<u32, LibSignalException> {
+        self.inner.registration_id().map_err(LibSignalException::from)
     }
 
     /// Get the device ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn device_id(&self) -> Result<u32, String> {
-        Ok(self.inner.device_id().map_err(|e| e.to_string())?.into())
+    pub fn device_id(&self) -> Result<u32, LibSignalException> {
+        Ok(self.inner.device_id().map_err(LibSignalException::from)?.into())
     }
 
     /// Get the pre-key ID (returns None if no pre-key).
     #[flutter_rust_bridge::frb(sync)]
-    pub fn pre_key_id(&self) -> Result<Option<u32>, String> {
+    pub fn pre_key_id(&self) -> Result<Option<u32>, LibSignalException> {
         Ok(self
             .inner
             .pre_key_id()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .map(|id| id.into()))
     }
 
     /// Get the pre-key public key (returns None if no pre-key).
     #[flutter_rust_bridge::frb(sync)]
-    pub fn pre_key_public(&self) -> Result<Option<Vec<u8>>, String> {
-        match self.inner.pre_key_public().map_err(|e| e.to_string())? {
+    pub fn pre_key_public(&self) -> Result<Option<Vec<u8>>, LibSignalException> {
+        match self.inner.pre_key_public().map_err(LibSignalException::from)? {
             Some(key) => Ok(Some(key.serialize().into_vec())),
             None => Ok(None),
         }
@@ -141,74 +156,74 @@ impl PreKeyBundle {
 
     /// Get the signed pre-key ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn signed_pre_key_id(&self) -> Result<u32, String> {
+    pub fn signed_pre_key_id(&self) -> Result<u32, LibSignalException> {
         Ok(self
             .inner
             .signed_pre_key_id()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .into())
     }
 
     /// Get the signed pre-key public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn signed_pre_key_public(&self) -> Result<Vec<u8>, String> {
+    pub fn signed_pre_key_public(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self
             .inner
             .signed_pre_key_public()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .serialize()
             .into_vec())
     }
 
     /// Get the signed pre-key signature.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn signed_pre_key_signature(&self) -> Result<Vec<u8>, String> {
+    pub fn signed_pre_key_signature(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self
             .inner
             .signed_pre_key_signature()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .to_vec())
     }
 
     /// Get the identity public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn identity_key(&self) -> Result<Vec<u8>, String> {
+    pub fn identity_key(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self
             .inner
             .identity_key()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .serialize()
             .into_vec())
     }
 
     /// Get the Kyber pre-key ID.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn kyber_pre_key_id(&self) -> Result<u32, String> {
+    pub fn kyber_pre_key_id(&self) -> Result<u32, LibSignalException> {
         Ok(self
             .inner
             .kyber_pre_key_id()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .into())
     }
 
     /// Get the Kyber pre-key public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn kyber_pre_key_public(&self) -> Result<Vec<u8>, String> {
+    pub fn kyber_pre_key_public(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self
             .inner
             .kyber_pre_key_public()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .serialize()
             .into_vec())
     }
 
     /// Get the Kyber pre-key signature.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn kyber_pre_key_signature(&self) -> Result<Vec<u8>, String> {
+    pub fn kyber_pre_key_signature(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self
             .inner
             .kyber_pre_key_signature()
-            .map_err(|e| e.to_string())?
+            .map_err(LibSignalException::from)?
             .to_vec())
     }
 }

@@ -76,7 +76,7 @@ fn wire__crate__api__crypto__Aes256GcmSiv_decrypt_impl(
             let api_ciphertext = ciphertext.cst_decode();
             let api_nonce = nonce.cst_decode();
             let api_associated_data = associated_data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -121,7 +121,7 @@ fn wire__crate__api__crypto__Aes256GcmSiv_encrypt_impl(
             let api_plaintext = plaintext.cst_decode();
             let api_nonce = nonce.cst_decode();
             let api_associated_data = associated_data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -158,7 +158,7 @@ fn wire__crate__api__crypto__Aes256GcmSiv_new_impl(
         },
         move || {
             let api_key = key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::crypto::Aes256GcmSiv::new(api_key)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -180,7 +180,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -213,7 +213,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::message::DecryptionErrorMessage::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
@@ -236,7 +236,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_device_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -269,7 +269,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_extract_from_serialized_con
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::message::DecryptionErrorMessage::extract_from_serialized_content(
                         api_bytes,
@@ -296,7 +296,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_for_original_message_impl(
             let api_message_type = message_type.cst_decode();
             let api_timestamp = timestamp.cst_decode();
             let api_original_sender_device_id = original_sender_device_id.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::message::DecryptionErrorMessage::for_original_message(
                     api_original_bytes,
                     api_message_type,
@@ -323,7 +323,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_ratchet_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -360,7 +360,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -397,7 +397,7 @@ fn wire__crate__api__message__DecryptionErrorMessage_timestamp_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -432,7 +432,7 @@ fn wire__crate__api__crypto__Fingerprint_clone_fingerprint_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -467,7 +467,7 @@ fn wire__crate__api__crypto__Fingerprint_display_string_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -509,7 +509,7 @@ fn wire__crate__api__crypto__Fingerprint_new_impl(
             let api_local_public_key = local_public_key.cst_decode();
             let api_remote_identifier = remote_identifier.cst_decode();
             let api_remote_public_key = remote_public_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::crypto::Fingerprint::new(
                     api_iterations,
                     api_version,
@@ -536,7 +536,7 @@ fn wire__crate__api__crypto__Fingerprint_scannable_encoding_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -569,7 +569,7 @@ fn wire__crate__api__keys__IdentityKeyPair_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::keys::IdentityKeyPair::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -608,7 +608,7 @@ fn wire__crate__api__keys__IdentityKeyPair_generate_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::keys::IdentityKeyPair::generate()?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -628,7 +628,7 @@ fn wire__crate__api__keys__IdentityKeyPair_private_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -662,7 +662,7 @@ fn wire__crate__api__keys__IdentityKeyPair_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -696,7 +696,7 @@ fn wire__crate__api__keys__IdentityKeyPair_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -732,7 +732,7 @@ fn wire__crate__api__keys__IdentityKeyPair_sign_impl(
         move || {
             let api_that = that.cst_decode();
             let api_message = message.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -771,7 +771,7 @@ fn wire__crate__api__keys__IdentityKeyPair_sign_alternate_identity_impl(
         move || {
             let api_that = that.cst_decode();
             let api_other_identity = other_identity.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_other_identity_guard = None;
                 let decode_indices_ =
@@ -819,7 +819,7 @@ fn wire__crate__api__kyber__KyberKeyPair_clone_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -857,7 +857,7 @@ fn wire__crate__api__kyber__KyberKeyPair_from_keys_impl(
         move || {
             let api_public_key = public_key.cst_decode();
             let api_secret_key = secret_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_public_key_guard = None;
                 let mut api_secret_key_guard = None;
                 let decode_indices_ =
@@ -900,7 +900,7 @@ fn wire__crate__api__kyber__KyberKeyPair_generate_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::kyber::KyberKeyPair::generate()?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -920,7 +920,7 @@ fn wire__crate__api__kyber__KyberKeyPair_get_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -954,7 +954,7 @@ fn wire__crate__api__kyber__KyberKeyPair_get_secret_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -988,7 +988,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_clone_record_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1029,7 +1029,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_create_impl(
             let api_timestamp = timestamp.cst_decode();
             let api_key_pair = key_pair.cst_decode();
             let api_signature = signature.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_key_pair_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1068,7 +1068,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::kyber::KyberPreKeyRecord::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -1088,7 +1088,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_get_key_pair_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1123,7 +1123,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_get_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1158,7 +1158,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_get_secret_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1193,7 +1193,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1227,7 +1227,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1261,7 +1261,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_signature_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1295,7 +1295,7 @@ fn wire__crate__api__kyber__KyberPreKeyRecord_timestamp_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1329,7 +1329,7 @@ fn wire__crate__api__kyber__KyberPublicKey_clone_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1361,7 +1361,7 @@ fn wire__crate__api__kyber__KyberPublicKey_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::kyber::KyberPublicKey::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -1385,7 +1385,7 @@ fn wire__crate__api__kyber__KyberPublicKey_equals_impl(
         move || {
             let api_that = that.cst_decode();
             let api_other = other.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_other_guard = None;
                 let decode_indices_ =
@@ -1426,7 +1426,7 @@ fn wire__crate__api__kyber__KyberPublicKey_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1460,7 +1460,7 @@ fn wire__crate__api__kyber__KyberSecretKey_clone_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1492,7 +1492,7 @@ fn wire__crate__api__kyber__KyberSecretKey_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::kyber::KyberSecretKey::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -1512,7 +1512,7 @@ fn wire__crate__api__kyber__KyberSecretKey_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1546,7 +1546,7 @@ fn wire__crate__api__message__PlaintextContent_body_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1580,7 +1580,7 @@ fn wire__crate__api__message__PlaintextContent_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1613,7 +1613,7 @@ fn wire__crate__api__message__PlaintextContent_deserialize_impl(
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::message::PlaintextContent::deserialize(api_data)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -1635,7 +1635,7 @@ fn wire__crate__api__message__PlaintextContent_from_decryption_error_message_imp
         },
         move || {
             let api_message = message.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_message_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1674,7 +1674,7 @@ fn wire__crate__api__message__PlaintextContent_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1708,7 +1708,7 @@ fn wire__crate__api__bundle__PreKeyBundle_device_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1742,7 +1742,7 @@ fn wire__crate__api__bundle__PreKeyBundle_identity_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1776,7 +1776,7 @@ fn wire__crate__api__bundle__PreKeyBundle_kyber_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1811,7 +1811,7 @@ fn wire__crate__api__bundle__PreKeyBundle_kyber_pre_key_public_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1846,7 +1846,7 @@ fn wire__crate__api__bundle__PreKeyBundle_kyber_pre_key_signature_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1899,7 +1899,7 @@ fn wire__crate__api__bundle__PreKeyBundle_new_impl(
             let api_kyber_pre_key_id = kyber_pre_key_id.cst_decode();
             let api_kyber_pre_key_public = kyber_pre_key_public.cst_decode();
             let api_kyber_pre_key_signature = kyber_pre_key_signature.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::bundle::PreKeyBundle::new(
                     api_registration_id,
                     api_device_id,
@@ -1931,7 +1931,7 @@ fn wire__crate__api__bundle__PreKeyBundle_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1965,7 +1965,7 @@ fn wire__crate__api__bundle__PreKeyBundle_pre_key_public_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -1999,7 +1999,7 @@ fn wire__crate__api__bundle__PreKeyBundle_registration_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2034,7 +2034,7 @@ fn wire__crate__api__bundle__PreKeyBundle_signed_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2069,7 +2069,7 @@ fn wire__crate__api__bundle__PreKeyBundle_signed_pre_key_public_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2104,7 +2104,7 @@ fn wire__crate__api__bundle__PreKeyBundle_signed_pre_key_signature_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2137,7 +2137,7 @@ fn wire__crate__api__prekey__PreKeyRecord_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::prekey::PreKeyRecord::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -2157,7 +2157,7 @@ fn wire__crate__api__prekey__PreKeyRecord_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2197,7 +2197,7 @@ fn wire__crate__api__prekey__PreKeyRecord_new_impl(
             let api_id = id.cst_decode();
             let api_public_key = public_key.cst_decode();
             let api_private_key = private_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_public_key_guard = None;
                 let mut api_private_key_guard = None;
                 let decode_indices_ =
@@ -2247,7 +2247,7 @@ fn wire__crate__api__prekey__PreKeyRecord_private_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2281,7 +2281,7 @@ fn wire__crate__api__prekey__PreKeyRecord_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2315,7 +2315,7 @@ fn wire__crate__api__prekey__PreKeyRecord_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2349,7 +2349,7 @@ fn wire__crate__api__message__PreKeySignalMessage_base_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2384,7 +2384,7 @@ fn wire__crate__api__message__PreKeySignalMessage_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2417,7 +2417,7 @@ fn wire__crate__api__message__PreKeySignalMessage_deserialize_impl(
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::message::PreKeySignalMessage::deserialize(api_data)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -2437,7 +2437,7 @@ fn wire__crate__api__message__PreKeySignalMessage_identity_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2472,7 +2472,7 @@ fn wire__crate__api__message__PreKeySignalMessage_kyber_ciphertext_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2507,7 +2507,7 @@ fn wire__crate__api__message__PreKeySignalMessage_kyber_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2542,7 +2542,7 @@ fn wire__crate__api__message__PreKeySignalMessage_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2577,7 +2577,7 @@ fn wire__crate__api__message__PreKeySignalMessage_message_version_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2612,7 +2612,7 @@ fn wire__crate__api__message__PreKeySignalMessage_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2647,7 +2647,7 @@ fn wire__crate__api__message__PreKeySignalMessage_registration_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2682,7 +2682,7 @@ fn wire__crate__api__message__PreKeySignalMessage_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2717,7 +2717,7 @@ fn wire__crate__api__message__PreKeySignalMessage_signed_pre_key_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2756,7 +2756,7 @@ fn wire__crate__api__keys__PrivateKey_agree_impl(
         move || {
             let api_that = that.cst_decode();
             let api_public_key = public_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_public_key_guard = None;
                 let decode_indices_ =
@@ -2799,7 +2799,7 @@ fn wire__crate__api__keys__PrivateKey_clone_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2831,7 +2831,7 @@ fn wire__crate__api__keys__PrivateKey_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::keys::PrivateKey::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -2847,7 +2847,7 @@ fn wire__crate__api__keys__PrivateKey_generate_impl(
             mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
         },
         move || {
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::keys::PrivateKey::generate()?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -2867,7 +2867,7 @@ fn wire__crate__api__keys__PrivateKey_get_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2901,7 +2901,7 @@ fn wire__crate__api__keys__PrivateKey_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2937,7 +2937,7 @@ fn wire__crate__api__keys__PrivateKey_sign_impl(
         move || {
             let api_that = that.cst_decode();
             let api_message = message.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -2971,7 +2971,7 @@ fn wire__crate__api__address__ProtocolAddress_device_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3005,7 +3005,7 @@ fn wire__crate__api__address__ProtocolAddress_name_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3039,7 +3039,7 @@ fn wire__crate__api__address__ProtocolAddress_new_impl(
         move || {
             let api_name = name.cst_decode();
             let api_device_id = device_id.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::address::ProtocolAddress::new(api_name, api_device_id)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -3059,7 +3059,7 @@ fn wire__crate__api__keys__PublicKey_clone_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3097,7 +3097,7 @@ fn wire__crate__api__keys__PublicKey_compare_impl(
         move || {
             let api_that = that.cst_decode();
             let api_other = other.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_other_guard = None;
                 let decode_indices_ =
@@ -3136,7 +3136,7 @@ fn wire__crate__api__keys__PublicKey_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::keys::PublicKey::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -3160,7 +3160,7 @@ fn wire__crate__api__keys__PublicKey_equals_impl(
         move || {
             let api_that = that.cst_decode();
             let api_other = other.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_other_guard = None;
                 let decode_indices_ =
@@ -3201,7 +3201,7 @@ fn wire__crate__api__keys__PublicKey_get_public_key_bytes_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3236,7 +3236,7 @@ fn wire__crate__api__keys__PublicKey_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3274,7 +3274,7 @@ fn wire__crate__api__keys__PublicKey_verify_impl(
             let api_that = that.cst_decode();
             let api_message = message.cst_decode();
             let api_signature = signature.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3314,7 +3314,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_chain_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3351,7 +3351,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3385,7 +3385,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_deserialize_impl(
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::message::SenderKeyDistributionMessage::deserialize(api_data)?;
                 std::result::Result::Ok(output_ok)
@@ -3408,7 +3408,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_distribution_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3446,7 +3446,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_iteration_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3483,7 +3483,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_message_version_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3521,7 +3521,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3558,7 +3558,7 @@ fn wire__crate__api__message__SenderKeyDistributionMessage_signing_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3594,7 +3594,7 @@ fn wire__crate__api__message__SenderKeyMessage_chain_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3628,7 +3628,7 @@ fn wire__crate__api__message__SenderKeyMessage_ciphertext_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3663,7 +3663,7 @@ fn wire__crate__api__message__SenderKeyMessage_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3696,7 +3696,7 @@ fn wire__crate__api__message__SenderKeyMessage_deserialize_impl(
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::message::SenderKeyMessage::deserialize(api_data)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -3716,7 +3716,7 @@ fn wire__crate__api__message__SenderKeyMessage_distribution_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3751,7 +3751,7 @@ fn wire__crate__api__message__SenderKeyMessage_iteration_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3785,7 +3785,7 @@ fn wire__crate__api__message__SenderKeyMessage_message_version_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3820,7 +3820,7 @@ fn wire__crate__api__message__SenderKeyMessage_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3856,7 +3856,7 @@ fn wire__crate__api__message__SenderKeyMessage_verify_signature_impl(
         move || {
             let api_that = that.cst_decode();
             let api_signature_key = signature_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3893,7 +3893,7 @@ fn wire__crate__api__session__SessionRecord_archive_current_state_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3929,7 +3929,7 @@ fn wire__crate__api__session__SessionRecord_clone_record_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -3967,7 +3967,7 @@ fn wire__crate__api__session__SessionRecord_current_ratchet_key_matches_impl(
         move || {
             let api_that = that.cst_decode();
             let api_key = key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let mut api_key_guard = None;
                 let decode_indices_ =
@@ -4008,7 +4008,7 @@ fn wire__crate__api__session__SessionRecord_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::session::SessionRecord::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -4030,7 +4030,7 @@ fn wire__crate__api__session__SessionRecord_has_usable_sender_chain_impl(
         move || {
             let api_that = that.cst_decode();
             let api_now_millis = now_millis.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4067,7 +4067,7 @@ fn wire__crate__api__session__SessionRecord_local_registration_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4102,7 +4102,7 @@ fn wire__crate__api__session__SessionRecord_remote_registration_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4137,7 +4137,7 @@ fn wire__crate__api__session__SessionRecord_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4171,7 +4171,7 @@ fn wire__crate__api__message__SignalMessage_body_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4205,7 +4205,7 @@ fn wire__crate__api__message__SignalMessage_clone_message_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4240,7 +4240,7 @@ fn wire__crate__api__message__SignalMessage_counter_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4272,7 +4272,7 @@ fn wire__crate__api__message__SignalMessage_deserialize_impl(
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::message::SignalMessage::deserialize(api_data)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -4292,7 +4292,7 @@ fn wire__crate__api__message__SignalMessage_message_version_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4327,7 +4327,7 @@ fn wire__crate__api__message__SignalMessage_pq_ratchet_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4361,7 +4361,7 @@ fn wire__crate__api__message__SignalMessage_sender_ratchet_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4396,7 +4396,7 @@ fn wire__crate__api__message__SignalMessage_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4444,7 +4444,7 @@ fn wire__crate__api__message__SignalMessage_verify_mac_impl(
             let api_sender_identity_key = sender_identity_key.cst_decode();
             let api_receiver_identity_key = receiver_identity_key.cst_decode();
             let api_mac_key = mac_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4485,7 +4485,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_deserialize_impl(
         },
         move || {
             let api_bytes = bytes.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::signed_prekey::SignedPreKeyRecord::deserialize(api_bytes)?;
                 std::result::Result::Ok(output_ok)
@@ -4506,7 +4506,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_id_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4551,7 +4551,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_new_impl(
             let api_public_key = public_key.cst_decode();
             let api_private_key = private_key.cst_decode();
             let api_signature = signature.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_public_key_guard = None;
                 let mut api_private_key_guard = None;
                 let decode_indices_ =
@@ -4603,7 +4603,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4638,7 +4638,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4673,7 +4673,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_serialize_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4708,7 +4708,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_signature_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4743,7 +4743,7 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_timestamp_impl(
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4782,7 +4782,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_content_hin
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4823,7 +4823,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_contents_im
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4858,7 +4858,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_deserialize
         },
         move || {
             let api_data = data.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::sealed_sender::UnidentifiedSenderMessageContent::deserialize(
                         api_data,
@@ -4885,7 +4885,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_group_id_im
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4926,7 +4926,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_message_typ
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -4969,7 +4969,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_new_impl(
             let api_contents = contents.cst_decode();
             let api_content_hint = content_hint.cst_decode();
             let api_group_id = group_id.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::sealed_sender::UnidentifiedSenderMessageContent::new(
                     api_message_type,
                     api_sender_certificate,
@@ -4992,7 +4992,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_sender_cert
     >,
 ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "UnidentifiedSenderMessageContent_sender_certificate", port: None, mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync }, move || {let api_that = that.cst_decode();
-                transform_result_dco::<_, _, String>((move || {
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                     let mut api_that_guard = None;
 let decode_indices_ = flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![flutter_rust_bridge::for_generated::LockableOrderInfo::new(&api_that, 0, false)]);
         for i in decode_indices_ {
@@ -5022,7 +5022,7 @@ fn wire__crate__api__sealed_sender__UnidentifiedSenderMessageContent_serialize_i
         },
         move || {
             let api_that = that.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_that_guard = None;
                 let decode_indices_ =
                     flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
@@ -5067,7 +5067,7 @@ fn wire__crate__api__sealed_sender__create_sender_certificate_impl(
             let api_expiration = expiration.cst_decode();
             let api_server_certificate = server_certificate.cst_decode();
             let api_server_private_key = server_private_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::sealed_sender::create_sender_certificate(
                     api_sender_uuid,
                     api_sender_device_id,
@@ -5091,7 +5091,7 @@ fn wire__crate__api__group_session__create_sender_key_distribution_message_with_
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "create_sender_key_distribution_message_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_sender_name = sender_name.cst_decode();let api_sender_device_id = sender_device_id.cst_decode();let api_distribution_id = distribution_id.cst_decode();let api_load_sender_key = decode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(load_sender_key.cst_decode());let api_store_sender_key = decode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(store_sender_key.cst_decode());let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::group_session::create_sender_key_distribution_message_with_callbacks(api_sender_name, api_sender_device_id, api_distribution_id, api_load_sender_key, api_store_sender_key, api_get_identity_key_pair).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5111,7 +5111,7 @@ fn wire__crate__api__sealed_sender__create_server_certificate_impl(
             let api_key_id = key_id.cst_decode();
             let api_server_public_key = server_public_key.cst_decode();
             let api_trust_root_private_key = trust_root_private_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::sealed_sender::create_server_certificate(
                     api_key_id,
                     api_server_public_key,
@@ -5133,7 +5133,7 @@ fn wire__crate__api__session_cipher__extract_prekey_message_ids_impl(
         },
         move || {
             let api_message = message.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::session_cipher::extract_prekey_message_ids(api_message)?;
                 std::result::Result::Ok(output_ok)
@@ -5154,7 +5154,7 @@ fn wire__crate__api__crypto__fingerprint_compare_impl(
         move || {
             let api_fingerprint1 = fingerprint1.cst_decode();
             let api_fingerprint2 = fingerprint2.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::crypto::fingerprint_compare(api_fingerprint1, api_fingerprint2)?;
                 std::result::Result::Ok(output_ok)
@@ -5172,7 +5172,7 @@ fn wire__crate__api__group_session__group_decrypt_with_callbacks_impl(
     store_sender_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "group_decrypt_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_sender_name = sender_name.cst_decode();let api_sender_device_id = sender_device_id.cst_decode();let api_distribution_id = distribution_id.cst_decode();let api_ciphertext = ciphertext.cst_decode();let api_load_sender_key = decode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(load_sender_key.cst_decode());let api_store_sender_key = decode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(store_sender_key.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::group_session::group_decrypt_with_callbacks(api_sender_name, api_sender_device_id, api_distribution_id, api_ciphertext, api_load_sender_key, api_store_sender_key).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5188,7 +5188,7 @@ fn wire__crate__api__group_session__group_encrypt_with_callbacks_impl(
     get_identity_key_pair: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "group_encrypt_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_sender_name = sender_name.cst_decode();let api_sender_device_id = sender_device_id.cst_decode();let api_distribution_id = distribution_id.cst_decode();let api_plaintext = plaintext.cst_decode();let api_load_sender_key = decode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(load_sender_key.cst_decode());let api_store_sender_key = decode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(store_sender_key.cst_decode());let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::group_session::group_encrypt_with_callbacks(api_sender_name, api_sender_device_id, api_distribution_id, api_plaintext, api_load_sender_key, api_store_sender_key, api_get_identity_key_pair).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5210,7 +5210,7 @@ fn wire__crate__api__crypto__hkdf_derive_impl(
             let api_input_key_material = input_key_material.cst_decode();
             let api_salt = salt.cst_decode();
             let api_info = info.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::crypto::hkdf_derive(
                     api_output_length,
                     api_input_key_material,
@@ -5239,7 +5239,7 @@ fn wire__crate__api__keys__identity_keypair_serialize_raw_impl(
         move || {
             let api_public_key = public_key.cst_decode();
             let api_private_key = private_key.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_public_key_guard = None;
                 let mut api_private_key_guard = None;
                 let decode_indices_ =
@@ -5296,7 +5296,7 @@ fn wire__crate__api__keys__identity_keypair_sign_alternate_identity_raw_impl(
             let api_public_key = public_key.cst_decode();
             let api_private_key = private_key.cst_decode();
             let api_other_identity = other_identity.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let mut api_public_key_guard = None;
                 let mut api_private_key_guard = None;
                 let mut api_other_identity_guard = None;
@@ -5355,7 +5355,7 @@ fn wire__crate__api__init__init_libsignal_impl(
         },
         move || {
             let api__library_path = _library_path.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::init::init_libsignal(api__library_path)?;
                 std::result::Result::Ok(output_ok)
             })())
@@ -5451,7 +5451,7 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok =
                             crate::api::session_cipher::message_decrypt_prekey_with_callbacks(
@@ -5531,7 +5531,7 @@ fn wire__crate__api__session_cipher__message_decrypt_signal_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok =
                             crate::api::session_cipher::message_decrypt_signal_with_callbacks(
@@ -5601,7 +5601,7 @@ fn wire__crate__api__session_cipher__message_encrypt_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok = crate::api::session_cipher::message_encrypt_with_callbacks(
                             api_remote_name,
@@ -5676,7 +5676,7 @@ fn wire__crate__api__session_builder__process_prekey_bundle_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let mut api_bundle_guard = None;
                         let decode_indices_ =
@@ -5730,7 +5730,7 @@ fn wire__crate__api__group_session__process_sender_key_distribution_message_with
     store_sender_key: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "process_sender_key_distribution_message_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_sender_name = sender_name.cst_decode();let api_sender_device_id = sender_device_id.cst_decode();let api_distribution_id = distribution_id.cst_decode();let api_distribution_message = distribution_message.cst_decode();let api_load_sender_key = decode_DartFn_Inputs_String_u_32_String_Output_opt_list_prim_u_8_strict_AnyhowException(load_sender_key.cst_decode());let api_store_sender_key = decode_DartFn_Inputs_String_u_32_String_list_prim_u_8_strict_Output_unit_AnyhowException(store_sender_key.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::group_session::process_sender_key_distribution_message_with_callbacks(api_sender_name, api_sender_device_id, api_distribution_id, api_distribution_message, api_load_sender_key, api_store_sender_key).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5747,7 +5747,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_to_usmc_with_callbacks
     get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "sealed_sender_decrypt_to_usmc_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_ciphertext = ciphertext.cst_decode();let api_trust_root = trust_root.cst_decode();let api_timestamp = timestamp.cst_decode();let api_local_name = local_name.cst_decode();let api_local_device_id = local_device_id.cst_decode();let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode());let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(get_local_registration_id.cst_decode());let api_get_identity = decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(get_identity.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::sealed_sender::sealed_sender_decrypt_to_usmc_with_callbacks(api_ciphertext, api_trust_root, api_timestamp, api_local_name, api_local_device_id, api_get_identity_key_pair, api_get_local_registration_id, api_get_identity).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5825,7 +5825,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok =
                             crate::api::sealed_sender::sealed_sender_decrypt_with_callbacks(
@@ -5865,7 +5865,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_encrypt_from_usmc_with_callbac
     get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "sealed_sender_encrypt_from_usmc_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_recipient_name = recipient_name.cst_decode();let api_recipient_device_id = recipient_device_id.cst_decode();let api_usmc = usmc.cst_decode();let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode());let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(get_local_registration_id.cst_decode());let api_get_identity = decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(get_identity.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::sealed_sender::sealed_sender_encrypt_from_usmc_with_callbacks(api_recipient_name, api_recipient_device_id, api_usmc, api_get_identity_key_pair, api_get_local_registration_id, api_get_identity).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5913,7 +5913,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks_impl(
                     get_identity.cst_decode(),
                 );
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok =
                             crate::api::sealed_sender::sealed_sender_encrypt_with_callbacks(
@@ -5946,7 +5946,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_multi_recipient_encrypt_with_c
     get_identity: impl CstDecode<flutter_rust_bridge::DartOpaque>,
 ) {
     FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::DcoCodec,_,_,_>(flutter_rust_bridge::for_generated::TaskInfo{ debug_name: "sealed_sender_multi_recipient_encrypt_with_callbacks", port: Some(port_), mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal }, move || {let api_destinations = destinations.cst_decode();let api_excluded_recipients = excluded_recipients.cst_decode();let api_usmc = usmc.cst_decode();let api_get_identity_key_pair = decode_DartFn_Inputs__Output_list_prim_u_8_strict_AnyhowException(get_identity_key_pair.cst_decode());let api_get_local_registration_id = decode_DartFn_Inputs__Output_u_32_AnyhowException(get_local_registration_id.cst_decode());let api_get_identity = decode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(get_identity.cst_decode()); move |context| async move {
-                    transform_result_dco::<_, _, String>((move || async move {
+                    transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || async move {
                          let output_ok = crate::api::sealed_sender::sealed_sender_multi_recipient_encrypt_with_callbacks(api_destinations, api_excluded_recipients, api_usmc, api_get_identity_key_pair, api_get_local_registration_id, api_get_identity).await?;   std::result::Result::Ok(output_ok)
                     })().await)
                 } })
@@ -5964,7 +5964,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_v2_parse_sent_message_impl(
         move || {
             let api_data = data.cst_decode();
             move |context| async move {
-                transform_result_dco::<_, _, String>(
+                transform_result_dco::<_, _, crate::api::error::LibSignalException>(
                     (move || async move {
                         let output_ok =
                             crate::api::sealed_sender::sealed_sender_v2_parse_sent_message(
@@ -5990,7 +5990,7 @@ fn wire__crate__api__sealed_sender__sender_certificate_get_expiration_impl(
         },
         move || {
             let api_certificate = certificate.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::sealed_sender::sender_certificate_get_expiration(api_certificate)?;
                 std::result::Result::Ok(output_ok)
@@ -6009,7 +6009,7 @@ fn wire__crate__api__sealed_sender__sender_certificate_get_key_impl(
         },
         move || {
             let api_certificate = certificate.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::sealed_sender::sender_certificate_get_key(api_certificate)?;
                 std::result::Result::Ok(output_ok)
@@ -6028,7 +6028,7 @@ fn wire__crate__api__sealed_sender__sender_certificate_get_sender_device_id_impl
         },
         move || {
             let api_certificate = certificate.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::sealed_sender::sender_certificate_get_sender_device_id(
                     api_certificate,
                 )?;
@@ -6048,7 +6048,7 @@ fn wire__crate__api__sealed_sender__sender_certificate_get_sender_name_impl(
         },
         move || {
             let api_certificate = certificate.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok =
                     crate::api::sealed_sender::sender_certificate_get_sender_name(api_certificate)?;
                 std::result::Result::Ok(output_ok)
@@ -6071,7 +6071,7 @@ fn wire__crate__api__sealed_sender__validate_sender_certificate_impl(
             let api_certificate = certificate.cst_decode();
             let api_trust_root = trust_root.cst_decode();
             let api_timestamp = timestamp.cst_decode();
-            transform_result_dco::<_, _, String>((move || {
+            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
                 let output_ok = crate::api::sealed_sender::validate_sender_certificate(
                     api_certificate,
                     api_trust_root,
@@ -6441,6 +6441,35 @@ impl CstDecode<isize> for isize {
     // Codec=Cst (C-struct based), see doc to use other codecs
     fn cst_decode(self) -> isize {
         self
+    }
+}
+impl CstDecode<crate::api::error::LibSignalErrorCode> for i32 {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    fn cst_decode(self) -> crate::api::error::LibSignalErrorCode {
+        match self {
+            0 => crate::api::error::LibSignalErrorCode::InvalidArgument,
+            1 => crate::api::error::LibSignalErrorCode::InvalidState,
+            2 => crate::api::error::LibSignalErrorCode::InternalError,
+            3 => crate::api::error::LibSignalErrorCode::ProtobufError,
+            4 => crate::api::error::LibSignalErrorCode::LegacyCiphertextVersion,
+            5 => crate::api::error::LibSignalErrorCode::UnknownCiphertextVersion,
+            6 => crate::api::error::LibSignalErrorCode::UnrecognizedMessageVersion,
+            7 => crate::api::error::LibSignalErrorCode::InvalidMessage,
+            8 => crate::api::error::LibSignalErrorCode::SealedSenderSelfSend,
+            9 => crate::api::error::LibSignalErrorCode::InvalidKey,
+            10 => crate::api::error::LibSignalErrorCode::InvalidSignature,
+            11 => crate::api::error::LibSignalErrorCode::FingerprintVersionMismatch,
+            12 => crate::api::error::LibSignalErrorCode::FingerprintParsingError,
+            13 => crate::api::error::LibSignalErrorCode::UntrustedIdentity,
+            14 => crate::api::error::LibSignalErrorCode::InvalidKeyIdentifier,
+            15 => crate::api::error::LibSignalErrorCode::SessionNotFound,
+            16 => crate::api::error::LibSignalErrorCode::InvalidRegistrationId,
+            17 => crate::api::error::LibSignalErrorCode::InvalidSession,
+            18 => crate::api::error::LibSignalErrorCode::InvalidSenderKeySession,
+            19 => crate::api::error::LibSignalErrorCode::DuplicatedMessage,
+            20 => crate::api::error::LibSignalErrorCode::VerificationFailure,
+            _ => unreachable!("Invalid variant for LibSignalErrorCode: {}", self),
+        }
     }
 }
 impl CstDecode<u32> for u32 {
@@ -6985,6 +7014,49 @@ impl SseDecode for isize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_i64::<NativeEndian>().unwrap() as _
+    }
+}
+
+impl SseDecode for crate::api::error::LibSignalErrorCode {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut inner = <i32>::sse_decode(deserializer);
+        return match inner {
+            0 => crate::api::error::LibSignalErrorCode::InvalidArgument,
+            1 => crate::api::error::LibSignalErrorCode::InvalidState,
+            2 => crate::api::error::LibSignalErrorCode::InternalError,
+            3 => crate::api::error::LibSignalErrorCode::ProtobufError,
+            4 => crate::api::error::LibSignalErrorCode::LegacyCiphertextVersion,
+            5 => crate::api::error::LibSignalErrorCode::UnknownCiphertextVersion,
+            6 => crate::api::error::LibSignalErrorCode::UnrecognizedMessageVersion,
+            7 => crate::api::error::LibSignalErrorCode::InvalidMessage,
+            8 => crate::api::error::LibSignalErrorCode::SealedSenderSelfSend,
+            9 => crate::api::error::LibSignalErrorCode::InvalidKey,
+            10 => crate::api::error::LibSignalErrorCode::InvalidSignature,
+            11 => crate::api::error::LibSignalErrorCode::FingerprintVersionMismatch,
+            12 => crate::api::error::LibSignalErrorCode::FingerprintParsingError,
+            13 => crate::api::error::LibSignalErrorCode::UntrustedIdentity,
+            14 => crate::api::error::LibSignalErrorCode::InvalidKeyIdentifier,
+            15 => crate::api::error::LibSignalErrorCode::SessionNotFound,
+            16 => crate::api::error::LibSignalErrorCode::InvalidRegistrationId,
+            17 => crate::api::error::LibSignalErrorCode::InvalidSession,
+            18 => crate::api::error::LibSignalErrorCode::InvalidSenderKeySession,
+            19 => crate::api::error::LibSignalErrorCode::DuplicatedMessage,
+            20 => crate::api::error::LibSignalErrorCode::VerificationFailure,
+            _ => unreachable!("Invalid variant for LibSignalErrorCode: {}", inner),
+        };
+    }
+}
+
+impl SseDecode for crate::api::error::LibSignalException {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_code = <crate::api::error::LibSignalErrorCode>::sse_decode(deserializer);
+        let mut var_message = <String>::sse_decode(deserializer);
+        return crate::api::error::LibSignalException {
+            code: var_code,
+            message: var_message,
+        };
     }
 }
 
@@ -7663,6 +7735,67 @@ impl flutter_rust_bridge::IntoIntoDart<crate::api::group_session::GroupEncryptRe
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::error::LibSignalErrorCode {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        match self {
+            Self::InvalidArgument => 0.into_dart(),
+            Self::InvalidState => 1.into_dart(),
+            Self::InternalError => 2.into_dart(),
+            Self::ProtobufError => 3.into_dart(),
+            Self::LegacyCiphertextVersion => 4.into_dart(),
+            Self::UnknownCiphertextVersion => 5.into_dart(),
+            Self::UnrecognizedMessageVersion => 6.into_dart(),
+            Self::InvalidMessage => 7.into_dart(),
+            Self::SealedSenderSelfSend => 8.into_dart(),
+            Self::InvalidKey => 9.into_dart(),
+            Self::InvalidSignature => 10.into_dart(),
+            Self::FingerprintVersionMismatch => 11.into_dart(),
+            Self::FingerprintParsingError => 12.into_dart(),
+            Self::UntrustedIdentity => 13.into_dart(),
+            Self::InvalidKeyIdentifier => 14.into_dart(),
+            Self::SessionNotFound => 15.into_dart(),
+            Self::InvalidRegistrationId => 16.into_dart(),
+            Self::InvalidSession => 17.into_dart(),
+            Self::InvalidSenderKeySession => 18.into_dart(),
+            Self::DuplicatedMessage => 19.into_dart(),
+            Self::VerificationFailure => 20.into_dart(),
+            _ => unreachable!(),
+        }
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::error::LibSignalErrorCode
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::error::LibSignalErrorCode>
+    for crate::api::error::LibSignalErrorCode
+{
+    fn into_into_dart(self) -> crate::api::error::LibSignalErrorCode {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::error::LibSignalException {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.code.into_into_dart().into_dart(),
+            self.message.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::error::LibSignalException
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::error::LibSignalException>
+    for crate::api::error::LibSignalException
+{
+    fn into_into_dart(self) -> crate::api::error::LibSignalException {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::sealed_sender::MultiRecipientDestination {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -8295,6 +8428,49 @@ impl SseEncode for isize {
             .cursor
             .write_i64::<NativeEndian>(self as _)
             .unwrap();
+    }
+}
+
+impl SseEncode for crate::api::error::LibSignalErrorCode {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(
+            match self {
+                crate::api::error::LibSignalErrorCode::InvalidArgument => 0,
+                crate::api::error::LibSignalErrorCode::InvalidState => 1,
+                crate::api::error::LibSignalErrorCode::InternalError => 2,
+                crate::api::error::LibSignalErrorCode::ProtobufError => 3,
+                crate::api::error::LibSignalErrorCode::LegacyCiphertextVersion => 4,
+                crate::api::error::LibSignalErrorCode::UnknownCiphertextVersion => 5,
+                crate::api::error::LibSignalErrorCode::UnrecognizedMessageVersion => 6,
+                crate::api::error::LibSignalErrorCode::InvalidMessage => 7,
+                crate::api::error::LibSignalErrorCode::SealedSenderSelfSend => 8,
+                crate::api::error::LibSignalErrorCode::InvalidKey => 9,
+                crate::api::error::LibSignalErrorCode::InvalidSignature => 10,
+                crate::api::error::LibSignalErrorCode::FingerprintVersionMismatch => 11,
+                crate::api::error::LibSignalErrorCode::FingerprintParsingError => 12,
+                crate::api::error::LibSignalErrorCode::UntrustedIdentity => 13,
+                crate::api::error::LibSignalErrorCode::InvalidKeyIdentifier => 14,
+                crate::api::error::LibSignalErrorCode::SessionNotFound => 15,
+                crate::api::error::LibSignalErrorCode::InvalidRegistrationId => 16,
+                crate::api::error::LibSignalErrorCode::InvalidSession => 17,
+                crate::api::error::LibSignalErrorCode::InvalidSenderKeySession => 18,
+                crate::api::error::LibSignalErrorCode::DuplicatedMessage => 19,
+                crate::api::error::LibSignalErrorCode::VerificationFailure => 20,
+                _ => {
+                    unimplemented!("");
+                }
+            },
+            serializer,
+        );
+    }
+}
+
+impl SseEncode for crate::api::error::LibSignalException {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <crate::api::error::LibSignalErrorCode>::sse_encode(self.code, serializer);
+        <String>::sse_encode(self.message, serializer);
     }
 }
 
@@ -9120,6 +9296,15 @@ mod io {
             }
         }
     }
+    impl CstDecode<crate::api::error::LibSignalException> for wire_cst_lib_signal_exception {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::error::LibSignalException {
+            crate::api::error::LibSignalException {
+                code: self.code.cst_decode(),
+                message: self.message.cst_decode(),
+            }
+        }
+    }
     impl CstDecode<Vec<String>> for *mut wire_cst_list_String {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> Vec<String> {
@@ -9317,6 +9502,19 @@ mod io {
         }
     }
     impl Default for wire_cst_group_encrypt_result {
+        fn default() -> Self {
+            Self::new_with_null_ptr()
+        }
+    }
+    impl NewWithNullPtr for wire_cst_lib_signal_exception {
+        fn new_with_null_ptr() -> Self {
+            Self {
+                code: Default::default(),
+                message: core::ptr::null_mut(),
+            }
+        }
+    }
+    impl Default for wire_cst_lib_signal_exception {
         fn default() -> Self {
             Self::new_with_null_ptr()
         }
@@ -11556,6 +11754,12 @@ mod io {
     }
     #[repr(C)]
     #[derive(Clone, Copy)]
+    pub struct wire_cst_lib_signal_exception {
+        code: i32,
+        message: *mut wire_cst_list_prim_u_8_strict,
+    }
+    #[repr(C)]
+    #[derive(Clone, Copy)]
     pub struct wire_cst_list_String {
         ptr: *mut *mut wire_cst_list_prim_u_8_strict,
         len: i32,
@@ -11776,6 +11980,26 @@ mod web {
             crate::api::group_session::GroupEncryptResult {
                 ciphertext: self_.get(0).cst_decode(),
                 sender_key_record: self_.get(1).cst_decode(),
+            }
+        }
+    }
+    impl CstDecode<crate::api::error::LibSignalException>
+        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::error::LibSignalException {
+            let self_ = self
+                .dyn_into::<flutter_rust_bridge::for_generated::js_sys::Array>()
+                .unwrap();
+            assert_eq!(
+                self_.length(),
+                2,
+                "Expected 2 elements, got {}",
+                self_.length()
+            );
+            crate::api::error::LibSignalException {
+                code: self_.get(0).cst_decode(),
+                message: self_.get(1).cst_decode(),
             }
         }
     }
@@ -12656,6 +12880,14 @@ mod web {
         // Codec=Cst (C-struct based), see doc to use other codecs
         fn cst_decode(self) -> isize {
             ::std::convert::TryInto::<i64>::try_into(self).unwrap() as _
+        }
+    }
+    impl CstDecode<crate::api::error::LibSignalErrorCode>
+        for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue
+    {
+        // Codec=Cst (C-struct based), see doc to use other codecs
+        fn cst_decode(self) -> crate::api::error::LibSignalErrorCode {
+            (self.unchecked_into_f64() as i32).cst_decode()
         }
     }
     impl CstDecode<Vec<u8>> for flutter_rust_bridge::for_generated::wasm_bindgen::JsValue {
