@@ -9,6 +9,7 @@
 import 'api/address.dart';
 import 'api/bundle.dart';
 import 'api/crypto.dart';
+import 'api/error.dart';
 import 'api/group_session.dart';
 import 'api/init.dart';
 import 'api/keys.dart';
@@ -586,6 +587,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  LibSignalErrorCode dco_decode_lib_signal_error_code(dynamic raw);
+
+  @protected
+  LibSignalException dco_decode_lib_signal_exception(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -1082,6 +1089,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  LibSignalErrorCode sse_decode_lib_signal_error_code(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LibSignalException sse_decode_lib_signal_exception(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
@@ -1219,6 +1236,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   JSAny cst_encode_isize(PlatformInt64 raw) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return castNativeBigInt(raw);
+  }
+
+  @protected
+  JSAny cst_encode_lib_signal_exception(LibSignalException raw) {
+    // Codec=Cst (C-struct based), see doc to use other codecs
+    return [
+      cst_encode_lib_signal_error_code(raw.code),
+      cst_encode_String(raw.message),
+    ].jsify()!;
   }
 
   @protected
@@ -1808,6 +1834,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int cst_encode_i_32(int raw);
 
   @protected
+  int cst_encode_lib_signal_error_code(LibSignalErrorCode raw);
+
+  @protected
   int cst_encode_u_32(int raw);
 
   @protected
@@ -2368,6 +2397,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_lib_signal_error_code(
+    LibSignalErrorCode self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_lib_signal_exception(
+    LibSignalException self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);

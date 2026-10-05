@@ -70,7 +70,8 @@ fn assert_equivalent(label: &str, data: &[u8]) {
         (Err(e), Ok(_)) => {
             // Only the deliberate u32 guard may diverge, and only above 4 GiB.
             assert!(
-                e.starts_with("Message too large"),
+                e.code == crate::api::error::LibSignalErrorCode::InvalidArgument
+                    && e.message.starts_with("Message too large"),
                 "[{label}] upstream parsed, we refused: {e}"
             );
             return;

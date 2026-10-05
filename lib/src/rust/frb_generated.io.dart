@@ -6,6 +6,7 @@
 import 'api/address.dart';
 import 'api/bundle.dart';
 import 'api/crypto.dart';
+import 'api/error.dart';
 import 'api/group_session.dart';
 import 'api/init.dart';
 import 'api/keys.dart';
@@ -584,6 +585,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 dco_decode_isize(dynamic raw);
 
   @protected
+  LibSignalErrorCode dco_decode_lib_signal_error_code(dynamic raw);
+
+  @protected
+  LibSignalException dco_decode_lib_signal_exception(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -1080,6 +1087,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   PlatformInt64 sse_decode_isize(SseDeserializer deserializer);
 
   @protected
+  LibSignalErrorCode sse_decode_lib_signal_error_code(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  LibSignalException sse_decode_lib_signal_exception(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
@@ -1317,6 +1334,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     wireObj.sender_key_record = cst_encode_list_prim_u_8_strict(
       apiObj.senderKeyRecord,
     );
+  }
+
+  @protected
+  void cst_api_fill_to_wire_lib_signal_exception(
+    LibSignalException apiObj,
+    wire_cst_lib_signal_exception wireObj,
+  ) {
+    wireObj.code = cst_encode_lib_signal_error_code(apiObj.code);
+    wireObj.message = cst_encode_String(apiObj.message);
   }
 
   @protected
@@ -1850,6 +1876,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   int cst_encode_i_32(int raw);
+
+  @protected
+  int cst_encode_lib_signal_error_code(LibSignalErrorCode raw);
 
   @protected
   int cst_encode_u_32(int raw);
@@ -2412,6 +2441,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_isize(PlatformInt64 self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_lib_signal_error_code(
+    LibSignalErrorCode self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_lib_signal_exception(
+    LibSignalException self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
@@ -7365,6 +7406,13 @@ final class wire_cst_group_encrypt_result extends ffi.Struct {
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> ciphertext;
 
   external ffi.Pointer<wire_cst_list_prim_u_8_strict> sender_key_record;
+}
+
+final class wire_cst_lib_signal_exception extends ffi.Struct {
+  @ffi.Int32()
+  external int code;
+
+  external ffi.Pointer<wire_cst_list_prim_u_8_strict> message;
 }
 
 final class wire_cst_pre_key_message_ids extends ffi.Struct {

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:libsignal/src/rust/api/keys.dart' as keys;
 import 'package:test/test.dart';
+import '../test_helpers/error_matchers.dart';
 
 void main() {
   setUpAll(LibSignal.init);
@@ -213,14 +214,17 @@ void main() {
       });
 
       test('deserialize rejects empty data', () {
-        expect(() => IdentityKeyPair.deserialize(bytes: []), throwsA(anything));
+        expect(
+          () => IdentityKeyPair.deserialize(bytes: []),
+          failsWith(LibSignalErrorCode.invalidKey),
+        );
       });
 
       test('deserialize rejects data with wrong length', () {
         final invalidData = [0x0a, 1, 2, 3, 4, 5];
         expect(
           () => IdentityKeyPair.deserialize(bytes: invalidData),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });

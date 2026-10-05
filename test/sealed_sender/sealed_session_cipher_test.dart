@@ -439,7 +439,13 @@ void main() {
             trustRoot: trustRootPublicKey.serialize(),
             timestamp: DateTime.now().millisecondsSinceEpoch,
           ),
-          throwsA(anything),
+          throwsA(
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.verificationFailure,
+            ),
+          ),
         );
       });
 
@@ -489,7 +495,13 @@ void main() {
             trustRoot: wrongTrustRoot.serialize(),
             timestamp: DateTime.now().millisecondsSinceEpoch,
           ),
-          throwsA(anything),
+          throwsA(
+            isA<LibSignalException>().having(
+              (e) => e.code,
+              'code',
+              LibSignalErrorCode.verificationFailure,
+            ),
+          ),
         );
       });
 

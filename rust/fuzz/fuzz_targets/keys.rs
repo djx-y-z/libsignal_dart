@@ -3,7 +3,7 @@
 //!
 //! These `deserialize` functions sit directly on the network/storage boundary:
 //! a peer or a corrupted store can hand us arbitrary bytes. We only assert that
-//! they never panic / abort — a well-formed `Err(String)` is a success.
+//! they never panic / abort — a well-formed `Err(LibSignalException)` is a success.
 
 use libfuzzer_sys::fuzz_target;
 use libsignal_frb::api::keys::{IdentityKeyPair, PrivateKey, PublicKey};

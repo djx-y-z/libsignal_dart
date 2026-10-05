@@ -1,5 +1,6 @@
 //! Key management API using libsignal-protocol.
 
+use crate::api::error::{LibSignalErrorCode, LibSignalException};
 use libsignal_protocol::{
     IdentityKey, IdentityKeyPair as NativeIdentityKeyPair, KeyPair,
     PrivateKey as NativePrivateKey, PublicKey as NativePublicKey,
@@ -25,7 +26,7 @@ impl PrivateKey {
 
     /// Generate a new random private key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<PrivateKey, String> {
+    pub fn generate() -> Result<PrivateKey, LibSignalException> {
         let key_pair = KeyPair::generate(&mut OsRng.unwrap_err());
         Ok(PrivateKey {
             inner: key_pair.private_key,
@@ -37,8 +38,8 @@ impl PrivateKey {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<PrivateKey, String> {
-        let result = NativePrivateKey::deserialize(&bytes).map_err(|e| e.to_string());
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<PrivateKey, LibSignalException> {
+        let result = NativePrivateKey::deserialize(&bytes).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(PrivateKey { inner: result? })
     }
@@ -50,24 +51,24 @@ impl PrivateKey {
     /// for securely zeroing these bytes when done. Consider using `SecureBytes.wrap()`
     /// on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.serialize())
     }
 
     /// Get the public key corresponding to this private key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_public_key(&self) -> Result<PublicKey, String> {
-        let native_pub = self.inner.public_key().map_err(|e| e.to_string())?;
+    pub fn get_public_key(&self) -> Result<PublicKey, LibSignalException> {
+        let native_pub = self.inner.public_key().map_err(LibSignalException::from)?;
         Ok(PublicKey { inner: native_pub })
     }
 
     /// Sign a message with this private key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn sign(&self, message: Vec<u8>) -> Result<Vec<u8>, String> {
+    pub fn sign(&self, message: Vec<u8>) -> Result<Vec<u8>, LibSignalException> {
         let signature = self
             .inner
             .calculate_signature(&message, &mut OsRng.unwrap_err())
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         Ok(signature.into_vec())
     }
 
@@ -103,11 +104,11 @@ impl PrivateKey {
     /// that the peer's public key is the one expected remains the caller's job,
     /// and this method authenticates nothing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn agree(&self, public_key: &PublicKey) -> Result<Vec<u8>, String> {
+    pub fn agree(&self, public_key: &PublicKey) -> Result<Vec<u8>, LibSignalException> {
         let shared = self
             .inner
             .calculate_agreement(&public_key.inner)
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         Ok(shared.into_vec())
     }
 
@@ -121,7 +122,7 @@ impl PrivateKey {
     /// each copy as soon as it is no longer needed rather than waiting for the
     /// garbage collector, and avoid making copies you do not need.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_key(&self) -> Result<PrivateKey, String> {
+    pub fn clone_key(&self) -> Result<PrivateKey, LibSignalException> {
         // PrivateKey is Copy, so we can just copy it
         Ok(PrivateKey { inner: self.inner })
     }
@@ -145,12 +146,15 @@ impl PublicKey {
 
     /// Deserialize a public key from bytes.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<PublicKey, String> {
-        let native = NativePublicKey::deserialize(&bytes).map_err(|e| e.to_string())?;
+    pub fn deserialize(bytes: Vec<u8>) -> Result<PublicKey, LibSignalException> {
+        let native = NativePublicKey::deserialize(&bytes).map_err(LibSignalException::from)?;
 
         // Check for low-order points (required for security)
         if !native.is_canonical() {
-            return Err("Low-order point".to_string());
+            return Err(LibSignalException::new(
+                LibSignalErrorCode::InvalidKey,
+                "Low-order point",
+            ));
         }
 
         Ok(PublicKey { inner: native })
@@ -158,13 +162,13 @@ impl PublicKey {
 
     /// Serialize this public key to bytes.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.serialize().into_vec())
     }
 
     /// Verify a signature on a message.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn verify(&self, message: Vec<u8>, signature: Vec<u8>) -> Result<bool, String> {
+    pub fn verify(&self, message: Vec<u8>, signature: Vec<u8>) -> Result<bool, LibSignalException> {
         Ok(self.inner.verify_signature(&message, &signature))
     }
 
@@ -172,7 +176,7 @@ impl PublicKey {
     ///
     /// Comparison is performed lexicographically on the serialized bytes.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn compare(&self, other: &PublicKey) -> Result<i32, String> {
+    pub fn compare(&self, other: &PublicKey) -> Result<i32, LibSignalException> {
         use std::cmp::Ordering;
         let self_bytes = self.inner.serialize();
         let other_bytes = other.inner.serialize();
@@ -185,19 +189,19 @@ impl PublicKey {
 
     /// Check if this public key equals another.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn equals(&self, other: &PublicKey) -> Result<bool, String> {
+    pub fn equals(&self, other: &PublicKey) -> Result<bool, LibSignalException> {
         Ok(self.inner == other.inner)
     }
 
     /// Get the raw public key bytes without the type prefix.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn get_public_key_bytes(&self) -> Result<Vec<u8>, String> {
+    pub fn get_public_key_bytes(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.public_key_bytes().to_vec())
     }
 
     /// Create a copy of this public key.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn clone_key(&self) -> Result<PublicKey, String> {
+    pub fn clone_key(&self) -> Result<PublicKey, LibSignalException> {
         // PublicKey is Copy, so we can just copy it
         Ok(PublicKey { inner: self.inner })
     }
@@ -221,7 +225,7 @@ impl IdentityKeyPair {
 
     /// Generate a new identity key pair.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<IdentityKeyPair, String> {
+    pub fn generate() -> Result<IdentityKeyPair, LibSignalException> {
         let native = NativeIdentityKeyPair::generate(&mut OsRng.unwrap_err());
         Ok(IdentityKeyPair { inner: native })
     }
@@ -239,8 +243,8 @@ impl IdentityKeyPair {
     /// # Security
     /// The input bytes are securely zeroized after deserialization.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(mut bytes: Vec<u8>) -> Result<IdentityKeyPair, String> {
-        let result = NativeIdentityKeyPair::try_from(&bytes[..]).map_err(|e| e.to_string());
+    pub fn deserialize(mut bytes: Vec<u8>) -> Result<IdentityKeyPair, LibSignalException> {
+        let result = NativeIdentityKeyPair::try_from(&bytes[..]).map_err(LibSignalException::from);
         bytes.zeroize(); // SECURITY: Zeroize input bytes
         Ok(IdentityKeyPair { inner: result? })
     }
@@ -252,13 +256,13 @@ impl IdentityKeyPair {
     /// The caller is responsible for securely zeroing these bytes when done.
     /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn serialize(&self) -> Result<Vec<u8>, String> {
+    pub fn serialize(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.serialize().into_vec())
     }
 
     /// Get the public key as serialized bytes.
     #[flutter_rust_bridge::frb(sync, getter)]
-    pub fn public_key(&self) -> Result<Vec<u8>, String> {
+    pub fn public_key(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.public_key().serialize().into_vec())
     }
 
@@ -273,7 +277,7 @@ impl IdentityKeyPair {
     /// pre-key or a Kyber pre-key, say — call `identityKeyPair.sign` instead.
     /// It does the same work without copying the long-term secret out of Rust.
     #[flutter_rust_bridge::frb(sync, getter)]
-    pub fn private_key(&self) -> Result<Vec<u8>, String> {
+    pub fn private_key(&self) -> Result<Vec<u8>, LibSignalException> {
         Ok(self.inner.private_key().serialize())
     }
 
@@ -300,12 +304,12 @@ impl IdentityKeyPair {
     /// prefix, so the two uses of the identity key overlap only if a caller
     /// deliberately builds the prefix and passes it as `message`.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn sign(&self, message: Vec<u8>) -> Result<Vec<u8>, String> {
+    pub fn sign(&self, message: Vec<u8>) -> Result<Vec<u8>, LibSignalException> {
         let signature = self
             .inner
             .private_key()
             .calculate_signature(&message, &mut OsRng.unwrap_err())
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         Ok(signature.into_vec())
     }
 
@@ -313,12 +317,12 @@ impl IdentityKeyPair {
     ///
     /// This is used in the multi-device protocol to link devices.
     #[flutter_rust_bridge::frb(sync)]
-    pub fn sign_alternate_identity(&self, other_identity: &PublicKey) -> Result<Vec<u8>, String> {
+    pub fn sign_alternate_identity(&self, other_identity: &PublicKey) -> Result<Vec<u8>, LibSignalException> {
         let other_identity_key = IdentityKey::new(other_identity.inner);
         let signature = self
             .inner
             .sign_alternate_identity(&other_identity_key, &mut OsRng.unwrap_err())
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         Ok(signature.into_vec())
     }
 }
@@ -331,13 +335,13 @@ pub fn identity_keypair_sign_alternate_identity_raw(
     public_key: &PublicKey,
     private_key: &PrivateKey,
     other_identity: &PublicKey,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, LibSignalException> {
     let identity_key = IdentityKey::new(public_key.inner);
     let pair = NativeIdentityKeyPair::new(identity_key, private_key.inner);
     let other_identity_key = IdentityKey::new(other_identity.inner);
     let signature = pair
         .sign_alternate_identity(&other_identity_key, &mut OsRng.unwrap_err())
-        .map_err(|e| e.to_string())?;
+        .map_err(LibSignalException::from)?;
     Ok(signature.into_vec())
 }
 
@@ -348,7 +352,7 @@ pub fn identity_keypair_sign_alternate_identity_raw(
 pub fn identity_keypair_serialize_raw(
     public_key: &PublicKey,
     private_key: &PrivateKey,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, LibSignalException> {
     let identity_key = IdentityKey::new(public_key.inner);
     let pair = NativeIdentityKeyPair::new(identity_key, private_key.inner);
     Ok(pair.serialize().into_vec())

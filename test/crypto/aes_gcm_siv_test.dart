@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/test_helpers.dart';
 
 void main() {
@@ -27,17 +28,26 @@ void main() {
       test('throws for key shorter than 32 bytes', () {
         final shortKey = randomBytes(16);
 
-        expect(() => Aes256GcmSiv(key: shortKey.toList()), throwsA(anything));
+        expect(
+          () => Aes256GcmSiv(key: shortKey.toList()),
+          failsWith(LibSignalErrorCode.invalidArgument),
+        );
       });
 
       test('throws for key longer than 32 bytes', () {
         final longKey = randomBytes(64);
 
-        expect(() => Aes256GcmSiv(key: longKey.toList()), throwsA(anything));
+        expect(
+          () => Aes256GcmSiv(key: longKey.toList()),
+          failsWith(LibSignalErrorCode.invalidArgument),
+        );
       });
 
       test('throws for empty key', () {
-        expect(() => Aes256GcmSiv(key: []), throwsA(anything));
+        expect(
+          () => Aes256GcmSiv(key: []),
+          failsWith(LibSignalErrorCode.invalidArgument),
+        );
       });
     });
 
@@ -165,7 +175,7 @@ void main() {
             nonce: shortNonce.toList(),
             associatedData: [],
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 
@@ -179,7 +189,7 @@ void main() {
             nonce: longNonce.toList(),
             associatedData: [],
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 
@@ -197,7 +207,7 @@ void main() {
             nonce: randomBytes(8).toList(),
             associatedData: [],
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
     });

@@ -1,5 +1,6 @@
 //! FRB API modules for Dart.
 
+use crate::api::error::LibSignalException;
 use futures::executor::block_on;
 use libsignal_protocol::{
     IdentityKey, IdentityKeyStore, InMemIdentityKeyStore, ProtocolAddress, PublicKey,
@@ -19,12 +20,12 @@ pub(crate) fn preseed_identity(
     identity_store: &mut InMemIdentityKeyStore,
     remote_address: &ProtocolAddress,
     known_remote_identity: &Option<Vec<u8>>,
-) -> Result<(), String> {
+) -> Result<(), LibSignalException> {
     if let Some(bytes) = known_remote_identity {
-        let public_key = PublicKey::deserialize(bytes).map_err(|e| e.to_string())?;
+        let public_key = PublicKey::deserialize(bytes).map_err(LibSignalException::from)?;
         let identity = IdentityKey::new(public_key);
         block_on(async { identity_store.save_identity(remote_address, &identity).await })
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
     }
     Ok(())
 }
@@ -32,6 +33,7 @@ pub(crate) fn preseed_identity(
 pub mod address;
 pub mod bundle;
 pub mod crypto;
+pub mod error;
 pub mod group_session;
 pub mod init;
 pub mod keys;

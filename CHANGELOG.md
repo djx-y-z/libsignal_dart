@@ -2,7 +2,76 @@
 
 ### For Users
 
+#### Changed (Breaking)
+
+- **A failed call throws a `LibSignalException` carrying a
+  `LibSignalErrorCode`, where it used to throw the error's text as a `String`**
+  ([#106](https://github.com/djx-y-z/libsignal_dart/issues/106))
+  (`rust/src/api/error.rs`, every file in `rust/src/api/`, `lib/libsignal.dart`,
+  `README.md`) — the native layer passed libsignal's errors to Dart as their
+  `Display` text and nothing else, so code that needed to tell, say, a
+  duplicate from a missing session had to search text that libsignal does not
+  treat as an API. Each failed call now throws a `LibSignalException`: its
+  `code` classifies the failure, and its `message` is, with one correction
+  listed under Fixed, the text the call threw before.
+
+  The codes, and the way libsignal's error variants are grouped into them, come
+  from libsignal's own app bindings: one code per decision a caller makes, not
+  one per failing line. Codes change only in a major release, so a `switch`
+  over all of them keeps compiling through minor and patch releases; a
+  condition libsignal introduces in between gets the nearest existing code.
+  Every libsignal variant is mapped by hand with no wildcard, so a new one is a
+  compile error until it has a code. Nothing converts text into an exception:
+  an error this package raises names its code, and a libsignal error given a
+  prefix keeps its own.
+
+  Three choices differ from libsignal's bindings. A sender certificate that
+  fails validation (expired, not signed by the trust root or by its server
+  certificate, revoked, or naming an unknown server certificate) is
+  `verificationFailure` wherever this package checks one, including inside the
+  sealed-sender decrypt functions, where libsignal reports it as an invalid
+  message; the code says nothing about who sent the envelope, since anyone who
+  knows your public identity key can seal one that fails this check.
+  libsignal's `InvalidProtocolAddress` has no code of its own:
+  libsignal-protocol never raises it (libsignal's bindings use it for a device
+  id out of range), and this package reports a device id out of range as
+  `invalidArgument` everywhere. And libsignal's `ApplicationCallbackError` is
+  `internalError` rather than a callback code, since nothing here can produce
+  it. Separately, a check this package adds — a sender-key distribution message
+  whose distribution id differs from the one passed in — is `invalidMessage`,
+  because the id inside the message comes from the peer.
+
+  `message` is the text these calls threw before (except the `Aes256GcmSiv`
+  key-length message, see Fixed), and `toString()` returns
+  `LibSignalException(<code>): <message>`. A store callback that throws still
+  cannot be reported this way, because the store interfaces cannot return an
+  error across the bridge: on native platforms the call fails with
+  `flutter_rust_bridge`'s `PanicException`, and on the web, where every call
+  that takes store callbacks is asynchronous, the WebAssembly module traps and
+  the call never completes.
+
+  **Action required:**
+  - Code that catches with `on String`, tests the thrown value with `is String`
+    or `as String`, or compares it with a string breaks; catch
+    `LibSignalException` and branch on `code`.
+  - `on Exception` and `on FrbException` clauses now catch these errors too — a
+    bare `String` never matched them — so check what such a clause does with a
+    decryption failure.
+  - `e.toString()` now starts with `LibSignalException(<code>): `. Checks with
+    `==` or `startsWith` no longer match. Checks with `contains(...)` still find
+    the message part, but now see the code name too: `contains('duplicate')`
+    matches every `duplicatedMessage`.
+  - The native library changes with it: this needs a new major `libsignal_frb`,
+    released (stage 1) before the package (stage 2). Against an older binary
+    every error fails to decode, as a `TypeError`.
+
 #### Fixed
+
+- **`Aes256GcmSiv` reports the key length it was actually given**
+  (`rust/src/api/crypto.rs`) — a key of the wrong length threw
+  "Key must be 32 bytes, got 0 bytes" whatever its length, because the key was
+  zeroized before its length was read, and zeroizing a `Vec` also truncates it.
+  The length is read first now.
 
 - **An async call no longer waits forever when another isolate shuts down
   during `LibSignal.init()`** (`lib/src/libsignal.dart`, `lib/src/platform/`)
@@ -53,7 +122,35 @@
   that has already counted to zero and not yet written the no-op, which only
   a lock inside flutter_rust_bridge can close.
 
+#### Documentation
+
+- **`SECURITY.md` matches the coded errors** (`SECURITY.md`) — the
+  certificate-validation example called a `senderCert.validate(...)` returning
+  a `bool`, which this package does not have; it now uses
+  `validateSenderCertificate`, which never returns `false` but throws, and says
+  what `verificationFailure` does and does not tell you. The identity-trust
+  section now says to branch on `LibSignalErrorCode.untrustedIdentity` instead
+  of looking for "untrusted identity" in the message, and that on a pre-key
+  message the code reports a key someone presented, not one shown to be the
+  contact's, and that an application must never let `verificationFailure`
+  change its configuration or make it fall back to unsealed sending.
+
 ### For Contributors
+
+#### Added
+
+- **Tests pin the error type, the codes' wire numbers and every code**
+  (`rust/src/api/error.rs`, `test/errors/lib_signal_exception_test.dart`,
+  `test/test_helpers/error_matchers.dart`) — a bridged function declared with
+  another error type, such as `-> Result<T, String>`, still compiles, and Dart
+  then gets that type. `generated_bindings_use_no_other_error_type` reads
+  `rust/src/frb_generated.rs` and fails when any bridged function's error type,
+  under any codec, is not `LibSignalException`. `codes_keep_their_wire_positions`
+  checks the number each generated encoder and decoder writes for every code,
+  so a code inserted, moved or appended fails it, as it fails the Dart test that
+  lists `LibSignalErrorCode.values`. Every code except `internalError` is
+  asserted with an exact matcher somewhere under `test/`, through the public
+  API.
 
 #### Changed
 

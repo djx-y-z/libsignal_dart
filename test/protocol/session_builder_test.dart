@@ -2,6 +2,7 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
@@ -189,7 +190,7 @@ void main() {
         // Should throw due to invalid signature
         expect(
           () => builder.processPreKeyBundle(bobAddress, invalidBundle),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidSignature),
         );
       });
     });

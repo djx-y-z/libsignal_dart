@@ -3,6 +3,7 @@
 //! This module provides message encryption and decryption functions using
 //! DartFn callbacks for store operations.
 
+use crate::api::error::{LibSignalErrorCode, LibSignalException};
 use crate::recording_stores::{KyberPreKeyUsed, RecordingKyberPreKeyStore, RecordingPreKeyStore};
 use flutter_rust_bridge::DartFnFuture;
 use futures::executor::block_on;
@@ -50,8 +51,8 @@ pub struct PreKeyMessageIds {
 
 /// Extract pre-key IDs from a serialized pre-key message.
 #[flutter_rust_bridge::frb(sync)]
-pub fn extract_prekey_message_ids(message: Vec<u8>) -> Result<PreKeyMessageIds, String> {
-    let msg = PreKeySignalMessage::try_from(&message[..]).map_err(|e| e.to_string())?;
+pub fn extract_prekey_message_ids(message: Vec<u8>) -> Result<PreKeyMessageIds, LibSignalException> {
+    let msg = PreKeySignalMessage::try_from(&message[..]).map_err(LibSignalException::from)?;
 
     Ok(PreKeyMessageIds {
         pre_key_id: msg.pre_key_id().map(|id| id.into()),
@@ -89,7 +90,7 @@ pub async fn message_encrypt_with_callbacks(
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-) -> Result<EncryptResult, String> {
+) -> Result<EncryptResult, LibSignalException> {
     // Step 1: Load data via callbacks
     // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
     // A Dart store callback that throws panics the worker thread (FRB declares
@@ -101,10 +102,9 @@ pub async fn message_encrypt_with_callbacks(
         load_session(remote_name.clone(), remote_device_id)
             .await
             .ok_or_else(|| {
-                format!(
-                    "No session for {}:{}",
-                    remote_name.clone(),
-                    remote_device_id
+                LibSignalException::new(
+                    LibSignalErrorCode::SessionNotFound,
+                    format!("No session for {}:{}", remote_name, remote_device_id),
                 )
             })?,
     );
@@ -149,26 +149,26 @@ fn message_encrypt_inner(
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
     known_remote_identity: &Option<Vec<u8>>,
-) -> Result<(EncryptResult, Vec<u8>), String> {
+) -> Result<(EncryptResult, Vec<u8>), LibSignalException> {
     // Parse our identity
     let our_identity =
-        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(|e| e.to_string())?;
+        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(LibSignalException::from)?;
 
     // Parse session
-    let session = NativeSessionRecord::deserialize(session_bytes).map_err(|e| e.to_string())?;
+    let session = NativeSessionRecord::deserialize(session_bytes).map_err(LibSignalException::from)?;
 
     // Create protocol addresses
     let remote_address = ProtocolAddress::new(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid remote device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid remote device ID"))?,
     );
     let local_address = ProtocolAddress::new(
         local_name.to_string(),
         local_device_id
             .try_into()
-            .map_err(|_| "Invalid local device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid local device ID"))?,
     );
 
     // Create in-memory stores
@@ -182,7 +182,7 @@ fn message_encrypt_inner(
 
     // Populate session store
     block_on(async { session_store.store_session(&remote_address, &session).await })
-        .map_err(|e| e.to_string())?;
+        .map_err(LibSignalException::from)?;
 
     // Encrypt using the library's function
     let ciphertext = block_on(async {
@@ -197,23 +197,26 @@ fn message_encrypt_inner(
         )
         .await
     })
-    .map_err(|e| e.to_string())?;
+    .map_err(LibSignalException::from)?;
 
     // Get the updated session
     let updated_session = block_on(async { session_store.load_session(&remote_address).await })
-        .map_err(|e| e.to_string())?
-        .ok_or("Session not found after encryption")?;
+        .map_err(LibSignalException::from)?
+        .ok_or_else(|| LibSignalException::internal("Session not found after encryption"))?;
 
     // Serialize results
     let msg_type = match ciphertext.message_type() {
         CiphertextMessageType::Whisper => 1,
         CiphertextMessageType::PreKey => 3,
-        other => return Err(format!(
-            "Unexpected message type {:?}, expected Whisper (1) or PreKey (3)", other
-        )),
+        other => {
+            return Err(LibSignalException::internal(format!(
+                "Unexpected message type {:?}, expected Whisper (1) or PreKey (3)",
+                other
+            )));
+        }
     };
 
-    let updated_session_bytes = updated_session.serialize().map_err(|e| e.to_string())?;
+    let updated_session_bytes = updated_session.serialize().map_err(LibSignalException::from)?;
 
     Ok((
         EncryptResult {
@@ -255,7 +258,7 @@ pub async fn message_decrypt_signal_with_callbacks(
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
     save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, LibSignalException> {
     // Step 1: Load data via callbacks
     // SECURITY: `Zeroizing` rather than a manual `zeroize()` after the call.
     // A Dart store callback that throws panics the worker thread (FRB declares
@@ -267,10 +270,9 @@ pub async fn message_decrypt_signal_with_callbacks(
         load_session(remote_name.clone(), remote_device_id)
             .await
             .ok_or_else(|| {
-                format!(
-                    "No session for {}:{}",
-                    remote_name.clone(),
-                    remote_device_id
+                LibSignalException::new(
+                    LibSignalErrorCode::SessionNotFound,
+                    format!("No session for {}:{}", remote_name, remote_device_id),
                 )
             })?,
     );
@@ -319,29 +321,29 @@ fn message_decrypt_signal_inner(
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
     known_remote_identity: &Option<Vec<u8>>,
-) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), String> {
+) -> Result<(Vec<u8>, Vec<u8>, Vec<u8>), LibSignalException> {
     // Parse the message
-    let message = SignalMessage::try_from(ciphertext).map_err(|e| e.to_string())?;
+    let message = SignalMessage::try_from(ciphertext).map_err(LibSignalException::from)?;
 
     // Parse our identity
     let our_identity =
-        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(|e| e.to_string())?;
+        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(LibSignalException::from)?;
 
     // Parse session
-    let session = NativeSessionRecord::deserialize(session_bytes).map_err(|e| e.to_string())?;
+    let session = NativeSessionRecord::deserialize(session_bytes).map_err(LibSignalException::from)?;
 
     // Create protocol addresses
     let remote_address = ProtocolAddress::new(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid remote device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid remote device ID"))?,
     );
     let local_address = ProtocolAddress::new(
         local_name.to_string(),
         local_device_id
             .try_into()
-            .map_err(|_| "Invalid local device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid local device ID"))?,
     );
 
     // Create in-memory stores
@@ -355,7 +357,7 @@ fn message_decrypt_signal_inner(
 
     // Populate session store
     block_on(async { session_store.store_session(&remote_address, &session).await })
-        .map_err(|e| e.to_string())?;
+        .map_err(LibSignalException::from)?;
 
     // Decrypt using the library's function
     let plaintext = block_on(async {
@@ -369,20 +371,25 @@ fn message_decrypt_signal_inner(
         )
         .await
     })
-    .map_err(|e| e.to_string())?;
+    .map_err(LibSignalException::from)?;
 
     // Get the updated session
     let updated_session = block_on(async { session_store.load_session(&remote_address).await })
-        .map_err(|e| e.to_string())?
-        .ok_or("Session not found after decryption")?;
+        .map_err(LibSignalException::from)?
+        .ok_or_else(|| LibSignalException::internal("Session not found after decryption"))?;
 
     // Get the remote identity key from the session
     let their_identity_key = updated_session
         .remote_identity_key_bytes()
-        .map_err(|e| e.to_string())?
-        .ok_or("No remote identity key in session")?;
+        .map_err(LibSignalException::from)?
+        .ok_or_else(|| {
+            LibSignalException::new(
+                LibSignalErrorCode::InvalidSession,
+                "No remote identity key in session",
+            )
+        })?;
 
-    let updated_session_bytes = updated_session.serialize().map_err(|e| e.to_string())?;
+    let updated_session_bytes = updated_session.serialize().map_err(LibSignalException::from)?;
 
     Ok((plaintext, updated_session_bytes, their_identity_key.to_vec()))
 }
@@ -439,10 +446,10 @@ pub async fn message_decrypt_prekey_with_callbacks(
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, LibSignalException> {
     // Extract pre-key IDs from the message first
     let prekey_msg =
-        PreKeySignalMessage::try_from(&ciphertext[..]).map_err(|e| e.to_string())?;
+        PreKeySignalMessage::try_from(&ciphertext[..]).map_err(LibSignalException::from)?;
     let pre_key_id = prekey_msg.pre_key_id();
     let signed_pre_key_id: u32 = prekey_msg.signed_pre_key_id().into();
     let kyber_pre_key_id = prekey_msg.kyber_pre_key_id();
@@ -464,7 +471,12 @@ pub async fn message_decrypt_prekey_with_callbacks(
     let signed_pre_key_bytes = Zeroizing::new(
         load_signed_pre_key(signed_pre_key_id)
             .await
-            .ok_or_else(|| format!("Signed pre-key {} not found", signed_pre_key_id))?,
+            .ok_or_else(|| {
+                LibSignalException::new(
+                    LibSignalErrorCode::InvalidKeyIdentifier,
+                    format!("Signed pre-key {} not found", signed_pre_key_id),
+                )
+            })?,
     );
 
     let pre_key_bytes = Zeroizing::new(if let Some(pk_id) = pre_key_id {
@@ -554,17 +566,17 @@ fn message_decrypt_prekey_inner(
     kyber_pre_key_id: Option<u32>,
     kyber_pre_key_bytes: &Option<Vec<u8>>,
     known_remote_identity: &Option<Vec<u8>>,
-) -> Result<PreKeyDecryptOutcome, String> {
+) -> Result<PreKeyDecryptOutcome, LibSignalException> {
     // Parse the message
-    let message = PreKeySignalMessage::try_from(ciphertext).map_err(|e| e.to_string())?;
+    let message = PreKeySignalMessage::try_from(ciphertext).map_err(LibSignalException::from)?;
 
     // Parse our identity
     let our_identity =
-        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(|e| e.to_string())?;
+        IdentityKeyPair::try_from(identity_key_pair_bytes).map_err(LibSignalException::from)?;
 
     // Parse existing session if provided
     let existing_session = match existing_session_bytes {
-        Some(bytes) => Some(NativeSessionRecord::deserialize(bytes).map_err(|e| e.to_string())?),
+        Some(bytes) => Some(NativeSessionRecord::deserialize(bytes).map_err(LibSignalException::from)?),
         None => None,
     };
 
@@ -573,13 +585,13 @@ fn message_decrypt_prekey_inner(
         remote_name.to_string(),
         remote_device_id
             .try_into()
-            .map_err(|_| "Invalid remote device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid remote device ID"))?,
     );
     let local_address = ProtocolAddress::new(
         local_name.to_string(),
         local_device_id
             .try_into()
-            .map_err(|_| "Invalid local device ID")?,
+            .map_err(|_| LibSignalException::invalid_argument("Invalid local device ID"))?,
     );
 
     // Create in-memory stores
@@ -597,34 +609,34 @@ fn message_decrypt_prekey_inner(
     // Populate session store if we have an existing session
     if let Some(session) = existing_session {
         block_on(async { session_store.store_session(&remote_address, &session).await })
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
     }
 
     // Populate pre-key stores
     let signed_prekey_record =
-        SignedPreKeyRecord::deserialize(signed_pre_key_bytes).map_err(|e| e.to_string())?;
+        SignedPreKeyRecord::deserialize(signed_pre_key_bytes).map_err(LibSignalException::from)?;
     block_on(async {
         signed_prekey_store
             .save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record)
             .await
     })
-    .map_err(|e| e.to_string())?;
+    .map_err(LibSignalException::from)?;
 
     if let (Some(id), Some(bytes)) = (pre_key_id, pre_key_bytes.as_ref()) {
-        let prekey_record = PreKeyRecord::deserialize(bytes).map_err(|e| e.to_string())?;
+        let prekey_record = PreKeyRecord::deserialize(bytes).map_err(LibSignalException::from)?;
         block_on(async { prekey_store.save_pre_key(PreKeyId::from(id), &prekey_record).await })
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
     }
 
     if let (Some(id), Some(bytes)) = (kyber_pre_key_id, kyber_pre_key_bytes.as_ref()) {
         let kyber_prekey_record =
-            KyberPreKeyRecord::deserialize(bytes).map_err(|e| e.to_string())?;
+            KyberPreKeyRecord::deserialize(bytes).map_err(LibSignalException::from)?;
         block_on(async {
             kyber_prekey_store
                 .save_kyber_pre_key(KyberPreKeyId::from(id), &kyber_prekey_record)
                 .await
         })
-        .map_err(|e: SignalProtocolError| e.to_string())?;
+        .map_err(|e: SignalProtocolError| LibSignalException::from(e))?;
     }
 
     // Decrypt using the library's function
@@ -642,20 +654,20 @@ fn message_decrypt_prekey_inner(
         )
         .await
     })
-    .map_err(|e| e.to_string())?;
+    .map_err(LibSignalException::from)?;
 
     // Get the updated session
     let updated_session =
         block_on(async { SessionStore::load_session(&session_store, &remote_address).await })
-            .map_err(|e: SignalProtocolError| e.to_string())?
-            .ok_or("Session not found after decryption")?;
+            .map_err(|e: SignalProtocolError| LibSignalException::from(e))?
+            .ok_or_else(|| LibSignalException::internal("Session not found after decryption"))?;
 
     // Get the remote identity key
     let their_identity_key = message.identity_key().serialize().to_vec();
 
     let updated_session_bytes = updated_session
         .serialize()
-        .map_err(|e: libsignal_protocol::error::SignalProtocolError| e.to_string())?;
+        .map_err(|e: libsignal_protocol::error::SignalProtocolError| LibSignalException::from(e))?;
 
     Ok(PreKeyDecryptOutcome {
         plaintext,

@@ -220,17 +220,33 @@ throw Exception('Key operation failed');
 
 ### F: Certificate Validation
 
-Always validate certificates before use:
+Always validate certificates before use. `validateSenderCertificate` never
+returns `false`: a certificate that is expired, not signed by the trust root or
+naming an unknown server certificate throws a `LibSignalException` whose `code`
+is `LibSignalErrorCode.verificationFailure`, and one that does not parse throws
+with another code. Treat every exception as "not valid":
 
 ```dart
-final isValid = senderCert.validate(
-  trustRoot: serverTrustRoot,
-  timestamp: DateTime.now().toUtc(),
-);
-if (!isValid) {
-  throw SecurityException('Invalid sender certificate');
+try {
+  validateSenderCertificate(
+    certificate: certificateBytes,
+    trustRoot: serverTrustRoot.serialize(),
+    timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+  );
+} on LibSignalException {
+  return; // do not use the certificate
 }
 ```
+
+The sealed-sender decrypt functions run the same check themselves and report a
+failure with the same code. That code says nothing about who sent the
+envelope: the certificate inside is chosen by whoever sealed it, and anyone who
+knows your public identity key can seal one that fails here. Treat it like any
+other rejected message: log it, and never let it change your configuration,
+such as the trust root or the clock, or make you fall back to unsealed sending.
+Before the certificate is checked, an envelope can also fail as `invalidMessage`, `invalidKey`,
+`protobufError` or `unrecognizedMessageVersion`; none of those identifies a
+sender either.
 
 ### G: Input Validation
 
@@ -964,8 +980,8 @@ libsignal's `is_trusted_identity` semantics: session establishment
 decryption of both pre-key and regular (Whisper) messages, including Sealed
 Sender (`Direction::Receiving`). The library pre-seeds the previously-trusted
 remote identity (read from your `IdentityKeyStore.getIdentity`) into libsignal,
-so a **remote identity key that differs from the stored one is rejected with an
-`UntrustedIdentity` error** rather than being silently accepted — whether it
+so a **remote identity key that differs from the stored one is rejected with
+`LibSignalErrorCode.untrustedIdentity`** rather than being silently accepted — whether it
 arrives in a new bundle / pre-key message or disagrees with the identity bound
 to an existing session. First contact (no stored identity) is
 trusted-on-first-use — with one deliberate exception, below.
@@ -1032,7 +1048,7 @@ Two consequences worth stating outright:
      so the service id is the whole test on both paths.
   3. it takes `getIdentity` and rejects a certificate whose identity key differs
      from the one you have stored for that sender, with the same
-     `untrusted identity` error the decrypt path raises. A valid certificate is
+     `untrustedIdentity` code the decrypt path raises. A valid certificate is
      not the same claim as a familiar peer: a sender who re-registers gets a
      perfectly valid certificate carrying a **new** identity key, which is a
      safety-number change. Gate 1 alone would hand that back silently while
@@ -1051,13 +1067,17 @@ Two consequences worth stating outright:
   Handle the error the same way as on the decrypt path — see
   [Identity trust](#identity-trust--mitm-detection) above.
 
-Applications **must handle the `UntrustedIdentity` error** (its message contains
-`untrusted identity`): treat it as a safety-number change — surface it to the
-user, and only after explicit verification save the new identity (or remove the
-old one) in your store. Note that after re-trusting a new identity, messages
-from sessions still bound to the old key are rejected too — archive or delete
-the old session for that address so a fresh one is established. Continue to
-offer fingerprint / safety-number verification via `Fingerprint`.
+Applications **must handle `LibSignalErrorCode.untrustedIdentity`** (branch on
+the exception's `code`, not on its text). On a pre-key message the new key comes
+from the message itself and is compared before the message is authenticated, so
+the code shows that someone presented another key for that address, not that
+the contact changed keys. Treat it as a possible safety-number change: surface
+it to the user, and only after they have verified the new identity save it (or
+remove the old one) in your store. Note that after re-trusting a
+new identity, messages from sessions still bound to the old key are rejected too
+— archive or delete the old session for that address so a fresh one is
+established. Continue to offer fingerprint / safety-number verification via
+`Fingerprint`.
 
 This depends on your `IdentityKeyStore` implementing `getIdentity` correctly (the
 provided in-memory store does). A store that always returns `null` from

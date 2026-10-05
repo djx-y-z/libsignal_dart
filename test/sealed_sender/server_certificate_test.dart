@@ -1,5 +1,6 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
+import '../test_helpers/error_matchers.dart';
 
 void main() {
   setUpAll(LibSignal.init);
@@ -76,7 +77,7 @@ void main() {
             serverPublicKey: [1, 2, 3], // Invalid key
             trustRootPrivateKey: trustRootPrivate.serialize().toList(),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidKey),
         );
       });
 
@@ -87,7 +88,7 @@ void main() {
             serverPublicKey: serverPublic.serialize().toList(),
             trustRootPrivateKey: [1, 2, 3], // Invalid key
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidKey),
         );
       });
     });
@@ -100,7 +101,7 @@ void main() {
             trustRoot: [],
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
@@ -112,7 +113,7 @@ void main() {
             trustRoot: garbage,
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
