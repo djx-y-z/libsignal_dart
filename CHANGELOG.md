@@ -4,6 +4,14 @@
 
 #### ✨ Highlights
 
+- **A failed call throws a `LibSignalException` with a `LibSignalErrorCode`** —
+  **(breaking)** an application can now decide by `code`, whose values change
+  only in a major release, instead of matching the text of a thrown `String`.
+  Code that catches a `String`, compares the thrown value with a string, or
+  relies on `on Exception` not matching needs the changes listed under Changed
+  (Breaking) ([#106](https://github.com/djx-y-z/libsignal_dart/issues/106))
+- **Async calls no longer wait forever when another isolate shuts down during
+  `LibSignal.init()`** — see Fixed
 - **libsignal v0.104.0** — internal/dependency update, no public-API impact
 
 #### Changed (Breaking)
@@ -71,7 +79,7 @@
 
 #### Changed
 
-- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API.
+- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API. What does reach the native libraries are routine updates of third-party crates: `uuid` 1.27.0, `tokio` 1.53.2, `libc` 0.2.190, `zerocopy` 0.8.59, `smallvec` 1.16.2 and `lazy_static` 1.5.1, plus, for the web module, `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and `wasm-bindgen-futures` 0.4.79. `cc`, `find-msvc-tools` and `wasm-bindgen-test` move too, but only build or test the crate.
 
 #### Fixed
 
