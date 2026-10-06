@@ -132,7 +132,7 @@ cbc 0.2.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T68]
 
-cc 1.4.7
+cc 1.6.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -300,7 +300,7 @@ fiat-crypto 0.3.0
   License: MIT OR Apache-2.0 OR BSD-1-Clause
   Texts:   LICENSE-APACHE [T117], LICENSE-BSD-1 [T118], LICENSE-MIT [T123]
 
-find-msvc-tools 0.1.13
+find-msvc-tools 0.1.14
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -467,15 +467,15 @@ itoa 1.0.18
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T115]
 
-js-sys 0.3.105
+js-sys 0.3.106
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-lazy_static 1.5.0
+lazy_static 1.5.1
   License: MIT OR Apache-2.0
-  Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T29]
+  Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T115]
 
-libc 0.2.189
+libc 0.2.190
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T9], LICENSE-MIT [T92]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.103.1
+libsignal-debug 0.104.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -815,7 +815,7 @@ slab 0.4.12
   License: MIT
   Texts:   LICENSE [T75]
 
-smallvec 1.16.1
+smallvec 1.16.2
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T65]
 
@@ -855,7 +855,7 @@ threadpool 1.8.1
   License: MIT/Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T33]
 
-tokio 1.53.1
+tokio 1.53.2
   License: MIT
   Texts:   LICENSE [T110]
 
@@ -883,7 +883,7 @@ universal-hash 0.6.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T79]
 
-uuid 1.26.1
+uuid 1.27.0
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T34]
 
@@ -895,27 +895,27 @@ wasip2 1.0.4+wasi-0.2.12
   License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T14], LICENSE-Apache-2.0_WITH_LLVM-exception [T7], LICENSE-MIT [T115]
 
-wasm-bindgen-futures 0.4.78
+wasm-bindgen-futures 0.4.79
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro-support 0.2.128
+wasm-bindgen-macro-support 0.2.129
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-macro 0.2.128
+wasm-bindgen-macro 0.2.129
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen-shared 0.2.128
+wasm-bindgen-shared 0.2.129
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-wasm-bindgen 0.2.128
+wasm-bindgen 0.2.129
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
-web-sys 0.3.105
+web-sys 0.3.106
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T31]
 
@@ -939,11 +939,11 @@ x25519-dalek 3.0.0
   License: BSD-3-Clause
   Texts:   LICENSE [T60]
 
-zerocopy-derive 0.8.57
+zerocopy-derive 0.8.59
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
-zerocopy 0.8.57
+zerocopy 0.8.59
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
@@ -1608,8 +1608,8 @@ Apache License
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.57
-  zerocopy@0.8.57
+  zerocopy-derive@0.8.59
+  zerocopy@0.8.59
 
 Apache License
                            Version 2.0, January 2004
@@ -2478,7 +2478,7 @@ Crates:
   anyhow@1.0.104
   async-trait@0.1.92
   itoa@1.0.18
-  libc@0.2.189
+  libc@0.2.190
   num_enum@0.7.6
   num_enum_derive@0.7.6
   pastey@0.2.3
@@ -3532,7 +3532,7 @@ Crates:
   backtrace@0.3.76
   bitflags@2.13.2
   bumpalo@3.20.3
-  cc@1.4.7
+  cc@1.6.0
   cexpr@0.6.0
   cfg-if@1.0.5
   crossbeam-deque@0.8.8
@@ -3544,7 +3544,7 @@ Crates:
   equivalent@1.0.2
   errno@0.3.14
   fastrand@2.5.0
-  find-msvc-tools@0.1.13
+  find-msvc-tools@0.1.14
   fixedbitset@0.5.7
   gimli@0.32.3
   glob@0.3.4
@@ -3557,8 +3557,8 @@ Crates:
   itertools@0.13.0
   itertools@0.14.0
   itertools@0.15.0
-  js-sys@0.3.105
-  lazy_static@1.5.0
+  js-sys@0.3.106
+  lazy_static@1.5.1
   linux-raw-sys@0.12.1
   lock_api@0.4.14
   log@0.4.34
@@ -3586,18 +3586,18 @@ Crates:
   rustc_version@0.4.1
   rustix@1.1.5
   scopeguard@1.2.0
-  smallvec@1.16.1
+  smallvec@1.16.2
   tempfile@3.27.0
   threadpool@1.8.1
-  uuid@1.26.1
+  uuid@1.27.0
   version_check@0.9.5
   wasip2@1.0.4+wasi-0.2.12
-  wasm-bindgen-futures@0.4.78
-  wasm-bindgen-macro-support@0.2.128
-  wasm-bindgen-macro@0.2.128
-  wasm-bindgen-shared@0.2.128
-  wasm-bindgen@0.2.128
-  web-sys@0.3.105
+  wasm-bindgen-futures@0.4.79
+  wasm-bindgen-macro-support@0.2.129
+  wasm-bindgen-macro@0.2.129
+  wasm-bindgen-shared@0.2.129
+  wasm-bindgen@0.2.129
+  web-sys@0.3.106
   wit-bindgen@0.57.1
 
 Apache License
@@ -6046,11 +6046,10 @@ IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
 ------------------------------------------------------------------------------
-[T29] referenced by 3 crate(s)
+[T29] referenced by 2 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
-  lazy_static@1.5.0
   rayon-core@1.13.0
   rayon@1.12.0
 
@@ -6114,18 +6113,18 @@ SOFTWARE.
 
 Crates:
   backtrace@0.3.76
-  cc@1.4.7
+  cc@1.6.0
   cfg-if@1.0.5
-  find-msvc-tools@0.1.13
-  js-sys@0.3.105
+  find-msvc-tools@0.1.14
+  js-sys@0.3.106
   pkg-config@0.3.34
   rustc-demangle@0.1.28
-  wasm-bindgen-futures@0.4.78
-  wasm-bindgen-macro-support@0.2.128
-  wasm-bindgen-macro@0.2.128
-  wasm-bindgen-shared@0.2.128
-  wasm-bindgen@0.2.128
-  web-sys@0.3.105
+  wasm-bindgen-futures@0.4.79
+  wasm-bindgen-macro-support@0.2.129
+  wasm-bindgen-macro@0.2.129
+  wasm-bindgen-shared@0.2.129
+  wasm-bindgen@0.2.129
+  web-sys@0.3.106
 
 Copyright (c) 2014 Alex Crichton
 
@@ -6233,7 +6232,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  uuid@1.26.1
+  uuid@1.27.0
 
 Copyright (c) 2014 The Rust Project Developers
 Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
@@ -7270,7 +7269,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  smallvec@1.16.1
+  smallvec@1.16.2
 
 Copyright (c) 2018 The Servo Project Developers
 
@@ -8155,7 +8154,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  libc@0.2.189
+  libc@0.2.190
 
 Copyright (c) The Rust Project Developers
 
@@ -8303,8 +8302,8 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.57
-  zerocopy@0.8.57
+  zerocopy-derive@0.8.59
+  zerocopy@0.8.59
 
 Copyright 2019 The Fuchsia Authors.
 
@@ -8336,8 +8335,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.57
-  zerocopy@0.8.57
+  zerocopy-derive@0.8.59
+  zerocopy@0.8.59
 
 Copyright 2023 The Fuchsia Authors
 
@@ -8391,7 +8390,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.103.1
+  libsignal-debug@0.104.0
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.6.0
@@ -9288,7 +9287,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 ------------------------------------------------------------------------------
 
 Crates:
-  tokio@1.53.1
+  tokio@1.53.2
 
 MIT License
 
@@ -9432,7 +9431,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ------------------------------------------------------------------------------
-[T115] referenced by 36 crate(s)
+[T115] referenced by 37 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
@@ -9444,6 +9443,7 @@ Crates:
   fastrand@2.5.0
   hermit-abi@0.5.3
   itoa@1.0.18
+  lazy_static@1.5.1
   linux-raw-sys@0.12.1
   minimal-lexical@0.2.1
   num_enum@0.7.6

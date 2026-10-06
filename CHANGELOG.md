@@ -2,6 +2,10 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.104.0** — internal/dependency update, no public-API impact
+
 #### Changed (Breaking)
 
 - **A failed call throws a `LibSignalException` carrying a
@@ -64,6 +68,10 @@
   - The native library changes with it: this needs a new major `libsignal_frb`,
     released (stage 1) before the package (stage 2). Against an older binary
     every error fails to decode, as a `TypeError`.
+
+#### Changed
+
+- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API.
 
 #### Fixed
 
