@@ -214,7 +214,7 @@ ctr 0.10.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T68]
 
-ctutils 0.4.2
+ctutils 0.4.3
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T90]
 
@@ -276,7 +276,7 @@ displaydoc 0.2.7
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T115]
 
-either 1.18.0
+either 1.19.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T14], LICENSE-MIT [T36]
 
@@ -537,7 +537,7 @@ libsignal-core 0.1.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
-libsignal-debug 0.104.0
+libsignal-debug 0.105.0
   License: AGPL-3.0-only
   Texts:   ../../LICENSE [T100]
 
@@ -939,15 +939,15 @@ x25519-dalek 3.0.0
   License: BSD-3-Clause
   Texts:   LICENSE [T60]
 
-zerocopy-derive 0.8.59
+zerocopy-derive 0.8.61
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
-zerocopy 0.8.59
+zerocopy 0.8.61
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T97], LICENSE-MIT [T98]
 
-zeroize 1.9.0
+zeroize 1.9.1
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T73]
 
@@ -1608,8 +1608,8 @@ Apache License
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.59
-  zerocopy@0.8.59
+  zerocopy-derive@0.8.61
+  zerocopy@0.8.61
 
 Apache License
                            Version 2.0, January 2004
@@ -1821,9 +1821,9 @@ Crates:
   allo-isolate@0.1.27
   clang-sys@1.9.1
   cmov@0.5.4
-  ctutils@0.4.2
+  ctutils@0.4.3
   derive-where@1.7.0
-  zeroize@1.9.0
+  zeroize@1.9.1
   zeroize_derive@1.5.0
 
 Apache License
@@ -3540,7 +3540,7 @@ Crates:
   crossbeam-utils@0.8.23
   curve25519-dalek-derive@0.1.1
   displaydoc@0.2.7
-  either@1.18.0
+  either@1.19.0
   equivalent@1.0.2
   errno@0.3.14
   fastrand@2.5.0
@@ -6294,7 +6294,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  either@1.18.0
+  either@1.19.0
   itertools@0.13.0
   itertools@0.14.0
   itertools@0.15.0
@@ -7541,7 +7541,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zeroize@1.9.0
+  zeroize@1.9.1
 
 Copyright (c) 2018-2026 The RustCrypto Project Developers
 
@@ -8091,7 +8091,7 @@ the following restrictions:
 ------------------------------------------------------------------------------
 
 Crates:
-  ctutils@0.4.2
+  ctutils@0.4.3
 
 Copyright (c) 2025-2026 The RustCrypto Project Developers
 
@@ -8302,8 +8302,8 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.59
-  zerocopy@0.8.59
+  zerocopy-derive@0.8.61
+  zerocopy@0.8.61
 
 Copyright 2019 The Fuchsia Authors.
 
@@ -8335,8 +8335,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zerocopy-derive@0.8.59
-  zerocopy@0.8.59
+  zerocopy-derive@0.8.61
+  zerocopy@0.8.61
 
 Copyright 2023 The Fuchsia Authors
 
@@ -8390,7 +8390,7 @@ THIS SOFTWARE.
 
 Crates:
   libsignal-core@0.1.0
-  libsignal-debug@0.104.0
+  libsignal-debug@0.105.0
   libsignal-protocol@0.1.0
   signal-crypto@0.1.0
   spqr@1.6.0
