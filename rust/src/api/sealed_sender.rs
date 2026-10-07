@@ -31,7 +31,12 @@ use zeroize::{Zeroize, Zeroizing};
 
 /// Validate a sender certificate.
 ///
-/// Returns true if valid, throws an error if invalid or expired.
+/// Returns `true`, and never `false`. A certificate that fails validation —
+/// expired, not signed by the trust root or by its server certificate,
+/// revoked, or naming an unknown server certificate — throws a
+/// `LibSignalException` whose `code` is
+/// `LibSignalErrorCode.verificationFailure`. Bytes that do not parse as a
+/// certificate or a public key throw with another code.
 #[flutter_rust_bridge::frb(sync)]
 pub fn validate_sender_certificate(
     certificate: Vec<u8>,

@@ -39,11 +39,12 @@
 
   Three choices differ from libsignal's bindings. A sender certificate that
   fails validation (expired, not signed by the trust root or by its server
-  certificate, revoked, or naming an unknown server certificate) is
-  `verificationFailure` wherever this package checks one, including inside the
-  sealed-sender decrypt functions, where libsignal reports it as an invalid
-  message; the code says nothing about who sent the envelope, since anyone who
-  knows your public identity key can seal one that fails this check.
+  certificate, or revoked) is `verificationFailure` wherever this package
+  checks one, including inside the sealed-sender decrypt functions, where
+  libsignal reports it as an invalid message; the code says nothing about who
+  sent the envelope, since anyone who knows your public identity key can seal
+  one that fails this check. (A certificate naming an unknown server
+  certificate is `verificationFailure` in libsignal's bindings too.)
   libsignal's `InvalidProtocolAddress` has no code of its own:
   libsignal-protocol never raises it (libsignal's bindings use it for a device
   id out of range), and this package reports a device id out of range as
@@ -73,13 +74,44 @@
     `==` or `startsWith` no longer match. Checks with `contains(...)` still find
     the message part, but now see the code name too: `contains('duplicate')`
     matches every `duplicatedMessage`.
-  - The native library changes with it: this needs a new major `libsignal_frb`,
-    released (stage 1) before the package (stage 2). Against an older binary
-    every error fails to decode, as a `TypeError`.
+  - The native library changes with it, to `libsignal_frb` 7.0.0, which the
+    build hook downloads by itself. If you pass `libraryPath` to
+    `LibSignal.init()` or ship the native library yourself, replace that
+    library with a 7.0.0 build. 6.4.0, the one 7.4.1 uses, still passes
+    `init()`, and every error then fails to decode as a `TypeError`, which
+    `on LibSignalException` does not catch; an older 6.x stops at `init()`.
 
 #### Changed
 
-- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API. What does reach the native libraries are routine updates of third-party crates: `uuid` 1.27.0, `tokio` 1.53.2, `zerocopy` 0.8.59, `smallvec` 1.16.2 and `lazy_static` 1.5.1, plus, for the web module, `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and `wasm-bindgen-futures` 0.4.79. `cc`, `find-msvc-tools` and `wasm-bindgen-test` move too, but only build or test the crate.
+- **The native dependency update leaves this package's exposed protocol
+  surface unchanged** — the range
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0))
+  changes backup, chat, key-transparency, zkgroup, and language-binding files
+  outside this package's bound crates or exposed surface; those locations are
+  not built or called by this wrapper. In the four libsignal crates that reach
+  the binaries — `libsignal-protocol`, `libsignal-core`, `signal-crypto` and
+  `libsignal-debug` — the complete file list changes one file,
+  `rust/core/src/version.rs`, whose only change is the version constant, and
+  `libsignal-debug` moves to 0.104.0 by its version number alone, so these
+  changes do not affect this library's public API. Regenerating the bindings
+  for this update on its own changed nothing in `lib/src/rust/`; the bindings
+  this release does change come from the coded errors above. `spqr`, the
+  post-quantum ratchet that runs inside the Double Ratchet, stays at 1.6.0
+  (`06959b4`).
+
+  Third-party crates move with it, and each of these reaches every binary, the
+  web module included: `uuid` 1.27.0, `tokio` 1.53.2, `zerocopy` 0.8.59,
+  `smallvec` 1.16.2 and `lazy_static` 1.5.1. The web module also gets
+  `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and
+  `wasm-bindgen-futures` 0.4.79. `uuid` 1.27.0 also changes what the sender-key
+  group calls accept as a distribution id: it reads the `urn:uuid:` prefix in
+  any letter case, so an id written as `URN:UUID:<id>`, which used to fail with
+  `invalidArgument`, is now accepted as `<id>`, as the lowercase form already
+  was. `cc` 1.6.0 is not build-only either: it compiles C that is linked into
+  the native libraries — `dart-sys`'s `dart_api_dl.c` on every native platform
+  and `oslog`'s `wrapper.c` on iOS and macOS. `find-msvc-tools`, which `cc`
+  uses to find the MSVC tools on Windows, and `wasm-bindgen-test` move too, and
+  only build or test the crate.
 
 #### Fixed
 
@@ -143,13 +175,32 @@
 - **`SECURITY.md` matches the coded errors** (`SECURITY.md`) — the
   certificate-validation example called a `senderCert.validate(...)` returning
   a `bool`, which this package does not have; it now uses
-  `validateSenderCertificate`, which never returns `false` but throws, and says
-  what `verificationFailure` does and does not tell you. The identity-trust
-  section now says to branch on `LibSignalErrorCode.untrustedIdentity` instead
-  of looking for "untrusted identity" in the message, and that on a pre-key
-  message the code reports a key someone presented, not one shown to be the
-  contact's, and that an application must never let `verificationFailure`
-  change its configuration or make it fall back to unsealed sending.
+  `validateSenderCertificate`, which never returns `false` but throws, and the
+  section says what `verificationFailure` does and does not tell you, and that
+  an application must never let it change its configuration or make it fall
+  back to unsealed sending. The identity-trust section now says to branch on
+  `LibSignalErrorCode.untrustedIdentity` instead of looking for "untrusted
+  identity" in the message, and that on a pre-key message the code reports a
+  key someone presented, not one shown to be the contact's. The load-time
+  section no longer says FRB's content-hash check pins the bridge's API
+  signature: the check covers the bridged functions' names only, so
+  `libsignal_frb` 6.4.0 passes `init()` under this release. The section now
+  also says to replace a library pinned with `libraryPath` on every upgrade.
+
+- **The README says what a failure tells you, and the API docs name the
+  codes** (`README.md`, `rust/src/api/sealed_sender.rs`,
+  `lib/src/rust/api/sealed_sender.dart`,
+  `lib/src/stores/identity_key_store.dart`) — a new *Error Handling* section
+  shows how to branch on `code`, lists the codes a decrypt call can return
+  before anything in the message is authenticated, says that
+  `untrustedIdentity` is a claim rather than a proof and that codes change
+  only in a major release, and names the failures that are not a
+  `LibSignalException`: a store callback that throws, any other panic, a call
+  after `dispose()`, and the checks made in Dart. The documentation of
+  `validateSenderCertificate` now says that it never returns `false` and which
+  failures are `verificationFailure`, as `SECURITY.md` section F does, and that
+  of `IdentityKeyStore` names `LibSignalErrorCode.untrustedIdentity` instead
+  of the error's old name.
 
 ### For Contributors
 
