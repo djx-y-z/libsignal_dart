@@ -33,7 +33,12 @@ command:
 2. **Verifies the stage-1 native release exists** — checks that the GitHub
    Release `libsignal_frb-<version in rust/Cargo.toml>` is published (via `gh`).
    Fails closed if it is missing or can't be verified — the published build hook
-   downloads it, so releasing without it would break consumers.
+   downloads it, so releasing without it would break consumers. It also checks
+   that the release was **built from this tree**: `rust/` (all but `rust/fuzz`
+   and `rust/deny.toml`) and `lib/src/rust/` at its tag must equal `HEAD`'s.
+   Any commit touching them after stage 1 therefore needs a new crate — a
+   test-only change under `rust/src` or a docstring-only regeneration
+   included, since the check cannot tell those apart and refuses them all.
 3. **Validates** the package with `make publish-dry-run` on the clean, pre-bump
    tree, aborting if it reports errors. (Runs before the bump because
    `dart pub publish --dry-run` exits non-zero on any warning, and dry-running a
@@ -78,8 +83,9 @@ edits. Nothing has to be reverted or tagged by hand.
 - `--version <X.Y.Z>` — new package version (required)
 - `--no-push` — commit and tag locally only (push later yourself)
 - `--yes`, `-y` — skip the confirmation prompt
-- `--skip-frb-check` — skip the stage-1 native-binary existence check (only if
-  you have verified the `libsignal_frb-<crate>` release exists manually)
+- `--skip-frb-check` — skip both checks of step 2, that `libsignal_frb-<crate>`
+  exists and that it was built from this tree (only if you have verified the
+  binary by hand)
 - `--date <Y-M-D>` — CHANGELOG date to stamp (default: today)
 
 ## Choosing the version (SemVer for the Dart package)
@@ -107,6 +113,20 @@ first:
 
 ```bash
 make release-frb ARGS="--version <crate X.Y.Z>"   # then let the build finish
+```
+
+**Then run the suite against that binary.** No workflow does: `publish.yml`
+and `test.yml` — its `workflow_run` after the native build included — build the
+library from source with `make build`. Check `HEAD` out in a fresh sibling
+worktree, which has no `rust/target/`, and run the suite there without
+`make build`: the build hook then downloads `libsignal_frb-<crate>` from the
+release, checks it against the release's checksums, and every test runs
+against the binary consumers will get.
+
+```bash
+git worktree add --detach ../stage2-check HEAD
+cd ../stage2-check && make get && make test   # no make build: the hook downloads
+cd - && git worktree remove ../stage2-check
 ```
 
 ## Publishing flow
@@ -145,18 +165,33 @@ git tag -s vX.Y.Z -m "Release vX.Y.Z"
 git push origin main && git push origin vX.Y.Z
 ```
 
-Non-admins: open a PR for the bump commit, merge it, then push the `vX.Y.Z` tag
-(tag creation is not gated by the pull-request rule).
+Without Admin you cannot push the bump to `main`, so open a PR for the bump
+commit and merge it. The tag is a separate gate: the `Protect release tags`
+ruleset lets only Admin and Maintain create one. With the Maintain role, push
+the signed `vX.Y.Z` tag on the merged commit yourself; without it, ask someone
+who has it.
 
 ### If CI fails
 
-Fix the issue, then delete and re-create the tag:
+Find out why before touching the tag: `make release` will not cut a version it
+has already cut.
+
+**A transient failure** — a runner that never started, a network timeout — is
+retried on the same tag: re-run the failed jobs of the tag's run (Actions → the
+run → *Re-run failed jobs*, or `gh run rerun <run-id> --failed`).
+
+**A failure caused by the code or the package** — a failing test, a dry-run
+error, an upload pub.dev refuses — cannot be retried, because the tag points at
+the release commit. The version is spent: its bump is on `main`, so
+`make release` refuses it as not greater than the current version, and the tag
+ruleset reserves deleting the tag to Admin and Maintain — which tidies up but
+does not free the version. Fix the cause on `main`. The release renamed
+`## [Unreleased]`, so start a new one above the section the failed release
+created, with the fix and a Highlights line saying that `X.Y.Z` was tagged but
+never published. Push, let CI go green, and release the next patch:
 
 ```bash
-git tag -d vX.Y.Z
-git push origin :refs/tags/vX.Y.Z
-# fix + commit on main, then re-run:
-make release ARGS="--version X.Y.Z"
+make release ARGS="--version X.Y.W"   # W = Z + 1
 ```
 
 ## Resources

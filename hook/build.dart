@@ -83,10 +83,10 @@ const localWasmStampName = '.crate-version';
 /// file is absent — which is the case for every wasm directory built before
 /// this stamp existed, and is deliberately treated as a mismatch.
 ///
-/// ⚠ `rustContentHash` does NOT cover this. That check compares the FFI
-/// *surface*, and the surface can be byte-identical across a release that
-/// moves the vendored crypto underneath it — 6.3.0 → 6.3.1 was exactly such a
-/// release, which is why it was a patch. So the one value that already crosses
+/// ⚠ `rustContentHash` does NOT cover this. That check hashes only the
+/// *names* of the bridged functions, and those can stay the same across a
+/// release that moves the vendored crypto underneath them — 6.3.0 → 6.3.1 was
+/// exactly such a release, which is why it was a patch. So the one value that already crosses
 /// the Dart-to-binary boundary is blind to a stale local module by
 /// construction, and a version stamp is the check that is not.
 ///
@@ -375,10 +375,11 @@ Future<void> _handleWebBuild(
     // to THIS crate version. Nothing downstream would notice if it did not:
     // the marker written below is a sentinel rather than a version, so the
     // freshness check further down is unreachable on this path, and
-    // `rustContentHash` compares the FFI surface, which a release may leave
-    // byte-identical while replacing the vendored crypto behind it. A stale
-    // module would then be served silently, and on the web that means running
-    // an upstream version the rest of the package has already moved past.
+    // `rustContentHash` hashes only the bridged functions' names, which a
+    // release may leave unchanged while replacing the vendored crypto behind
+    // them. A stale module would then be served silently, and on the web that
+    // means running an upstream version the rest of the package has already
+    // moved past.
     final stamped = readLocalWasmStamp(localWasmDir);
     if (!localWasmMatchesCrate(stamped: stamped, version: version)) {
       throw HookException(

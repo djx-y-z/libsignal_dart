@@ -98,8 +98,9 @@ void main() {
     // The hook prefers a local `rust/target/wasm32/` build over the released
     // module, so the stamp is the only thing standing between a developer and
     // a silently stale crypto module on the web. `rustContentHash` does not
-    // cover it: that value compares the FFI surface, which 6.3.0 -> 6.3.1 left
-    // byte-identical while the vendored libsignal moved v0.102.0 -> v0.103.0.
+    // cover it: that value hashes only the bridged functions' names, which
+    // 6.3.0 -> 6.3.1 left unchanged while the vendored libsignal moved
+    // v0.102.0 -> v0.103.0.
     test('accepts a build stamped with the same crate version', () {
       expect(
         build_hook.localWasmMatchesCrate(stamped: '6.3.1', version: '6.3.1'),

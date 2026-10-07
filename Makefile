@@ -322,9 +322,9 @@ build-web:
 # rebuild and their timestamps move on a checkout or a stash, in both
 # directions, so neither content nor mtime answers it. Without the stamp a
 # wasm directory left over from an earlier version is served silently, and
-# `rustContentHash` does not catch that: it compares the FFI surface, which a
-# release may leave byte-identical while replacing the vendored crypto behind
-# it. The same first-`version` match the hook's own parser uses.
+# `rustContentHash` does not catch that: it hashes only the bridged functions'
+# names, which a release may leave unchanged while replacing the vendored
+# crypto behind them. The same first-`version` match the hook's own parser uses.
 	@grep -m1 -E '^version[[:space:]]*=' rust/Cargo.toml \
 		| sed -E 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/' \
 		> rust/target/wasm32/.crate-version
@@ -786,13 +786,13 @@ ifndef CI
 	@echo "ERROR: Local publishing is disabled."
 	@echo ""
 	@echo "This package uses automated publishing via GitHub Actions."
-	@echo "To publish a new version:"
+	@echo "To publish a new version, once the native crate is released (stage 1):"
 	@echo ""
-	@echo "  1. Update version in pubspec.yaml"
-	@echo "  2. Update CHANGELOG.md"
-	@echo "  3. Commit and push changes"
-	@echo "  4. Create and push a tag: git tag v0.1.0 && git push origin v0.1.0"
-	@echo "  5. GitHub Actions will automatically publish to pub.dev"
+	@echo '  make release ARGS="--version X.Y.Z"'
+	@echo ""
+	@echo "It verifies the stage-1 release, bumps pubspec.yaml, finalizes"
+	@echo "CHANGELOG.md and pushes a signed vX.Y.Z tag, which starts"
+	@echo "publish.yml. Do not tag by hand: that skips those checks."
 	@echo ""
 	@echo "To validate the package locally, use: make publish-dry-run"
 	@echo ""

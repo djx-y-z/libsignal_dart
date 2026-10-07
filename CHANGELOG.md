@@ -230,6 +230,18 @@
   own, a genuine certificate sealed with another key failing as
   `invalidMessage`. The test that a throwing store surfaces as `PanicException`
   runs on the Dart VM only.
+- **A check between the release stages runs the suite against the released
+  binary** (`CLAUDE.md`, `.claude/skills/release-package/SKILL.md`) — no
+  workflow ever does: `publish.yml` and `test.yml`, its `workflow_run` after
+  the native build included, build the library from source with `make build`,
+  so a mismatch between the stage-1 binary and the Dart about to be published
+  would first reach consumers. Both now describe checking `HEAD` out in a fresh
+  sibling worktree, which has no `rust/target/`, and running `make get` and
+  `make test` there, so that the build hook downloads the release, checks its
+  checksum and every test runs against it. Measured both ways, against the
+  released 6.4.0: from the tree just before this change (`c653698`, 927
+  tests), 82 fail, every one with the `TypeError` an old binary gives the new
+  error type; from `v7.4.1`, whose Dart matches that binary, all 895 pass.
 
 #### Changed
 
@@ -255,6 +267,60 @@
   ⚠ A full `cargo update` — `make rust-update`, which the libsignal update
   bot also runs — takes `libc` back to 0.2.190 until upstream releases a fix,
   so build an iOS target before cutting a crate after one.
+- **`make release` refuses a stage-1 release whose native sources moved since
+  its tag** (`scripts/src/release.dart`, `scripts/release.dart`,
+  `test/scripts/release_test.dart`, `CLAUDE.md`,
+  `.claude/skills/release-package/SKILL.md`) — "built from this tree" was
+  checked on two values, the codegen version and the libsignal pin, so a
+  commit to `rust/src` between the two stages passed, as would a stage 2 run
+  with stage 1 forgotten whenever the pin had not moved — and the package then
+  went out against a binary built without that code. `rust/` (all but
+  `rust/fuzz` and `rust/deny.toml`) and `lib/src/rust/` at the stage-1 tag
+  are now compared with `HEAD` by git object, read through GitHub's contents
+  API on one side and `git ls-tree` on the other: equal shas mean equal
+  content, no tag has to exist locally, and `HEAD` need not be pushed. It
+  fails closed when either side cannot be read. **Any commit touching those
+  paths after stage 1 now needs a new crate**, a test-only change under
+  `rust/src` and a docstring-only regeneration included, and
+  `--skip-frb-check` skips both checks. Measured on the real tags:
+  `libsignal_frb-6.4.0` against `v7.4.1` reports nothing, against `main` it
+  names `lib/src/rust`, `rust/Cargo.lock`, `rust/Cargo.toml` and `rust/src`,
+  and both readers return the same objects for the same tag.
+
+#### Fixed
+
+- **The release recovery advice works with the release scripts**
+  (`.claude/skills/release-frb-crate/SKILL.md`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.github/workflows/build-libsignal.yml`) — both skills said to delete a
+  failed release's tag, fix `main` and run the same version again, which the
+  scripts refuse: past the fix the version bump is no longer `HEAD`, and the
+  version is not greater than itself. They now tell a transient failure, which
+  is retried on the same tag (re-run the failed jobs, or dispatch the native
+  build on the tag, never on `main`, whose newer code would be published under
+  the tag's version), from a code failure, which spends the version and needs
+  the next patch. The build workflow's comments said to delete a release
+  *and its tag* to rebuild it, which leaves nothing to dispatch on; they now
+  say to keep the tag.
+- **No instruction suggests a hand-made release tag, or misstates who may
+  create one** (`Makefile`, `.github/workflows/publish.yml`,
+  `.claude/skills/release-package/SKILL.md`, `CLAUDE.md`,
+  `.claude/skills/security-review/SKILL.md`) — `make publish`'s help and
+  `publish.yml`'s header told you to `git tag vX.Y.Z && git push`, an unsigned
+  tag that skips every check `make release` makes; they now name
+  `make release`. The skill said tag creation is not gated, but the
+  `Protect release tags` ruleset reserves it to Admin and Maintain. `CLAUDE.md`
+  said an unsigned tag is rejected, while both roles that may create a tag are
+  on that ruleset's bypass list. And the security-review skill's certificate
+  example still called a `senderCert.validate(...)` this package does not
+  have; it is now `SECURITY.md` section F's.
+- **`rustContentHash` is described as what it is** (`CLAUDE.md`, `Makefile`,
+  `hook/build.dart`, `test/hook/build_hook_test.dart`,
+  `test/scripts/release_test.dart`, `scripts/src/release.dart`) — seven places
+  in six files said it compares the FFI *surface*. flutter_rust_bridge 2.13.0 hashes the
+  sorted names of the bridged functions and nothing else
+  (`generate_content_hash`), so a change to argument, return or error types —
+  this release's errors included — leaves it where it was.
 
 ## [7.4.1] - 2026-09-29
 
