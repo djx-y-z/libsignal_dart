@@ -303,7 +303,10 @@ This library uses Flutter Rust Bridge (FRB) with libsignal-protocol (pure Rust):
 When adding new Rust API functions:
 
 - Use opaque types with `#[frb(opaque)]` for complex libsignal types
-- Return `Result<T, String>` for error handling (FRB converts to Dart exceptions)
+- Return `Result<T, LibSignalException>` from every fallible function, so that
+  Dart throws a `LibSignalException` with a `code` (see `rust/src/api/error.rs`;
+  the Rust test `generated_bindings_use_no_other_error_type` fails on any other
+  error type, `String` included)
 - Use `DartFnFuture<T>` for async callbacks to Dart stores
 
 Example Rust API:
@@ -316,7 +319,7 @@ pub struct PrivateKey {
 
 impl PrivateKey {
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<PrivateKey, String> {
+    pub fn generate() -> Result<PrivateKey, LibSignalException> {
         let key = libsignal_protocol::PrivateKey::generate(&mut OsRng);
         Ok(PrivateKey { native: key })
     }

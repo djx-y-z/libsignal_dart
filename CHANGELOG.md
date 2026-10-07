@@ -321,6 +321,16 @@
   sorted names of the bridged functions and nothing else
   (`generate_content_hash`), so a change to argument, return or error types —
   this release's errors included — leaves it where it was.
+- **The contributor docs teach the coded error type** (`CONTRIBUTING.md`,
+  `.claude/skills/frb-patterns/SKILL.md`) — both still had a new bridged
+  function return `Result<T, String>`, and the skill converted libsignal's
+  errors with `e.to_string()`: the shape this release replaces, and one
+  `generated_bindings_use_no_other_error_type` now fails. Their examples return
+  `Result<T, LibSignalException>`, and the skill's *Error Handling* says how a
+  libsignal error keeps its code (`From`, `.context()`), how one raised here
+  names its own, and why there is no `From<String>`. The template keeps its
+  wording, since its copy serves every generated project and each one picks its
+  own error type, so the skill is now a standing divergence.
 
 ## [7.4.1] - 2026-09-29
 

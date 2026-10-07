@@ -29,21 +29,21 @@ Use `impl` blocks for constructors so FRB generates idiomatic Dart:
 // ✅ CORRECT - generates PrivateKey.generate() in Dart
 impl PrivateKey {
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<PrivateKey, String> {
+    pub fn generate() -> Result<PrivateKey, LibSignalException> {
         let key = libsignal_protocol::PrivateKey::generate(&mut OsRng);
         Ok(PrivateKey { native: key })
     }
 
     #[flutter_rust_bridge::frb(sync)]
-    pub fn deserialize(bytes: Vec<u8>) -> Result<PrivateKey, String> {
+    pub fn deserialize(bytes: Vec<u8>) -> Result<PrivateKey, LibSignalException> {
         let key = libsignal_protocol::PrivateKey::deserialize(&bytes)
-            .map_err(|e| e.to_string())?;
+            .map_err(LibSignalException::from)?;
         Ok(PrivateKey { native: key })
     }
 }
 
 // ❌ WRONG - generates privateKeyGenerate() as a top-level function in Dart
-pub fn private_key_generate() -> Result<PrivateKey, String> { ... }
+pub fn private_key_generate() -> Result<PrivateKey, LibSignalException> { ... }
 ```
 
 **Dart usage:**
@@ -108,7 +108,7 @@ pub async fn process_prekey_bundle_with_callbacks(
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + 'static,
     save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<bool> + 'static,
     is_trusted_identity: impl Fn(String, u32, Vec<u8>, u8) -> DartFnFuture<bool> + 'static,
-) -> Result<(), String> {
+) -> Result<(), LibSignalException> {
     // Implementation uses callbacks to access Dart stores
 }
 ```
@@ -144,8 +144,9 @@ Dart throws exception but Rust side assume it is not failable: <the error>
 ```
 
 This does not mirror Error Handling below, and the asymmetry is easy to assume
-away: a `Result<T, String>` returned *from* Rust becomes a clean Dart exception,
-but an exception thrown *into* Rust from a callback is a panic. Nothing in the
+away: a `Result<T, LibSignalException>` returned *from* Rust becomes a
+`LibSignalException` in Dart, but an exception thrown *into* Rust from a
+callback is a panic. Nothing in the
 signature says so, and nothing fails at compile time.
 
 Two consequences:
@@ -241,24 +242,41 @@ pub async fn encrypt_with_callbacks(
     plaintext: Vec<u8>,
     load_session: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + 'static,
     // ...
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, LibSignalException> {
     // async implementation
 }
 ```
 
 ## Error Handling
 
-Convert libsignal errors to String for FRB:
+Every fallible bridged function returns `Result<T, LibSignalException>`
+(`rust/src/api/error.rs`), and Dart then throws a `LibSignalException` whose
+`code` a caller can branch on — never a `String` it would have to match:
 
 ```rust
-pub fn deserialize(bytes: Vec<u8>) -> Result<Self, String> {
+pub fn deserialize(bytes: Vec<u8>) -> Result<Self, LibSignalException> {
     libsignal_protocol::PrivateKey::deserialize(&bytes)
         .map(|native| PrivateKey { native })
-        .map_err(|e| e.to_string())
+        .map_err(LibSignalException::from)
 }
 ```
 
-FRB automatically converts `Result<T, String>` to Dart exceptions.
+- **A libsignal error keeps libsignal's code.** Convert it with
+  `LibSignalException::from` (there are `From` impls for `SignalProtocolError`,
+  `CurveError`, `InvalidDeviceId` and `FingerprintError`), and give it a prefix
+  with `.context("…")`, which keeps the code.
+- **An error this crate raises names its code**:
+  `LibSignalException::new(code, …)`, or the `invalid_argument` / `internal`
+  shorthands.
+- **There is no `From<String>`, on purpose.** With one,
+  `.map_err(|e| format!("…: {e}"))?` would compile and quietly replace
+  libsignal's code with a generic one.
+- **Another error type still compiles** — `-> Result<T, String>` included — and
+  Dart then gets that type. `generated_bindings_use_no_other_error_type` fails
+  when any bridged function declares one, so run `make codegen` and
+  `make rust-test` after adding a function.
+- **Codes change only in a major release.** The module doc of `error.rs` says
+  how a code is chosen.
 
 This works in one direction only. A Dart exception thrown *into* Rust from a
 DartFn callback is not converted — it panics the worker thread. See "Callbacks
@@ -291,7 +309,7 @@ pub fn serialize(&self) -> Vec<u8> {
 }
 
 // Deserialize takes Vec<u8> (or List<int> in Dart)
-pub fn deserialize(bytes: Vec<u8>) -> Result<Self, String> {
+pub fn deserialize(bytes: Vec<u8>) -> Result<Self, LibSignalException> {
     // ...
 }
 ```
@@ -301,15 +319,15 @@ pub fn deserialize(bytes: Vec<u8>) -> Result<Self, String> {
 Convert UUIDs to/from strings for Dart compatibility:
 
 ```rust
-pub fn uuid_from_string(uuid_str: String) -> Result<Vec<u8>, String> {
+pub fn uuid_from_string(uuid_str: String) -> Result<Vec<u8>, LibSignalException> {
     let uuid = uuid::Uuid::parse_str(&uuid_str)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| LibSignalException::invalid_argument(format!("Invalid UUID: {e}")))?;
     Ok(uuid.as_bytes().to_vec())
 }
 
-pub fn uuid_to_string(uuid_bytes: Vec<u8>) -> Result<String, String> {
+pub fn uuid_to_string(uuid_bytes: Vec<u8>) -> Result<String, LibSignalException> {
     let bytes: [u8; 16] = uuid_bytes.try_into()
-        .map_err(|_| "UUID must be 16 bytes")?;
+        .map_err(|_| LibSignalException::invalid_argument("UUID must be 16 bytes"))?;
     Ok(uuid::Uuid::from_bytes(bytes).to_string())
 }
 ```
