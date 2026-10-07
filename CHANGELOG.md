@@ -79,7 +79,7 @@
 
 #### Changed
 
-- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API. What does reach the native libraries are routine updates of third-party crates: `uuid` 1.27.0, `tokio` 1.53.2, `libc` 0.2.190, `zerocopy` 0.8.59, `smallvec` 1.16.2 and `lazy_static` 1.5.1, plus, for the web module, `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and `wasm-bindgen-futures` 0.4.79. `cc`, `find-msvc-tools` and `wasm-bindgen-test` move too, but only build or test the crate.
+- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API. What does reach the native libraries are routine updates of third-party crates: `uuid` 1.27.0, `tokio` 1.53.2, `zerocopy` 0.8.59, `smallvec` 1.16.2 and `lazy_static` 1.5.1, plus, for the web module, `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and `wasm-bindgen-futures` 0.4.79. `cc`, `find-msvc-tools` and `wasm-bindgen-test` move too, but only build or test the crate.
 
 #### Fixed
 
@@ -177,6 +177,21 @@
   set of compiled crates is identical on the host and on wasm32, and
   `THIRD_PARTY_NOTICES.txt` does not move. The template keeps the line:
   projects generated from it do use `thiserror`.
+- **`libc` is held at 0.2.189, the version 6.4.0 shipped** (`rust/Cargo.lock`,
+  `THIRD_PARTY_NOTICES.txt`) — the libsignal v0.104.0 update took it to
+  0.2.190, which puts `_dyld_image_count` and the `_dyld_get_image_*`
+  functions behind `cfg(target_os = "macos")`. `backtrace` 0.3.76, which every
+  native build compiles through `flutter_rust_bridge` and `allo-isolate`, calls
+  them on every Apple target, so all three iOS builds failed with `error[E0425]`
+  and a crate release tag would have produced no GitHub Release. No workflow
+  that runs before a release tag compiles iOS, which is why the update pull
+  request and `main` were green. Upstream tracks it as
+  [rust-lang/libc#5601](https://github.com/rust-lang/libc/issues/5601), and
+  0.2.190 was still its latest release on 2026-10-07. The binaries keep the
+  `libc` that 6.4.0 shipped.
+  ⚠ A full `cargo update` — `make rust-update`, which the libsignal update
+  bot also runs — takes `libc` back to 0.2.190 until upstream releases a fix,
+  so build an iOS target before cutting a crate after one.
 
 ## [7.4.1] - 2026-09-29
 
