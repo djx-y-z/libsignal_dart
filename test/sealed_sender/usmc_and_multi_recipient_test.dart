@@ -322,8 +322,13 @@ void main() {
         // group. Upstream's decrypt_to_usmc only binds the certificate to
         // whoever sealed the blob; the trust-root check is what stops the
         // caller attributing the message — and its resend request — to whoever
-        // the attacker chose.
+        // the attacker chose. The certificate names the key Mallory seals
+        // with, so the envelope gets past that binding and only the trust-root
+        // check is left to refuse it. With a certificate for any other key the
+        // call fails earlier, as invalidMessage, whether the check is there or
+        // not.
         final bob = await addPeer(_bobUuid, 2222);
+        final mallory = IdentityKeyPair.generate();
 
         final rogueRoot = PrivateKey.generate();
         final rogueServer = PrivateKey.generate();
@@ -336,7 +341,7 @@ void main() {
           // Impersonating alice.
           senderUuid: _aliceUuid,
           senderDeviceId: 1,
-          senderIdentityKey: IdentityKeyPair.generate().publicKey,
+          senderIdentityKey: mallory.publicKey,
           expiration: BigInt.from(
             DateTime.now().add(const Duration(hours: 1)).millisecondsSinceEpoch,
           ),
@@ -344,7 +349,6 @@ void main() {
           serverPrivateKey: rogueServer.serialize(),
         );
 
-        final mallory = IdentityKeyPair.generate();
         final sealed = await sealedSenderEncryptFromUsmcWithCallbacks(
           recipientName: bob.address.name(),
           recipientDeviceId: bob.address.deviceId(),
@@ -374,8 +378,66 @@ void main() {
             getLocalRegistrationId: () async => bob.registrationId,
             getIdentity: (name, deviceId) async => null,
           ),
-          failsWith(LibSignalErrorCode.invalidMessage),
+          failsWith(LibSignalErrorCode.verificationFailure),
           reason: 'a foreign trust root must not authenticate',
+        );
+      });
+
+      test('rejects a genuine certificate sealed with a key it does not '
+          'name', () async {
+        // Every sealed message carries its sender certificate, so anyone who
+        // has received one from Alice holds a copy of hers. What stops
+        // Mallory sealing under it is the binding upstream's decrypt_to_usmc
+        // checks before anything of ours runs: the key an envelope was sealed
+        // with must be the key its certificate names. This certificate is
+        // genuine — issued under the trust root the caller passes — so that
+        // binding is the only check that can refuse it.
+        final bob = await addPeer(_bobUuid, 2222);
+        final mallory = IdentityKeyPair.generate();
+        final sealed = await sealedSenderEncryptFromUsmcWithCallbacks(
+          recipientName: bob.address.name(),
+          recipientDeviceId: bob.address.deviceId(),
+          usmc: UnidentifiedSenderMessageContent(
+            messageType: CiphertextMessageType.signal.value,
+            senderCertificate: aliceCertificate,
+            contents: utf8.encode('garbage'),
+            contentHint: ContentHint.resendable.value,
+            groupId: utf8.encode('a-group-mallory-picked'),
+          ).serialize(),
+          getIdentityKeyPair: () async => mallory.serialize(),
+          getLocalRegistrationId: () async => 4444,
+          getIdentity: (name, deviceId) async =>
+              bob.keys.identityKeyPair.publicKey,
+        );
+
+        await expectLater(
+          sealedSenderDecryptToUsmcWithCallbacks(
+            ciphertext: sealed,
+            trustRoot: trustRootPrivate.getPublicKey().serialize(),
+            timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+            localName: bob.uuid,
+            localDeviceId: bob.deviceId,
+            getIdentityKeyPair: () async =>
+                bob.keys.identityKeyPair.serialize(),
+            getLocalRegistrationId: () async => bob.registrationId,
+            getIdentity: (name, deviceId) async => null,
+          ),
+          throwsA(
+            isA<LibSignalException>()
+                .having(
+                  (e) => e.code,
+                  'code',
+                  LibSignalErrorCode.invalidMessage,
+                )
+                .having(
+                  (e) => e.message,
+                  'message',
+                  contains('sender certificate key does not match message key'),
+                ),
+          ),
+          reason:
+              'only the holder of the key a certificate names may seal '
+              'under it',
         );
       });
 

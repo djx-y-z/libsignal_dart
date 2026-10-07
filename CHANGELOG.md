@@ -208,16 +208,28 @@
 
 - **Tests pin the error type, the codes' wire numbers and every code**
   (`rust/src/api/error.rs`, `test/errors/lib_signal_exception_test.dart`,
-  `test/test_helpers/error_matchers.dart`) — a bridged function declared with
-  another error type, such as `-> Result<T, String>`, still compiles, and Dart
-  then gets that type. `generated_bindings_use_no_other_error_type` reads
+  `test/test_helpers/error_matchers.dart`,
+  `test/sealed_sender/usmc_and_multi_recipient_test.dart`) — a bridged
+  function declared with another error type, such as `-> Result<T, String>`,
+  still compiles, and Dart then gets that type.
+  `generated_bindings_use_no_other_error_type` reads
   `rust/src/frb_generated.rs` and fails when any bridged function's error type,
   under any codec, is not `LibSignalException`. `codes_keep_their_wire_positions`
   checks the number each generated encoder and decoder writes for every code,
   so a code inserted, moved or appended fails it, as it fails the Dart test that
   lists `LibSignalErrorCode.values`. Every code except `internalError` is
   asserted with an exact matcher somewhere under `test/`, through the public
-  API.
+  API. `every_protocol_error_variant_has_its_code` holds one row per
+  `SignalProtocolError` variant, checked against the list that also builds an
+  exhaustive `match`: a variant libsignal adds does not compile until it is
+  listed, and then fails the test until it has a row. The foreign-trust-root
+  test in `usmc_and_multi_recipient_test.dart` issues its forged certificate
+  for the key that seals it, so the trust-root check is what it reaches and
+  `verificationFailure` what it expects; libsignal's own check that a
+  certificate names the key the envelope was sealed with has a test of its
+  own, a genuine certificate sealed with another key failing as
+  `invalidMessage`. The test that a throwing store surfaces as `PanicException`
+  runs on the Dart VM only.
 
 #### Changed
 
