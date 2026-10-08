@@ -56,7 +56,8 @@ enum Direction {
 /// from [SessionStore]: losing a [saveIdentity] write does not rewind the
 /// ratchet, it silently downgrades MITM detection, because an address with no
 /// stored identity is trusted on first use. A remote key substituted while the
-/// write was missing is then accepted instead of raising `UntrustedIdentity`.
+/// write was missing is then accepted instead of failing with
+/// `LibSignalErrorCode.untrustedIdentity`.
 ///
 /// Note that the library stores the session and the remote identity through two
 /// separate callbacks, so a crash between them leaves the pair inconsistent.

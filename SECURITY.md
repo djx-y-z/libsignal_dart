@@ -222,9 +222,11 @@ throw Exception('Key operation failed');
 
 Always validate certificates before use. `validateSenderCertificate` never
 returns `false`: a certificate that is expired, not signed by the trust root or
-naming an unknown server certificate throws a `LibSignalException` whose `code`
-is `LibSignalErrorCode.verificationFailure`, and one that does not parse throws
-with another code. Treat every exception as "not valid":
+by its server certificate, revoked, or naming an unknown server certificate
+throws a `LibSignalException` whose `code` is
+`LibSignalErrorCode.verificationFailure`, and bytes that do not parse as a
+certificate or a public key throw with another code. Treat every exception as
+"not valid":
 
 ```dart
 try {
@@ -456,10 +458,16 @@ Practical consequences:
   as the source tree itself; for a **compiled application shipped to users** it
   is not, which is why the executable-relative location is probed *before* the
   working-directory one.
-- A stale but loadable build in one of those directories is not detected: FRB's
-  content-hash check pins the bridge's API signature, not the libsignal
-  version, so an older binary with an unchanged bridge signature loads
-  silently.
+- A stale but loadable build in one of those directories is not detected.
+  FRB's content-hash check covers only the *names* of the bridged functions —
+  not their argument, return or error types, and not the libsignal version —
+  so an older binary built from the same set of function names loads silently
+  even when what crosses the bridge has changed. The move of errors from text to
+  `LibSignalException` (package 8.0.0, `libsignal_frb` 7.0.0) is such a
+  change: under 8.x Dart, `libsignal_frb` 6.4.0 — the library 7.4.1 uses —
+  passes `init()`, and every error then fails to decode as a `TypeError` that
+  `on LibSignalException` does not catch. Older 6.x libraries were built from
+  other function names, so `init()` refuses them.
 
 For a hardened deployment, pin the library explicitly and skip probing
 entirely:
@@ -467,6 +475,11 @@ entirely:
 ```dart
 await LibSignal.init(libraryPath: '/opt/myapp/lib/liblibsignal_frb.so');
 ```
+
+A pinned library is no more checked than a probed one, so replace it whenever
+you upgrade this package, with a build of the `libsignal_frb` version that
+release's build hook downloads: the `version` in the package's
+`rust/Cargo.toml`.
 
 ### Release & build-trigger protection
 
@@ -476,9 +489,10 @@ cause a publish, mirroring the `pub.dev` environment that gates the pub.dev
 publish:
 
 - **Tag protection** — a repository ruleset restricts creating, moving, and
-  deleting **all tags** to Admins/Maintainers (and requires them signed), so a
-  plain `write` collaborator cannot mint a release tag (`libsignal_frb-*` / `v*`)
-  or any other tag.
+  deleting **all tags**, and requires them signed, for everyone off its bypass
+  list. ⚠ That list holds the `write` role as well as `admin`, so it does not
+  stop a `write` collaborator from minting a release tag (`libsignal_frb-*` /
+  `v*`); the approval gate below is what holds on every path.
 - **Approval gate** — the publishing job runs in the `native-build` environment,
   whose required reviewers must approve before any binary is released. Unlike the
   tag ruleset, this also covers the `workflow_dispatch` path.

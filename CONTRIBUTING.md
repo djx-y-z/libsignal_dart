@@ -303,7 +303,10 @@ This library uses Flutter Rust Bridge (FRB) with libsignal-protocol (pure Rust):
 When adding new Rust API functions:
 
 - Use opaque types with `#[frb(opaque)]` for complex libsignal types
-- Return `Result<T, String>` for error handling (FRB converts to Dart exceptions)
+- Return `Result<T, LibSignalException>` from every fallible function, so that
+  Dart throws a `LibSignalException` with a `code` (see `rust/src/api/error.rs`;
+  the Rust test `generated_bindings_use_no_other_error_type` fails on any other
+  error type, `String` included)
 - Use `DartFnFuture<T>` for async callbacks to Dart stores
 
 Example Rust API:
@@ -316,7 +319,7 @@ pub struct PrivateKey {
 
 impl PrivateKey {
     #[flutter_rust_bridge::frb(sync)]
-    pub fn generate() -> Result<PrivateKey, String> {
+    pub fn generate() -> Result<PrivateKey, LibSignalException> {
         let key = libsignal_protocol::PrivateKey::generate(&mut OsRng);
         Ok(PrivateKey { native: key })
     }
@@ -407,7 +410,9 @@ make test
 Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
 
 For development, build the native library from source and the hook picks up the
-host-matching `rust/target/` build automatically — no marker needed:
+host-matching `rust/target/release/` build automatically — no marker needed.
+Build it with `make build`, which stamps it with the crate version: the hook
+refuses a host library that carries no stamp, or another version's.
 
 ```bash
 # Native platforms
@@ -697,9 +702,11 @@ be published without the right people and review:
 
 - **Signed commits** required on all branches (configure SSH or GPG signing).
 - **`main`** protected (changes land via PR; force-push and deletion blocked).
-- **Tags** — all tags creatable only by Admins/Maintainers and must be signed;
-  the release-triggering `libsignal_frb-*` / `v*` are the critical subset (they
-  start native / pub.dev publishing).
+- **Tags** — creating, moving and deleting tags is reserved to the roles on the
+  tag ruleset's bypass list, which also skip its signature rule. ⚠ That list
+  holds Write as well as Admin, so against a `write` collaborator the required
+  reviewer below is the gate. The release-triggering `libsignal_frb-*` / `v*`
+  are the critical subset (they start native / pub.dev publishing).
 - The **native-build publish** waits on a required reviewer (the `native-build`
   environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
 

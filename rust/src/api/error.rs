@@ -302,48 +302,62 @@ mod tests {
         ProtocolAddress::new("bob".to_owned(), DeviceId::new(7).expect("7 is a valid device id"))
     }
 
-    /// The variant's name. The match has no wildcard arm, so a variant
-    /// libsignal adds breaks this module as well as `code_for`, and the table
-    /// below is where its row then goes.
-    fn variant_name(error: &SignalProtocolError) -> &'static str {
-        use SignalProtocolError as P;
-        match error {
-            P::InvalidArgument(_) => "InvalidArgument",
-            P::InvalidState(_, _) => "InvalidState",
-            P::InvalidProtobufEncoding => "InvalidProtobufEncoding",
-            P::CiphertextMessageTooShort(_) => "CiphertextMessageTooShort",
-            P::LegacyCiphertextVersion(_) => "LegacyCiphertextVersion",
-            P::UnrecognizedCiphertextVersion(_) => "UnrecognizedCiphertextVersion",
-            P::UnrecognizedMessageVersion(_) => "UnrecognizedMessageVersion",
-            P::NoKeyTypeIdentifier => "NoKeyTypeIdentifier",
-            P::BadKeyType(_) => "BadKeyType",
-            P::BadKeyLength(_, _) => "BadKeyLength",
-            P::InvalidKeyAgreement => "InvalidKeyAgreement",
-            P::SignatureValidationFailed => "SignatureValidationFailed",
-            P::UntrustedIdentity(_) => "UntrustedIdentity",
-            P::InvalidPreKeyId => "InvalidPreKeyId",
-            P::InvalidSignedPreKeyId => "InvalidSignedPreKeyId",
-            P::InvalidKyberPreKeyId => "InvalidKyberPreKeyId",
-            P::InvalidMacKeyLength(_) => "InvalidMacKeyLength",
-            P::NoSenderKeyState { .. } => "NoSenderKeyState",
-            P::InvalidProtocolAddress { .. } => "InvalidProtocolAddress",
-            P::SessionNotFound(_) => "SessionNotFound",
-            P::InvalidSessionStructure(_) => "InvalidSessionStructure",
-            P::InvalidSenderKeySession { .. } => "InvalidSenderKeySession",
-            P::InvalidRegistrationId(_, _) => "InvalidRegistrationId",
-            P::DuplicatedMessage(_, _) => "DuplicatedMessage",
-            P::InvalidMessage(_, _) => "InvalidMessage",
-            P::FfiBindingError(_) => "FfiBindingError",
-            P::ApplicationCallbackError(_, _) => "ApplicationCallbackError",
-            P::InvalidSealedSenderMessage(_) => "InvalidSealedSenderMessage",
-            P::UnknownSealedSenderVersion(_) => "UnknownSealedSenderVersion",
-            P::SealedSenderSelfSend => "SealedSenderSelfSend",
-            P::UnknownSealedSenderServerCertificateId(_) => "UnknownSealedSenderServerCertificateId",
-            P::BadKEMKeyType(_) => "BadKEMKeyType",
-            P::WrongKEMKeyType(_, _) => "WrongKEMKeyType",
-            P::BadKEMKeyLength(_, _) => "BadKEMKeyLength",
-            P::BadKEMCiphertextLength(_, _) => "BadKEMCiphertextLength",
-        }
+    /// Builds `variant_name` and `VARIANT_NAMES` from one list of every
+    /// `SignalProtocolError` variant. The match has no wildcard arm, so a
+    /// variant libsignal adds breaks this module as well as `code_for` until it
+    /// is listed; once listed, its name is in `VARIANT_NAMES`, and the table
+    /// test below fails until the variant has a row there.
+    macro_rules! protocol_error_variants {
+        ($($pattern:pat => $name:literal,)+) => {
+            /// The variant's name.
+            fn variant_name(error: &SignalProtocolError) -> &'static str {
+                use SignalProtocolError as P;
+                match error {
+                    $($pattern => $name,)+
+                }
+            }
+
+            /// The name of every variant, in the order listed.
+            const VARIANT_NAMES: &[&str] = &[$($name),+];
+        };
+    }
+
+    protocol_error_variants! {
+        P::InvalidArgument(_) => "InvalidArgument",
+        P::InvalidState(_, _) => "InvalidState",
+        P::InvalidProtobufEncoding => "InvalidProtobufEncoding",
+        P::CiphertextMessageTooShort(_) => "CiphertextMessageTooShort",
+        P::LegacyCiphertextVersion(_) => "LegacyCiphertextVersion",
+        P::UnrecognizedCiphertextVersion(_) => "UnrecognizedCiphertextVersion",
+        P::UnrecognizedMessageVersion(_) => "UnrecognizedMessageVersion",
+        P::NoKeyTypeIdentifier => "NoKeyTypeIdentifier",
+        P::BadKeyType(_) => "BadKeyType",
+        P::BadKeyLength(_, _) => "BadKeyLength",
+        P::InvalidKeyAgreement => "InvalidKeyAgreement",
+        P::SignatureValidationFailed => "SignatureValidationFailed",
+        P::UntrustedIdentity(_) => "UntrustedIdentity",
+        P::InvalidPreKeyId => "InvalidPreKeyId",
+        P::InvalidSignedPreKeyId => "InvalidSignedPreKeyId",
+        P::InvalidKyberPreKeyId => "InvalidKyberPreKeyId",
+        P::InvalidMacKeyLength(_) => "InvalidMacKeyLength",
+        P::NoSenderKeyState { .. } => "NoSenderKeyState",
+        P::InvalidProtocolAddress { .. } => "InvalidProtocolAddress",
+        P::SessionNotFound(_) => "SessionNotFound",
+        P::InvalidSessionStructure(_) => "InvalidSessionStructure",
+        P::InvalidSenderKeySession { .. } => "InvalidSenderKeySession",
+        P::InvalidRegistrationId(_, _) => "InvalidRegistrationId",
+        P::DuplicatedMessage(_, _) => "DuplicatedMessage",
+        P::InvalidMessage(_, _) => "InvalidMessage",
+        P::FfiBindingError(_) => "FfiBindingError",
+        P::ApplicationCallbackError(_, _) => "ApplicationCallbackError",
+        P::InvalidSealedSenderMessage(_) => "InvalidSealedSenderMessage",
+        P::UnknownSealedSenderVersion(_) => "UnknownSealedSenderVersion",
+        P::SealedSenderSelfSend => "SealedSenderSelfSend",
+        P::UnknownSealedSenderServerCertificateId(_) => "UnknownSealedSenderServerCertificateId",
+        P::BadKEMKeyType(_) => "BadKEMKeyType",
+        P::WrongKEMKeyType(_, _) => "WrongKEMKeyType",
+        P::BadKEMKeyLength(_, _) => "BadKEMKeyLength",
+        P::BadKEMCiphertextLength(_, _) => "BadKEMCiphertextLength",
     }
 
     /// One row per `SignalProtocolError` variant: the whole mapping, pinned.
@@ -401,10 +415,12 @@ mod tests {
             (P::BadKEMKeyLength(kem::KeyType::Kyber1024, 3), Code::InvalidKey),
             (P::BadKEMCiphertextLength(kem::KeyType::Kyber1024, 3), Code::InvalidMessage),
         ];
-        assert_eq!(table.len(), 35, "SignalProtocolError has 35 variants at v0.103");
-        let variants: std::collections::BTreeSet<&str> =
+        let rows: std::collections::BTreeSet<&str> =
             table.iter().map(|(error, _)| variant_name(error)).collect();
-        assert_eq!(variants.len(), table.len(), "each variant has exactly one row");
+        assert_eq!(rows.len(), table.len(), "each variant has exactly one row");
+        let listed: std::collections::BTreeSet<&str> = VARIANT_NAMES.iter().copied().collect();
+        assert_eq!(listed.len(), VARIANT_NAMES.len(), "each variant is listed once");
+        assert_eq!(rows, listed, "every SignalProtocolError variant has a row");
         for (error, expected) in table {
             let upstream_text = error.to_string();
             let thrown = LibSignalException::from(error);

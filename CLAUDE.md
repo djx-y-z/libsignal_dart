@@ -69,15 +69,27 @@ substitution. The local build still takes priority over the released module; it
 just has to prove which crate produced it.
 
 The stamp exists because nothing else can answer that question. `rustContentHash`
-cannot: it compares the FFI *surface*, and a patch release is precisely the case
-where the surface is byte-identical while the native code behind it moves.
-Timestamps cannot either — a checkout or a stash moves them in both directions
-with the content unchanged.
+cannot: it hashes only the names of the bridged functions, and a patch release
+is precisely the case where those names stay the same while the native code
+behind them moves. Timestamps cannot either — a checkout or a stash moves them
+in both directions with the content unchanged.
 
 ⚠ **A `rust/target/wasm32/` built before this stamp existed carries none and is
 rejected.** That is the intended answer rather than a regression, and it is what
 the first web build after adopting this looks like: run `make build-web`, or
 delete the directory to use the released module instead.
+
+⚠ **`make build` stamps the host library the same way, in
+`rust/target/release/.crate-version`, and the hook refuses a local host
+library whose stamp is missing or disagrees** — the same `HookException`, for
+the same reason: a library left over from an earlier crate loads silently, and
+once the way values cross the bridge has moved, its calls fail in ways nothing
+names. Only `rust/target/release/` is read; a `--target` build lands in
+`rust/target/<triple>/`, is never read and gets no stamp. A library built
+before the stamp existed, or by a bare `cargo build`, is refused: run
+`make build`, or delete `rust/target/release/` to use the released library.
+So after `make release-frb` bumps the crate, `make test` needs a `make build`
+first.
 
 ### Web
 
@@ -132,7 +144,10 @@ platform is **not** in that key — so a debug run for macOS and a debug run for
 Chrome share one `dart_build` stamp. Whichever ran first makes the other skip
 the build hook outright (`Skipping target: dart_build`, visible under
 `--verbose`), and `example/web/pkg/` is then never provisioned:
-`RustLib.init()` fails on a 404 for `pkg/libsignal_frb.js`. The hook cannot
+`RustLib.init()` never completes: flutter_rust_bridge waits for the `load`
+event of `pkg/libsignal_frb.js` with no error path or timeout, so a missing
+module (a 404, or the app's HTML page the dev server serves in its place
+with a 200) leaves the call pending. The hook cannot
 declare its way out of it — the skip happens above `hooks_runner`, where
 nothing it declares is read. Consumers of the published package hit the same
 thing; the README's *Known Limitations* names the escapes.
@@ -141,6 +156,7 @@ thing; the README's *Known Limitations* names the escapes.
 ### Rust Quality
 ```bash
 make rust-check                   # Check Rust code compiles
+make rust-check-ios               # Type-check the 3 iOS targets (CI: Type-check (iOS))
 make rust-test                    # Crate unit tests (CI: Linux x86_64 leg)
 make rust-clippy                  # Lint Rust code with clippy (warnings = errors)
 make rust-clippy-web              # The same lint over the wasm32 half (GATE)
@@ -216,6 +232,7 @@ for an already-published version.
 ### Utilities
 ```bash
 make get                          # Get dependencies
+make get ARGS="--directory=example_cli"  # Resolve example_cli (its analyze needs it)
 make clean                        # Clean build artifacts (including rust/target)
 make version                      # Show current crate version
 make rust-update                  # Update Cargo.lock + regenerate notices
@@ -289,10 +306,11 @@ do not exist). Native libraries are delivered via Dart **build hooks**
    target platform from the GitHub Release `libsignal_frb-<version>` (no Rust
    needed) and registers it as a code asset
 2. **Developers**: build from source via `make build` (or `make build-web`); the
-   hook then picks up the host-matching `rust/target/` build automatically (no
-   marker needed). Cross-target builds (`make build-android`, `make build
-   --target <triple>`, iOS) land in `rust/target/<triple>/` and are **not**
-   picked up — those targets always download the released binary.
+   hook then picks up the host-matching `rust/target/release/` build
+   automatically, provided `make build` stamped it with the current crate
+   version (no marker needed). Cross-target builds (`make build-android`,
+   `make build --target <triple>`, iOS) land in `rust/target/<triple>/` and
+   are **not** picked up — those targets always download the released binary.
    `.skip_libsignal_hook` is only an
    internal escape the Makefile uses while wrapping pub-get/codegen/doc — when
    present the hook returns immediately and registers **no** asset
@@ -510,14 +528,36 @@ make release ARGS="--version X.Y.Z --no-push"      # local only
 `libsignal_frb-<rust/Cargo.toml version>` exists (the published build hook
 downloads it) **and was built from this tree** — a release left by an earlier cut
 carries the same version string with different bindings, and neither runtime
-check catches that. `--skip-frb-check` skips both checks; pass it only if you
-verified the binary by hand. It runs
+check catches that. "Built from this tree" is checked on the binary's sources:
+`rust/` (all but `rust/fuzz` and `rust/deny.toml`) and `lib/src/rust/` at the
+stage-1 tag must equal `HEAD`'s, compared by git object: the tag's through
+GitHub's contents API, `HEAD`'s with `git ls-tree`, so `HEAD` need not be
+pushed.
+So **any** commit touching them after stage 1 needs a new crate, a test-only
+change under `rust/src` and a docstring-only regeneration included: the check
+cannot tell those apart and refuses them all. `--skip-frb-check` skips both
+checks; pass it only if you verified the binary by hand. It runs
 `make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`, then
 finalizes the CHANGELOG (renames `[Unreleased]` → `[X.Y.Z] - <today>` in place —
 no empty `[Unreleased]` is left behind — and rewrites the bottom `[Unreleased]:`
 compare link to `vX.Y.Z...HEAD`), then signs a commit + tag `vX.Y.Z` and pushes —
 `publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
 API** (independent of the crate version).
+
+**Between the stages, run the suite against the released binary.**
+Nothing else does: `publish.yml` and `test.yml` — its `workflow_run` after the
+native build included — build the library from source with `make build`. Once
+the stage-1 release exists, check `HEAD` out in a fresh sibling worktree, which
+has no `rust/target/`, and run the suite there without `make build`: the build
+hook then downloads `libsignal_frb-<crate>` from the release, checks it against
+the release's checksums, and every test runs against that release's library
+for this host, the one platform the check covers.
+
+```bash
+git worktree add --detach ../stage2-check HEAD
+cd ../stage2-check && make get && make test   # no make build: the hook downloads
+cd - && git worktree remove ../stage2-check
+```
 
 | Variable | Purpose |
 |----------|---------|
@@ -790,8 +830,10 @@ Rules:
 
 **Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
 existence check, the CHANGELOG finalization, and the publish dry-run. Both
-scripts require a clean tree and create a **signed** tag, which the
-`Protect release tags` ruleset requires; an unsigned `git tag -a` is rejected.
+scripts require a clean tree and create a **signed** tag. Do not count on the
+`Protect release tags` ruleset to refuse an unsigned one: only the roles on its
+bypass list may create a tag at all, and every one of them bypasses it
+(`always`), its `required_signatures` rule included.
 Use the two-stage flow documented above (see
 [Release Flow](#release-flow-two-stages)).
 
@@ -803,6 +845,7 @@ make analyze ARGS="--fatal-infos"
 make format-check
 make test
 make rust-test                  # incl. the release-profile panic guard
+make rust-check-ios             # the iOS targets; CI runs it too, not as a required check
 make rust-clippy
 make rust-clippy-web            # blocking: the wasm32 half, which the above cannot see
 make doc                        # blocking: unresolved doc references

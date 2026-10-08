@@ -577,7 +577,7 @@ void main() {
     // The store interfaces cannot return an error across the bridge, so a
     // store that throws is reported as a panic. This is the Dart VM; on the
     // web the module traps and the call never completes, which the README
-    // documents and nothing here can pin.
+    // documents and nothing here can pin, so the test runs on the VM only.
     test('on the Dart VM, a store callback that throws surfaces as '
         'PanicException', () async {
       final carol = TestParty.create(name: 'carol', registrationId: 4201);
@@ -603,7 +603,7 @@ void main() {
           ),
         ),
       );
-    });
+    }, testOn: 'vm');
 
     // flutter_rust_bridge reports a disposed handle itself, with an exception
     // type it does not export.

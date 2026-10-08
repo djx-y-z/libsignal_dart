@@ -4,7 +4,6 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.105.0** — internal/dependency update, no public-API impact
 - **A failed call throws a `LibSignalException` with a `LibSignalErrorCode`** —
   **(breaking)** an application can now decide by `code`, whose values change
   only in a major release, instead of matching the text of a thrown `String`.
@@ -13,6 +12,8 @@
   (Breaking) ([#106](https://github.com/djx-y-z/libsignal_dart/issues/106))
 - **Async calls no longer wait forever when another isolate shuts down during
   `LibSignal.init()`** — see Fixed
+- **libsignal v0.105.0** (from v0.103.1, through v0.104.0) — internal/dependency
+  update, no public-API impact
 
 #### Changed (Breaking)
 
@@ -39,11 +40,12 @@
 
   Three choices differ from libsignal's bindings. A sender certificate that
   fails validation (expired, not signed by the trust root or by its server
-  certificate, revoked, or naming an unknown server certificate) is
-  `verificationFailure` wherever this package checks one, including inside the
-  sealed-sender decrypt functions, where libsignal reports it as an invalid
-  message; the code says nothing about who sent the envelope, since anyone who
-  knows your public identity key can seal one that fails this check.
+  certificate, or revoked) is `verificationFailure` wherever this package
+  checks one, including inside the sealed-sender decrypt functions, where
+  libsignal reports it as an invalid message; the code says nothing about who
+  sent the envelope, since anyone who knows your public identity key can seal
+  one that fails this check. (A certificate naming an unknown server
+  certificate is `verificationFailure` in libsignal's bindings too.)
   libsignal's `InvalidProtocolAddress` has no code of its own:
   libsignal-protocol never raises it (libsignal's bindings use it for a device
   id out of range), and this package reports a device id out of range as
@@ -73,16 +75,69 @@
     `==` or `startsWith` no longer match. Checks with `contains(...)` still find
     the message part, but now see the code name too: `contains('duplicate')`
     matches every `duplicatedMessage`.
-  - The native library changes with it: this needs a new major `libsignal_frb`,
-    released (stage 1) before the package (stage 2). Against an older binary
-    every error fails to decode, as a `TypeError`.
+  - The native library changes with it, to `libsignal_frb` 7.0.0, which the
+    build hook downloads by itself. If you pass `libraryPath` to
+    `LibSignal.init()` or ship the native library yourself, replace that
+    library with a 7.0.0 build. 6.4.0, the one 7.4.1 uses, still passes
+    `init()`, and every error then fails to decode as a `TypeError`, which
+    `on LibSignalException` does not catch; an older 6.x stops at `init()`.
 
 #### Changed
 
-- **The v0.105.0 dependency bump leaves the Dart protocol surface unchanged** — the [compare](https://github.com/signalapp/libsignal/compare/v0.104.0...v0.105.0) changes net/chat modules under `rust/net/chat/` and `rust/bridge/shared/`, along with Java, Node, and Swift client files for those APIs; those locations are outside the crates this wrapper builds and the Dart protocol primitives it exposes. The remaining changed Cargo, package, podspec, build, release, version, and test files are metadata or tests rather than implementations of an exposed primitive.
+- **The native dependency update leaves this package's exposed protocol
+  surface unchanged** — the range
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0))
+  changes backup, chat, key-transparency, zkgroup, and language-binding files
+  outside this package's bound crates or exposed surface; those locations are
+  not built or called by this wrapper. In the four libsignal crates that reach
+  the binaries — `libsignal-protocol`, `libsignal-core`, `signal-crypto` and
+  `libsignal-debug` — the complete file list changes one file,
+  `rust/core/src/version.rs`, whose only change is the version constant, and
+  `libsignal-debug` moves to 0.104.0 by its version number alone, so these
+  changes do not affect this library's public API. Regenerating the bindings
+  for this update on its own changed nothing in `lib/src/rust/`; the bindings
+  this release does change come from the coded errors above. `spqr`, the
+  post-quantum ratchet that runs inside the Double Ratchet, stays at 1.6.0
+  (`06959b4`).
 
-  The complete file list shows that, among the bound crate directories, the range changes only `rust/core/src/version.rs`, a version string; it has no source changes in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API.
-- **The native dependency update leaves this package's exposed protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.103.1...v0.104.0)) changes backup, chat, key-transparency, zkgroup, and language-binding files outside this package's bound crates or exposed surface; those locations are not built or called by this wrapper. Among the bound crates, the complete file list shows only `rust/core/src/version.rs`, a version file, and no changed source files in `libsignal-protocol` or `signal-crypto`. `make codegen` produced no change to `lib/src/rust/`, so these changes do not affect this library's public API. What does reach the native libraries are routine updates of third-party crates: `uuid` 1.27.0, `tokio` 1.53.2, `libc` 0.2.190, `zerocopy` 0.8.59, `smallvec` 1.16.2 and `lazy_static` 1.5.1, plus, for the web module, `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and `wasm-bindgen-futures` 0.4.79. `cc`, `find-msvc-tools` and `wasm-bindgen-test` move too, but only build or test the crate.
+  Third-party crates move with it, and each of these reaches every binary, the
+  web module included: `uuid` 1.27.0, `tokio` 1.53.2, `zerocopy` 0.8.59,
+  `smallvec` 1.16.2 and `lazy_static` 1.5.1. The web module also gets
+  `wasm-bindgen` 0.2.129 with `js-sys`/`web-sys` 0.3.106 and
+  `wasm-bindgen-futures` 0.4.79. `uuid` 1.27.0 also changes what the sender-key
+  group calls accept as a distribution id: it reads the `urn:uuid:` prefix in
+  any letter case, so an id written as `URN:UUID:<id>`, which used to fail with
+  `invalidArgument`, is now accepted as `<id>`, as the lowercase form already
+  was. `cc` 1.6.0 is not build-only either: it compiles C that is linked into
+  the native libraries — `dart-sys`'s `dart_api_dl.c` on every native platform
+  and `oslog`'s `wrapper.c` on iOS and macOS. `find-msvc-tools`, which `cc`
+  uses to find the MSVC tools on Windows, and `wasm-bindgen-test` move too, and
+  only build or test the crate.
+- **The update to libsignal v0.105.0 leaves the exposed protocol surface
+  unchanged as well** — the range
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.104.0...v0.105.0))
+  is four commits: the changes its release notes name — chat connection info
+  that says whether a connection is direct, now also in Java, and an
+  `expectedLevel` argument to `createLoginReceiptCredential()` — which live in
+  `rust/net/chat/`, `rust/bridge/shared/` and the Java, Node and Swift
+  clients, plus formatting and a version reset. None of those crates is in
+  this package's dependency graph. In the four libsignal crates that are, the
+  only change is again the version constant in `rust/core/src/version.rs`,
+  which this package does not expose, and `libsignal-debug` moves to 0.105.0
+  by its version number alone. The upstream workspace keeps `rust-version` at
+  1.93.1, this package's floor, `spqr` stays at 1.6.0 (`06959b4`), and
+  regenerating the bindings on top of it changed nothing in `lib/src/rust/`.
+
+  Third-party crates move with it, and each of these reaches every binary, the
+  web module included: `zeroize` 1.9.1, `zerocopy` 0.8.61, `ctutils` 0.4.3 and
+  `either` 1.19.0; `zerocopy-derive` 0.8.61 moves too and only runs at compile
+  time. `zeroize` 1.9.1 is the one that changes behaviour: its zeroing no
+  longer passes through `optimization_barrier`, so on `wasm32`, which has no
+  assembly barrier in 1.9.0, the web module no longer runs that function's
+  fallback, which upstream fixed in the same release for values whose first
+  byte may be uninitialized; and `Zeroizing`'s `Debug` output is now
+  `Zeroizing { .. }` instead of the secret it holds. `libc` stays at 0.2.189
+  (see For Contributors).
 
 #### Fixed
 
@@ -141,18 +196,92 @@
   that has already counted to zero and not yet written the no-op, which only
   a lock inside flutter_rust_bridge can close.
 
+- **A local native build left over from an older crate version is no longer
+  loaded silently** (`hook/build.dart`, `Makefile`, `README.md`,
+  `CONTRIBUTING.md`, `CLAUDE.md`) — the build hook prefers a host library in
+  `rust/target/release/` (or `debug/`) over the released one, and took it on
+  the sole condition that the file existed, while the local WASM build has had
+  to carry a crate stamp since 7.4.0 (published as 7.4.1). `make build` now
+  stamps a host build the same way, in `rust/target/release/.crate-version`
+  (a `--target` build lands elsewhere, is never read, and gets none), and the
+  hook refuses a library whose stamp is missing or names another version,
+  saying how to fix it: run `make build`, or delete `rust/target/release/` to
+  use the released library.
+  `rust/target/debug/` is no longer read: nothing here builds there, and
+  nothing would stamp it. Measured on this tree: a library built before the
+  change is refused as "an unknown crate version", one stamped 6.3.9 as
+  "crate 6.3.9" against 6.4.0, a freshly built one passes, and a `--target`
+  build leaves the stamp untouched.
+
+  It matters most in this release: the way errors cross the bridge changed, a
+  library built before it still loads, and every error it raises then reaches
+  Dart as a `TypeError`. **Who this reaches:** `rust/target/` is
+  `.pubignore`d, so a consumer installing from pub.dev never takes this path;
+  it affects work in this repository and anyone depending on it by path or git
+  who has built the crate. A `rust/target/release/` built before this release
+  carries no stamp and is refused, which is the intended answer: `make build`
+  fixes it.
+
 #### Documentation
 
 - **`SECURITY.md` matches the coded errors** (`SECURITY.md`) — the
   certificate-validation example called a `senderCert.validate(...)` returning
   a `bool`, which this package does not have; it now uses
-  `validateSenderCertificate`, which never returns `false` but throws, and says
-  what `verificationFailure` does and does not tell you. The identity-trust
-  section now says to branch on `LibSignalErrorCode.untrustedIdentity` instead
-  of looking for "untrusted identity" in the message, and that on a pre-key
-  message the code reports a key someone presented, not one shown to be the
-  contact's, and that an application must never let `verificationFailure`
-  change its configuration or make it fall back to unsealed sending.
+  `validateSenderCertificate`, which never returns `false` but throws, and the
+  section says what `verificationFailure` does and does not tell you, and that
+  an application must never let it change its configuration or make it fall
+  back to unsealed sending. The identity-trust section now says to branch on
+  `LibSignalErrorCode.untrustedIdentity` instead of looking for "untrusted
+  identity" in the message, and that on a pre-key message the code reports a
+  key someone presented, not one shown to be the contact's. The load-time
+  section no longer says FRB's content-hash check pins the bridge's API
+  signature: the check covers the bridged functions' names only, so
+  `libsignal_frb` 6.4.0 passes `init()` under this release. The section now
+  also says to replace a library pinned with `libraryPath` on every upgrade,
+  with the crate version that release's build hook downloads.
+
+- **`SECURITY.md` no longer says the tag ruleset stops a `write`
+  collaborator** (`SECURITY.md`) — it said the `Protect release tags` ruleset
+  restricts creating, moving and deleting tags to Admins and Maintainers, so
+  that a plain `write` collaborator cannot mint a release tag. The ruleset
+  leaves all three, unsigned, to the roles on its bypass list, and on
+  2026-10-07 GitHub's GraphQL API named those roles `admin` and `write` on the
+  live ruleset. What gates a release whoever pushed its tag is the approval of
+  the `native-build` and `pub.dev` environments' required reviewers, which the
+  section now names as the control that holds on every path. The repository
+  has no collaborator but its admin, and the ruleset itself is unchanged.
+
+- **The README says what a failure tells you, and the API docs name the
+  codes** (`README.md`, `rust/src/api/sealed_sender.rs`,
+  `lib/src/rust/api/sealed_sender.dart`,
+  `lib/src/stores/identity_key_store.dart`) — a new *Error Handling* section
+  shows how to branch on `code`, lists the codes a decrypt call can return
+  before anything in the message is authenticated, says that
+  `untrustedIdentity` is a claim rather than a proof and that codes change
+  only in a major release, and names the failures that are not a
+  `LibSignalException`: a store callback that throws, any other panic, a call
+  after `dispose()`, and the checks made in Dart. The documentation of
+  `validateSenderCertificate` now says that it never returns `false` and which
+  failures are `verificationFailure`, as `SECURITY.md` section F does, and that
+  of `IdentityKeyStore` names `LibSignalErrorCode.untrustedIdentity` instead
+  of the error's old name.
+
+- **The README says what a missing `web/pkg/` actually does** (`README.md`,
+  `CLAUDE.md`, `Makefile`, `example/lib/main.dart`) — *Known Limitations* said
+  that `RustLib.init()` then fails on a 404 for `pkg/libsignal_frb.js`. It
+  never completes: flutter_rust_bridge 2.13.0 loads the module through a
+  `<script>` tag and waits for its `load` event with no error path or
+  timeout, so a missing module — a 404, or, under `flutter run`, the app's own
+  page served in its place with a 200 — leaves the call pending with nothing
+  reported to Dart. Measured with
+  `make run-example-web`, the build hook disabled by its skip marker so that
+  `web/pkg/` stayed empty, in headless Chrome: `init()` neither returned nor
+  threw for 75 seconds, and the dev server answered the missing file with the
+  app's own HTML page and a 200, which is why no 404 shows in the network
+  tab. The example's error screen never appears in this case; its spinner
+  runs on. The README and the comments now say that the call never completes,
+  and the example's hint no longer names a missing `web/pkg/` as the usual
+  cause of an error screen that case never reaches.
 
 ### For Contributors
 
@@ -160,16 +289,56 @@
 
 - **Tests pin the error type, the codes' wire numbers and every code**
   (`rust/src/api/error.rs`, `test/errors/lib_signal_exception_test.dart`,
-  `test/test_helpers/error_matchers.dart`) — a bridged function declared with
-  another error type, such as `-> Result<T, String>`, still compiles, and Dart
-  then gets that type. `generated_bindings_use_no_other_error_type` reads
+  `test/test_helpers/error_matchers.dart`,
+  `test/sealed_sender/usmc_and_multi_recipient_test.dart`) — a bridged
+  function declared with another error type, such as `-> Result<T, String>`,
+  still compiles, and Dart then gets that type.
+  `generated_bindings_use_no_other_error_type` reads
   `rust/src/frb_generated.rs` and fails when any bridged function's error type,
   under any codec, is not `LibSignalException`. `codes_keep_their_wire_positions`
   checks the number each generated encoder and decoder writes for every code,
   so a code inserted, moved or appended fails it, as it fails the Dart test that
   lists `LibSignalErrorCode.values`. Every code except `internalError` is
   asserted with an exact matcher somewhere under `test/`, through the public
-  API.
+  API. `every_protocol_error_variant_has_its_code` holds one row per
+  `SignalProtocolError` variant, checked against the list that also builds an
+  exhaustive `match`: a variant libsignal adds does not compile until it is
+  listed, and then fails the test until it has a row. The foreign-trust-root
+  test in `usmc_and_multi_recipient_test.dart` issues its forged certificate
+  for the key that seals it, so the trust-root check is what it reaches and
+  `verificationFailure` what it expects; libsignal's own check that a
+  certificate names the key the envelope was sealed with has a test of its
+  own, a genuine certificate sealed with another key failing as
+  `invalidMessage`. The test that a throwing store surfaces as `PanicException`
+  runs on the Dart VM only.
+- **A check between the release stages runs the suite against the released
+  binary** (`CLAUDE.md`, `.claude/skills/release-package/SKILL.md`) — no
+  workflow ever does: `publish.yml` and `test.yml`, its `workflow_run` after
+  the native build included, build the library from source with `make build`,
+  so a mismatch between the stage-1 binary and the Dart about to be published
+  would first reach consumers. Both now describe checking `HEAD` out in a fresh
+  sibling worktree, which has no `rust/target/`, and running `make get` and
+  `make test` there, so that the build hook downloads that release's library
+  for this host, checks its checksum and every test runs against it; the
+  other platforms' libraries are not loaded. Measured both ways, against the
+  released 6.4.0: from the tree just before this change (`c653698`, 927
+  tests), 82 fail, every one with the `TypeError` an old binary gives the new
+  error type; from `v7.4.1`, whose Dart matches that binary, all 895 pass.
+- **CI type-checks the three iOS targets on every push and pull request**
+  (`.github/workflows/test-reusable.yml`, `Makefile`, `CLAUDE.md`,
+  `.github/rulesets/README.md`) — nothing that ran before a release tag
+  compiled iOS, so the `libc` 0.2.190 break
+  below was green on its pull request and on `main`, and only the tag's
+  `build-ios` legs would have found it, with the crate version already spent.
+  A `Type-check (iOS)` job now runs `make rust-check-ios` on macOS:
+  `cargo check --locked` for `aarch64-apple-ios`, `aarch64-apple-ios-sim` and
+  `x86_64-apple-ios`, the three the release builds. Measured both ways: with
+  the lock from before the `libc` hold it fails on the first target with the
+  same four `E0425`, and with the current one all three pass. It catches
+  compile errors, not link errors, and it is not a required check, which the
+  rulesets README now says; because `publish.yml` runs its tests through the
+  same reusable workflow, a failure there also stops stage 2, as the Android
+  jobs already do.
 
 #### Changed
 
@@ -180,6 +349,120 @@
   set of compiled crates is identical on the host and on wasm32, and
   `THIRD_PARTY_NOTICES.txt` does not move. The template keeps the line:
   projects generated from it do use `thiserror`.
+- **`libc` is held at 0.2.189, the version 6.4.0 shipped** (`rust/Cargo.lock`,
+  `THIRD_PARTY_NOTICES.txt`) — the libsignal v0.104.0 update took it to
+  0.2.190, which puts `_dyld_image_count` and the `_dyld_get_image_*`
+  functions behind `cfg(target_os = "macos")`. `backtrace` 0.3.76, which every
+  native build compiles through `flutter_rust_bridge` and `allo-isolate`, calls
+  them on every Apple target, so all three iOS builds failed with `error[E0425]`
+  and a crate release tag would have produced no GitHub Release. No workflow
+  that runs before a release tag compiles iOS, which is why the update pull
+  request and `main` were green. Upstream tracks it as
+  [rust-lang/libc#5601](https://github.com/rust-lang/libc/issues/5601), and
+  0.2.190 was still its latest release on 2026-10-07. The binaries keep the
+  `libc` that 6.4.0 shipped.
+  ⚠ A full `cargo update` — `make rust-update`, which the libsignal update
+  bot also runs — takes `libc` back to 0.2.190 until upstream releases a fix;
+  the `Type-check (iOS)` job added above now fails on the pull request that
+  does it, and `make rust-check-ios` runs the same check locally.
+- **`make release` refuses a stage-1 release whose native sources moved since
+  its tag** (`scripts/src/release.dart`, `scripts/release.dart`,
+  `test/scripts/release_test.dart`, `CLAUDE.md`,
+  `.claude/skills/release-package/SKILL.md`) — "built from this tree" was
+  checked on two values, the codegen version and the libsignal pin, so a
+  commit to `rust/src` between the two stages passed, as would a stage 2 run
+  with stage 1 forgotten whenever the pin had not moved — and the package then
+  went out against a binary built without that code. `rust/` (all but
+  `rust/fuzz` and `rust/deny.toml`) and `lib/src/rust/` at the stage-1 tag
+  are now compared with `HEAD` by git object, read through GitHub's contents
+  API on one side and `git ls-tree` on the other: equal shas mean equal
+  content, no tag has to exist locally, and `HEAD` need not be pushed. It
+  fails closed when either side cannot be read. **Any commit touching those
+  paths after stage 1 now needs a new crate**, a test-only change under
+  `rust/src` and a docstring-only regeneration included, and
+  `--skip-frb-check` skips both checks. Measured on the real tags:
+  `libsignal_frb-6.4.0` against `v7.4.1` reports nothing, against `HEAD` it
+  names `lib/src/rust`, `rust/Cargo.lock`, `rust/Cargo.toml` and `rust/src`,
+  and both readers return the same objects for the same tag.
+- **The Linux x86_64 library is built on a pinned `ubuntu-24.04`**
+  (`.github/workflows/build-libsignal.yml`) — it was the one release build on
+  `ubuntu-latest`, which moves to Ubuntu 26 from 2026-10-19
+  ([runner-images#14748](https://github.com/actions/runner-images/issues/14748)),
+  and the `.so` links against the runner's glibc: a newer one can raise the
+  oldest glibc a consumer's Linux needs to load the library. arm64 was already
+  pinned to `ubuntu-24.04-arm`, and 6.4.0's libraries need `GLIBC_2.34` on
+  both architectures (measured with `llvm-objdump -T`), so the release keeps
+  the environment 6.4.0 was built in and consumers see no change. The CI test
+  leg for Linux x86_64 still runs on `ubuntu-latest`.
+
+#### Fixed
+
+- **The release recovery advice works with the release scripts**
+  (`.claude/skills/release-frb-crate/SKILL.md`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.github/workflows/build-libsignal.yml`) — both skills said to delete a
+  failed release's tag, fix `main` and run the same version again, which the
+  scripts refuse: past the fix the version bump is no longer `HEAD`, and the
+  version is not greater than itself. They now tell a transient failure, which
+  is retried on the same tag (re-run the failed jobs, or dispatch the native
+  build on the tag, never on `main`, whose newer code would be published under
+  the tag's version), from a code failure, which spends the version and needs
+  the next patch. The build workflow's comments said to delete a release
+  *and its tag* to rebuild it, which leaves nothing to dispatch on; they now
+  say to keep the tag.
+- **No instruction tags a release by hand without the checks `make release`
+  makes, or misstates who may create a tag** (`Makefile`,
+  `.github/workflows/publish.yml`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.claude/skills/release-frb-crate/SKILL.md`, `CLAUDE.md`, `CONTRIBUTING.md`,
+  `.github/rulesets/README.md`, `.claude/skills/security-review/SKILL.md`) —
+  `make publish`'s help and `publish.yml`'s header told you to
+  `git tag vX.Y.Z && git push`, an unsigned tag that skips every check
+  `make release` makes, and the update bot's pull request listed stage 2 as
+  steps to do by hand; all three now name `make release`. The release skill's
+  manual fallback, for a release that cannot go through `make release`, still
+  tags by hand, and now starts with what `make release` checks first: that
+  the stage-1 release exists, and that `git diff --quiet` finds nothing
+  between its tag and `HEAD` in the native sources. On the real tags that
+  command agrees with the scripted check: nothing for `libsignal_frb-6.4.0`
+  against `v7.4.1`, the same four paths against `HEAD`. The skill said tag
+  creation is not gated; the `Protect release tags` ruleset gates it, to the
+  roles on its bypass list, and every one of them bypasses its
+  `required_signatures` rule (`always`), which `CLAUDE.md` said rejects an
+  unsigned tag. The rulesets README called `actor_id` 4 on that list
+  Maintain, which GitHub names `write` (the `SECURITY.md` entry above); the
+  README now maps it as GitHub does and says what that allows, and both
+  release skills, `CLAUDE.md` and `CONTRIBUTING.md` speak of the roles on the
+  bypass list instead of naming them. The JSON is unchanged: which roles
+  belong there is a policy decision. And the security-review skill's certificate example
+  still called a `senderCert.validate(...)` this package does not have; it is
+  now `SECURITY.md` section F's.
+- **`rustContentHash` is described as what it is** (`CLAUDE.md`, `Makefile`,
+  `hook/build.dart`, `test/hook/build_hook_test.dart`,
+  `test/scripts/release_test.dart`, `scripts/src/release.dart`) — seven places
+  in six files said it compares the FFI *surface*. flutter_rust_bridge 2.13.0 hashes the
+  sorted names of the bridged functions and nothing else
+  (`generate_content_hash`), so a change to argument, return or error types —
+  this release's errors included — leaves it where it was.
+- **The contributor docs teach the coded error type** (`CONTRIBUTING.md`,
+  `.claude/skills/frb-patterns/SKILL.md`) — both still had a new bridged
+  function return `Result<T, String>`, and the skill converted libsignal's
+  errors with `e.to_string()`: the shape this release replaces, and one
+  `generated_bindings_use_no_other_error_type` now fails. Their examples return
+  `Result<T, LibSignalException>`, and the skill's *Error Handling* says how a
+  libsignal error keeps its code (`From`, `.context()`), how one raised here
+  names its own, and why there is no `From<String>`. The template keeps its
+  wording, since its copy serves every generated project and each one picks its
+  own error type, so the skill is now a standing divergence.
+- **`make get` passes `ARGS` on** (`Makefile`, `CLAUDE.md`) — it ran
+  `dart pub get` on the root package whatever it was given, so
+  `make get ARGS="--directory=example_cli"` exited 0 having resolved the
+  wrong package, and on a fresh checkout `make analyze ARGS="example_cli"`
+  failed with `uri_does_not_exist` with no make target to fix it. Measured both
+  ways: with `example_cli` unresolved, the analysis fails, and after the fixed
+  `make get ARGS="--directory=example_cli"` it is clean; a plain `make get`
+  behaves as before.
 
 ## [7.4.1] - 2026-09-29
 

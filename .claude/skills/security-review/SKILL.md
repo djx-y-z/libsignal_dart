@@ -97,15 +97,23 @@ throw Exception('Key operation failed');
 - [ ] Trust roots properly configured
 - [ ] Certificate expiration checked
 - [ ] Server certificates validated before use
+- [ ] A `verificationFailure` never changes configuration (trust root, clock)
+      or makes the app fall back to unsealed sending
+
+`validateSenderCertificate` never returns `false`: every failure throws a
+`LibSignalException`, so treat any exception as "not valid" (the example is
+`SECURITY.md` section F's).
 
 ```dart
 // ✅ CORRECT - validate before use
-final isValid = senderCert.validate(
-  trustRoot: serverTrustRoot,
-  timestamp: DateTime.now().toUtc(),
-);
-if (!isValid) {
-  throw SecurityException('Invalid sender certificate');
+try {
+  validateSenderCertificate(
+    certificate: certificateBytes,
+    trustRoot: serverTrustRoot.serialize(),
+    timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
+  );
+} on LibSignalException {
+  return; // do not use the certificate
 }
 ```
 
