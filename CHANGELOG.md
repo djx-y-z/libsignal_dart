@@ -12,7 +12,8 @@
   (Breaking) ([#106](https://github.com/djx-y-z/libsignal_dart/issues/106))
 - **Async calls no longer wait forever when another isolate shuts down during
   `LibSignal.init()`** — see Fixed
-- **libsignal v0.104.0** — internal/dependency update, no public-API impact
+- **libsignal v0.105.0** (from v0.103.1, through v0.104.0) — internal/dependency
+  update, no public-API impact
 
 #### Changed (Breaking)
 
@@ -112,6 +113,31 @@
   and `oslog`'s `wrapper.c` on iOS and macOS. `find-msvc-tools`, which `cc`
   uses to find the MSVC tools on Windows, and `wasm-bindgen-test` move too, and
   only build or test the crate.
+- **The update to libsignal v0.105.0 leaves the exposed protocol surface
+  unchanged as well** — the range
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.104.0...v0.105.0))
+  is four commits: the changes its release notes name — chat connection info
+  that says whether a connection is direct, now also in Java, and an
+  `expectedLevel` argument to `createLoginReceiptCredential()` — which live in
+  `rust/net/chat/`, `rust/bridge/shared/` and the Java, Node and Swift
+  clients, plus formatting and a version reset. None of those crates is in
+  this package's dependency graph. In the four libsignal crates that are, the
+  only change is again the version constant in `rust/core/src/version.rs`,
+  which this package does not expose, and `libsignal-debug` moves to 0.105.0
+  by its version number alone. The upstream workspace keeps `rust-version` at
+  1.93.1, this package's floor, `spqr` stays at 1.6.0 (`06959b4`), and
+  regenerating the bindings on top of it changed nothing in `lib/src/rust/`.
+
+  Third-party crates move with it, and each of these reaches every binary, the
+  web module included: `zeroize` 1.9.1, `zerocopy` 0.8.61, `ctutils` 0.4.3 and
+  `either` 1.19.0; `zerocopy-derive` 0.8.61 moves too and only runs at compile
+  time. `zeroize` 1.9.1 is the one that changes behaviour: its zeroing no
+  longer passes through `optimization_barrier`, so on `wasm32`, which has no
+  assembly barrier in 1.9.0, the web module no longer runs that function's
+  fallback, which upstream fixed in the same release for values whose first
+  byte may be uninitialized; and `Zeroizing`'s `Debug` output is now
+  `Zeroizing { .. }` instead of the secret it holds. `libc` stays at 0.2.189
+  (see For Contributors).
 
 #### Fixed
 
