@@ -114,8 +114,13 @@ jobs:
     strategy:
       matrix:
         include:
+          # Pinned, like arm64 below, rather than ubuntu-latest: the .so links
+          # against the runner's glibc, and a newer one can raise the oldest
+          # glibc a consumer's Linux needs to load it. ubuntu-latest moves to
+          # Ubuntu 26 from 2026-10-19, so moving this pin is a decision to make
+          # on purpose, after checking the built library's GLIBC_* symbols.
           - arch: x86_64
-            runner: ubuntu-latest
+            runner: ubuntu-24.04
             rust_target: x86_64-unknown-linux-gnu
           - arch: arm64
             runner: ubuntu-24.04-arm

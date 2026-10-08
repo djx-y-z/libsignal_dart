@@ -126,6 +126,11 @@ A required check that fails by itself teaches people to merge past required
 checks, so diagnosing that timeout is worth more than either exclusion. Add
 `Linux ARM64` back when it is fixed, not before.
 
+`test / Type-check (iOS)` is new and not required yet. It type-checks the three
+iOS targets (`make rust-check-ios`), the only check before a release tag that
+compiles iOS, and a failure there still stops a package release: `publish.yml`
+runs its tests through the same reusable workflow.
+
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.
 

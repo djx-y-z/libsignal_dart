@@ -410,7 +410,9 @@ make test
 Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
 
 For development, build the native library from source and the hook picks up the
-host-matching `rust/target/` build automatically — no marker needed:
+host-matching `rust/target/release/` build automatically — no marker needed.
+Build it with `make build`, which stamps it with the crate version: the hook
+refuses a host library that carries no stamp, or another version's.
 
 ```bash
 # Native platforms

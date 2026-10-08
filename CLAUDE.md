@@ -79,6 +79,18 @@ rejected.** That is the intended answer rather than a regression, and it is what
 the first web build after adopting this looks like: run `make build-web`, or
 delete the directory to use the released module instead.
 
+⚠ **`make build` stamps the host library the same way, in
+`rust/target/release/.crate-version`, and the hook refuses a local host
+library whose stamp is missing or disagrees** — the same `HookException`, for
+the same reason: a library left over from an earlier crate loads silently, and
+once the way values cross the bridge has moved, its calls fail in ways nothing
+names. Only `rust/target/release/` is read; a `--target` build lands in
+`rust/target/<triple>/`, is never read and gets no stamp. A library built
+before the stamp existed, or by a bare `cargo build`, is refused: run
+`make build`, or delete `rust/target/release/` to use the released library.
+So after `make release-frb` bumps the crate, `make test` needs a `make build`
+first.
+
 ### Web
 
 ```bash
@@ -141,6 +153,7 @@ thing; the README's *Known Limitations* names the escapes.
 ### Rust Quality
 ```bash
 make rust-check                   # Check Rust code compiles
+make rust-check-ios               # Type-check the 3 iOS targets (CI: Type-check (iOS))
 make rust-test                    # Crate unit tests (CI: Linux x86_64 leg)
 make rust-clippy                  # Lint Rust code with clippy (warnings = errors)
 make rust-clippy-web              # The same lint over the wasm32 half (GATE)
@@ -216,6 +229,7 @@ for an already-published version.
 ### Utilities
 ```bash
 make get                          # Get dependencies
+make get ARGS="--directory=example_cli"  # Resolve example_cli (its analyze needs it)
 make clean                        # Clean build artifacts (including rust/target)
 make version                      # Show current crate version
 make rust-update                  # Update Cargo.lock + regenerate notices
@@ -289,10 +303,11 @@ do not exist). Native libraries are delivered via Dart **build hooks**
    target platform from the GitHub Release `libsignal_frb-<version>` (no Rust
    needed) and registers it as a code asset
 2. **Developers**: build from source via `make build` (or `make build-web`); the
-   hook then picks up the host-matching `rust/target/` build automatically (no
-   marker needed). Cross-target builds (`make build-android`, `make build
-   --target <triple>`, iOS) land in `rust/target/<triple>/` and are **not**
-   picked up — those targets always download the released binary.
+   hook then picks up the host-matching `rust/target/release/` build
+   automatically, provided `make build` stamped it with the current crate
+   version (no marker needed). Cross-target builds (`make build-android`,
+   `make build --target <triple>`, iOS) land in `rust/target/<triple>/` and
+   are **not** picked up — those targets always download the released binary.
    `.skip_libsignal_hook` is only an
    internal escape the Makefile uses while wrapping pub-get/codegen/doc — when
    present the hook returns immediately and registers **no** asset
@@ -824,6 +839,7 @@ make analyze ARGS="--fatal-infos"
 make format-check
 make test
 make rust-test                  # incl. the release-profile panic guard
+make rust-check-ios             # the iOS targets; CI runs it too, not as a required check
 make rust-clippy
 make rust-clippy-web            # blocking: the wasm32 half, which the above cannot see
 make doc                        # blocking: unresolved doc references

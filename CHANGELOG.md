@@ -170,6 +170,32 @@
   that has already counted to zero and not yet written the no-op, which only
   a lock inside flutter_rust_bridge can close.
 
+- **A local native build left over from an older crate version is no longer
+  loaded silently** (`hook/build.dart`, `Makefile`, `README.md`,
+  `CONTRIBUTING.md`, `CLAUDE.md`) — the build hook prefers a host library in
+  `rust/target/release/` (or `debug/`) over the released one, and took it on
+  the sole condition that the file existed, while the local WASM build has had
+  to carry a crate stamp since 7.4.0 (published as 7.4.1). `make build` now
+  stamps a host build the same way, in `rust/target/release/.crate-version`
+  (a `--target` build lands elsewhere, is never read, and gets none), and the
+  hook refuses a library whose stamp is missing or names another version,
+  saying how to fix it: run `make build`, or delete `rust/target/release/` to
+  use the released library.
+  `rust/target/debug/` is no longer read: nothing here builds there, and
+  nothing would stamp it. Measured on this tree: a library built before the
+  change is refused as "an unknown crate version", one stamped 6.3.9 as
+  "crate 6.3.9" against 6.4.0, a freshly built one passes, and a `--target`
+  build leaves the stamp untouched.
+
+  It matters most in this release: the way errors cross the bridge changed, a
+  library built before it still loads, and every error it raises then reaches
+  Dart as a `TypeError`. **Who this reaches:** `rust/target/` is
+  `.pubignore`d, so a consumer installing from pub.dev never takes this path;
+  it affects work in this repository and anyone depending on it by path or git
+  who has built the crate. A `rust/target/release/` built before this release
+  carries no stamp and is refused, which is the intended answer: `make build`
+  fixes it.
+
 #### Documentation
 
 - **`SECURITY.md` matches the coded errors** (`SECURITY.md`) — the
@@ -242,6 +268,21 @@
   released 6.4.0: from the tree just before this change (`c653698`, 927
   tests), 82 fail, every one with the `TypeError` an old binary gives the new
   error type; from `v7.4.1`, whose Dart matches that binary, all 895 pass.
+- **CI type-checks the three iOS targets on every push and pull request**
+  (`.github/workflows/test-reusable.yml`, `Makefile`, `CLAUDE.md`,
+  `.github/rulesets/README.md`) — nothing that ran before a release tag
+  compiled iOS, so the `libc` 0.2.190 break
+  below was green on its pull request and on `main`, and only the tag's
+  `build-ios` legs would have found it, with the crate version already spent.
+  A `Type-check (iOS)` job now runs `make rust-check-ios` on macOS:
+  `cargo check --locked` for `aarch64-apple-ios`, `aarch64-apple-ios-sim` and
+  `x86_64-apple-ios`, the three the release builds. Measured both ways: with
+  the lock from before the `libc` hold it fails on the first target with the
+  same four `E0425`, and with the current one all three pass. It catches
+  compile errors, not link errors, and it is not a required check, which the
+  rulesets README now says; because `publish.yml` runs its tests through the
+  same reusable workflow, a failure there also stops stage 2, as the Android
+  jobs already do.
 
 #### Changed
 
@@ -265,8 +306,9 @@
   0.2.190 was still its latest release on 2026-10-07. The binaries keep the
   `libc` that 6.4.0 shipped.
   ⚠ A full `cargo update` — `make rust-update`, which the libsignal update
-  bot also runs — takes `libc` back to 0.2.190 until upstream releases a fix,
-  so build an iOS target before cutting a crate after one.
+  bot also runs — takes `libc` back to 0.2.190 until upstream releases a fix;
+  the `Type-check (iOS)` job added above now fails on the pull request that
+  does it, and `make rust-check-ios` runs the same check locally.
 - **`make release` refuses a stage-1 release whose native sources moved since
   its tag** (`scripts/src/release.dart`, `scripts/release.dart`,
   `test/scripts/release_test.dart`, `CLAUDE.md`,
@@ -286,6 +328,16 @@
   `libsignal_frb-6.4.0` against `v7.4.1` reports nothing, against `main` it
   names `lib/src/rust`, `rust/Cargo.lock`, `rust/Cargo.toml` and `rust/src`,
   and both readers return the same objects for the same tag.
+- **The Linux x86_64 library is built on a pinned `ubuntu-24.04`**
+  (`.github/workflows/build-libsignal.yml`) — it was the one release build on
+  `ubuntu-latest`, which moves to Ubuntu 26 from 2026-10-19
+  ([runner-images#14748](https://github.com/actions/runner-images/issues/14748)),
+  and the `.so` links against the runner's glibc: a newer one can raise the
+  oldest glibc a consumer's Linux needs to load the library. arm64 was already
+  pinned to `ubuntu-24.04-arm`, and 6.4.0's libraries need `GLIBC_2.34` on
+  both architectures (measured with `llvm-objdump -T`), so the release keeps
+  the environment 6.4.0 was built in and consumers see no change. The CI test
+  leg for Linux x86_64 still runs on `ubuntu-latest`.
 
 #### Fixed
 
@@ -331,6 +383,14 @@
   names its own, and why there is no `From<String>`. The template keeps its
   wording, since its copy serves every generated project and each one picks its
   own error type, so the skill is now a standing divergence.
+- **`make get` passes `ARGS` on** (`Makefile`, `CLAUDE.md`) — it ran
+  `dart pub get` on the root package whatever it was given, so
+  `make get ARGS="--directory=example_cli"` exited 0 having resolved the
+  wrong package, and on a fresh checkout `make analyze ARGS="example_cli"`
+  failed with `uri_does_not_exist` with no make target to fix it. Measured both
+  ways: with `example_cli` unresolved, the analysis fails, and after the fixed
+  `make get ARGS="--directory=example_cli"` it is clean; a plain `make get`
+  behaves as before.
 
 ## [7.4.1] - 2026-09-29
 

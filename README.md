@@ -144,7 +144,7 @@ dependencies:
 
 Native libraries are downloaded automatically during build via Dart build hooks.
 
-**No Rust required** for end users - precompiled binaries are downloaded from GitHub Releases (the build hook verifies each download's SHA256 and fails closed if it can't). Developers can instead build from source with `make build`; the hook then picks up the local `rust/target/` build automatically.
+**No Rust required** for end users - precompiled binaries are downloaded from GitHub Releases (the build hook verifies each download's SHA256 and fails closed if it can't). Developers can instead build from source with `make build`; the hook then picks up the local `rust/target/release/` build automatically, and refuses one that `make build` did not stamp with the current crate version.
 
 ### Web Support
 
