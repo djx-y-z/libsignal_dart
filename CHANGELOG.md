@@ -14,6 +14,7 @@
   `LibSignal.init()`** — see Fixed
 - **libsignal v0.105.0** (from v0.103.1, through v0.104.0) — internal/dependency
   update, no public-API impact
+- **libsignal_frb v7.0.0** — Rust FFI bindings
 
 #### Changed (Breaking)
 
