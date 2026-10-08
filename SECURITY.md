@@ -488,11 +488,10 @@ The native binaries above are published by `build-libsignal.yml`, triggered by a
 cause a publish, mirroring the `pub.dev` environment that gates the pub.dev
 publish:
 
-- **Tag protection** — a repository ruleset restricts creating, moving, and
-  deleting **all tags**, and requires them signed, for everyone off its bypass
-  list. ⚠ That list holds the `write` role as well as `admin`, so it does not
-  stop a `write` collaborator from minting a release tag (`libsignal_frb-*` /
-  `v*`); the approval gate below is what holds on every path.
+- **Tag protection** — a repository ruleset reserves creating, moving, and
+  deleting **all tags** to repository Admins, so a `write` collaborator cannot
+  mint a release tag (`libsignal_frb-*` / `v*`) or any other tag. Admins bypass
+  it, its signature rule included; the release scripts sign their tags.
 - **Approval gate** — the publishing job runs in the `native-build` environment,
   whose required reviewers must approve before any binary is released. Unlike the
   tag ruleset, this also covers the `workflow_dispatch` path.

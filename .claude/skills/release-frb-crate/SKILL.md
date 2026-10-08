@@ -139,8 +139,8 @@ needs them all.
 be retried, because the tag points at the commit that fails. The version is
 spent: its bump commit is on `main`, so `make release-frb` refuses it as not
 greater than the current version, and the tag ruleset reserves deleting the
-tag to the roles on its bypass list — which tidies up but does not free the
-version. Fix the cause on `main`, push, let CI go green, and cut the next patch:
+tag to Admin — which tidies up but does not free the version. Fix the cause on
+`main`, push, let CI go green, and cut the next patch:
 
 ```bash
 make release-frb ARGS="--version X.Y.W"   # W = Z + 1

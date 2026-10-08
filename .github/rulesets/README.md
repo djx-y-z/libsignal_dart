@@ -35,9 +35,10 @@ bring the native build up to the same bar.
 
 ## The rulesets
 
-Repository roles referenced by `actor_id`: **Write = 4** and **Admin = 5**, the
-only two used here. This file used to call 4 Maintain. GitHub names the role
-behind each id on the live rulesets:
+Repository role referenced by `actor_id`: **Admin = 5**, the only one on any
+bypass list here. (4 is **Write** — not Maintain, as this file used to say — and
+sat on the tag ruleset's list until 2026-10-08.) GitHub names the role behind
+each id on the live rulesets:
 
 ```bash
 gh api graphql -F owner='{owner}' -F name='{repo}' -f query='
@@ -54,29 +55,29 @@ gh api graphql -F owner='{owner}' -F name='{repo}' -f query='
 | `protect-main.json` | Protect main branch | `~DEFAULT_BRANCH` | pull_request (0 approvals), required_status_checks, non_fast_forward, deletion | Admin (5) |
 | `signing-commit.json` | Signing commit | `~ALL` branches except `dependabot/**/*` | required_signatures, non_fast_forward | none by default |
 | `delete-branches.json` | Delete branches | `~ALL` branches except `dependabot/**/*` | deletion | Admin (5) |
-| `protect-release-tags.json` | Protect release tags | all tags (`~ALL`) | creation, update, deletion, required_signatures | Admin (5), Write (4) ⚠ |
+| `protect-release-tags.json` | Protect release tags | all tags (`~ALL`) | creation, update, deletion, required_signatures | Admin (5) |
 
 The load-bearing new one is **Protect release tags**. It targets **all tags**
-(`~ALL`), so `creation` restricts creating *any* tag to the roles on its bypass
-list — which covers the release-triggering `libsignal_frb-*` (native build) and
-`v*` (pub.dev) tags and every other tag. (Only `libsignal_frb-*`/`v*` actually
+(`~ALL`), so `creation` restricts creating *any* tag to Admin, the only role on
+its bypass list — which covers the release-triggering `libsignal_frb-*` (native
+build) and `v*` (pub.dev) tags and every other tag, so no `write` collaborator
+can mint a tag that starts a publish. (Only `libsignal_frb-*`/`v*` actually
 trigger a workflow; the `~ALL` scope is defense-in-depth so the rule never lags
 behind a new trigger pattern.) `update`+`deletion` make tags immutable to
-everyone off that list; `required_signatures` is belt-and-suspenders
-(`make release-frb` / `make release` already sign tags), and every role on the
-list bypasses it. If GitHub ever rejects `required_signatures` on a tag target,
-drop that one rule — `creation`/`update`/`deletion` carry the protection.
+everyone but Admin; `required_signatures` is belt-and-suspenders
+(`make release-frb` / `make release` already sign tags), and Admin bypasses it.
+If GitHub ever rejects `required_signatures` on a tag target, drop that one
+rule — `creation`/`update`/`deletion` carry the protection.
 
-⚠ **That list holds Write (4), so this ruleset does not stop a `write`
-collaborator.** It was meant to — this file mapped 4 to Maintain and said no
-`write` collaborator could mint a tag that starts a publish — but on 2026-10-07
-the query above named 4 `write`: anyone with `write` can create, move and
-delete any tag here, the release tags included, unsigned. What does hold,
-whoever pushed the tag, is the approval gate: a publish waits for the required
-reviewers of the `native-build` and `pub.dev` environments. Narrowing the list
-— dropping 4, or replacing it with a role this repository has — is a policy
-choice: edit `protect-release-tags.json` and re-apply with
-`make setup-repo-protections ARGS="--update"`.
+⚠ **Until 2026-10-08 the list also held Write (4).** This file mapped 4 to
+Maintain, but GitHub names it `write` (the query above, 2026-10-07), so anyone
+with `write` could create, move and delete any tag here, the release tags
+included, unsigned. No automation needs the role: the workflows react to tags
+and create GitHub Releases for tags that already exist, and GitHub Apps,
+Dependabot and `GITHUB_TOKEN` were never on the list. A co-maintainer who has
+to cut releases needs the Admin role — a personal repository cannot list
+individual users. Whoever pushes a tag, a publish still waits for the required
+reviewers of the `native-build` and `pub.dev` environments.
 
 ### Required status checks
 
@@ -278,6 +279,20 @@ gh api --method POST repos/djx-y-z/libsignal_dart/rulesets \
   --input .github/rulesets/protect-release-tags.json
 ```
 
+To update one existing ruleset and nothing else, `PUT` its file to its ID (from
+the listing below):
+
+```bash
+gh api --method PUT repos/djx-y-z/libsignal_dart/rulesets/<ID> \
+  --input .github/rulesets/protect-release-tags.json
+```
+
+`--update` sends every file, and a live ruleset can carry a parameter GitHub
+added that its JSON does not name. Measured 2026-10-08: the live
+`Protect main branch` had
+`require_extra_approval_for_unattributed_changes: true`, which
+`protect-main.json` does not set. Compare before overwriting.
+
 **Verify / roll back:**
 
 ```bash
@@ -323,8 +338,7 @@ it off an arbitrary ref, add a deployment-branch policy allowing only
   only a "use PRs" hygiene gate — the Admin bypasses it anyway. Once you add
   non-admin write collaborators, raise `required_approving_review_count` to 1 and
   enable `require_last_push_approval` in `protect-main.json`, then re-run with
-  `--update`. Narrow `protect-release-tags.json`'s bypass list at the same
-  time: it holds Write (see the ⚠ under *The rulesets*).
+  `--update`.
 
 ## Residual risks (out of scope for rulesets)
 

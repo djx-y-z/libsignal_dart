@@ -702,11 +702,10 @@ be published without the right people and review:
 
 - **Signed commits** required on all branches (configure SSH or GPG signing).
 - **`main`** protected (changes land via PR; force-push and deletion blocked).
-- **Tags** — creating, moving and deleting tags is reserved to the roles on the
-  tag ruleset's bypass list, which also skip its signature rule. ⚠ That list
-  holds Write as well as Admin, so against a `write` collaborator the required
-  reviewer below is the gate. The release-triggering `libsignal_frb-*` / `v*`
-  are the critical subset (they start native / pub.dev publishing).
+- **Tags** — creating, moving and deleting tags is reserved to Admins, who also
+  skip the ruleset's signature rule (the release scripts sign their tags). The
+  release-triggering `libsignal_frb-*` / `v*` are the critical subset (they
+  start native / pub.dev publishing).
 - The **native-build publish** waits on a required reviewer (the `native-build`
   environment), mirroring the `pub.dev` environment that gates pub.dev publishing.
 

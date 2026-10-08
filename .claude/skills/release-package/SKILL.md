@@ -177,10 +177,8 @@ git push origin main && git push origin vX.Y.Z
 
 Without Admin you cannot push the bump to `main`, so open a PR for the bump
 commit, merge it, and repeat step 1 on the merged commit. The tag is a separate
-gate: the `Protect release tags` ruleset lets only the roles on its bypass list
-create one (`.github/rulesets/README.md` names them). If yours is one of them,
-push the signed `vX.Y.Z` tag on the merged commit yourself; otherwise ask
-someone whose role is.
+gate: the `Protect release tags` ruleset lets only Admin create one, so ask an
+Admin to push the signed `vX.Y.Z` tag on the merged commit.
 
 ### If CI fails
 
@@ -195,11 +193,11 @@ run → *Re-run failed jobs*, or `gh run rerun <run-id> --failed`).
 error, an upload pub.dev refuses — cannot be retried, because the tag points at
 the release commit. The version is spent: its bump is on `main`, so
 `make release` refuses it as not greater than the current version, and the tag
-ruleset reserves deleting the tag to the roles on its bypass list — which
-tidies up but does not free the version. Fix the cause on `main`. The release
-renamed `## [Unreleased]`, so start a new one above the section the failed
-release created, with the fix and a Highlights line saying that `X.Y.Z` was
-tagged but never published. Push, let CI go green, and release the next patch:
+ruleset reserves deleting the tag to Admin — which tidies up but does not free
+the version. Fix the cause on `main`. The release renamed `## [Unreleased]`, so
+start a new one above the section the failed release created, with the fix and
+a Highlights line saying that `X.Y.Z` was tagged but never published. Push, let
+CI go green, and release the next patch:
 
 ```bash
 make release ARGS="--version X.Y.W"   # W = Z + 1

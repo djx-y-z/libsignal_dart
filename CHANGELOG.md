@@ -1,3 +1,35 @@
+## [Unreleased]
+
+### For Users
+
+#### Documentation
+
+- **`SECURITY.md`: only repository Admins can create a release tag**
+  (`SECURITY.md`) — 8.0.0's text said the tag ruleset did not stop a `write`
+  collaborator, because its bypass list held the `write` role as well as
+  `admin`. The list now holds `admin` only (see For Contributors), and the
+  section says so.
+
+### For Contributors
+
+#### Changed
+
+- **Only an Admin can create, move or delete a tag**
+  (`.github/rulesets/protect-release-tags.json`, `.github/rulesets/README.md`,
+  `CONTRIBUTING.md`, `CLAUDE.md`, `.claude/skills/release-package/SKILL.md`,
+  `.claude/skills/release-frb-crate/SKILL.md`) — the `Protect release tags`
+  ruleset's bypass list also held `actor_id` 4, which GitHub names `write`
+  (read back through GraphQL on 2026-10-07), so any collaborator with `write`
+  could create, move and delete tags, the release tags included, unsigned.
+  Only `admin` (5) is on it now, which is what the rulesets README always
+  described. No automation creates tags: the workflows react to them and
+  create GitHub Releases for tags that already exist, and GitHub Apps,
+  Dependabot and `GITHUB_TOKEN` were never on the list. The README also shows
+  how to update one ruleset without `make setup-repo-protections
+  ARGS="--update"`, which sends every file and can reset a parameter GitHub
+  added to a live ruleset that the JSON does not name (`protect-main` carries
+  one).
+
 ## [8.0.0] - 2026-10-08
 
 ### For Users

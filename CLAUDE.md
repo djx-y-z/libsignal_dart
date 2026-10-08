@@ -831,9 +831,9 @@ Rules:
 **Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
 existence check, the CHANGELOG finalization, and the publish dry-run. Both
 scripts require a clean tree and create a **signed** tag. Do not count on the
-`Protect release tags` ruleset to refuse an unsigned one: only the roles on its
-bypass list may create a tag at all, and every one of them bypasses it
-(`always`), its `required_signatures` rule included.
+`Protect release tags` ruleset to refuse an unsigned one: only Admin may create
+a tag at all, and Admin bypasses it (`always`), its `required_signatures` rule
+included.
 Use the two-stage flow documented above (see
 [Release Flow](#release-flow-two-stages)).
 
