@@ -211,7 +211,19 @@
   section no longer says FRB's content-hash check pins the bridge's API
   signature: the check covers the bridged functions' names only, so
   `libsignal_frb` 6.4.0 passes `init()` under this release. The section now
-  also says to replace a library pinned with `libraryPath` on every upgrade.
+  also says to replace a library pinned with `libraryPath` on every upgrade,
+  with the crate version that release's build hook downloads.
+
+- **`SECURITY.md` no longer says the tag ruleset stops a `write`
+  collaborator** (`SECURITY.md`) — it said the `Protect release tags` ruleset
+  restricts creating, moving and deleting tags to Admins and Maintainers, so
+  that a plain `write` collaborator cannot mint a release tag. The ruleset
+  leaves all three, unsigned, to the roles on its bypass list, and on
+  2026-10-07 GitHub's GraphQL API named those roles `admin` and `write` on the
+  live ruleset. What gates a release whoever pushed its tag is the approval of
+  the `native-build` and `pub.dev` environments' required reviewers, which the
+  section now names as the control that holds on every path. The repository
+  has no collaborator but its admin, and the ruleset itself is unchanged.
 
 - **The README says what a failure tells you, and the API docs name the
   codes** (`README.md`, `rust/src/api/sealed_sender.rs`,
@@ -280,8 +292,9 @@
   so a mismatch between the stage-1 binary and the Dart about to be published
   would first reach consumers. Both now describe checking `HEAD` out in a fresh
   sibling worktree, which has no `rust/target/`, and running `make get` and
-  `make test` there, so that the build hook downloads the release, checks its
-  checksum and every test runs against it. Measured both ways, against the
+  `make test` there, so that the build hook downloads that release's library
+  for this host, checks its checksum and every test runs against it; the
+  other platforms' libraries are not loaded. Measured both ways, against the
   released 6.4.0: from the tree just before this change (`c653698`, 927
   tests), 82 fail, every one with the `TypeError` an old binary gives the new
   error type; from `v7.4.1`, whose Dart matches that binary, all 895 pass.
@@ -342,7 +355,7 @@
   paths after stage 1 now needs a new crate**, a test-only change under
   `rust/src` and a docstring-only regeneration included, and
   `--skip-frb-check` skips both checks. Measured on the real tags:
-  `libsignal_frb-6.4.0` against `v7.4.1` reports nothing, against `main` it
+  `libsignal_frb-6.4.0` against `v7.4.1` reports nothing, against `HEAD` it
   names `lib/src/rust`, `rust/Cargo.lock`, `rust/Cargo.toml` and `rust/src`,
   and both readers return the same objects for the same tag.
 - **The Linux x86_64 library is built on a pinned `ubuntu-24.04`**
@@ -371,18 +384,34 @@
   the next patch. The build workflow's comments said to delete a release
   *and its tag* to rebuild it, which leaves nothing to dispatch on; they now
   say to keep the tag.
-- **No instruction suggests a hand-made release tag, or misstates who may
-  create one** (`Makefile`, `.github/workflows/publish.yml`,
-  `.claude/skills/release-package/SKILL.md`, `CLAUDE.md`,
-  `.claude/skills/security-review/SKILL.md`) — `make publish`'s help and
-  `publish.yml`'s header told you to `git tag vX.Y.Z && git push`, an unsigned
-  tag that skips every check `make release` makes; they now name
-  `make release`. The skill said tag creation is not gated, but the
-  `Protect release tags` ruleset reserves it to Admin and Maintain. `CLAUDE.md`
-  said an unsigned tag is rejected, while both roles that may create a tag are
-  on that ruleset's bypass list. And the security-review skill's certificate
-  example still called a `senderCert.validate(...)` this package does not
-  have; it is now `SECURITY.md` section F's.
+- **No instruction tags a release by hand without the checks `make release`
+  makes, or misstates who may create a tag** (`Makefile`,
+  `.github/workflows/publish.yml`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.claude/skills/release-frb-crate/SKILL.md`, `CLAUDE.md`, `CONTRIBUTING.md`,
+  `.github/rulesets/README.md`, `.claude/skills/security-review/SKILL.md`) —
+  `make publish`'s help and `publish.yml`'s header told you to
+  `git tag vX.Y.Z && git push`, an unsigned tag that skips every check
+  `make release` makes, and the update bot's pull request listed stage 2 as
+  steps to do by hand; all three now name `make release`. The release skill's
+  manual fallback, for a release that cannot go through `make release`, still
+  tags by hand, and now starts with what `make release` checks first: that
+  the stage-1 release exists, and that `git diff --quiet` finds nothing
+  between its tag and `HEAD` in the native sources. On the real tags that
+  command agrees with the scripted check: nothing for `libsignal_frb-6.4.0`
+  against `v7.4.1`, the same four paths against `HEAD`. The skill said tag
+  creation is not gated; the `Protect release tags` ruleset gates it, to the
+  roles on its bypass list, and every one of them bypasses its
+  `required_signatures` rule (`always`), which `CLAUDE.md` said rejects an
+  unsigned tag. The rulesets README called `actor_id` 4 on that list
+  Maintain, which GitHub names `write` (the `SECURITY.md` entry above); the
+  README now maps it as GitHub does and says what that allows, and both
+  release skills, `CLAUDE.md` and `CONTRIBUTING.md` speak of the roles on the
+  bypass list instead of naming them. The JSON is unchanged: which roles
+  belong there is a policy decision. And the security-review skill's certificate example
+  still called a `senderCert.validate(...)` this package does not have; it is
+  now `SECURITY.md` section F's.
 - **`rustContentHash` is described as what it is** (`CLAUDE.md`, `Makefile`,
   `hook/build.dart`, `test/hook/build_hook_test.dart`,
   `test/scripts/release_test.dart`, `scripts/src/release.dart`) — seven places

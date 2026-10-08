@@ -477,8 +477,9 @@ await LibSignal.init(libraryPath: '/opt/myapp/lib/liblibsignal_frb.so');
 ```
 
 A pinned library is no more checked than a probed one, so replace it whenever
-you upgrade this package, with a build of the `libsignal_frb` version named in
-that release's CHANGELOG highlights.
+you upgrade this package, with a build of the `libsignal_frb` version that
+release's build hook downloads: the `version` in the package's
+`rust/Cargo.toml`.
 
 ### Release & build-trigger protection
 
@@ -488,9 +489,10 @@ cause a publish, mirroring the `pub.dev` environment that gates the pub.dev
 publish:
 
 - **Tag protection** — a repository ruleset restricts creating, moving, and
-  deleting **all tags** to Admins/Maintainers (and requires them signed), so a
-  plain `write` collaborator cannot mint a release tag (`libsignal_frb-*` / `v*`)
-  or any other tag.
+  deleting **all tags**, and requires them signed, for everyone off its bypass
+  list. ⚠ That list holds the `write` role as well as `admin`, so it does not
+  stop a `write` collaborator from minting a release tag (`libsignal_frb-*` /
+  `v*`); the approval gate below is what holds on every path.
 - **Approval gate** — the publishing job runs in the `native-build` environment,
   whose required reviewers must approve before any binary is released. Unlike the
   tag ruleset, this also covers the `workflow_dispatch` path.

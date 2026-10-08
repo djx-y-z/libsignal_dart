@@ -121,7 +121,8 @@ library from source with `make build`. Check `HEAD` out in a fresh sibling
 worktree, which has no `rust/target/`, and run the suite there without
 `make build`: the build hook then downloads `libsignal_frb-<crate>` from the
 release, checks it against the release's checksums, and every test runs
-against the binary consumers will get.
+against that release's library for this host, the one platform the check
+covers.
 
 ```bash
 git worktree add --detach ../stage2-check HEAD
@@ -146,30 +147,40 @@ If you cannot use `make release` (e.g. `make`/`gh` unavailable, or you are not a
 Admin and must land the version bump through a PR instead of pushing to `main`):
 
 ```bash
-# 1. Quality checks
+# 1. What `make release` checks first: the stage-1 release exists, and its tag
+#    holds the native sources HEAD does. <crate> is the crate version
+#    `make version` prints; without `gh`, find the release on the Releases page.
+gh release view libsignal_frb-<crate>
+git fetch origin tag libsignal_frb-<crate>
+git diff --quiet libsignal_frb-<crate> HEAD -- rust lib/src/rust ':!rust/fuzz' ':!rust/deny.toml'
+#    Non-zero: those sources moved since the tag, so release a new crate first.
+#    Then run the suite against the release in a fresh worktree, as above.
+
+# 2. Quality checks
 make analyze && make test && make format-check && make rust-check && make rust-audit
 
-# 2. Bump pubspec.yaml `version:` and finalize CHANGELOG.md:
+# 3. Bump pubspec.yaml `version:` and finalize CHANGELOG.md:
 #    - rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` in place
 #      (do NOT add a fresh empty `## [Unreleased]` — the next unreleased
 #      change recreates it)
 #    - rewrite `[Unreleased]: .../compare/vX.Y.Z...HEAD` (kept at the bottom)
 #      and add `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 
-# 3. Validate
+# 4. Validate
 make publish-dry-run
 
-# 4. Commit (signed), tag (signed, annotated), push
+# 5. Commit (signed), tag (signed, annotated), push
 git commit -am "chore: prepare release vX.Y.Z"
 git tag -s vX.Y.Z -m "Release vX.Y.Z"
 git push origin main && git push origin vX.Y.Z
 ```
 
 Without Admin you cannot push the bump to `main`, so open a PR for the bump
-commit and merge it. The tag is a separate gate: the `Protect release tags`
-ruleset lets only Admin and Maintain create one. With the Maintain role, push
-the signed `vX.Y.Z` tag on the merged commit yourself; without it, ask someone
-who has it.
+commit, merge it, and repeat step 1 on the merged commit. The tag is a separate
+gate: the `Protect release tags` ruleset lets only the roles on its bypass list
+create one (`.github/rulesets/README.md` names them). If yours is one of them,
+push the signed `vX.Y.Z` tag on the merged commit yourself; otherwise ask
+someone whose role is.
 
 ### If CI fails
 
@@ -184,11 +195,11 @@ run → *Re-run failed jobs*, or `gh run rerun <run-id> --failed`).
 error, an upload pub.dev refuses — cannot be retried, because the tag points at
 the release commit. The version is spent: its bump is on `main`, so
 `make release` refuses it as not greater than the current version, and the tag
-ruleset reserves deleting the tag to Admin and Maintain — which tidies up but
-does not free the version. Fix the cause on `main`. The release renamed
-`## [Unreleased]`, so start a new one above the section the failed release
-created, with the fix and a Highlights line saying that `X.Y.Z` was tagged but
-never published. Push, let CI go green, and release the next patch:
+ruleset reserves deleting the tag to the roles on its bypass list — which
+tidies up but does not free the version. Fix the cause on `main`. The release
+renamed `## [Unreleased]`, so start a new one above the section the failed
+release created, with the fix and a Highlights line saying that `X.Y.Z` was
+tagged but never published. Push, let CI go green, and release the next patch:
 
 ```bash
 make release ARGS="--version X.Y.W"   # W = Z + 1

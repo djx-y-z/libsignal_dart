@@ -530,7 +530,9 @@ downloads it) **and was built from this tree** — a release left by an earlier 
 carries the same version string with different bindings, and neither runtime
 check catches that. "Built from this tree" is checked on the binary's sources:
 `rust/` (all but `rust/fuzz` and `rust/deny.toml`) and `lib/src/rust/` at the
-stage-1 tag must equal `HEAD`'s, compared by git object through the GitHub API.
+stage-1 tag must equal `HEAD`'s, compared by git object: the tag's through
+GitHub's contents API, `HEAD`'s with `git ls-tree`, so `HEAD` need not be
+pushed.
 So **any** commit touching them after stage 1 needs a new crate, a test-only
 change under `rust/src` and a docstring-only regeneration included: the check
 cannot tell those apart and refuses them all. `--skip-frb-check` skips both
@@ -542,13 +544,14 @@ compare link to `vX.Y.Z...HEAD`), then signs a commit + tag `vX.Y.Z` and pushes 
 `publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
 API** (independent of the crate version).
 
-**Between the stages, run the suite against the binary consumers will get.**
+**Between the stages, run the suite against the released binary.**
 Nothing else does: `publish.yml` and `test.yml` — its `workflow_run` after the
 native build included — build the library from source with `make build`. Once
 the stage-1 release exists, check `HEAD` out in a fresh sibling worktree, which
 has no `rust/target/`, and run the suite there without `make build`: the build
 hook then downloads `libsignal_frb-<crate>` from the release, checks it against
-the release's checksums, and every test runs against that binary.
+the release's checksums, and every test runs against that release's library
+for this host, the one platform the check covers.
 
 ```bash
 git worktree add --detach ../stage2-check HEAD
@@ -828,8 +831,8 @@ Rules:
 **Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
 existence check, the CHANGELOG finalization, and the publish dry-run. Both
 scripts require a clean tree and create a **signed** tag. Do not count on the
-`Protect release tags` ruleset to refuse an unsigned one: it lets only Admin
-and Maintain create a tag at all, and both roles are on its bypass list
+`Protect release tags` ruleset to refuse an unsigned one: only the roles on its
+bypass list may create a tag at all, and every one of them bypasses it
 (`always`), its `required_signatures` rule included.
 Use the two-stage flow documented above (see
 [Release Flow](#release-flow-two-stages)).
