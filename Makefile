@@ -363,7 +363,10 @@ build-web:
 #      all. The hook cannot declare its way out of that: the skip happens above
 #      `hooks_runner`, so nothing the hook declares is ever read. Together with
 #      step 2 it turns a stale `web/pkg/` into a missing one, and
-#      `RustLib.init()` then fails on a 404 for `pkg/libsignal_frb.js`. A
+#      `RustLib.init()` then never completes: flutter_rust_bridge waits for
+#      `pkg/libsignal_frb.js` to fire `load`, with no error path or timeout,
+#      and a missing module never does — the dev server serves the app's
+#      HTML page in its place, with a 200. A
 #      stamp that does not exist cannot be stale, and an unmatched glob is
 #      a no-op under `rm -f`.
 #   4. `flutter run -d chrome` last, and NOT `--wasm`: that flag compiles the

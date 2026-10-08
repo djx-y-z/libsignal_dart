@@ -228,6 +228,23 @@
   of `IdentityKeyStore` names `LibSignalErrorCode.untrustedIdentity` instead
   of the error's old name.
 
+- **The README says what a missing `web/pkg/` actually does** (`README.md`,
+  `CLAUDE.md`, `Makefile`, `example/lib/main.dart`) — *Known Limitations* said
+  that `RustLib.init()` then fails on a 404 for `pkg/libsignal_frb.js`. It
+  never completes: flutter_rust_bridge 2.13.0 loads the module through a
+  `<script>` tag and waits for its `load` event with no error path or
+  timeout, so a missing module — a 404, or, under `flutter run`, the app's own
+  page served in its place with a 200 — leaves the call pending with nothing
+  reported to Dart. Measured with
+  `make run-example-web`, the build hook disabled by its skip marker so that
+  `web/pkg/` stayed empty, in headless Chrome: `init()` neither returned nor
+  threw for 75 seconds, and the dev server answered the missing file with the
+  app's own HTML page and a 200, which is why no 404 shows in the network
+  tab. The example's error screen never appears in this case; its spinner
+  runs on. The README and the comments now say that the call never completes,
+  and the example's hint no longer names a missing `web/pkg/` as the usual
+  cause of an error screen that case never reaches.
+
 ### For Contributors
 
 #### Added

@@ -52,11 +52,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       // below runs forever, and the only trace is a line in the console — a
       // hang that says nothing about its cause.
       //
-      // On web the ordinary cause is a missing `web/pkg/`: `flutter run -d
-      // chrome` after a run for another platform reuses that run's
-      // `dart_build` stamp — the build directory key does not include the
-      // target platform — and skips the build hook outright, so the WASM
-      // module is never provisioned and `init()` fails on a 404.
+      // A missing `web/pkg/` never lands here, though it is the common web
+      // failure: `flutter run -d chrome` after a run for another platform
+      // reuses that run's `dart_build` stamp — the build directory key does
+      // not include the target platform — and skips the build hook outright,
+      // so the WASM module is never provisioned, and `init()` then never
+      // completes instead of throwing (README, Known Limitations).
       if (!mounted) return;
       setState(() => _initError = '$e');
     }
@@ -64,8 +65,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   /// Shown instead of the spinner when [LibSignal.init] threw.
   ///
-  /// The raw error is kept in the text on purpose: any `init()` failure lands
-  /// here, not only the missing-WASM one the hint names.
+  /// The raw error is kept in the text on purpose: the hint below is a remedy
+  /// to try, not a diagnosis, and a missing `web/pkg/` never gets this far.
   Widget _buildInitError() {
     return Center(
       child: Padding(
@@ -87,10 +88,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             ),
             const SizedBox(height: 16),
             const Text(
-              'On web this usually means web/pkg/ was not provisioned.\n'
-              'Run `make run-example-web` from the package root — it rebuilds '
-              'the WASM module and clears the dart_build stamp that makes '
-              'flutter run skip the build hook.',
+              'On web, rebuild the module first: run `make run-example-web` '
+              'from the package root — it rebuilds the WASM module and '
+              'clears the dart_build stamp that makes flutter run skip the '
+              'build hook.',
               textAlign: TextAlign.center,
             ),
           ],

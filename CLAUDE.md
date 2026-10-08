@@ -144,7 +144,10 @@ platform is **not** in that key — so a debug run for macOS and a debug run for
 Chrome share one `dart_build` stamp. Whichever ran first makes the other skip
 the build hook outright (`Skipping target: dart_build`, visible under
 `--verbose`), and `example/web/pkg/` is then never provisioned:
-`RustLib.init()` fails on a 404 for `pkg/libsignal_frb.js`. The hook cannot
+`RustLib.init()` never completes: flutter_rust_bridge waits for the `load`
+event of `pkg/libsignal_frb.js` with no error path or timeout, so a missing
+module (a 404, or the app's HTML page the dev server serves in its place
+with a 200) leaves the call pending. The hook cannot
 declare its way out of it — the skip happens above `hooks_runner`, where
 nothing it declares is read. Consumers of the published package hit the same
 thing; the README's *Known Limitations* names the escapes.
