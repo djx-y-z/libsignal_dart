@@ -539,6 +539,17 @@ jobs:
         run: make verify-frb-pins
         shell: bash
 
+      # pub.dev refuses a README, CHANGELOG, LICENSE or example over 256 KiB at
+      # UPLOAD, and the dry-run does not measure them, so without this the
+      # first sign is the publish job failing after the tag. A CHANGELOG
+      # crosses the line by growing a release at a time; this makes the commit
+      # that takes it over the one that goes red, and puts a warning on the run
+      # page from 200 KiB.
+      - name: Verify pub.dev size limits
+        if: matrix.name == 'Linux x86_64'
+        run: make verify-pub-limits
+        shell: bash
+
   # ============================================
   # Update coverage badge (after ALL tests pass)
   # ============================================

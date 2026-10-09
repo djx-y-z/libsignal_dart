@@ -239,6 +239,7 @@ make rust-update                  # Update Cargo.lock + regenerate notices
 make third-party-notices          # Regenerate THIRD_PARTY_NOTICES.txt
 make verify-third-party-notices   # Check it matches the dependency graph
 make verify-frb-pins              # Check every file names the same FRB version
+make verify-pub-limits            # Check no file is over what pub.dev accepts at upload
 make verify-android-alignment     # Check built Android libraries are 16 KB-aligned
 make verify-release-artifacts ARGS=<dir>  # Check release archives hold what their names say
 make actionlint                   # Lint the GitHub Actions workflows
@@ -518,10 +519,48 @@ wire signature moved (≥ minor; major if breaking).
 
 ```bash
 # After the stage-1 native build has finished. Same interactive signing flow.
+<<<<<<< before updating
 make release ARGS="--version X.Y.Z"                # verify frb binary + dry-run +
                                                    # bump + finalize CHANGELOG
                                                    # + signed commit/tag/push
 make release ARGS="--version X.Y.Z --no-push"      # local only
+=======
+make release ARGS="--version X.Y.Z"   # verify frb binary + bump + finalize
+                                      # CHANGELOG + dry-run + signed commit/tag/push
+```
+
+Verifies the stage-1 `libsignal_frb-<crate>` release exists, runs
+`make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`,
+finalizes the CHANGELOG (`[Unreleased]` → `[X.Y.Z]` + compare links; no empty
+`[Unreleased]` is left behind), measures the result against pub.dev's upload
+limits (`make verify-pub-limits` — the dry-run does not check them, and pub.dev
+refuses the upload only after the tag), then signs a commit + tag `vX.Y.Z` and
+pushes — `publish.yml` publishes to pub.dev.
+
+Repository rulesets restrict who can create the `libsignal_frb-*` / `v*` release
+tags, and a required-reviewer `native-build` environment gates the native publish.
+See `.github/rulesets/README.md`.
+
+## Native Library Version
+
+Two different versions live here, and neither of them is in `pubspec.yaml`:
+
+- **The upstream libsignal version** is the git tag in
+  `rust/Cargo.toml` — the `tag = "..."` on every upstream dependency line. That
+  is what `make check-new-libsignal-version` reads and updates.
+- **The native crate version** is `[package] version` in `rust/Cargo.toml`.
+  `hook/build.dart` parses it out of that file and downloads
+  `libsignal_frb-<version>` from GitHub Releases, so the copy of
+  `rust/Cargo.toml` inside the published archive is what decides which binary a
+  consumer gets. It is also why stage 1 has to finish before stage 2.
+
+To check/update the version:
+```bash
+make check-new-libsignal-version              # Check for updates
+make check-new-libsignal-version ARGS="--update"  # Apply update
+make rust-update                    # Update Cargo.lock after version bump
+make update-changelog ARGS="--version v1.0.0"  # Generate AI changelog entry
+>>>>>>> after updating
 ```
 
 `make release` refuses to proceed until the stage-1 GitHub Release
@@ -828,6 +867,7 @@ Rules:
 
 ## Publishing Checklist
 
+<<<<<<< before updating
 **Do not tag or bump versions by hand** — that bypasses the stage-1 native-binary
 existence check, the CHANGELOG finalization, and the publish dry-run. Both
 scripts require a clean tree and create a **signed** tag. Do not count on the
@@ -836,6 +876,15 @@ a tag at all, and Admin bypasses it (`always`), its `required_signatures` rule
 included.
 Use the two-stage flow documented above (see
 [Release Flow](#release-flow-two-stages)).
+=======
+Releasing itself is **"Release Flow (two stages)"** above — `make release-frb`,
+then `make release`. Do not bump versions, tag or push by hand: each script
+requires a clean tree, bumps the right file, finalizes the CHANGELOG, and
+creates a **signed** tag (`git tag -s`). Do not count on the
+`Protect release tags` ruleset to refuse an unsigned one: only Admin may create
+a tag at all, and Admin bypasses it (`always`), its `required_signatures` rule
+included.
+>>>>>>> after updating
 
 **What to have green before starting stage 1** — the release scripts run some of
 these, not all of them:
@@ -857,7 +906,7 @@ make rust-deny
 make verify-frb-pins
 make verify-third-party-notices
 make actionlint                 # workflows: static + shellcheck (CI runs it too)
-make publish-dry-run            # exits 65 on ANY warning, a dirty tree included
+make publish-dry-run            # size limits first; then exits 65 on ANY warning, a dirty tree included
 ```
 
 **Push first and let CI go green, then tag.** `make release-frb` only *warns*

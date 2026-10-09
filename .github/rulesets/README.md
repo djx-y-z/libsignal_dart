@@ -37,8 +37,13 @@ bring the native build up to the same bar.
 
 Repository role referenced by `actor_id`: **Admin = 5**, the only one on any
 bypass list here. (4 is **Write** — not Maintain, as this file used to say — and
+<<<<<<< before updating
 sat on the tag ruleset's list until 2026-10-08.) GitHub names the role behind
 each id on the live rulesets:
+=======
+sat on the tag ruleset's list in earlier versions of this template.) GitHub
+names the role behind each id on the live rulesets:
+>>>>>>> after updating
 
 ```bash
 gh api graphql -F owner='{owner}' -F name='{repo}' -f query='
@@ -57,6 +62,7 @@ gh api graphql -F owner='{owner}' -F name='{repo}' -f query='
 | `delete-branches.json` | Delete branches | `~ALL` branches except `dependabot/**/*` | deletion | Admin (5) |
 | `protect-release-tags.json` | Protect release tags | all tags (`~ALL`) | creation, update, deletion, required_signatures | Admin (5) |
 
+<<<<<<< before updating
 The load-bearing new one is **Protect release tags**. It targets **all tags**
 (`~ALL`), so `creation` restricts creating *any* tag to Admin, the only role on
 its bypass list — which covers the release-triggering `libsignal_frb-*` (native
@@ -83,6 +89,37 @@ reviewers of the `native-build` and `pub.dev` environments.
 
 `protect-main.json` requires eleven checks — **`FRB bindings were regenerated`**,
 the job in `codegen-guard.yml`, plus ten legs of the test matrix:
+=======
+The load-bearing one is **Protect release tags**. It targets **all tags**
+(`~ALL`), so `creation` restricts creating *any* tag to Admin, the only role on
+its bypass list — which covers the release-triggering `libsignal_frb-*`
+(native build) and `v*` (pub.dev) tags and every other tag, so no `write`
+collaborator can mint a tag that starts a publish. (Only
+`libsignal_frb-*`/`v*` actually trigger a workflow; the `~ALL` scope is
+defense-in-depth so the rule never lags behind a new trigger pattern.)
+`update`+`deletion` make tags immutable to everyone but Admin;
+`required_signatures` is belt-and-suspenders (`make release-frb` /
+`make release` already sign tags), and Admin bypasses it. If GitHub ever
+rejects `required_signatures` on a tag target, drop that one rule.
+
+⚠ **Earlier versions of this template also put Write (4) on the list.** They
+mapped 4 to Maintain, but GitHub names it `write` (the query above, run on a
+generated project on 2026-10-07), so anyone with `write` could create, move
+and delete any tag, the release tags included, unsigned. A project that applied
+that version keeps it until it re-applies this file; the single-ruleset `PUT`
+under *Apply* does that and touches nothing else. No automation needs the role:
+the workflows react to tags and create GitHub Releases for tags that already
+exist, and GitHub Apps, Dependabot and `GITHUB_TOKEN` were never on the list.
+A co-maintainer who has to cut releases needs the Admin role. Whoever pushes a
+tag, a publish still waits for the required reviewers of the `native-build` and
+`pub.dev` environments.
+
+### Required status checks
+
+`protect-main.json` requires twelve checks — **`FRB bindings were regenerated`**,
+the job in `codegen-guard.yml`, plus the whole test matrix except
+`test / Type-check (iOS)`, which is new and not required yet:
+>>>>>>> after updating
 
 ```
 FRB bindings were regenerated
@@ -232,16 +269,20 @@ still have to pass `~DEFAULT_BRANCH`'s `pull_request` gate plus `main`'s own
 with a bypass actor — the rulesets target `~ALL`, so a bypass actor would also
 be exempt on `main` itself, which is the opposite of what is wanted.
 
-It is no longer only a convenience, though, and that matters when narrowing it.
-`refresh-notices.yml` regenerates `THIRD_PARTY_NOTICES.txt` on Dependabot's
-cargo pull requests and pushes an ordinary **unsigned** commit to those
-branches — legal only because `required_signatures` does not reach them. Keeping
-the force-push and deletion exclusions while requiring signatures again would
-put every cargo pull request back to unmergeable with nothing saying why: the
-workflow's push is rejected, and the stale inventory then fails
-`test / Test (Linux x86_64)`, one of the required contexts above. If signatures
-are ever wanted on these branches, that workflow has to create its commit
-through the GitHub API — which signs — rather than with `git push`.
+It is not what lets `refresh-notices.yml` work, though, and reading it that way
+is the trap. That workflow regenerates `THIRD_PARTY_NOTICES.txt` on Dependabot's
+cargo pull requests and creates the commit through the GraphQL
+`createCommitOnBranch` mutation, which signs, then reads `verification.verified`
+back and fails unless it is `true`. It has to sign whatever this exclusion says:
+the exclusion decides only what may be **pushed** onto these branches, while
+`main`'s own `required_signatures` still checks every commit of a pull request
+when it is **merged**. An unsigned commit is accepted here and then leaves the
+pull request `BLOCKED` with every required context green — measured while the
+workflow still committed with a plain `git push`. So requiring signatures on
+these branches again, keeping the force-push and deletion exclusions by moving
+`required_signatures` into a ruleset of its own, would not break that workflow.
+The only commits it would newly constrain are Dependabot's own, which Dependabot
+signs today; anything else unsigned on these branches is unmergeable already.
 
 Mind the pattern's trailing `/*`. These are `fnmatch` patterns in pathname mode,
 where a bare `**` does **not** cross a `/`: `refs/heads/dependabot/**` matches
@@ -288,8 +329,13 @@ gh api --method PUT repos/djx-y-z/libsignal_dart/rulesets/<ID> \
 ```
 
 `--update` sends every file, and a live ruleset can carry a parameter GitHub
+<<<<<<< before updating
 added that its JSON does not name. Measured 2026-10-08: the live
 `Protect main branch` had
+=======
+added that its JSON does not name. Measured on a generated project on
+2026-10-08: the live `Protect main branch` had
+>>>>>>> after updating
 `require_extra_approval_for_unattributed_changes: true`, which
 `protect-main.json` does not set. Compare before overwriting.
 

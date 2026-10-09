@@ -14,6 +14,39 @@
 
 #### Changed
 
+- **copier template adopted: v4.15.2 -> v4.16.1** — adds package-size gates, native-build provenance checks, iOS type-checking, and corresponding release and repository documentation updates.
+  `make verify-pub-limits` now measures the byte limits pub.dev applies to
+  `README.md`, `CHANGELOG.md`, `LICENSE`, every example candidate, and
+  `pubspec.yaml`, with the implementation in `scripts/src/pub_limits.dart`,
+  the command in `scripts/verify_pub_limits.dart`, and coverage in
+  `test/scripts/pub_limits_test.dart`. `Makefile` runs the check during
+  publishing and release preparation, while `.github/workflows/test-reusable.yml`
+  runs it in CI and warns before a file reaches the 256 KiB content limit or
+  the 128 KiB pubspec limit. This catches an oversized package before a tag
+  spends a version or pub.dev refuses the upload.
+
+  `scripts/src/release.dart` now compares the native source trees at the
+  stage-1 tag with `HEAD`, failing closed when either side cannot be read, so
+  `make release` cannot publish a package whose native code changed after its
+  library was built. `hook/build.dart` and `Makefile` also stamp host builds
+  with the crate version and reject missing or stale stamps; this prevents a
+  leftover `rust/target/release/` library from being loaded against a
+  different crate. The related cases are covered in
+  `test/hook/build_hook_test.dart`, and `.claude/skills/release-package/SKILL.md`
+  now documents the stage checks, released-binary test step, and recovery
+  rules.
+
+  `.github/workflows/test-reusable.yml` adds the three iOS `cargo check`
+  targets to push and pull-request CI, while `Makefile` supplies the check;
+  this catches iOS compilation failures before a release tag is created.
+  `CLAUDE.md`, `.github/rulesets/README.md`, and `SECURITY.md` update the
+  matching repository and release guidance, including the distinction between
+  tag creation and environment approval. The Admin-only release-tag policy
+  was already present in this project, so that part arrives byte-identically
+  rather than introducing a new policy; the adoption carries the template's
+  clarified wording and update instructions. `.copier-answers.yml` records
+  the new template version.
+
 - **Only an Admin can create, move or delete a tag**
   (`.github/rulesets/protect-release-tags.json`, `.github/rulesets/README.md`,
   `CONTRIBUTING.md`, `CLAUDE.md`, `.claude/skills/release-package/SKILL.md`,

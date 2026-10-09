@@ -21,6 +21,7 @@ import 'dart:io';
 
 import 'common.dart';
 import 'frb_pins.dart';
+import 'pub_limits.dart';
 import 'release_common.dart';
 import 'third_party_notices.dart';
 
@@ -29,7 +30,12 @@ import 'third_party_notices.dart';
 /// Verifies the stage-1 native release exists and was built from this tree's
 /// native sources, runs `make publish-dry-run` (on the clean, pre-bump tree),
 /// bumps `pubspec.yaml`, finalizes the CHANGELOG,
+<<<<<<< before updating
 /// creates a signed commit + signed tag `vX.Y.Z`, and (unless [push] is false)
+=======
+/// measures the result against pub.dev's size limits, creates a signed commit +
+/// signed tag `vX.Y.Z`, and (unless [push] is false)
+>>>>>>> after updating
 /// pushes `main` and the tag. Prompts
 /// for confirmation before committing unless [assumeYes]. Set [skipFrbCheck]
 /// only if you have manually verified that the native binary exists *and* was
@@ -221,6 +227,30 @@ Future<void> releasePackage({
 
     logStep('Changes to be committed:');
     await runInherit('git', ['--no-pager', 'diff', '--stat', ...releaseFiles]);
+  }
+
+  // ---- pub.dev size limits -------------------------------------------------
+  // pub.dev refuses a README, CHANGELOG, LICENSE or example over 256 KiB at
+  // UPLOAD, and the dry-run above never measures them: the first sign would be
+  // publish.yml failing after the tag, with the version spent. `make
+  // publish-dry-run` ran the same check on the pre-bump tree; this one measures
+  // the files this release commits, the finalized CHANGELOG included.
+  logStep('Checking the file sizes pub.dev refuses at upload...');
+  final sizes = collectPubLimitChecks(packageDir);
+  for (final c in sizes.where((c) => c.status == PubLimitStatus.near)) {
+    logWarn(
+      '$c — past the ${pubContentWarnAt ~/ 1024} KiB warning line. '
+      '${pubLimitAdvice(c)}',
+    );
+  }
+  final overLimit = sizes.where((c) => c.status == PubLimitStatus.over);
+  if (overLimit.isNotEmpty) {
+    if (!resuming) await git(['checkout', '--', ...releaseFiles]);
+    throw Exception(
+      'pub.dev would refuse this upload: ${overLimit.join('; ')}. '
+      '${pubLimitAdvice(overLimit.first)}'
+      '${resuming ? '' : ' Reverted pubspec.yaml and CHANGELOG.md.'}',
+    );
   }
 
   // ---- Confirm -------------------------------------------------------------
