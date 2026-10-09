@@ -42,16 +42,22 @@ command:
 3. **Validates** the package with `make publish-dry-run` on the clean, pre-bump
    tree, aborting if it reports errors. (Runs before the bump because
    `dart pub publish --dry-run` exits non-zero on any warning, and dry-running a
-   bumped-but-uncommitted tree would warn about the modified files.)
+   bumped-but-uncommitted tree would warn about the modified files.) The target
+   runs `make verify-pub-limits` first — see step 6.
 4. **Bumps** the `version:` in `pubspec.yaml`.
 5. **Finalizes the CHANGELOG** — renames `## [Unreleased]` to `## [X.Y.Z] -
    <today>` in place (no empty `## [Unreleased]` is left behind — the next
    unreleased change recreates it), and updates the bottom compare links
    (`[Unreleased]` → `vX.Y.Z...HEAD`, retained, and a new `[X.Y.Z]` →
    `vPREV...vX.Y.Z`).
-6. Shows the diff and asks for confirmation (skip with `--yes`).
-7. Creates a **signed commit** and a **signed tag** `vX.Y.Z`.
-8. **Pushes** `main` and the tag (skip with `--no-push`), which triggers
+6. **Measures the files pub.dev limits**, as this release will commit them:
+   `README.md`, `CHANGELOG.md`, `LICENSE` and the example against 256 KiB,
+   `pubspec.yaml` against 128 KiB. pub.dev refuses the upload over either, the
+   dry-run checks neither, and the refusal arrives after the tag — so a file
+   over its limit reverts the bump and the CHANGELOG edit and stops here.
+7. Shows the diff and asks for confirmation (skip with `--yes`).
+8. Creates a **signed commit** and a **signed tag** `vX.Y.Z`.
+9. **Pushes** `main` and the tag (skip with `--no-push`), which triggers
    `publish.yml` → pub.dev.
 
 ### Signing passphrase
@@ -166,7 +172,12 @@ make analyze && make test && make format-check && make rust-check && make rust-a
 #    - rewrite `[Unreleased]: .../compare/vX.Y.Z...HEAD` (kept at the bottom)
 #      and add `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 
+<<<<<<< before updating
 # 4. Validate
+=======
+# 4. Validate (runs `make verify-pub-limits` first: pub.dev's size limits,
+#    which the dry-run itself does not check)
+>>>>>>> after updating
 make publish-dry-run
 
 # 5. Commit (signed), tag (signed, annotated), push

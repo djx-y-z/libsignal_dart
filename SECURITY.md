@@ -510,10 +510,15 @@ OIDC — no long-lived publishing tokens exist.
 Two complementary checks run in CI (on pushes to `main` and on pull requests
 that touch the sources) and can be run locally:
 
+<<<<<<< before updating
 ```bash
 make rust-audit   # cargo audit — fails on known RustSec vulnerabilities
 make rust-deny    # cargo deny — advisories + license + source allow-list policy
 ```
+=======
+- **Tag protection** — a repository ruleset reserves creating, moving, and deleting **all tags** to repository Admins, so a `write` collaborator cannot mint a release tag (`libsignal_frb-*` / `v*`) or any other tag. Admins bypass it, its signature rule included; the release scripts sign their tags.
+- **Approval gate** — the publishing job runs in the `native-build` environment, whose required reviewers must approve before any binary is released. Unlike the tag ruleset, this also covers the `workflow_dispatch` path.
+>>>>>>> after updating
 
 `rust/deny.toml` restricts dependency sources to crates.io and the official
 Signal git repositories, and constrains licenses to an AGPL-compatible set.

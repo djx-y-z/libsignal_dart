@@ -8,7 +8,11 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
+<<<<<<< before updating
 .PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets third-party-notices verify-third-party-notices verify-frb-pins verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+=======
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+>>>>>>> after updating
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -65,6 +69,7 @@ help:
 	@echo "    make third-party-notices          - Regenerate THIRD_PARTY_NOTICES.txt from the dep graph"
 	@echo "    make verify-third-party-notices   - Verify THIRD_PARTY_NOTICES.txt is up to date"
 	@echo "    make verify-frb-pins              - Verify every file names the same flutter_rust_bridge version"
+	@echo "    make verify-pub-limits            - Verify no file is over what pub.dev accepts at upload"
 	@echo "    make verify-android-alignment     - Verify built Android libraries are 16 KB-aligned"
 	@echo "    make verify-release-artifacts     - Verify release archives hold what their names say"
 	@echo "                                        Example: make verify-release-artifacts ARGS=release-archives"
@@ -336,8 +341,13 @@ build-web:
 # directions, so neither content nor mtime answers it. Without the stamp a
 # wasm directory left over from an earlier version is served silently, and
 # `rustContentHash` does not catch that: it hashes only the bridged functions'
+<<<<<<< before updating
 # names, which a release may leave unchanged while replacing the vendored
 # crypto behind them. The same first-`version` match the hook's own parser uses.
+=======
+# names, which a patch release leaves unchanged while replacing the native
+# code behind them. The same first-`version` match the hook's own parser uses.
+>>>>>>> after updating
 	@$(READ_CRATE_VERSION) > rust/target/wasm32/.crate-version
 	@echo ""
 	@echo "Build complete! WASM files at: rust/target/wasm32/ (crate $$(cat rust/target/wasm32/.crate-version))"
@@ -644,6 +654,15 @@ verify-third-party-notices:
 verify-frb-pins:
 	@$(FVM) dart scripts/verify_frb_pins.dart $(ARGS)
 
+# pub.dev refuses a README.md, CHANGELOG.md, LICENSE or example over 256 KiB
+# and a pubspec.yaml over 128 KiB — at UPLOAD, after the tag, when the version
+# is already spent. `dart pub publish --dry-run` measures none of them, which is
+# why publish-dry-run runs this first. A CHANGELOG crosses the line by growing,
+# so CI runs it on every push too, and warns from 200 KiB. File sizes only — no
+# build, no network.
+verify-pub-limits:
+	@$(FVM) dart scripts/verify_pub_limits.dart $(ARGS)
+
 # Google Play has required an app's bundled native libraries to be 16 KB-aligned,
 # for apps targeting Android 15 or later, since 1 November 2025 — and the
 # alignment is supplied by cargo-ndk's linker flags, not by the NDK and not by
@@ -809,7 +828,7 @@ get-version:
 # Publishing
 # =============================================================================
 
-publish-dry-run:
+publish-dry-run: verify-pub-limits
 	$(FVM) dart pub publish --dry-run
 
 publish:
