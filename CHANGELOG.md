@@ -2,6 +2,14 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.105.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **The v0.105.1 refresh leaves the generated Dart surface unchanged** — the [compare](https://github.com/signalapp/libsignal/compare/v0.105.0...v0.105.1) range changes networking, backup, zkcredential, language-binding and bridge-support locations that are outside the three bound crates or are not symbols on this package's exposed surface. Within the bound crates, the supplied list names `rust/core/src/version.rs` and `rust/protocol/src/timestamp.rs`; the former is version metadata, while the material does not identify which exposed primitive, if any, the latter affects. The file list is truncated, so it cannot establish that no other bound-crate files changed. `make codegen` produced no changes to `lib/src/rust/`, so the generated FFI surface is unchanged.
+
 #### Documentation
 
 - **`SECURITY.md`: only repository Admins can create a release tag**
