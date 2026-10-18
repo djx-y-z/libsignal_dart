@@ -475,7 +475,7 @@ lazy_static 1.5.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T116]
 
-libc 0.2.190
+libc 0.2.191
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T93]
 
@@ -2686,7 +2686,7 @@ Crates:
   anyhow@1.0.104
   async-trait@0.1.92
   itoa@1.0.18
-  libc@0.2.190
+  libc@0.2.191
   num_enum@0.7.6
   num_enum_derive@0.7.6
   pastey@0.2.3
@@ -8362,7 +8362,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  libc@0.2.190
+  libc@0.2.191
 
 Copyright (c) The Rust Project Developers
 
