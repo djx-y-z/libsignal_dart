@@ -29,6 +29,15 @@
   ARGS="--update"`, which sends every file and can reset a parameter GitHub
   added to a live ruleset that the JSON does not name (`protect-main` carries
   one).
+- **Repair Build no longer picks a draft pull request**
+  (`.github/workflows/repair-build.yml`) — from 2026-10-09 every scheduled run
+  failed on one unchanged commit: the draft template update (#113) was the
+  oldest red bot pull request, copier's conflict markers in its `Makefile`
+  stopped `make get` before the agent started, and with no verdict nothing
+  marked the head as answered, so the next run picked it again. Being the
+  oldest, it also kept the libsignal update (#115) from ever being picked. A
+  draft is a pull request a human has to finish, so the scheduled search now
+  skips drafts; a run named through `workflow_dispatch` can still target one.
 
 ## [8.0.0] - 2026-10-08
 

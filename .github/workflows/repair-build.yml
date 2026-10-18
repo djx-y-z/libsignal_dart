@@ -81,11 +81,12 @@ on:
       run_id:
         description: >-
           Failing Tests run to repair. Empty means: the latest completed run on
-          main, and failing that, the oldest red bot pull request. Naming a run
-          is how this workflow gets exercised without waiting for something to
-          break for real — a run on a pull-request branch selects mode=pr, and a
-          named run may point at a branch whose pull request is closed, which
-          the scheduled search would never choose. Whenever a named run is not
+          main, and failing that, the oldest red bot pull request that is not a
+          draft. Naming a run is how this workflow gets exercised without
+          waiting for something to break for real — a run on a pull-request
+          branch selects mode=pr, and a named run may point at a branch whose
+          pull request is closed or a draft, which the scheduled search would
+          never choose. Whenever a named run is not
           judging the current head of its branch, the dry run is forced.
         required: false
         default: ''
@@ -349,6 +350,20 @@ jobs:
             #
             #   open            — a closed pull request is a decision somebody
             #                     made; committing to its branch overrules it.
+            #   not a draft     — a draft is a pull request a human has to
+            #                     finish, and the template update opens one
+            #                     whenever copier left conflicts. No agent can
+            #                     repair that. Measured in two generated
+            #                     projects: where a conflict landed in the
+            #                     Makefile, `make get` stopped the job before
+            #                     the agent started, nothing marked the head as
+            #                     answered, and the same commit failed on every
+            #                     scheduled run for over a week — and, as the
+            #                     oldest candidate, it kept the dependency
+            #                     update this mode exists for from ever being
+            #                     picked. Where the conflicts missed the
+            #                     Makefile, the agent ran and blamed a flaky
+            #                     runner.
             #   same repository — a fork's branch cannot be pushed to, and
             #                     running an agent over a fork's tree in a
             #                     workflow that later mints an App token is
@@ -373,9 +388,10 @@ jobs:
             if [ -z "$MODE" ]; then
               CANDIDATES=$(gh pr list --repo "$GH_REPO" --state open --label automated \
                              --limit 50 \
-                             --json number,headRefName,headRefOid,isCrossRepository,author,labels \
+                             --json number,headRefName,headRefOid,isCrossRepository,isDraft,author,labels \
                 | jq -c '[ .[]
                     | select(.isCrossRepository == false)
+                    | select(.isDraft == false)
                     | select(.author.is_bot == true)
                     | select(.author.login | ascii_downcase | contains("dependabot") | not)
                     | {number, head: .headRefName, oid: .headRefOid,
@@ -432,7 +448,7 @@ jobs:
           if [ -z "$MODE" ]; then
             echo "broken=false" >> "$GITHUB_OUTPUT"
             echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
-            echo "::notice::Nothing to repair: the latest completed Tests run on main concluded '$MAIN_CONCLUSION', and no bot pull request is red."
+            echo "::notice::Nothing to repair: the latest completed Tests run on main concluded '$MAIN_CONCLUSION', and no bot pull request outside a draft is red."
             exit 0
           fi
 
@@ -584,7 +600,7 @@ jobs:
               echo "repository is supposed to look like."
             elif [ "${BROKEN:-}" != "true" ]; then
               echo "**Nothing to repair.** The latest completed Tests run on \`main\`"
-              echo "concluded \`${MAIN_CONCLUSION:-unknown}\`, and no bot pull request is red."
+              echo "concluded \`${MAIN_CONCLUSION:-unknown}\`, and no bot pull request outside a draft is red."
               echo
               echo "Agent that would have run: \`${ENGINE}\` / \`${MODEL}\`."
             elif [ "${SKIP:-}" = "true" ]; then
