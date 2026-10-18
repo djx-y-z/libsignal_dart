@@ -2,6 +2,41 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.105.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **The update to libsignal v0.105.1 leaves the exposed protocol surface
+  unchanged** — of the range's twenty commits
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.105.0...v0.105.1)),
+  the ones its release notes name — simpler zkcredential presentations, the
+  `Donations` and `AuthAccountsService.getAccountEntitlements` APIs, and a
+  flattened `FavoriteSticker` backup message — live in crates outside this
+  package's dependency graph. In the four libsignal crates that are in it,
+  `libsignal-protocol`'s `Timestamp` gains a `TryFrom<SystemTime>` conversion
+  and an `UnrepresentableTimestamp` error, added for the account-entitlements
+  API, which this package neither calls nor exposes; the rest is the version
+  constant in `rust/core/src/version.rs`, and `libsignal-debug` moves to
+  0.105.1 by its version number alone. The upstream workspace keeps
+  `rust-version` at 1.93.1, this package's floor, `spqr` stays at 1.6.0
+  (`06959b4`), and regenerating the bindings changed nothing in
+  `lib/src/rust/`.
+
+  Third-party crates move with it, none added or removed. Each of these
+  reaches every binary, the web module included: `libc` 0.2.191, `sha2`
+  0.11.1, `tokio` 1.53.3, `uuid` 1.28.0, `zerocopy` 0.8.63, `smallvec`
+  1.16.3, `inout` 0.2.3 and `equivalent` 1.0.3; `unicode-ident` 1.0.27
+  reaches only the web module. `sha2` 0.11.1 fixes how its AArch64 backends
+  load the round constants, to satisfy the Stacked Borrows model. `libc`
+  0.2.191 ends the hold 8.0.0 put on 0.2.189: 0.2.190 had put the dyld
+  functions `backtrace` calls behind `target_os = "macos"`, which broke every
+  iOS build, and 0.2.191 makes them available to iOS again — the three iOS
+  targets type-check against it, and a full `cargo update` no longer brings
+  the break back. `cc`, `syn`, `serde_json`, `toml_edit`, `toml_parser`,
+  `toml_datetime` and `zerocopy-derive` move too and only run at compile time.
+
 #### Documentation
 
 - **`SECURITY.md`: only repository Admins can create a release tag**
