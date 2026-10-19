@@ -101,6 +101,131 @@
   the first 26.04 runs restored what 24.04 had compiled, wasm-pack and
   cargo-ndk included. actionlint 1.7.12 does not know the two 26.04 labels
   yet, so `.github/actionlint.yaml` ignores exactly those until it does.
+- **The update bot's CHANGELOG entry is written from what the update
+  changed** (`scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`,
+  `.github/agent-prompts/changelog-scope.md`) — the entries for v0.104.0,
+  v0.105.0 and v0.105.1 were each rewritten by hand, for reasons the prompt
+  could not have avoided. It told the model, twice, to say that "the material
+  does not carry it", while rule 7 forbade narrating the inputs, and the
+  v0.105.1 entry did as told ("the material does not identify…"); both now
+  say to make no claim, as does the `spqr` paragraph of the scope file. A
+  12 000-character cap marked v0.105.1's file list TRUNCATED although the API
+  had returned all 228 files, and the entry said so; the cap is 60 000 now,
+  above anything the API's 300 files reach. The files of the upstream crates
+  this package builds are listed apart and first, with the compare API's own
+  patch for each — the one that shows `Timestamp` gaining
+  `TryFrom<SystemTime>` — and those crates now come from `cargo metadata`,
+  which names `libsignal-debug` as well; the scope file lists it too. The
+  third-party paragraph every rewrite added is now written by the script from
+  the `rust/Cargo.lock` diff against `HEAD` and appended to the entry — every
+  registry crate that moved, was added or was removed, and `spqr` with its
+  revision, moved or not — so no model copies the list, and none can again
+  invent a `spqr` move. The libsignal Highlights line goes above the
+  `libsignal_frb` line, or last, rather than above the release's headline
+  bullets, and the `#### Changed` entry goes last in its block. Measured on
+  v0.105.1's real inputs without a model: four crates, a COMPLETE list with
+  the two bound files first, the patch, and a paragraph naming the sixteen
+  crates the human's rewrite named, with `spqr` staying at 1.6.0
+  (`06959b4`). Then replayed through gpt-5.6-luna and gpt-6-luna on all three
+  bumps' real inputs: no entry narrated its inputs or repeated the crate list,
+  and on v0.105.1 both named the `timestamp.rs` change and left out the
+  no-impact sentence, as rule 4 requires. What the replay still caught is
+  settled in code: the model's typographic quotes and apostrophes are made
+  straight, as everywhere else in this file (gpt-6-luna wrote `’` beside the
+  rule-4 phrase's `'` in two entries of three), and an entry whose last
+  sentence the model left open is closed before the paragraph is appended
+  (one of six ran "…public API" into "Third-party crates move with it").
+- **The AI reviewer is told where each file starts in the diff, and that a
+  bot's CHANGELOG entry is a model's** (`.github/workflows/ai-review.yml`,
+  `.github/agent-prompts/pr-review.md`) — on the v0.105.1 bump it called the
+  bot's entry "consistent with a refresh" while the entry narrated its own
+  inputs and named none of the crates the lockfile moved, crates the same
+  finding listed. Its read tool returns 50 KB a call, and the lockfile hunk
+  began at line 2 656 of the diff, past where the first read stopped. The
+  context file now gives the line each file's hunks start on and each
+  commit's author, so a person's rewrite of a bot's entry shows, and on a
+  bot's pull request that touches `CHANGELOG.md` it says the entry was
+  written by a model and what to hold it to. The prompt's rule 6 now covers
+  an entry that names a version or crate no hunk shows, or narrates its
+  inputs. A file the reviewer lists as read but saw only as hunks of the diff
+  is now reported as seen in the diff rather than as "claimed but never
+  opened": still not a file it read, but no longer worded as though it had
+  not looked. Only the lines each read of the diff returned count, cut as
+  OpenCode's read tool cuts them (2 000 lines or 51 200 bytes), so a
+  `CHANGELOG.md` hunk near the top counts and a lockfile hunk past the first
+  read does not.
+- **Repair Build passes over what it has answered, re-runs a first failure,
+  and counts a repair that never finished** (`.github/workflows/repair-build.yml`,
+  `CONTRIBUTING.md`) — three ways the scheduled repair could stall or loop. It
+  asked whether a pull request had been answered only after picking the
+  oldest red one, so one answered pull request blocked every newer one; each
+  candidate is asked now, and the `repair-build-*` branches the workflow opens
+  itself are never candidates. A `main` it had reported as unfixable went
+  back to the agent on every run — on `f68354ddc64b`, four nights of
+  `cannot-fix` and then a fifth answer that hand-edited generated code (#67)
+  — and now counts as answered by that report. Only a verdict marked a commit
+  answered, so a job that failed before reaching one (#113's `make get`, 19
+  runs) repeated twice a day: a new `record` job counts each such attempt as
+  an artifact keyed by the commit, and after two the commit is left to a
+  person, with a comment on the pull request or an issue for `main` saying
+  so. And a red run on its first attempt has its failed jobs re-run once,
+  by a new `rerun` job, before any agent sees it — the commonest red here has
+  been a flaky runner, and the agent's correct answer to one spent the only
+  answer that commit gets. `rerun` holds the file's one `actions: write`, at
+  job level, runs nothing else, and keeps a marker before it asks, so a
+  re-run GitHub refuses is asked for once and the run then goes to the
+  agent. A `main` red at its tip still holds the
+  pull-request search, answered or not, because a branch cut from it inherits
+  the failure; a named run behaves as before, and a dry run with no run named
+  now picks what the schedule would. Replayed over fourteen fixture cases
+  through the old and new selector: the old one stalls behind the answered
+  pull request, re-asks the reported `main`, and repairs its own
+  `repair-build-*` branch; the new one does none of these.
+- **The update bot moves only what the new upstream tag requires**
+  (`Makefile`, `README.md`, `.github/dependabot.yml`, `CONTRIBUTING.md`,
+  `scripts/README.md`) — `make rust-update`,
+  which the bot runs, was a bare `cargo update` that moved every crate in the
+  lockfile: 41 registry crates over the last four bumps, none of them required
+  by the new tag, and twice that broke a platform the bump never touched —
+  wasm-bindgen 0.2.113 under FRB 2.11.1, and `libc` 0.2.190 on iOS in
+  v0.105.1's, which undid the hold put there for it. It is
+  `cargo update --workspace` now; replayed on those four bumps, it moved
+  exactly the four upstream crates. The rest of the graph moves in
+  Dependabot's weekly cargo pull request, which now takes transitive crates
+  too (`allow: dependency-type: all`) — until now it offered only what
+  `rust/Cargo.toml` names, so the comment there saying it is how a vulnerable
+  transitive crate's fix arrives was not true. The manual-update steps in
+  `CONTRIBUTING.md` and `scripts/README.md` now say `make rust-update` too:
+  they said `cd rust && cargo update`, which also skipped the notices
+  regeneration `make verify-third-party-notices` checks.
+- **The repair job can run `make rust-doc`** (`.github/workflows/repair-build.yml`)
+  — its toolchain had no `wasm32-unknown-unknown`, so the wasm32 half of a
+  gate the prompt has the agent run stopped before documenting anything; a
+  dry run's agent reported it as a gate it could not complete.
+- **OpenCode is pinned at 1.18.35 in both agent workflows**
+  (`.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`) —
+  1.18.15 looks a model up in a catalogue built into the binary that predates
+  gpt-6-luna, which the agents now run, and a run on it died with
+  `ProviderModelNotFoundError`, shown in the transcript only as
+  `UnknownError`. On 1.18.35 both agents' permission assertions pass
+  unchanged, locally and in a dry run of each workflow. The repository
+  variable `AGENT_OPENCODE_VERSION` already said 1.18.35; now the default
+  does as well.
+- **The agents call no model nobody named** (`.github/agent-config/opencode.json`,
+  `.github/workflows/repair-build.yml`, `.github/workflows/ai-review.yml`,
+  `CONTRIBUTING.md`) — OpenCode titles each session through a second, "small"
+  model that it picks from the provider's catalogue when none is set: on
+  OpenRouter, `google/gemini-3.6-flash` on 1.18.15, `google/gemini-3.8-flash`
+  on 1.18.35, and an image model on the catalogue it downloads today —
+  through the same key, with the run's opening message in the request. A
+  title is thrown away with the runner, so the call is off; the repository
+  variable `AGENT_OPENCODE_TITLE_MODEL` turns it back on with a named model.
+  Both workflows assert what OpenCode resolved — off, or exactly that model —
+  as they assert each agent's permissions, and on 1.18.15 and 1.18.35 alike
+  those permission assertions still pass unchanged. A default-branch config
+  with no title entry only warns: `ai-review.yml` runs as a pull request's
+  own copy, so the pull request that brings the check meets the old config.
 
 ## [8.0.0] - 2026-10-08
 

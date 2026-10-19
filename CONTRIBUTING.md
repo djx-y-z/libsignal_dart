@@ -394,8 +394,8 @@ make check-new-libsignal-version ARGS="--update"
 
 # Option 2: Manual update
 # Edit rust/Cargo.toml - update libsignal-protocol tag to new version
-# Then run cargo update to update Cargo.lock
-cd rust && cargo update && cd ..
+# Then update Cargo.lock (also regenerates THIRD_PARTY_NOTICES.txt)
+make rust-update
 
 # Test
 make test
@@ -533,6 +533,11 @@ repository is supposed to look like.
 4. Optional: `REVIEW_ALLOWED_BOTS`, a comma-separated list including your App's
    slug. Only the `claude-code` engine reads it, and without it that engine
    refuses to review pull requests opened by a bot — which is most of them here.
+5. Optional, `opencode` only: `AGENT_OPENCODE_TITLE_MODEL`, in the same
+   `provider/model` form, names the model OpenCode titles its sessions with.
+   Unset, that call is not made at all — left to itself OpenCode picks a model
+   from the provider's catalogue, another vendor's through the same key, and a
+   title is thrown away with the runner. Both workflows check what it resolved.
 
 Both agents hold no write credential: the job that runs the agent cannot reach
 the repository, and the job that publishes runs no agent. Read the header of

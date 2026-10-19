@@ -24,7 +24,8 @@ prefer concrete names over categories: a model can check "does this change touch
 This wrapper builds ONLY these upstream crates and exposes ONLY the Signal
 Protocol primitives on top of them:
 
-- Crates bound: `libsignal-protocol`, `libsignal-core`, `signal-crypto`
+- Crates bound: `libsignal-protocol`, `libsignal-core`, `signal-crypto`, and
+  `libsignal-debug`, which `libsignal-core` pulls in
 - Exposed surface: identity / pre / signed-pre / Kyber keys, X3DH session
   establishment, Double Ratchet encrypt/decrypt, sealed sender, group messaging
   (SenderKey), and serialization of the above.
@@ -51,8 +52,9 @@ recognise. The model hedged the claim it was handed; the premise was still
 wrong. **`spqr` is a different repository, so a version bump here is the only
 trace it leaves in the libsignal compare the prompt is given — its contents are
 never in that material.** So treat the bump as in scope and report it as the
-version move it is, then say the material does not carry what changed inside.
-Do not infer that from the bump, from the dependency's name, or from this
+version move it is, and make no claim about what changed inside it — not even
+that the material does not say: a reader of the CHANGELOG has no material. Do
+not infer the change from the bump, from the dependency's name, or from this
 paragraph.
 
 ⚠️ And nothing here may tell the model to go and fetch that range. This file is

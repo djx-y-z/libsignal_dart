@@ -24,6 +24,12 @@ const _noUnreleased = '''
 [1.4.2]: https://github.com/djx-y-z/libsignal_dart/compare/v1.4.1...v1.4.2
 ''';
 
+/// Two crates of an upstream repository, as `cargo metadata` resolves them.
+const _crates = <UpstreamCrate>[
+  (name: 'upstream-core', version: '0.1.0', dir: 'rust/core/'),
+  (name: 'upstream-protocol', version: '0.1.0', dir: 'rust/protocol/'),
+];
+
 /// The same CHANGELOG but with an in-progress `## [Unreleased]` section already
 /// open (a second native update within the same release cycle).
 const _withUnreleased = '''
@@ -491,6 +497,75 @@ void _breakingContradictionTests() {
     });
   });
 
+  group('withStraightQuotes', () {
+    // Replayed for real: the typographic apostrophe of the model's prose next
+    // to the straight one of the rule-4 phrase, in one paragraph.
+    test('straightens apostrophes and quotes, nothing else', () {
+      expect(
+        withStraightQuotes(
+          "this package’s bound crates; “as is”; this library's public API",
+        ),
+        equals(
+          "this package's bound crates; \"as is\"; this library's public API",
+        ),
+      );
+    });
+
+    test('leaves the em-dash and code spans alone', () {
+      const clean = '**Bump** — `Timestamp` gains `TryFrom<SystemTime>`';
+      expect(withStraightQuotes(clean), equals(clean));
+    });
+  });
+
+  group('composeChangedEntry', () {
+    const paragraph = 'Third-party crates move with it: `cc` 1.8.0.';
+
+    // The replayed entry, cut down: the model's last sentence had no full stop,
+    // and the appended paragraph then read as part of it.
+    test('closes an open last sentence before appending the paragraph', () {
+      expect(
+        composeChangedEntry(
+          '- **Bump** — detail.\n\n'
+          "  So these changes do not affect this library's public API",
+          paragraph,
+        ),
+        equals(
+          '- **Bump** — detail.\n\n'
+          "  So these changes do not affect this library's public API.\n\n"
+          '  $paragraph',
+        ),
+      );
+    });
+
+    test('closes a one-paragraph entry that ends on a code span', () {
+      expect(
+        composeChangedEntry('- **Bump** — `version.rs` moves to `0.2`', ''),
+        equals('- **Bump** — `version.rs` moves to `0.2`.'),
+      );
+    });
+
+    test('leaves an ending that is already punctuated', () {
+      for (final end in ['.', '!', '?', ')', ':']) {
+        expect(
+          composeChangedEntry('- **Bump** — detail$end', ''),
+          equals('- **Bump** — detail$end'),
+        );
+      }
+    });
+
+    test('leaves a nested list item without a full stop', () {
+      const entry = '- **Bump** — detail:\n  - `cc` 1.8.0';
+      expect(composeChangedEntry(entry, ''), equals(entry));
+    });
+
+    test('appends nothing when the lockfile moved nothing', () {
+      expect(
+        composeChangedEntry('- **Bump** — detail.  \n', ''),
+        equals('- **Bump** — detail.'),
+      );
+    });
+  });
+
   group('inRepoReleaseNotesFrom', () {
     // Some upstreams publish every release with an EMPTY body and keep the
     // notes in `RELEASE_NOTES.md` instead. Without this the prompt is told
@@ -795,7 +870,7 @@ void _breakingContradictionTests() {
       final files = [
         for (var i = 0; i < 250; i++)
           {
-            'filename': 'rust/${'deep/' * 12}module$i/source_file.rs',
+            'filename': 'rust/${'deep/' * 50}module$i/source_file.rs',
             'status': 'modified',
           },
       ];
@@ -803,6 +878,83 @@ void _breakingContradictionTests() {
       expect(out, startsWith('TRUNCATED'));
       // Cut on a line boundary, so no half path is presented as a real one.
       expect(out.split('\n').last, isNot(endsWith('source_file')));
+    });
+
+    // The range that made the cap a defect: a 20-commit patch release whose
+    // 228 files came to 12 330 characters. The API had returned every file,
+    // the old 12 000 cap called the list TRUNCATED anyway, and the entry wrote
+    // "the file list is truncated, so it cannot establish…" into the CHANGELOG.
+    test('228 files of ordinary length are COMPLETE', () {
+      final files = [
+        for (var i = 0; i < 228; i++)
+          {
+            'filename': 'node/ts/net/chat/ChatConnectionTypesFile$i.ts',
+            'status': 'modified',
+          },
+      ];
+      final out = upstreamFilesFrom(compare(files));
+      expect(out.length, greaterThan(12000));
+      expect(out, startsWith('COMPLETE'));
+      expect(out, contains('(228)'));
+    });
+
+    test('lists the files of the crates it builds apart, first', () {
+      final out = upstreamFilesFrom(
+        compare([
+          {'filename': 'node/ts/index.ts', 'status': 'modified'},
+          {'filename': 'rust/protocol/src/timestamp.rs', 'status': 'modified'},
+          {'filename': 'rust/net/src/chat.rs', 'status': 'modified'},
+          {'filename': 'rust/core/src/version.rs', 'status': 'modified'},
+          // A neighbour whose name merely starts like a bound crate's.
+          {'filename': 'rust/protocol-ext/src/lib.rs', 'status': 'added'},
+        ]),
+        crates: _crates,
+      );
+      expect(out, startsWith('COMPLETE'));
+      expect(out, contains('(5)'));
+      final bound = out.indexOf(
+        'In the upstream crates this package builds (2)',
+      );
+      final rest = out.indexOf('Everywhere else (3)');
+      expect(bound, greaterThan(0));
+      expect(rest, greaterThan(bound));
+      final boundBlock = out.substring(bound, rest);
+      expect(boundBlock, contains('modified rust/protocol/src/timestamp.rs'));
+      expect(boundBlock, contains('modified rust/core/src/version.rs'));
+      expect(boundBlock, isNot(contains('protocol-ext')));
+      expect(
+        out.substring(rest),
+        contains('added rust/protocol-ext/src/lib.rs'),
+      );
+    });
+
+    // An empty bound block is a claim, and a strong one, so it is written out
+    // rather than left as a missing heading.
+    test('says (none) when no bound crate changed', () {
+      final out = upstreamFilesFrom(
+        compare([
+          {'filename': 'java/client/Foo.java', 'status': 'modified'},
+        ]),
+        crates: _crates,
+      );
+      expect(
+        out,
+        contains('In the upstream crates this package builds (0):\n(none)'),
+      );
+    });
+
+    test('a rename out of a bound crate counts as a change to it', () {
+      final out = upstreamFilesFrom(
+        compare([
+          {
+            'filename': 'rust/shared/src/moved.rs',
+            'previous_filename': 'rust/core/src/moved.rs',
+            'status': 'renamed',
+          },
+        ]),
+        crates: _crates,
+      );
+      expect(out, contains('In the upstream crates this package builds (1)'));
     });
 
     test('a rename shows both names', () {
@@ -870,6 +1022,434 @@ void _breakingContradictionTests() {
     test('says when the compare page did not carry every commit', () {
       final out = upstreamCommitsFrom(withCommits(['One'], total: 260));
       expect(out, contains('and 259 more commits'));
+    });
+  });
+
+  group('upstreamCratesFrom', () {
+    Map<String, dynamic> package(
+      String name,
+      String version,
+      String? source,
+      String manifest,
+    ) => {
+      'name': name,
+      'version': version,
+      'source': source,
+      'manifest_path': manifest,
+    };
+    const checkout = '/home/runner/.cargo/git/checkouts';
+
+    // The shape `cargo metadata` gives for this package's own graph: the bound
+    // crates, one more pulled in from the same repository, a git dependency
+    // from another repository, a registry crate and the workspace's own crate.
+    test('takes the upstream repository crates, with their directories', () {
+      final crates = upstreamCratesFrom({
+        'packages': [
+          package(
+            'upstream-protocol',
+            '0.1.0',
+            'git+https://github.com/owner/upstream?tag=v0.105.1#1738ead8',
+            '$checkout/upstream-2a19/1738ead/rust/protocol/Cargo.toml',
+          ),
+          package(
+            'upstream-debug',
+            '0.105.1',
+            'git+https://github.com/owner/upstream?tag=v0.105.1#1738ead8',
+            '$checkout/upstream-2a19/1738ead/rust/debug/Cargo.toml',
+          ),
+          package(
+            'ratchet',
+            '1.6.0',
+            'git+https://github.com/owner/ratchet.git?tag=v1.6.0#06959b47',
+            '$checkout/ratchet-b58d/06959b4/Cargo.toml',
+          ),
+          package(
+            'libc',
+            '0.2.191',
+            'registry+https://github.com/rust-lang/crates.io-index',
+            '/home/runner/.cargo/registry/src/index/libc-0.2.191/Cargo.toml',
+          ),
+          package(
+            'wrapper_frb',
+            '7.0.0',
+            null,
+            '/work/wrapper/rust/Cargo.toml',
+          ),
+        ],
+      }, repo: 'owner/upstream');
+      expect(crates, [
+        (name: 'upstream-debug', version: '0.105.1', dir: 'rust/debug/'),
+        (name: 'upstream-protocol', version: '0.1.0', dir: 'rust/protocol/'),
+      ]);
+    });
+
+    // A repository whose crate sits at its root owns every path in it, which
+    // the empty directory says.
+    test('a crate at the repository root gets the empty directory', () {
+      final crates = upstreamCratesFrom({
+        'packages': [
+          package(
+            'ratchet',
+            '1.6.0',
+            'git+https://github.com/Owner/Ratchet.git#06959b47',
+            '$checkout/ratchet-b58d/06959b4/Cargo.toml',
+          ),
+        ],
+      }, repo: 'owner/ratchet');
+      expect(crates.single.dir, isEmpty);
+    });
+
+    test('a crate whose checkout path cannot be read is left out', () {
+      final crates = upstreamCratesFrom({
+        'packages': [
+          package(
+            'upstream-core',
+            '0.1.0',
+            'git+https://github.com/owner/upstream#1738ead8',
+            '/somewhere/else/core/Cargo.toml',
+          ),
+        ],
+      }, repo: 'owner/upstream');
+      expect(crates, isEmpty);
+      expect(upstreamCratesFrom({}, repo: 'owner/upstream'), isEmpty);
+    });
+  });
+
+  group('upstreamPatchesFrom', () {
+    Map<String, dynamic> compare(List<Map<String, dynamic>> files) => {
+      'commits': <Object?>[],
+      'files': files,
+    };
+
+    test('carries the patches of bound-crate files only', () {
+      final out = upstreamPatchesFrom(
+        compare([
+          {
+            'filename': 'rust/protocol/src/timestamp.rs',
+            'patch':
+                '@@ -34,6 +34,28 @@\n+impl TryFrom<SystemTime> for Timestamp {',
+          },
+          {'filename': 'rust/net/src/chat.rs', 'patch': '@@ -1 +1 @@\n+net'},
+        ]),
+        crates: _crates,
+      );
+      expect(out, contains('### rust/protocol/src/timestamp.rs\n```diff\n'));
+      expect(out, contains('impl TryFrom<SystemTime> for Timestamp'));
+      expect(out, isNot(contains('rust/net/src/chat.rs')));
+    });
+
+    // Named and not explained: a model shown only the path would otherwise
+    // reach for a reason.
+    test('names a bound file whose patch the payload does not carry', () {
+      final out = upstreamPatchesFrom(
+        compare([
+          {'filename': 'rust/core/src/big.rs'},
+        ]),
+        crates: _crates,
+      );
+      expect(out, contains('### rust/core/src/big.rs'));
+      expect(out, contains('carries no patch'));
+    });
+
+    test('cuts a long patch on a line boundary and says so', () {
+      final long = [for (var i = 0; i < 2000; i++) '+line $i'].join('\n');
+      final out = upstreamPatchesFrom(
+        compare([
+          {'filename': 'rust/core/src/big.rs', 'patch': long},
+        ]),
+        crates: _crates,
+      );
+      expect(out, contains('(cut at 6000 characters'));
+      expect(out, isNot(contains('+line 1999')));
+    });
+
+    test('is empty with no crates or no bound file', () {
+      final payload = compare([
+        {'filename': 'rust/net/src/chat.rs', 'patch': '+x'},
+      ]);
+      expect(upstreamPatchesFrom(payload, crates: const []), isEmpty);
+      expect(upstreamPatchesFrom(payload, crates: _crates), isEmpty);
+    });
+  });
+
+  group('lockfileChangesFrom', () {
+    String lock(List<String> packages) =>
+        '# This file is automatically @generated by Cargo.\n'
+        'version = 4\n'
+        '\n${packages.join('\n')}';
+    String reg(String name, String version) =>
+        '[[package]]\n'
+        'name = "$name"\n'
+        'version = "$version"\n'
+        'source = "registry+https://github.com/rust-lang/crates.io-index"\n'
+        'checksum = "00"\n'
+        'dependencies = [\n "other",\n]\n';
+    String git(String name, String version, String repo, String rev) =>
+        '[[package]]\n'
+        'name = "$name"\n'
+        'version = "$version"\n'
+        'source = "git+https://github.com/$repo?tag=v$version#$rev"\n';
+    const own = '[[package]]\nname = "wrapper_frb"\nversion = "7.0.0"\n';
+
+    test('names moves, additions, removals and the git dependencies', () {
+      final before = lock([
+        own,
+        git('upstream-core', '0.1.0', 'owner/upstream', 'aaaaaaa1111'),
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('libc', '0.2.189'),
+        reg('rand_core', '0.6.4'),
+        reg('rand_core', '0.9.3'),
+        reg('gone', '1.0.0'),
+        reg('same', '2.0.0'),
+      ]);
+      final after = lock([
+        own.replaceFirst('7.0.0', '7.0.1'),
+        git('upstream-core', '0.1.0', 'owner/upstream', 'bbbbbbb2222'),
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('libc', '0.2.191'),
+        reg('rand_core', '0.6.4'),
+        reg('rand_core', '0.9.5'),
+        reg('fresh', '0.1.0'),
+        reg('same', '2.0.0'),
+      ]);
+      final out = lockfileChangesFrom(before, after);
+      expect(
+        out,
+        contains(
+          '- `upstream-core` 0.1.0 (owner/upstream @bbbbbbb), '
+          'was 0.1.0 (owner/upstream @aaaaaaa)',
+        ),
+      );
+      expect(
+        out,
+        contains(
+          '- `ratchet` 1.6.0 (owner/ratchet @06959b4), '
+          'unchanged',
+        ),
+      );
+      expect(out, contains('Registry crates that moved (2):'));
+      expect(out, contains('- `libc` 0.2.189 → 0.2.191'));
+      expect(out, contains('- `rand_core` 0.6.4, 0.9.3 → 0.6.4, 0.9.5'));
+      expect(out, contains('Registry crates added (1):\n- `fresh` 0.1.0'));
+      expect(out, contains('Registry crates removed (1):\n- `gone` 1.0.0'));
+      expect(out, isNot(contains('same')));
+      // The workspace's own crate is not a dependency move.
+      expect(out, isNot(contains('wrapper_frb')));
+    });
+
+    test('says (none) for an empty block rather than leaving it out', () {
+      final before = lock([reg('libc', '0.2.189')]);
+      final after = lock([reg('libc', '0.2.191')]);
+      final out = lockfileChangesFrom(before, after);
+      expect(out, contains('Registry crates added (0):\n(none)'));
+      expect(out, contains('Registry crates removed (0):\n(none)'));
+    });
+
+    // The paragraph is the lockfile's, not the model's: every move named, the
+    // upstream repository's own crates left to the entry, and a git dependency
+    // from another repository stated even when it stayed put.
+    test('writes the third-party paragraph itself', () {
+      final before = lock([
+        git('upstream-core', '0.1.0', 'owner/upstream', 'aaaaaaa1111'),
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('libc', '0.2.189'),
+        reg('rand_core', '0.6.4'),
+        reg('rand_core', '0.9.3'),
+        reg('sha2', '0.11.0'),
+      ]);
+      final after = lock([
+        git('upstream-core', '0.1.0', 'owner/upstream', 'bbbbbbb2222'),
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('libc', '0.2.191'),
+        reg('rand_core', '0.6.4'),
+        reg('rand_core', '0.9.5'),
+        reg('sha2', '0.11.1'),
+      ]);
+      expect(
+        thirdPartyParagraphFrom(before, after, upstreamRepo: 'owner/upstream'),
+        'Third-party crates move with it: `libc` 0.2.191, `rand_core` 0.9.5 '
+        'and `sha2` 0.11.1. None is added or removed. `ratchet` stays at '
+        '1.6.0 (`06959b4`).',
+      );
+    });
+
+    test('names additions, removals and a git dependency that moved', () {
+      final before = lock([
+        git('ratchet', '1.5.3', 'owner/ratchet', 'ccccccc3333'),
+        reg('gone', '1.0.0'),
+      ]);
+      final after = lock([
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('fresh', '0.1.0'),
+      ]);
+      expect(
+        thirdPartyParagraphFrom(before, after, upstreamRepo: 'owner/upstream'),
+        'No third-party crate moves with it. New to the graph: `fresh` 0.1.0. '
+        'Gone from it: `gone` 1.0.0. `ratchet` moves from 1.5.3 (`ccccccc`) '
+        'to 1.6.0 (`06959b4`).',
+      );
+    });
+
+    // Run after the bump is committed, the two sides are equal; no section is
+    // better than one saying nothing moved.
+    test('is empty when nothing moved', () {
+      final same = lock([
+        git('ratchet', '1.6.0', 'owner/ratchet', '06959b47'),
+        reg('libc', '0.2.191'),
+      ]);
+      expect(lockfileChangesFrom(same, same), isEmpty);
+      expect(
+        thirdPartyParagraphFrom(same, same, upstreamRepo: 'owner/upstream'),
+        isEmpty,
+      );
+    });
+  });
+
+  group('insertChangelogEntry places the upstream Highlights line', () {
+    // The shape of v0.105.0's pull request: the release window already carried
+    // two headline bullets, one of them multi-line, and the previous bump's
+    // default line below them. The line went in ABOVE the headlines, against
+    // the documented order, and was moved back by hand.
+    const window = '''
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **A failed call throws a coded exception** —
+  **(breaking)** see Changed (Breaking)
+- **Async calls no longer hang** — see Fixed
+- **libsignal v0.104.0** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **The v0.104.0 bump leaves the surface unchanged** — detail
+
+  Third-party crates move with it.
+- **Another change** — detail
+
+#### Fixed
+
+- **A fix** — detail
+
+## [7.4.1] - 2026-09-29
+
+- Prior release
+''';
+
+    test('goes after the headline bullets, in place of the old default', () {
+      final out = insertChangelogEntry(
+        currentChangelog: window,
+        nativeHighlight: defaultHighlightFor('v0.105.0'),
+        changed: '- **The v0.105.0 bump** — detail',
+      );
+      final lines = out.split('\n');
+      final headline = lines.indexOf(
+        '- **Async calls no longer hang** — see Fixed',
+      );
+      final upstream = lines.indexOf('- ${defaultHighlightFor('v0.105.0')}');
+      expect(upstream, headline + 1);
+      expect(lines[upstream + 1], isEmpty);
+      expect(out, isNot(contains('v0.104.0** — internal')));
+    });
+
+    test('goes above the crate line once stage 1 has stamped one', () {
+      final out = insertChangelogEntry(
+        currentChangelog: window.replaceFirst(
+          '- **libsignal v0.104.0** — internal/dependency update, no public-API impact',
+          '- **libsignal_frb v7.1.0** — Rust FFI bindings',
+        ),
+        nativeHighlight: defaultHighlightFor('v0.105.0'),
+        changed: '- **The v0.105.0 bump** — detail',
+      );
+      final lines = out.split('\n');
+      final upstream = lines.indexOf('- ${defaultHighlightFor('v0.105.0')}');
+      expect(
+        lines[upstream - 1],
+        '- **Async calls no longer hang** — see Fixed',
+      );
+      expect(
+        lines[upstream + 1],
+        '- **libsignal_frb v7.1.0** — Rust FFI bindings',
+      );
+    });
+
+    // Bumps accumulate between releases; each reads after the one before it.
+    test('files the Changed entry last in its block', () {
+      final out = insertChangelogEntry(
+        currentChangelog: window,
+        nativeHighlight: defaultHighlightFor('v0.105.0'),
+        changed: '- **The v0.105.0 bump** — detail',
+      );
+      expect(
+        out,
+        contains(
+          '- **Another change** — detail\n'
+          '- **The v0.105.0 bump** — detail\n'
+          '\n'
+          '#### Fixed',
+        ),
+      );
+      expect(
+        out.indexOf('The v0.104.0 bump'),
+        lessThan(out.indexOf('The v0.105.0 bump')),
+      );
+    });
+
+    test('fills an empty Highlights block', () {
+      final out = insertChangelogEntry(
+        currentChangelog: window.replaceFirst(
+          RegExp(r'- \*\*A failed call[\s\S]*?impact\n\n'),
+          '',
+        ),
+        nativeHighlight: defaultHighlightFor('v0.105.0'),
+        changed: '- **The v0.105.0 bump** — detail',
+      );
+      expect(
+        out,
+        contains(
+          '#### ✨ Highlights\n'
+          '\n'
+          '- ${defaultHighlightFor('v0.105.0')}\n'
+          '\n'
+          '#### Changed',
+        ),
+      );
+    });
+
+    // A project that has never released has no version heading below
+    // [Unreleased]; the link references end the section instead.
+    test('stops at the link references when no release follows', () {
+      const unreleasedOnly = '''
+## [Unreleased]
+
+### For Users
+
+#### Changed
+
+- **First change** — detail
+
+[Unreleased]: https://github.com/owner/repo/commits/main
+''';
+      final out = insertChangelogEntry(
+        currentChangelog: unreleasedOnly,
+        nativeHighlight: defaultHighlightFor('v0.1.0'),
+        changed: '- **The bump** — detail',
+      );
+      expect(
+        out,
+        contains(
+          '- **First change** — detail\n'
+          '- **The bump** — detail\n'
+          '\n'
+          '[Unreleased]: https://github.com/owner/repo/commits/main',
+        ),
+      );
+      expect(
+        out,
+        contains('#### ✨ Highlights\n\n- ${defaultHighlightFor('v0.1.0')}'),
+      );
     });
   });
 }

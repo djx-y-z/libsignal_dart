@@ -76,8 +76,8 @@ make check-new-libsignal-version ARGS="--update"
 
 # Option 2: Manual update
 # 1. Edit rust/Cargo.toml - update libsignal-protocol tag to new version
-# 2. Update Cargo.lock
-cd rust && cargo update && cd ..
+# 2. Update Cargo.lock (also regenerates THIRD_PARTY_NOTICES.txt)
+make rust-update
 
 # Test
 make test

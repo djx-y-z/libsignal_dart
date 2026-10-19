@@ -73,7 +73,7 @@ help:
 	@echo "    make actionlint                   - Lint the GitHub Actions workflows (actionlint)"
 	@echo "    make check-targets                - Check deployment target consistency (iOS/macOS/Android)"
 	@echo "                                        Example: make check-targets ARGS=\"--ios --set 14.0\""
-	@echo "    make rust-update                  - Update Cargo.lock (cargo update)"
+	@echo "    make rust-update                  - Re-resolve Cargo.lock for rust/Cargo.toml (cargo update --workspace)"
 	@echo "    make update-changelog             - Update CHANGELOG.md with AI"
 	@echo "                                        Example: make update-changelog ARGS=\"--version v1.0.0\""
 	@echo ""
@@ -693,9 +693,20 @@ verify-library-loads:
 # third-party notice inventory. Regenerating here keeps the two in lockstep
 # both locally and in the scheduled update workflow (which calls this target),
 # so nobody has to remember a second command before CI rejects the branch.
+#
+# `--workspace`: re-resolve what rust/Cargo.toml asks for and nothing more.
+# After the update bot moves the upstream tag, that is the upstream crates and
+# whatever their new versions actually require. A bare `cargo update` moved
+# every crate in the lockfile besides. Measured in a generated project: 41
+# registry crates over its last four upstream bumps, none of them required by
+# the new tag, and twice that broke a platform no bump had touched —
+# wasm-bindgen 0.2.113 under FRB 2.11.1, and libc 0.2.190 on iOS, which also
+# undid the hold put there for it. The rest of the graph moves in Dependabot's
+# weekly cargo pull request instead, on its own CI run
+# (`.github/dependabot.yml`). A first lockfile is still built in full.
 rust-update:
 	@echo "Updating Cargo.lock..."
-	@cd rust && cargo update
+	@cd rust && cargo update --workspace
 	@echo ""
 	@echo "Regenerating third-party notices for the new dependency graph..."
 	@$(MAKE) third-party-notices
