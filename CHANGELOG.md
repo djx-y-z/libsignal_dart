@@ -36,6 +36,13 @@
   targets type-check against it, and a full `cargo update` no longer brings
   the break back. `cc`, `syn`, `serde_json`, `toml_edit`, `toml_parser`,
   `toml_datetime` and `zerocopy-derive` move too and only run at compile time.
+- **The Linux libraries are built on Ubuntu 26.04 and still need only glibc
+  2.34** — the release build moves from Ubuntu 24.04 along with every other
+  Ubuntu job (see For Contributors). A Linux library records the glibc symbol
+  versions of the image that built it, so a newer image can raise the oldest
+  glibc it loads on; this one does not. Built on 26.04 (glibc 2.43), the
+  library needs GLIBC_2.34 at most, measured on x86_64 and arm64, as crate
+  7.0.0's libraries do — Ubuntu 22.04, Debian 12, RHEL 9 or newer.
 
 #### Documentation
 
@@ -73,6 +80,27 @@
   oldest, it also kept the libsignal update (#115) from ever being picked. A
   draft is a pull request a human has to finish, so the scheduled search now
   skips drafts; a run named through `workflow_dispatch` can still target one.
+- **Every Ubuntu job names its image, `ubuntu-26.04`** (every workflow with
+  an Ubuntu job, `.github/actions/setup-rust/action.yml`,
+  `.github/actionlint.yaml`, `CLAUDE.md`) — GitHub moves `ubuntu-latest` from
+  24.04 to 26.04 job by job between 2026-10-19 and 2026-11-19, so a job could
+  change image, and go red, with no commit to blame. Every job on
+  `ubuntu-latest` now names `ubuntu-26.04`, and the Linux ARM64 test leg and
+  both Linux release builds move from `ubuntu-24.04` and `ubuntu-24.04-arm`
+  to `ubuntu-26.04` and `ubuntu-26.04-arm`; macOS and Windows stay on
+  `-latest`. Measured on a throwaway branch first, from a cold cache: Tests
+  (the whole matrix), Fuzz and a Repair Build dry run pass on 26.04 (GCC 15,
+  glibc 2.43, Python 3.14), with wasm-pack, cargo-ndk, cargo-audit,
+  cargo-deny, the FRB codegen and cargo-fuzz compiled there, and
+  `verify_release_artifacts.py`, whose tar extraction changes default on
+  Python 3.14, passes on 3.14 against crate 7.0.0's archives. The release
+  workflows, the scheduled update checks and the pull-request-only workflows
+  were not run; each first runs on 26.04 at its next trigger, the release
+  ones at the next tag. The Rust cache now keys on the image too (`ImageOS`,
+  in setup-rust and `fuzz.yml`): rust-cache keys on the OS family alone, and
+  the first 26.04 runs restored what 24.04 had compiled, wasm-pack and
+  cargo-ndk included. actionlint 1.7.12 does not know the two 26.04 labels
+  yet, so `.github/actionlint.yaml` ignores exactly those until it does.
 
 ## [8.0.0] - 2026-10-08
 

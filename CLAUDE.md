@@ -650,6 +650,12 @@ both tags before writing either claim.
   checksum where CI downloads them (`cargo-ndk`, `actionlint`). Neither pin is
   moved by Dependabot — it does not read `cargo install` or `curl` lines — so
   both move by hand
+- Runner images are named by version too: every Ubuntu job runs on
+  `ubuntu-26.04` (`ubuntu-26.04-arm` for arm64), never on `ubuntu-latest`,
+  which GitHub moves to a new image without a commit. The next image is a
+  change of its own, to every label at once, and the Linux release build is
+  the one to measure first: its image sets the oldest glibc a consumer needs
+  (`build-libsignal.yml`)
 
 ### Code Review Checklist
 1. No hardcoded keys or secrets

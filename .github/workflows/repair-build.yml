@@ -117,7 +117,7 @@ jobs:
   # ==========================================================================
   detect:
     name: Detect a broken main
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Named at the job rather than raised for the whole file, so the job the
     # agent runs in keeps the narrowest token of the five. `pull-requests: read`
@@ -634,7 +634,7 @@ jobs:
       needs.detect.outputs.broken == 'true' &&
       needs.detect.outputs.skip != 'true' &&
       needs.detect.outputs.configured == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Longer in mode=pr, because that mode adds work this job did not used to
     # do: installing the binding generator, running it, and copying the
     # upstream source the agent reads — all before the agent's own `make build`,
@@ -1786,7 +1786,7 @@ jobs:
       needs.detect.outputs.dry_run != 'true' &&
       needs.repair.outputs.status == 'fixed' &&
       needs.repair.outputs.changed == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -1947,7 +1947,7 @@ jobs:
       needs.detect.outputs.mode == 'pr' &&
       needs.detect.outputs.dry_run != 'true' &&
       needs.repair.outputs.status == 'fixed'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -2374,7 +2374,7 @@ jobs:
       needs.detect.outputs.mode == 'main' &&
       needs.detect.outputs.dry_run != 'true' &&
       needs.repair.outputs.status == 'cannot-fix'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -2507,7 +2507,7 @@ jobs:
       needs.detect.outputs.mode == 'pr' &&
       needs.detect.outputs.dry_run != 'true' &&
       needs.repair.outputs.status == 'cannot-fix'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read
@@ -2610,7 +2610,7 @@ jobs:
     # bot branch on a perfectly green `main` would otherwise leave the reports
     # about `main` open forever.
     if: needs.detect.outputs.main_conclusion != 'failure' && inputs.dry_run != true
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read

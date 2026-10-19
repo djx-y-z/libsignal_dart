@@ -82,7 +82,7 @@ jobs:
   # ==========================================================================
   config:
     name: Decide whether to review
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     outputs:
       run: ${{ steps.pr.outputs.run }}
@@ -323,7 +323,7 @@ jobs:
     name: Review the diff
     needs: config
     if: needs.config.outputs.run == 'true' && needs.config.outputs.configured == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
 
     steps:
@@ -1217,7 +1217,7 @@ jobs:
     # reads that; the failure mode of a mistake here is now silence rather than
     # a public write, which is the direction it should fail in.
     if: needs.config.outputs.dry_run != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read

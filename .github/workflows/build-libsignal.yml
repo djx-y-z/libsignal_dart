@@ -60,7 +60,7 @@ jobs:
   # Check if release already exists (uses scripts/check_exists_frb_release.dart)
   # ============================================
   check-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.check.outputs.version }}
       libsignal_version: ${{ steps.check.outputs.libsignal_version }}
@@ -114,16 +114,16 @@ jobs:
     strategy:
       matrix:
         include:
-          # Pinned, like arm64 below, rather than ubuntu-latest: the .so links
-          # against the runner's glibc, and a newer one can raise the oldest
-          # glibc a consumer's Linux needs to load it. ubuntu-latest moves to
-          # Ubuntu 26 from 2026-10-19, so moving this pin is a decision to make
-          # on purpose, after checking the built library's GLIBC_* symbols.
+          # Named by version, like every Ubuntu job here, and for a sharper
+          # reason than the rest: the .so links against the runner's glibc, and
+          # a newer one can raise the oldest glibc a consumer's Linux needs to
+          # load it. So the next image comes after checking the GLIBC_* symbol
+          # versions of a library built on it.
           - arch: x86_64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
             rust_target: x86_64-unknown-linux-gnu
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             rust_target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.runner }}
     steps:
@@ -264,7 +264,7 @@ jobs:
   build-android:
     needs: check-release
     if: needs.check-release.outputs.skip != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       matrix:
         include:
@@ -414,7 +414,7 @@ jobs:
   build-wasm:
     needs: check-release
     if: needs.check-release.outputs.skip != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -456,7 +456,7 @@ jobs:
       - build-android
       - build-windows
       - build-wasm
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -485,7 +485,7 @@ jobs:
       - build-windows
       - build-wasm
     if: needs.check-release.outputs.skip != 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Supply-chain gate: publishing the consumer-downloaded native binaries
     # requires a human to approve the `native-build` environment deployment.
     # This mirrors publish.yml's `pub.dev` environment and is the ONLY control

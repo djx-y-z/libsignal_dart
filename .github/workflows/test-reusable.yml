@@ -46,7 +46,7 @@ jobs:
   # ============================================
   audit:
     name: Security Audit (Rust)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -61,7 +61,7 @@ jobs:
   # ============================================
   deny:
     name: Dependency Policy (cargo-deny)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -82,7 +82,7 @@ jobs:
   # is checking.
   msrv:
     name: MSRV (rust-version from Cargo.toml)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -125,7 +125,7 @@ jobs:
   # `make actionlint` on a laptop reports exactly what this job reports.
   workflow-lint:
     name: Workflow Lint (actionlint)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -198,7 +198,7 @@ jobs:
   # toolchain than the release is not a gate.
   android:
     name: Cross-compile (Android ${{ matrix.abi }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -308,10 +308,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          # Named by version, like every Ubuntu job in these workflows:
+          # `ubuntu-latest` changes image without a commit (GitHub scheduled its
+          # move from 24.04 to 26.04 job by job, 2026-10-19 to 2026-11-19), and
+          # a leg that moves on its own makes a red run no commit caused.
+          - os: ubuntu-26.04
             name: Linux x86_64
             coverage: true
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
             name: Linux ARM64
             coverage: false
           - os: macos-latest
@@ -546,7 +550,7 @@ jobs:
     name: Update Coverage Badge
     needs: test
     if: inputs.update-badge && inputs.run-coverage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Update coverage badge
         uses: schneegans/dynamic-badges-action@28b0fa8bdeb46170ac397105ece0c1fe58f68910 # v1.9.0

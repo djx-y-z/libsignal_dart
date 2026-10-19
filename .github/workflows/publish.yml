@@ -42,7 +42,7 @@ jobs:
   # Validate and prepare
   # ============================================
   validate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
@@ -143,7 +143,7 @@ jobs:
   # ============================================
   validate-package:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -163,7 +163,7 @@ jobs:
   # ============================================
   publish:
     needs: [validate, test, validate-package]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: pub.dev
     permissions:
       contents: read
@@ -196,7 +196,7 @@ jobs:
   release:
     needs: [validate, publish]
     if: github.ref_type == 'tag' && !inputs.dry-run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write      # gh release create
     steps:
