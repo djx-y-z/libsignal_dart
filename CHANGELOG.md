@@ -111,15 +111,22 @@
   oldest, it also kept the libsignal update (#115) from ever being picked. A
   draft is a pull request a human has to finish, so the scheduled search now
   skips drafts; a run named through `workflow_dispatch` can still target one.
-- **Every Ubuntu job names its image, `ubuntu-26.04`** (every workflow with
-  an Ubuntu job, `.github/actions/setup-rust/action.yml`,
-  `.github/actionlint.yaml`, `CLAUDE.md`) — GitHub moves `ubuntu-latest` from
-  24.04 to 26.04 job by job between 2026-10-19 and 2026-11-19, so a job could
-  change image, and go red, with no commit to blame. Every job on
-  `ubuntu-latest` now names `ubuntu-26.04`, and the Linux ARM64 test leg and
-  both Linux release builds move from `ubuntu-24.04` and `ubuntu-24.04-arm`
-  to `ubuntu-26.04` and `ubuntu-26.04-arm`; macOS and Windows stay on
-  `-latest`. Measured on a throwaway branch first, from a cold cache: Tests
+- **Every job names its image: `ubuntu-26.04`, `macos-26` and
+  `windows-2025-vs2026`** (every workflow with an Ubuntu, macOS or Windows
+  job, `.github/actions/setup-rust/action.yml`, `.github/actionlint.yaml`,
+  `CLAUDE.md`) — GitHub moves `ubuntu-latest` from 24.04 to 26.04 job by job
+  between 2026-10-19 and 2026-11-19, so a job could change image, and go red,
+  with no commit to blame, and `macos-latest` and `windows-latest` move the
+  same way. Every job on `ubuntu-latest` now names `ubuntu-26.04`, and the
+  Linux ARM64 test leg and both Linux release builds move from
+  `ubuntu-24.04` and `ubuntu-24.04-arm` to `ubuntu-26.04` and
+  `ubuntu-26.04-arm`. The macOS and Windows jobs, the release builds among
+  them, name the images `-latest` resolved to on 2026-10-21: `macos-26`
+  (macOS 26 arm64) and `windows-2025-vs2026` (Windows Server 2025 with Visual
+  Studio 2026, the label that names the compiler as well as the system). Each
+  is one of the labels of the very image it replaces, so only the label
+  changes, and so does nothing in the cache keys, which carry `ImageOS`.
+  Measured on a throwaway branch first, from a cold cache: Tests
   (the whole matrix), Fuzz and a Repair Build dry run pass on 26.04 (GCC 15,
   glibc 2.43, Python 3.14), with wasm-pack, cargo-ndk, cargo-audit,
   cargo-deny, the FRB codegen and cargo-fuzz compiled there, and
@@ -131,7 +138,9 @@
   in setup-rust and `fuzz.yml`): rust-cache keys on the OS family alone, and
   the first 26.04 runs restored what 24.04 had compiled, wasm-pack and
   cargo-ndk included. actionlint 1.7.12 does not know the two 26.04 labels
-  yet, so `.github/actionlint.yaml` ignores exactly those until it does.
+  yet, so `.github/actionlint.yaml` ignores exactly those until it does; it
+  knows `macos-26` and `windows-2025-vs2026`, and still reports an unknown
+  `macos-99`.
 - **The update bot's CHANGELOG entry is written from what the update
   changed** (`scripts/src/update_changelog.dart`,
   `test/scripts/update_changelog_test.dart`,

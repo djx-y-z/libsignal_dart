@@ -616,10 +616,12 @@ cd - && git worktree remove ../stage2-check
   moved by Dependabot — it does not read `cargo install` or `curl` lines — so
   both move by hand
 - Runner images are named by version too: every Ubuntu job runs on
-  `ubuntu-26.04` (`ubuntu-26.04-arm` for arm64), never on `ubuntu-latest`,
-  which GitHub moves to a new image without a commit. The next image is a
-  change of its own, to every label at once, and the Linux release build is
-  the one to measure first: its image sets the oldest glibc a consumer needs
+  `ubuntu-26.04` (`ubuntu-26.04-arm` for arm64), every macOS job on
+  `macos-26` and every Windows job on `windows-2025-vs2026`, never on a
+  `-latest` label, which GitHub moves to a new image without a commit. The
+  next image is a change of its own, to every job on that system at once, and
+  for Linux the release build is the one to measure first: its image sets the
+  oldest glibc a consumer needs
   (`build-libsignal.yml`)
 
 ### Code Review Checklist
