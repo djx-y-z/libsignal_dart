@@ -249,7 +249,7 @@
   run. **Signing commit** now excludes `update-libsignal-*` and
   `update-template-v*`, so `force_update` can refresh an open update pull
   request — a force-push that ruleset refused, measured in a generated
-  project; it takes effect on GitHub once the ruleset is re-applied with the
+  project; the ruleset was re-applied on GitHub on 2026-10-21 with the
   single-ruleset `PUT` in `.github/rulesets/README.md`. That README now also
   says what `refresh-notices.yml` does: it commits through
   `createCommitOnBranch`, which signs. The update scripts are reorganised
@@ -260,8 +260,21 @@
   changes of 2026-10-19 were written here first and arrive as no diff. Kept
   ours: `hook/build.dart` and its test (this project's 6.3.0 → 6.3.1 example),
   `SECURITY.md` (it already lists the tag protection), the rulesets README's
-  dates and its eleven required checks, and `CLAUDE.md`'s two-stage release
-  docs, which gain the size check by hand.
+  dates and its notes on the required checks, and `CLAUDE.md`'s two-stage
+  release docs, which gain the size check by hand.
+- **`test / Test (Linux ARM64)` is a required check again**
+  (`.github/rulesets/protect-main.json`, `.github/rulesets/README.md`) — it
+  was left out when the test matrix became required on 2026-09-07, over a
+  30-second timeout that hit a different test each run. The cause was a
+  flutter_rust_bridge race that could drop Rust's replies to Dart while a test
+  file's isolate was starting; `LibSignal.init` has worked around it since
+  2026-09-30, released in 8.0.0. Of the 31 `Tests` runs from 2026-10-01 to
+  2026-10-21 the leg failed three, each time with every other test leg at the
+  same step (`Analyze` twice, `Get dependencies` once). `main` now requires
+  twelve checks, the template's list. The live ruleset was updated the same
+  day by a single-ruleset `PUT` of the live ruleset plus this one context, so
+  the parameters GitHub added to it stay as they were. The runbook's advice on
+  dropping a flaky leg is now the template's, followed by this project's case.
 
 ## [8.0.0] - 2026-10-08
 

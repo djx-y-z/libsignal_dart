@@ -81,12 +81,14 @@ reviewers of the `native-build` and `pub.dev` environments.
 
 ### Required status checks
 
-`protect-main.json` requires eleven checks — **`FRB bindings were regenerated`**,
-the job in `codegen-guard.yml`, plus ten legs of the test matrix:
+`protect-main.json` requires twelve checks — **`FRB bindings were regenerated`**,
+the job in `codegen-guard.yml`, plus the whole test matrix except
+`test / Type-check (iOS)`, which is new and not required yet:
 
 ```
 FRB bindings were regenerated
 test / Test (Linux x86_64)
+test / Test (Linux ARM64)
 test / Test (macOS ARM64)
 test / Test (Windows x86_64)
 test / Security Audit (Rust)
@@ -122,37 +124,47 @@ Removing that filter was measured before it was done: of the fifteen most
 recently merged pull requests, fifteen already matched it, so nothing much
 changed in practice except that the rare docs-only pull request now reports.
 
-#### What is deliberately absent
-
-`test / Test (Linux ARM64)` is left out over a flake, but the flake is **not**
-its property. It is a 30-second per-test timeout whose victim changes from run
-to run: across the 25 most recent `Tests` runs the signature
-`TimeoutException after 0:00:30` produced three isolated leg failures —
-`Windows x86_64` twice, `Linux ARM64` once. Every other red run in that window
-failed several jobs at once and was a real breakage, not a flake.
-
-Three events across four legs is not enough to blame a platform, and the
-tempting explanation does not survive the numbers either: the slowest leg by
-wall clock is `Linux x86_64` — 248 s on average over the last twelve runs
-against `Linux ARM64`'s 91 s — and it has never flaked. "Slow runner" is
-therefore not the cause, the cause is not known, and the counts above must not
-be read as a ranking.
-
-What the exclusion IS chosen by is what its absence costs. Dropping
-`Linux ARM64` still leaves Linux required through `test / Test (Linux x86_64)`;
-dropping Windows would leave that platform with no required coverage at all.
-Windows therefore stays required and will occasionally fail on its own until the
-timeout is understood — a cost paid deliberately, with the Admin bypass as the
-release valve, not an oversight.
+#### Drop any leg this project finds flaky
 
 A required check that fails by itself teaches people to merge past required
-checks, so diagnosing that timeout is worth more than either exclusion. Add
-`Linux ARM64` back when it is fixed, not before.
+checks, which costs more than the leg is worth. Remove such a leg from
+`protect-main.json` — leaving it in the workflow, where it still reports — and
+put it back the moment it is fixed, not before.
 
-`test / Type-check (iOS)` is new and not required yet. It type-checks the three
-iOS targets (`make rust-check-ios`), the only check before a release tag that
-compiles iOS, and a failure there still stops a package release: `publish.yml`
-runs its tests through the same reusable workflow.
+Two cautions before deciding which leg that is. **Count, do not rank on
+reputation** — a flake gets attached to one leg early and stays attached; count
+isolated failures (one leg red, the rest green) over recent runs instead. Expect
+the count to be small and to prove less than it looks: three events spread over
+four legs cannot tell a platform problem from chance, and the plausible
+explanations are worth checking against the numbers rather than assumed — "the
+slowest runner flakes" is the usual one, and in the project this comes from it
+was false, the slowest leg by wall clock being the one that never flaked.
+
+**Choose by what the absence costs**, which is knowable even when the cause is
+not: a leg whose platform another required leg already covers is cheap to drop,
+while the only leg covering its platform is not, however often it flakes.
+Diagnosing the flake beats either exclusion.
+
+Here that leg was `test / Test (Linux ARM64)`, left out when the matrix became
+required on 2026-09-07 and back on 2026-10-21. The flake was a 30-second
+per-test timeout that hit a different test each time: across 25 `Tests` runs,
+`Windows x86_64` twice and `Linux ARM64` once. `Linux x86_64` still covered
+Linux, while Windows had no other leg, so Windows stayed required. The cause was
+found on 2026-09-30, in flutter_rust_bridge rather than in any leg: when one
+test file's isolate shut down while another was starting, the function that
+carries Rust's replies to Dart was swapped for one that drops them, and the new
+file's first asynchronous call waited until the timeout. Since 8.0.0
+`LibSignal.init` installs that function again. Of the 31 `Tests` runs from
+2026-10-01 to 2026-10-21, `Linux ARM64` failed three, each time with every
+other test leg and at the same step: `Analyze` on a dependency bump twice,
+`Get dependencies` on a template update copier had left conflicted once. The
+one leg that did fail alone in that window was `Linux x86_64`, in its web-tools
+setup step rather than in a test.
+
+`test / Type-check (iOS)` type-checks the three iOS targets
+(`make rust-check-ios`), the only check before a release tag that compiles iOS,
+and a failure there still stops a package release: `publish.yml` runs its tests
+through the same reusable workflow.
 
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.
