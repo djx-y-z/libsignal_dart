@@ -321,6 +321,18 @@
   nothing staged and `make rust-check` was skipped on every `git commit -a`
   that changed `rust/` (measured with a hook that prints both). The hook is
   the template's now. The check above found both.
+- **The update bot's CHANGELOG entry no longer leaves two blank lines under
+  Highlights** (`scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`) — when the previous bump's
+  default Highlights line was the only line in its block, dropping it left
+  the blank line from either side of it, and the new line went in above
+  both. #119 (v0.105.2) arrived with two blank lines before `#### Changed`,
+  removed by hand when `main` was merged into it, and every bump after the
+  first in a release window would have needed the same edit. The emptied
+  block is now written with one blank line on each side of the new line.
+  Replayed on #119's real input, the generator produces the `CHANGELOG.md`
+  that was merged, byte for byte; the same replay before the fix gives the
+  extra line.
 
 ## [8.0.0] - 2026-10-08
 

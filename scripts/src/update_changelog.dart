@@ -1718,8 +1718,13 @@ String _insertIntoUnreleased(
       result.insert(end, text);
       return;
     }
-    result.insertAll(heading + 1, ['', text]);
-    if (heading + 3 >= result.length) result.add('');
+    // An empty block can hold more than one blank line: a superseded default
+    // that was its only line leaves the blank from either side of it. They are
+    // replaced rather than kept below [text], where they put two blank lines
+    // between it and the next heading (measured on a real update).
+    result
+      ..removeRange(heading + 1, result.length)
+      ..addAll(['', text, '']);
   }
 
   void closeHighlights() {

@@ -1476,6 +1476,32 @@ void _breakingContradictionTests() {
       );
     });
 
+    // The shape of v0.105.2's pull request: the previous bump's default was
+    // the block's only line. Dropping it left the blank line from either side
+    // of it, the new line went in above both, and `#### Changed` ended up two
+    // blank lines below it — removed by hand.
+    test('replaces a lone default, one blank line each side', () {
+      final out = insertChangelogEntry(
+        currentChangelog: window.replaceFirst(
+          RegExp(r'- \*\*A failed call[\s\S]*?see Fixed\n'),
+          '',
+        ),
+        nativeHighlight: defaultHighlightFor('v0.105.0'),
+        changed: '- **The v0.105.0 bump** — detail',
+      );
+      expect(
+        out,
+        contains(
+          '#### ✨ Highlights\n'
+          '\n'
+          '- ${defaultHighlightFor('v0.105.0')}\n'
+          '\n'
+          '#### Changed',
+        ),
+      );
+      expect(out, isNot(contains('v0.104.0** — internal')));
+    });
+
     // A project that has never released has no version heading below
     // [Unreleased]; the link references end the section instead.
     test('stops at the link references when no release follows', () {
