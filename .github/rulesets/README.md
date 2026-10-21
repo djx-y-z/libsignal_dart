@@ -224,8 +224,8 @@ edit would land in the file and nowhere else. `--update` PUTs the whole ruleset,
 so diff the live one against the file first (see *Verify / roll back* below) —
 anything changed in the UI and not written back here is overwritten. GitHub adds
 its own defaults to what it stores (`do_not_enforce_on_create`,
-`require_extra_approval_for_unattributed_changes`, `required_reviewers`), so
-expect those three back in the response; they are not UI edits.
+`required_reviewers`), so expect those two back in the response; they are not
+UI edits.
 
 ### Why Dependabot branches are excluded
 
@@ -332,11 +332,15 @@ gh api --method PUT repos/djx-y-z/libsignal_dart/rulesets/<ID> \
   --input .github/rulesets/protect-release-tags.json
 ```
 
-`--update` sends every file, and a live ruleset can carry a parameter GitHub
-added that its JSON does not name. Measured 2026-10-08: the live
-`Protect main branch` had
-`require_extra_approval_for_unattributed_changes: true`, which
-`protect-main.json` does not set. Compare before overwriting.
+`--update` sends every file, so compare before overwriting: anything changed in
+the UI and not written back here is lost. `protect-main.json` names one
+parameter that GitHub documents nowhere, neither in its REST description nor in
+its GraphQL schema: `require_extra_approval_for_unattributed_changes`. A payload
+that leaves it out gets `true` — a generated project's live `Protect main branch`
+read `true` after an `--update` from a file without it — so the file says `true`
+and means what GitHub enforces. Others report, and nothing here has measured,
+that with `true` a pull request carrying commits not linked to a GitHub account
+waits for one human approval even when no approval is required.
 
 **Verify / roll back:**
 

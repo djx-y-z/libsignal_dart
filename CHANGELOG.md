@@ -101,9 +101,7 @@
   create GitHub Releases for tags that already exist, and GitHub Apps,
   Dependabot and `GITHUB_TOKEN` were never on the list. The README also shows
   how to update one ruleset without `make setup-repo-protections
-  ARGS="--update"`, which sends every file and can reset a parameter GitHub
-  added to a live ruleset that the JSON does not name (`protect-main` carries
-  one).
+  ARGS="--update"`, which sends every file.
 - **Repair Build no longer picks a draft pull request**
   (`.github/workflows/repair-build.yml`) — from 2026-10-09 every scheduled run
   failed on one unchanged commit: the draft template update (#113) was the
@@ -394,6 +392,22 @@
   flutter_rust_bridge's own `frb_dart` pins `^20.1.1`, so a major moves
   generated code and belongs with the FRB version, not with a bump. Both
   lift once `ffigen` has moved. The same block goes into the template.
+- **`protect-main.json` names the unattributed-changes approval**
+  (`.github/rulesets/protect-main.json`, `.github/rulesets/README.md`) — the
+  live `Protect main branch` carries
+  `require_extra_approval_for_unattributed_changes: true`, which the file did
+  not name, and the README warned that `make setup-repo-protections
+  ARGS="--update"` might reset it. It does not: GitHub stores `true` for a
+  payload that leaves the parameter out, and the ruleset's own history shows
+  it `true` after the `--update` of 2026-09-07, sent from a file without it.
+  GitHub documents the parameter nowhere, neither in its REST description
+  nor in its GraphQL schema. Others report, and nothing here has measured,
+  that with `true` a pull request carrying commits not linked to a GitHub
+  account waits for one human approval even when none is required. The file
+  now says `true`, so it says what GitHub enforces: compared field by field,
+  the four live rulesets now differ from their files only in the two
+  defaults GitHub adds itself, which the README names. The template's file
+  and README change the same way.
 
 ## [8.0.0] - 2026-10-08
 
