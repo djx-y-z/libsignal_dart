@@ -123,6 +123,27 @@ updates:
       - dependency-name: "code_assets"
         update-types:
           - "version-update:semver-major"
+      # What carried majors into the minor-and-patch group regardless. `coverage`
+      # 1.16.0 is a minor, so the group takes it, and it resolves only one way:
+      # it needs `cli_util ^0.6.0`, every `ffigen` below 23.0.0 needs `^0.4.2`,
+      # and `ffigen` 23 needs hooks and code_assets 2.x. Dependabot moves
+      # whatever an update has to move, past the group's update-types and past
+      # an ignore alike. Measured in a generated project: its pub group pull
+      # request was that one minor plus the ffigen, hooks and code_assets
+      # majors, while the hooks and code_assets majors were ignored here.
+      #
+      # `ffigen` is held on its own account: it generates part of
+      # lib/src/rust/frb_generated.io.dart, `make codegen` runs the version this
+      # project depends on, and flutter_rust_bridge's own frb_dart pins
+      # `^20.1.1` (2.13.0 and master). A major moves generated code, so it
+      # moves with the FRB version and `make codegen`, not as a bump. Lift both
+      # once ffigen has moved.
+      - dependency-name: "coverage"
+        versions:
+          - ">= 1.16.0"
+      - dependency-name: "ffigen"
+        update-types:
+          - "version-update:semver-major"
 
   # The native crate's dependencies. These are compiled into the binary the
   # build hook downloads, so a vulnerable transitive crate reaches consumers as

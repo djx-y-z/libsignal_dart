@@ -377,6 +377,23 @@
   it: it lists the crates from `cargo metadata`, and the answer's list is
   only its fallback. The scope file now says how it arrives, as it already
   did for `libsignal-debug`.
+- **A `coverage` minor no longer drags majors into the pub group**
+  (`.github/dependabot.yml`) — #117 and #118 were each the pub group's pull
+  request, red on every OS: `coverage` 1.16.0, a minor the group may take,
+  with the `ffigen`, `hooks` and `code_assets` majors, although the `hooks`
+  and `code_assets` majors are ignored and the group admits only minors and
+  patches. The minor resolves one way only: it needs `cli_util ^0.6.0`,
+  every `ffigen` below 23.0.0 needs `^0.4.2`, and `ffigen` 23 needs `hooks`
+  and `code_assets` 2.x. pub's resolver, given the four unlocked, lands on
+  exactly #118's set, so Dependabot moved what the update had to move, past
+  both rules; the raised `hooks ^2.2.0` is what broke `example/`, where
+  Flutter 3.38.4 pins `meta` 1.17.0 and `hooks` from 2.1.0 needs `^1.19.0`.
+  `coverage` is now ignored from 1.16.0, and `ffigen` majors on their own
+  account: `ffigen` generates part of `lib/src/rust/frb_generated.io.dart`,
+  `make codegen` runs the version this package depends on, and
+  flutter_rust_bridge's own `frb_dart` pins `^20.1.1`, so a major moves
+  generated code and belongs with the FRB version, not with a bump. Both
+  lift once `ffigen` has moved. The same block goes into the template.
 
 ## [8.0.0] - 2026-10-08
 
