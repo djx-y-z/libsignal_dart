@@ -2,6 +2,7 @@ import 'package:test/test.dart';
 
 import '../../scripts/src/ai_client.dart';
 import '../../scripts/src/update_changelog.dart';
+import '../../scripts/src/upstream_source.dart';
 
 /// A released CHANGELOG with NO `## [Unreleased]` section — the normal state
 /// right after `make release` finalized the previous version (it no longer
@@ -622,6 +623,91 @@ void _breakingContradictionTests() {
     });
   });
 
+  group('changelogSectionFrom', () {
+    const changelog = '''
+# Changelog
+
+## [Unreleased]
+
+- Not yet.
+
+## 0.9.10 (2026-11-01)
+
+- Ten.
+
+## 0.9.1 (2026-10-07)
+
+### Fixed
+
+- The fix.
+
+## [0.9.1-rc.1] - 2026-10-01
+
+- Candidate.
+
+## v0.9.0
+
+- Older.
+''';
+
+    test('takes the section the version heads, sub-headings included', () {
+      expect(
+        changelogSectionFrom(changelog, '0.9.1'),
+        '### Fixed\n\n- The fix.',
+      );
+    });
+
+    // Either would hand over another release's notes, which is worse than
+    // none: wrong rather than missing.
+    test('a longer version, or a pre-release of it, is not it', () {
+      final section = changelogSectionFrom(changelog, '0.9.1');
+      expect(section, isNot(contains('Ten')));
+      expect(section, isNot(contains('Candidate')));
+      expect(changelogSectionFrom(changelog, '0.9.1-rc.1'), '- Candidate.');
+    });
+
+    test('reads a version after a v as the version', () {
+      expect(changelogSectionFrom(changelog, '0.9.0'), '- Older.');
+    });
+
+    test('is null when no heading names it, or its section is empty', () {
+      expect(changelogSectionFrom(changelog, '1.0.0'), isNull);
+      expect(
+        changelogSectionFrom('## 1.0.0\n\n## 0.9.0\n- x\n', '1.0.0'),
+        isNull,
+      );
+    });
+  });
+
+  group('highlightVersionFor', () {
+    // The house format is `**<library> vX.Y.Z**`. A tag carries its own
+    // prefix, which written as it is reads `<library> <library>-v1.2.3`, and a
+    // registry version carries none; both are written the one way.
+    test('names the release v and its version, whatever the pin', () {
+      const git = GitTagSource(
+        repo: 'owner/upstream',
+        crates: ['upstream-core'],
+        tagPrefix: 'upstream-v',
+      );
+      const registry = CratesIoSource(
+        repo: 'owner/upstream',
+        crates: ['upstream-core'],
+      );
+      expect(highlightVersionFor(git, 'upstream-v1.2.3'), 'v1.2.3');
+      expect(highlightVersionFor(registry, '1.2.3'), 'v1.2.3');
+    });
+
+    test('a default line is recognised whatever the version looks like', () {
+      for (final version in ['v1.2.3', '1.2.3', 'upstream-v1.2.3']) {
+        expect(
+          isOwnDefaultHighlight('- ${defaultHighlightFor(version)}'),
+          isTrue,
+          reason: version,
+        );
+      }
+    });
+  });
+
   group('isOwnDefaultHighlight', () {
     test('matches the prompt default at any version', () {
       expect(
@@ -1025,96 +1111,6 @@ void _breakingContradictionTests() {
     });
   });
 
-  group('upstreamCratesFrom', () {
-    Map<String, dynamic> package(
-      String name,
-      String version,
-      String? source,
-      String manifest,
-    ) => {
-      'name': name,
-      'version': version,
-      'source': source,
-      'manifest_path': manifest,
-    };
-    const checkout = '/home/runner/.cargo/git/checkouts';
-
-    // The shape `cargo metadata` gives for this package's own graph: the bound
-    // crates, one more pulled in from the same repository, a git dependency
-    // from another repository, a registry crate and the workspace's own crate.
-    test('takes the upstream repository crates, with their directories', () {
-      final crates = upstreamCratesFrom({
-        'packages': [
-          package(
-            'upstream-protocol',
-            '0.1.0',
-            'git+https://github.com/owner/upstream?tag=v0.105.1#1738ead8',
-            '$checkout/upstream-2a19/1738ead/rust/protocol/Cargo.toml',
-          ),
-          package(
-            'upstream-debug',
-            '0.105.1',
-            'git+https://github.com/owner/upstream?tag=v0.105.1#1738ead8',
-            '$checkout/upstream-2a19/1738ead/rust/debug/Cargo.toml',
-          ),
-          package(
-            'ratchet',
-            '1.6.0',
-            'git+https://github.com/owner/ratchet.git?tag=v1.6.0#06959b47',
-            '$checkout/ratchet-b58d/06959b4/Cargo.toml',
-          ),
-          package(
-            'libc',
-            '0.2.191',
-            'registry+https://github.com/rust-lang/crates.io-index',
-            '/home/runner/.cargo/registry/src/index/libc-0.2.191/Cargo.toml',
-          ),
-          package(
-            'wrapper_frb',
-            '7.0.0',
-            null,
-            '/work/wrapper/rust/Cargo.toml',
-          ),
-        ],
-      }, repo: 'owner/upstream');
-      expect(crates, [
-        (name: 'upstream-debug', version: '0.105.1', dir: 'rust/debug/'),
-        (name: 'upstream-protocol', version: '0.1.0', dir: 'rust/protocol/'),
-      ]);
-    });
-
-    // A repository whose crate sits at its root owns every path in it, which
-    // the empty directory says.
-    test('a crate at the repository root gets the empty directory', () {
-      final crates = upstreamCratesFrom({
-        'packages': [
-          package(
-            'ratchet',
-            '1.6.0',
-            'git+https://github.com/Owner/Ratchet.git#06959b47',
-            '$checkout/ratchet-b58d/06959b4/Cargo.toml',
-          ),
-        ],
-      }, repo: 'owner/ratchet');
-      expect(crates.single.dir, isEmpty);
-    });
-
-    test('a crate whose checkout path cannot be read is left out', () {
-      final crates = upstreamCratesFrom({
-        'packages': [
-          package(
-            'upstream-core',
-            '0.1.0',
-            'git+https://github.com/owner/upstream#1738ead8',
-            '/somewhere/else/core/Cargo.toml',
-          ),
-        ],
-      }, repo: 'owner/upstream');
-      expect(crates, isEmpty);
-      expect(upstreamCratesFrom({}, repo: 'owner/upstream'), isEmpty);
-    });
-  });
-
   group('upstreamPatchesFrom', () {
     Map<String, dynamic> compare(List<Map<String, dynamic>> files) => {
       'commits': <Object?>[],
@@ -1287,6 +1283,68 @@ void _breakingContradictionTests() {
         'No third-party crate moves with it. New to the graph: `fresh` 0.1.0. '
         'Gone from it: `gone` 1.0.0. `ratchet` moves from 1.5.3 (`ccccccc`) '
         'to 1.6.0 (`06959b4`).',
+      );
+    });
+
+    // With a registry upstream source the upstream crates are registry crates
+    // too, and they are the entry's subject: listed apart in the prompt, and
+    // never in the third-party paragraph.
+    test('keeps registry upstream crates out of the third-party lists', () {
+      final before = lock([
+        reg('upstream-core', '0.9.0'),
+        reg('upstream-traits', '0.6.0'),
+        reg('libc', '0.2.189'),
+      ]);
+      final after = lock([
+        reg('upstream-core', '0.9.1'),
+        reg('upstream-traits', '0.6.0'),
+        reg('upstream-macros', '0.1.0'),
+        reg('libc', '0.2.191'),
+      ]);
+      const upstream = {'upstream-core', 'upstream-traits', 'upstream-macros'};
+      final out = lockfileChangesFrom(before, after, upstream: upstream);
+      expect(
+        out,
+        contains(
+          'Upstream crates, from the registry:\n'
+          '- `upstream-core` 0.9.0 → 0.9.1\n'
+          '- `upstream-macros` 0.1.0, added',
+        ),
+      );
+      expect(
+        out,
+        contains('Registry crates that moved (1):\n- `libc` 0.2.189 → 0.2.191'),
+      );
+      expect(out, contains('Registry crates added (0):\n(none)'));
+      expect(
+        thirdPartyParagraphFrom(
+          before,
+          after,
+          upstreamRepo: 'owner/upstream',
+          upstream: upstream,
+        ),
+        'Third-party crates move with it: `libc` 0.2.191. None is added or '
+        'removed.',
+      );
+    });
+
+    test('a bump that moves only upstream crates says no third party did', () {
+      final before = lock([
+        reg('upstream-core', '0.9.0'),
+        reg('libc', '0.2.191'),
+      ]);
+      final after = lock([
+        reg('upstream-core', '0.9.1'),
+        reg('libc', '0.2.191'),
+      ]);
+      expect(
+        thirdPartyParagraphFrom(
+          before,
+          after,
+          upstreamRepo: 'owner/upstream',
+          upstream: {'upstream-core'},
+        ),
+        'No third-party crate moves with it. None is added or removed.',
       );
     });
 

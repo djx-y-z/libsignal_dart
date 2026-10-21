@@ -25,6 +25,10 @@
             "integration_id": 15368
           },
           {
+            "context": "test / Test (Linux ARM64)",
+            "integration_id": 15368
+          },
+          {
             "context": "test / Test (macOS ARM64)",
             "integration_id": 15368
           },

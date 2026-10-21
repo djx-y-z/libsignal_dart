@@ -53,7 +53,7 @@ gh api graphql -F owner='{owner}' -F name='{repo}' -f query='
 | File | Ruleset | Target | Rules | Bypass |
 |------|---------|--------|-------|--------|
 | `protect-main.json` | Protect main branch | `~DEFAULT_BRANCH` | pull_request (0 approvals), required_status_checks, non_fast_forward, deletion | Admin (5) |
-| `signing-commit.json` | Signing commit | `~ALL` branches except `dependabot/**/*` | required_signatures, non_fast_forward | none by default |
+| `signing-commit.json` | Signing commit | `~ALL` branches except `dependabot/**/*`, `update-libsignal-*`, `update-template-v*` | required_signatures, non_fast_forward | none by default |
 | `delete-branches.json` | Delete branches | `~ALL` branches except `dependabot/**/*` | deletion | Admin (5) |
 | `protect-release-tags.json` | Protect release tags | all tags (`~ALL`) | creation, update, deletion, required_signatures | Admin (5) |
 
@@ -81,12 +81,14 @@ reviewers of the `native-build` and `pub.dev` environments.
 
 ### Required status checks
 
-`protect-main.json` requires eleven checks — **`FRB bindings were regenerated`**,
-the job in `codegen-guard.yml`, plus ten legs of the test matrix:
+`protect-main.json` requires twelve checks — **`FRB bindings were regenerated`**,
+the job in `codegen-guard.yml`, plus the whole test matrix except
+`test / Type-check (iOS)`, which is new and not required yet:
 
 ```
 FRB bindings were regenerated
 test / Test (Linux x86_64)
+test / Test (Linux ARM64)
 test / Test (macOS ARM64)
 test / Test (Windows x86_64)
 test / Security Audit (Rust)
@@ -122,37 +124,47 @@ Removing that filter was measured before it was done: of the fifteen most
 recently merged pull requests, fifteen already matched it, so nothing much
 changed in practice except that the rare docs-only pull request now reports.
 
-#### What is deliberately absent
-
-`test / Test (Linux ARM64)` is left out over a flake, but the flake is **not**
-its property. It is a 30-second per-test timeout whose victim changes from run
-to run: across the 25 most recent `Tests` runs the signature
-`TimeoutException after 0:00:30` produced three isolated leg failures —
-`Windows x86_64` twice, `Linux ARM64` once. Every other red run in that window
-failed several jobs at once and was a real breakage, not a flake.
-
-Three events across four legs is not enough to blame a platform, and the
-tempting explanation does not survive the numbers either: the slowest leg by
-wall clock is `Linux x86_64` — 248 s on average over the last twelve runs
-against `Linux ARM64`'s 91 s — and it has never flaked. "Slow runner" is
-therefore not the cause, the cause is not known, and the counts above must not
-be read as a ranking.
-
-What the exclusion IS chosen by is what its absence costs. Dropping
-`Linux ARM64` still leaves Linux required through `test / Test (Linux x86_64)`;
-dropping Windows would leave that platform with no required coverage at all.
-Windows therefore stays required and will occasionally fail on its own until the
-timeout is understood — a cost paid deliberately, with the Admin bypass as the
-release valve, not an oversight.
+#### Drop any leg this project finds flaky
 
 A required check that fails by itself teaches people to merge past required
-checks, so diagnosing that timeout is worth more than either exclusion. Add
-`Linux ARM64` back when it is fixed, not before.
+checks, which costs more than the leg is worth. Remove such a leg from
+`protect-main.json` — leaving it in the workflow, where it still reports — and
+put it back the moment it is fixed, not before.
 
-`test / Type-check (iOS)` is new and not required yet. It type-checks the three
-iOS targets (`make rust-check-ios`), the only check before a release tag that
-compiles iOS, and a failure there still stops a package release: `publish.yml`
-runs its tests through the same reusable workflow.
+Two cautions before deciding which leg that is. **Count, do not rank on
+reputation** — a flake gets attached to one leg early and stays attached; count
+isolated failures (one leg red, the rest green) over recent runs instead. Expect
+the count to be small and to prove less than it looks: three events spread over
+four legs cannot tell a platform problem from chance, and the plausible
+explanations are worth checking against the numbers rather than assumed — "the
+slowest runner flakes" is the usual one, and in the project this comes from it
+was false, the slowest leg by wall clock being the one that never flaked.
+
+**Choose by what the absence costs**, which is knowable even when the cause is
+not: a leg whose platform another required leg already covers is cheap to drop,
+while the only leg covering its platform is not, however often it flakes.
+Diagnosing the flake beats either exclusion.
+
+Here that leg was `test / Test (Linux ARM64)`, left out when the matrix became
+required on 2026-09-07 and back on 2026-10-21. The flake was a 30-second
+per-test timeout that hit a different test each time: across 25 `Tests` runs,
+`Windows x86_64` twice and `Linux ARM64` once. `Linux x86_64` still covered
+Linux, while Windows had no other leg, so Windows stayed required. The cause was
+found on 2026-09-30, in flutter_rust_bridge rather than in any leg: when one
+test file's isolate shut down while another was starting, the function that
+carries Rust's replies to Dart was swapped for one that drops them, and the new
+file's first asynchronous call waited until the timeout. Since 8.0.0
+`LibSignal.init` installs that function again. Of the 31 `Tests` runs from
+2026-10-01 to 2026-10-21, `Linux ARM64` failed three, each time with every
+other test leg and at the same step: `Analyze` on a dependency bump twice,
+`Get dependencies` on a template update copier had left conflicted once. The
+one leg that did fail alone in that window was `Linux x86_64`, in its web-tools
+setup step rather than in a test.
+
+`test / Type-check (iOS)` type-checks the three iOS targets
+(`make rust-check-ios`), the only check before a release tag that compiles iOS,
+and a failure there still stops a package release: `publish.yml` runs its tests
+through the same reusable workflow.
 
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.
@@ -232,16 +244,20 @@ still have to pass `~DEFAULT_BRANCH`'s `pull_request` gate plus `main`'s own
 with a bypass actor — the rulesets target `~ALL`, so a bypass actor would also
 be exempt on `main` itself, which is the opposite of what is wanted.
 
-It is no longer only a convenience, though, and that matters when narrowing it.
-`refresh-notices.yml` regenerates `THIRD_PARTY_NOTICES.txt` on Dependabot's
-cargo pull requests and pushes an ordinary **unsigned** commit to those
-branches — legal only because `required_signatures` does not reach them. Keeping
-the force-push and deletion exclusions while requiring signatures again would
-put every cargo pull request back to unmergeable with nothing saying why: the
-workflow's push is rejected, and the stale inventory then fails
-`test / Test (Linux x86_64)`, one of the required contexts above. If signatures
-are ever wanted on these branches, that workflow has to create its commit
-through the GitHub API — which signs — rather than with `git push`.
+It is not what lets `refresh-notices.yml` work, though, and reading it that way
+is the trap. That workflow regenerates `THIRD_PARTY_NOTICES.txt` on Dependabot's
+cargo pull requests and creates the commit through the GraphQL
+`createCommitOnBranch` mutation, which signs, then reads `verification.verified`
+back and fails unless it is `true`. It has to sign whatever this exclusion says:
+the exclusion decides only what may be **pushed** onto these branches, while
+`main`'s own `required_signatures` still checks every commit of a pull request
+when it is **merged**. An unsigned commit is accepted here and then leaves the
+pull request `BLOCKED` with every required context green — measured while the
+workflow still committed with a plain `git push`. So requiring signatures on
+these branches again, keeping the force-push and deletion exclusions by moving
+`required_signatures` into a ruleset of its own, would not break that workflow.
+The only commits it would newly constrain are Dependabot's own, which Dependabot
+signs today; anything else unsigned on these branches is unmergeable already.
 
 Mind the pattern's trailing `/*`. These are `fnmatch` patterns in pathname mode,
 where a bare `**` does **not** cross a `/`: `refs/heads/dependabot/**` matches
@@ -257,12 +273,41 @@ gh api repos/djx-y-z/libsignal_dart/rules/branches/main \
   --jq '[.[] | .type] | join(", ")'    # expect the full set, unchanged
 ```
 
-Branches from `peter-evans/create-pull-request`
-(`update-libsignal-*`, `update-template-*`) are deliberately *not*
-excluded: those PRs are recreated per version rather than refreshed in place, so
-the force-push path has never been exercised. If an update PR is ever seen
-failing to refresh, extend the same `exclude` list rather than adding a bypass
-actor.
+### Why the update checkers' branches are excluded from Signing commit
+
+`peter-evans/create-pull-request` refreshes a branch that already exists by
+rebuilding it on `main` and moving the ref, which is a force-push. These
+branches were left in at first, because each update arrives on a branch of its
+own rather than refreshing an old one. That held for the scheduled path only:
+`force_update`, the documented way to regenerate an open update pull request,
+was measured failing in a generated project on 2026-10-20. The App created its
+signed commit through the API (`verified: true`), and the ref update was then
+refused: "Cannot force-push to this branch". A scheduled run takes the same
+path whenever a version's branch outlives its pull request, because the
+idempotency gate looks for an open pull request, not for the branch.
+
+So `refs/heads/update-libsignal-*` and `refs/heads/update-template-v*` are
+excluded from **Signing commit**, as Dependabot's branches are and at the same
+cost: on those branches a push may rewrite history and need not be signed. The
+App signs regardless (`sign-commits: true`), whoever can rewrite them could
+already push to them, and reaching `main` still takes its pull-request gate.
+
+⚠ Keep it an `exclude`. **Signing commit** is also what stops anyone, an Admin
+included, from force-pushing `main`: **Protect main branch** has its own
+`non_fast_forward`, but with an Admin bypass. A bypass actor here would exempt
+the App on `main` too (see above), and splitting `non_fast_forward` into a
+ruleset of its own, to keep signatures required on these branches, has to keep
+that one on `~ALL` with no bypass, or `main` loses its only unconditional ban.
+
+The patterns are exact on purpose: `update-*` would exempt any branch someone
+happens to name that way. The branches stay under **Delete branches**, so the
+App cannot delete one; a branch left behind by a closed update pull request is
+removed by an Admin. Verify it against a name of the real shape, as above:
+
+```bash
+gh api repos/djx-y-z/libsignal_dart/rules/branches/update-template-v1.0.0 \
+  --jq '[.[] | .type] | join(", ")'    # expect: deletion
+```
 
 ## Apply
 

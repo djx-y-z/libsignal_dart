@@ -6,7 +6,6 @@
 
 - **libsignal v0.105.2** — internal/dependency update, no public-API impact
 
-
 #### Changed
 
 - **The update to libsignal v0.105.1 leaves the exposed protocol surface
@@ -59,6 +58,34 @@
   section says so.
 
 ### For Contributors
+
+#### Added
+
+- **A template update reports text it merged in twice**
+  (`scripts/src/update_template.dart`, `scripts/update_template.dart`,
+  `test/scripts/update_template_test.dart`,
+  `.github/workflows/check-template-updates.yml`,
+  `.claude/skills/update-template/SKILL.md`) — adopting template v4.17.0 put
+  the `describeFrbTreeDrift`, `parseLsTree` and `parseContentsListing` groups
+  into `test/scripts/release_test.dart` a second time, with every gate green:
+  the template had taken them from here and filed them elsewhere, and copier
+  kept both copies without a conflict. It was found by hand. After merging,
+  `make update-template` — which the template bot runs — now renders the new
+  version afresh with this project's answers and flags each line of 25
+  characters or more that the merge left more often than both the file at
+  `HEAD` and the render have it, both having it at least once; in a conflicted
+  file, only when it stays repeated whichever side of its conflicts is kept.
+  The bot's pull request then opens as a draft, lists the files with the line
+  numbers of the first repeated line and carries the label `merged-twice`; when
+  the render cannot be made, its table says the check did not run. Replayed on
+  this repository's twelve resolved adoptions and three raw updates, it found
+  that case and the two under *Changed* below, and nothing else; a version
+  without the render, counting blocks that occur more often than at `HEAD`,
+  raised fourteen false alarms on the same adoptions. Written here and in the
+  template together, because the bot runs the script it finds on `main`: the
+  next adoption here is already checked. `scripts/src/update_changelog.dart`
+  takes the template's wrapping of one doc comment, so the file is the
+  template's render byte for byte.
 
 #### Changed
 
@@ -232,6 +259,68 @@
   those permission assertions still pass unchanged. A default-branch config
   with no title entry only warns: `ai-review.yml` runs as a pull request's
   own copy, so the pull request that brings the check meets the old config.
+- **copier template adopted: v4.15.2 → v4.17.0** (`.copier-answers.yml`,
+  `Makefile`, `CLAUDE.md`, `scripts/src/pub_limits.dart`,
+  `scripts/verify_pub_limits.dart`, `scripts/src/release.dart`,
+  `scripts/src/upstream_source.dart`, `scripts/src/check_updates.dart`,
+  `scripts/src/common.dart`, `scripts/src/update_changelog.dart`,
+  `scripts/check_exists_frb_release.dart` and their tests,
+  `.github/workflows/test-reusable.yml`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.github/workflows/check-template-updates.yml`,
+  `.github/workflows/refresh-notices.yml`,
+  `.github/rulesets/signing-commit.json`, `.github/rulesets/README.md`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.claude/skills/update-libsignal/SKILL.md`) — `make verify-pub-limits`
+  arrives. pub.dev refuses a README, CHANGELOG, LICENSE or example over
+  256 KiB, and a pubspec over 128 KiB, only at upload — after the tag, which is
+  how 7.4.0 was spent — and the dry-run measures none of them. The check now
+  runs before `make publish-dry-run`, inside `make release` once the CHANGELOG
+  is finalized, and in CI on every push, warning from 200 KiB; `CHANGELOG.md`
+  is at about 131 KB. The two update checkers no longer check out with the App
+  token and keep no credential in `.git/config` while project code and copier
+  run. **Signing commit** now excludes `update-libsignal-*` and
+  `update-template-v*`, so `force_update` can refresh an open update pull
+  request — a force-push that ruleset refused, measured in a generated
+  project; the ruleset was re-applied on GitHub on 2026-10-21 with the
+  single-ruleset `PUT` in `.github/rulesets/README.md`. That README now also
+  says what `refresh-notices.yml` does: it commits through
+  `createCommitOnBranch`, which signs. The update scripts are reorganised
+  around `upstream_source` (`git_tag` here; `crates_io` is the template's new
+  alternative): a manual `target_version` is held to shell-safe characters and
+  validated by the checker, the release reads the crate pin strictly, and
+  `upstream_version` is validated. The agent, repair, lockfile and Dependabot
+  changes of 2026-10-19 were written here first and arrive as no diff. Kept
+  ours: `hook/build.dart` and its test (this project's 6.3.0 → 6.3.1 example),
+  `SECURITY.md` (it already lists the tag protection), the rulesets README's
+  dates and its notes on the required checks, and `CLAUDE.md`'s two-stage
+  release docs, which gain the size check by hand.
+- **`test / Test (Linux ARM64)` is a required check again**
+  (`.github/rulesets/protect-main.json`, `.github/rulesets/README.md`) — it
+  was left out when the test matrix became required on 2026-09-07, over a
+  30-second timeout that hit a different test each run. The cause was a
+  flutter_rust_bridge race that could drop Rust's replies to Dart while a test
+  file's isolate was starting; `LibSignal.init` has worked around it since
+  2026-09-30, released in 8.0.0. Of the 31 `Tests` runs from 2026-10-01 to
+  2026-10-21 the leg failed three, each time with every other test leg at the
+  same step (`Analyze` twice, `Get dependencies` once). `main` now requires
+  twelve checks, the template's list. The live ruleset was updated the same
+  day by a single-ruleset `PUT` of the live ruleset plus this one context, so
+  the parameters GitHub added to it stay as they were. The runbook's advice on
+  dropping a flaky leg is now the template's, followed by this project's case.
+- **Two repeats a template merge left on 2026-08-31 are gone** (`CLAUDE.md`,
+  `.githooks/pre-commit`) — adopting v4.4.0 → v4.6.0 put the `AI_MODELS` table
+  and the paragraphs after it into `CLAUDE.md` a second time, inside *Stage 2
+  — release the Dart package*, and took *What the entry is judged against*
+  there with them; that section is back under *AI-Powered Changelog*, as in
+  the template. The same merge kept this repository's first fix for the
+  pre-commit hook's `GIT_DIR` problem, an `unset GIT_DIR GIT_WORK_TREE
+  GIT_INDEX_FILE` at the top of the file, beside the template's, which unsets
+  them for the checks alone. The one at the top also hid the temporary index
+  `git commit -a` hands the hook, so the hook's own `git diff --cached` saw
+  nothing staged and `make rust-check` was skipped on every `git commit -a`
+  that changed `rust/` (measured with a hook that prints both). The hook is
+  the template's now. The check above found both.
 
 ## [8.0.0] - 2026-10-08
 
