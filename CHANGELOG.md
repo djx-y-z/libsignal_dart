@@ -54,6 +54,34 @@
 
 ### For Contributors
 
+#### Added
+
+- **A template update reports text it merged in twice**
+  (`scripts/src/update_template.dart`, `scripts/update_template.dart`,
+  `test/scripts/update_template_test.dart`,
+  `.github/workflows/check-template-updates.yml`,
+  `.claude/skills/update-template/SKILL.md`) — adopting template v4.17.0 put
+  the `describeFrbTreeDrift`, `parseLsTree` and `parseContentsListing` groups
+  into `test/scripts/release_test.dart` a second time, with every gate green:
+  the template had taken them from here and filed them elsewhere, and copier
+  kept both copies without a conflict. It was found by hand. After merging,
+  `make update-template` — which the template bot runs — now renders the new
+  version afresh with this project's answers and flags each line of 25
+  characters or more that the merge left more often than both the file at
+  `HEAD` and the render have it, both having it at least once; in a conflicted
+  file, only when it stays repeated whichever side of its conflicts is kept.
+  The bot's pull request then opens as a draft, lists the files with the line
+  numbers of the first repeated line and carries the label `merged-twice`; when
+  the render cannot be made, its table says the check did not run. Replayed on
+  this repository's twelve resolved adoptions and three raw updates, it found
+  that case and the two under *Changed* below, and nothing else; a version
+  without the render, counting blocks that occur more often than at `HEAD`,
+  raised fourteen false alarms on the same adoptions. Written here and in the
+  template together, because the bot runs the script it finds on `main`: the
+  next adoption here is already checked. `scripts/src/update_changelog.dart`
+  takes the template's wrapping of one doc comment, so the file is the
+  template's render byte for byte.
+
 #### Changed
 
 - **Only an Admin can create, move or delete a tag**
@@ -275,6 +303,19 @@
   day by a single-ruleset `PUT` of the live ruleset plus this one context, so
   the parameters GitHub added to it stay as they were. The runbook's advice on
   dropping a flaky leg is now the template's, followed by this project's case.
+- **Two repeats a template merge left on 2026-08-31 are gone** (`CLAUDE.md`,
+  `.githooks/pre-commit`) — adopting v4.4.0 → v4.6.0 put the `AI_MODELS` table
+  and the paragraphs after it into `CLAUDE.md` a second time, inside *Stage 2
+  — release the Dart package*, and took *What the entry is judged against*
+  there with them; that section is back under *AI-Powered Changelog*, as in
+  the template. The same merge kept this repository's first fix for the
+  pre-commit hook's `GIT_DIR` problem, an `unset GIT_DIR GIT_WORK_TREE
+  GIT_INDEX_FILE` at the top of the file, beside the template's, which unsets
+  them for the checks alone. The one at the top also hid the temporary index
+  `git commit -a` hands the hook, so the hook's own `git diff --cached` saw
+  nothing staged and `make rust-check` was skipped on every `git commit -a`
+  that changed `rust/` (measured with a hook that prints both). The hook is
+  the template's now. The check above found both.
 
 ## [8.0.0] - 2026-10-08
 

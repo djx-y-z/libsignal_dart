@@ -425,6 +425,35 @@ that wrote the entry.
 If no model answers, nothing is guessed: the entry is left unwritten, the run
 says why, and the pull request is labelled `changelog-needed`.
 
+### What the entry is judged against
+
+`.github/agent-prompts/changelog-scope.md` holds this project's own statement of
+what it binds and exposes, and the prompt classifies every upstream change
+against it: anything that cannot be tied to something named there is invisible
+to this package's users and must not be presented as a feature of it. The
+template writes that file once and never overwrites it, so keeping it current is
+this project's job — a stale list is how somebody else's release notes end up
+described as our features.
+
+**The `spqr` range is read by hand, and this is where the command lives.** The
+sparse post-quantum ratchet runs inside the exposed Double Ratchet but is its
+own repository, so a bump leaves exactly one trace in the libsignal compare the
+prompt is given — a version number in a manifest. The model is sent a plain
+completion with no tools, so it cannot go and look, and the scope file is
+deliberately written so that it never asks it to. Whoever finishes the update
+pull request does:
+
+```bash
+gh api repos/signalapp/SparsePostQuantumRatchet/compare/<old>...<new> \
+  --jq '.files[] | "\(.status) +\(.additions)/-\(.deletions) \(.filename)"'
+```
+
+⚠ **Then diff the encoder, not just the file list.** On 1.5.3 → 1.6.0 the
+serializer moved in the diff and was byte-identical all the same — the parsing
+was regrouped so a message from an unsupported version could still be read. A
+changed `serialize.rs` is not a changed wire format; compare the function at
+both tags before writing either claim.
+
 ## Development Workflow
 
 ### 1. Implement Rust API
@@ -562,74 +591,6 @@ git worktree add --detach ../stage2-check HEAD
 cd ../stage2-check && make get && make test   # no make build: the hook downloads
 cd - && git worktree remove ../stage2-check
 ```
-
-| Variable | Purpose |
-|----------|---------|
-| `AI_MODELS` | Ordered `provider/model` list, highest priority first. **Required** — there is no default; unset means no model is called. |
-| `ANTHROPIC_API_KEY` | Key for `anthropic/…` entries ([console](https://console.anthropic.com/settings/keys)). |
-| `GEMINI_API_KEY` | Key for `google/…` entries ([AI Studio](https://aistudio.google.com/apikey)). |
-| `OPENROUTER_API_KEY` | Key for `openrouter/…` entries ([keys](https://openrouter.ai/keys)). |
-| `AI_EFFORT` | How hard the model is asked to think: `low`, `medium` (default), `high`, `xhigh`, `max`. Ignored by providers that have no such knob. |
-
-An entry whose key is unset is skipped silently — that is how the list says
-"use this if it is available". A malformed entry or an unknown provider is
-warned about loudly, because it is a typo, not a choice.
-
-Keys are read from the environment and go out in one request header each
-(`x-api-key`, `x-goog-api-key`, `Authorization`). They are never put in a URL,
-in process arguments, or in the prompt, and nothing logs them — the priority
-line prints model ids and variable *names* only. Provider error bodies are
-quoted into logs and pull-request output, so the key is stripped from those
-before they are reported.
-
-`openrouter` is an aggregator, so its model half is itself a `vendor/model`
-pair — an entry reads `openrouter/anthropic/claude-opus-5`. It buys one key for
-many models (swapping model costs neither code nor a new secret), at the price
-of a third party on the path and a weaker schema guarantee: structured-output
-support is per model **and** per backing provider, and `strict` is enforced
-exactly by some and treated as guidance by others. A model that cannot do
-structured outputs is rejected outright rather than silently downgraded.
-
-The next entry is tried only when a model produced **no** answer: a network
-failure, an auth/rate-limit/server status, a refusal, or a response cut off at
-the token limit. Never on the *content* of an answer — switching providers
-because an entry read poorly would make the CHANGELOG silently inconsistent.
-
-In CI these are step-scoped: `AI_MODELS` as a repository/organization
-**variable**, the keys as **secrets**. The pull request body names the model
-that wrote the entry.
-
-If no model answers, nothing is guessed: the entry is left unwritten, the run
-says why, and the pull request is labelled `changelog-needed`.
-
-### What the entry is judged against
-
-`.github/agent-prompts/changelog-scope.md` holds this project's own statement of
-what it binds and exposes, and the prompt classifies every upstream change
-against it: anything that cannot be tied to something named there is invisible
-to this package's users and must not be presented as a feature of it. The
-template writes that file once and never overwrites it, so keeping it current is
-this project's job — a stale list is how somebody else's release notes end up
-described as our features.
-
-**The `spqr` range is read by hand, and this is where the command lives.** The
-sparse post-quantum ratchet runs inside the exposed Double Ratchet but is its
-own repository, so a bump leaves exactly one trace in the libsignal compare the
-prompt is given — a version number in a manifest. The model is sent a plain
-completion with no tools, so it cannot go and look, and the scope file is
-deliberately written so that it never asks it to. Whoever finishes the update
-pull request does:
-
-```bash
-gh api repos/signalapp/SparsePostQuantumRatchet/compare/<old>...<new> \
-  --jq '.files[] | "\(.status) +\(.additions)/-\(.deletions) \(.filename)"'
-```
-
-⚠ **Then diff the encoder, not just the file list.** On 1.5.3 → 1.6.0 the
-serializer moved in the diff and was byte-identical all the same — the parsing
-was regrouped so a message from an unsupported version could still be read. A
-changed `serialize.rs` is not a changed wire format; compare the function at
-both tags before writing either claim.
 
 ## Supported Platforms
 

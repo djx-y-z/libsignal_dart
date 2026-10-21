@@ -33,10 +33,10 @@ class ChangelogUpdate {
 
   /// Whether `[Unreleased]` was left naming two upstream versions.
   ///
-  /// True when a REWRITTEN libsignal Highlights line was standing and this
-  /// run's line was therefore added beside it instead of superseding it — see
-  /// [hasRewrittenNativeHighlight] for why a rewritten one is never replaced.
-  /// The condition is legitimate; going unreported is not.
+  /// True when a REWRITTEN libsignal Highlights line was
+  /// standing and this run's line was therefore added beside it instead of
+  /// superseding it — see [hasRewrittenNativeHighlight] for why a rewritten one
+  /// is never replaced. The condition is legitimate; going unreported is not.
   final bool highlightsStacked;
 }
 

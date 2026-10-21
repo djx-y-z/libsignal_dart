@@ -3,8 +3,9 @@
 /// Apply a copier template update.
 ///
 /// Runs `copier update` for the requested version, reports whatever copier
-/// could not merge, checks that the version bump actually landed in
-/// `.copier-answers.yml`, and records the adoption in CHANGELOG.md.
+/// could not merge and any text it merged in twice, checks that the version
+/// bump actually landed in `.copier-answers.yml`, and records the adoption in
+/// CHANGELOG.md.
 ///
 /// Usage:
 ///   fvm dart scripts/update_template.dart --version vX.Y.Z [options]
@@ -23,9 +24,9 @@
 /// Exit codes are deliberately coarse: 0 means copier ran and the working tree
 /// now holds the update, **including** when it left conflicts, because that
 /// outcome still wants a pull request a human can finish. Anything a caller
-/// needs to branch on — conflicts, a missing version bump, a skipped CHANGELOG
-/// — is reported through `--ci-output`, not through the status. Only a failure
-/// that leaves nothing usable exits non-zero.
+/// needs to branch on — conflicts, text merged in twice, a missing version
+/// bump, a skipped CHANGELOG — is reported through `--ci-output`, not through
+/// the status. Only a failure that leaves nothing usable exits non-zero.
 ///
 /// Examples:
 ///   ```bash
