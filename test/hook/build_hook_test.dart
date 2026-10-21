@@ -98,22 +98,35 @@ void main() {
     // The hook prefers a local build over the released one, so the stamp is
     // the only thing standing between a developer and a silently stale
     // library or module. `rustContentHash` does not cover it: that value
+<<<<<<< before updating
     // hashes only the bridged functions' names, which 6.3.0 -> 6.3.1 left
     // unchanged while the vendored libsignal moved v0.102.0 -> v0.103.0.
     test('accepts a build stamped with the same crate version', () {
       expect(
         build_hook.localBuildMatchesCrate(stamped: '6.3.1', version: '6.3.1'),
+=======
+    // hashes only the bridged functions' names, which a patch release leaves
+    // unchanged while the vendored native code moves underneath them.
+    test('accepts a build stamped with the same crate version', () {
+      expect(
+        build_hook.localBuildMatchesCrate(stamped: '1.5.0', version: '1.5.0'),
+>>>>>>> after updating
         isTrue,
       );
     });
 
     test('rejects a build stamped with another crate version', () {
       expect(
+<<<<<<< before updating
         build_hook.localBuildMatchesCrate(stamped: '6.3.0', version: '6.3.1'),
+=======
+        build_hook.localBuildMatchesCrate(stamped: '1.4.0', version: '1.5.0'),
+>>>>>>> after updating
         isFalse,
       );
     });
 
+<<<<<<< before updating
     test(
       'rejects an UNSTAMPED build, which is every one built before this',
       () {
@@ -132,6 +145,23 @@ void main() {
       // every real build.
       expect(
         build_hook.localBuildMatchesCrate(stamped: '6.3.1\n', version: '6.3.1'),
+=======
+    test('rejects an UNSTAMPED build, which is every one built before this', () {
+      // The case that motivated the check: a build directory that predates
+      // its stamp carries no version at all and used to be used regardless.
+      expect(
+        build_hook.localBuildMatchesCrate(stamped: null, version: '1.5.0'),
+        isFalse,
+      );
+    });
+
+    test('tolerates the trailing newline the make targets actually write', () {
+      // `make build` and `make build-web` stamp with `grep | sed > file`, which
+      // terminates the line. A check that compared raw contents would reject
+      // every real build.
+      expect(
+        build_hook.localBuildMatchesCrate(stamped: '1.5.0\n', version: '1.5.0'),
+>>>>>>> after updating
         isTrue,
       );
     });
@@ -147,8 +177,13 @@ void main() {
       addTearDown(() => dir.deleteSync(recursive: true));
       File(
         '${dir.path}/${build_hook.localBuildStampName}',
+<<<<<<< before updating
       ).writeAsStringSync('6.3.1\n');
       expect(build_hook.readLocalBuildStamp(dir), equals('6.3.1'));
+=======
+      ).writeAsStringSync('1.5.0\n');
+      expect(build_hook.readLocalBuildStamp(dir), equals('1.5.0'));
+>>>>>>> after updating
     });
   });
 }

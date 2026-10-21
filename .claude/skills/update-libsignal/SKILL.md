@@ -295,7 +295,12 @@ Files automatically updated by `make check-new-libsignal-version ARGS="--update"
 
 | File | What | Description |
 |------|------|-------------|
+<<<<<<< before updating
 | `rust/Cargo.toml` | libsignal-* tags | Native library dependency version |
+=======
+| `rust/Cargo.toml` | upstream tags | Native library dependency version |
+| `.copier-answers.yml` | `upstream_version` | What the next `copier update` renders |
+>>>>>>> after updating
 | `rust/Cargo.toml` | `version` | `libsignal_frb` bump mirroring upstream SemVer delta (adjust manually if wrapper API changed differently) |
 | `README.md` | Badge | Version badge in header |
 | `CLAUDE.md` | Example | Code example in documentation |

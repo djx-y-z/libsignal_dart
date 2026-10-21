@@ -72,7 +72,11 @@ const _localWasmMarker = 'local-dev';
 /// `rust/target/wasm32/`, recording the crate version each was built from.
 ///
 /// It exists because nothing else can answer the question. A local build
+<<<<<<< before updating
 /// directory is a build artefact of this repository: its files change whenever
+=======
+/// directory is a build artefact: its files change whenever
+>>>>>>> after updating
 /// anyone rebuilds, and their timestamps move on a checkout, a stash or a
 /// no-op rebuild, in both directions — so neither content nor mtime says which
 /// crate version they came from.
@@ -87,10 +91,17 @@ const localBuildStampName = '.crate-version';
 ///
 /// ⚠ `rustContentHash` does NOT cover this. That check hashes only the
 /// *names* of the bridged functions, and those can stay the same across a
+<<<<<<< before updating
 /// release that moves the vendored crypto underneath them — 6.3.0 → 6.3.1 was
 /// exactly such a release, which is why it was a patch. So the one value that
 /// already crosses the Dart-to-binary boundary is blind to a stale local build
 /// by construction, and a version stamp is the check that is not.
+=======
+/// release that moves the vendored native code underneath them, which is
+/// exactly what a patch release looks like. So the one value that already
+/// crosses the Dart-to-binary boundary is blind to a stale local build by
+/// construction, and a version stamp is the check that is not.
+>>>>>>> after updating
 ///
 /// Pure so it is testable without a build tree.
 bool localBuildMatchesCrate({
@@ -400,7 +411,11 @@ Future<void> _handleWebBuild(
     // the marker written below is a sentinel rather than a version, so the
     // freshness check further down is unreachable on this path, and
     // `rustContentHash` hashes only the bridged functions' names, which a
+<<<<<<< before updating
     // release may leave unchanged while replacing the vendored crypto behind
+=======
+    // release may leave unchanged while replacing the native code behind
+>>>>>>> after updating
     // them. A stale module would then be served silently, and on the web that
     // means running an upstream version the rest of the package has already
     // moved past.

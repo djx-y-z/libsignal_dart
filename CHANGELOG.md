@@ -56,6 +56,28 @@
 
 #### Changed
 
+- **copier template adopted: v4.15.2 -> v4.17.0** — adds crates.io-aware
+  upstream handling while retaining this project's `git_tag` source, and
+  tightens pin validation and release/update tooling.
+  `.copier-answers.yml` now records `upstream_source: git_tag`; the new
+  `scripts/src/upstream_source.dart` and its tests provide the source-specific
+  interface, while `scripts/src/check_updates.dart`, `scripts/src/release.dart`
+  and `scripts/check_exists_frb_release.dart` validate pins strictly. The
+  checker can now find stable crates.io releases as well as GitHub releases;
+  this adoption does not switch libsignal from git tags.
+  `scripts/src/update_changelog.dart` now builds the third-party dependency
+  paragraph from the `rust/Cargo.lock` diff and includes upstream crate patches
+  and a complete file list in its prompt, so the generated entry can describe
+  the actual changes without asking the model to reproduce dependency moves.
+  `Makefile`, `scripts/verify_pub_limits.dart` and
+  `.github/workflows/test-reusable.yml` add `make verify-pub-limits` to catch
+  pub.dev file-size refusals before release. `hook/build.dart` now requires a
+  crate-version stamp for local host libraries, so a stale or unstamped build
+  fails clearly instead of being loaded; rebuild it with `make build`.
+  The update-check workflows no longer expose the write-scoped App token to
+  checkout code, and `.github/rulesets/signing-commit.json` excludes update
+  branches so the bot can refresh an existing pull request by force-pushing.
+
 - **Only an Admin can create, move or delete a tag**
   (`.github/rulesets/protect-release-tags.json`, `.github/rulesets/README.md`,
   `CONTRIBUTING.md`, `CLAUDE.md`, `.claude/skills/release-package/SKILL.md`,
