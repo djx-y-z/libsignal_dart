@@ -333,6 +333,30 @@
   Replayed on #119's real input, the generator produces the `CHANGELOG.md`
   that was merged, byte for byte; the same replay before the fix gives the
   extra line.
+- **The AI reviewer holds a bot entry's upstream claims against the upstream
+  range, not against this diff** (`.github/workflows/ai-review.yml`,
+  `.github/agent-prompts/pr-review.md`) — the rule added on 2026-10-19 said
+  that every file a bot's CHANGELOG entry names must appear in a hunk. An
+  entry that describes the upstream release names upstream files, which no
+  hunk here can show, so on #119 the reviewer reported `rust/net/chat`,
+  `rust/attest` and `rust/core/src/version.rs` as named by no hunk although
+  every claim was true, and it would have on every bump. The workflow now
+  reads the range the entry links from GitHub and lists the files it changed
+  in `pr-context.md`. It takes the link only when it points at `native_repo`
+  from `.copier-answers.yml` and both refs are plain, and nothing in it can
+  fail the step: without a link nothing is added, and a range GitHub will
+  not return is reported as unreadable. Only that section, and rule 6 of the
+  prompt, exempt claims about that one repository's files from the hunks and
+  hold them against the list. Every other claim is held against the diff as
+  before, so a template adoption's entry, whose link points at the template,
+  is still checked against the diff in full. Run on #119's real diff, the
+  section lists the range's 49 files, the three paths above among them. Nine
+  more variants each finish the step and write what they should: no link, a
+  link to another repository or to the template, an unreadable range, a ref
+  with `..`, a pull request opened by a person, a missing or malformed
+  `native_repo`, and a range past GitHub's 300-file cap, which the section
+  then states. No model was run: what the reviewer makes of the list shows on
+  the next libsignal bump.
 
 ## [8.0.0] - 2026-10-08
 
