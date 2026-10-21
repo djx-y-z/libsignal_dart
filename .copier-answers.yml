@@ -1,4 +1,4 @@
-_commit: v4.15.2
+_commit: v4.17.0
 _src_path: https://github.com/djx-y-z/copier-dart-frb-wrapper.git
 android_compile_sdk: '36'
 android_gradle_version: 8.11.1
@@ -30,5 +30,6 @@ rust_edition: '2024'
 rust_version: 1.93.1
 topics: rust,flutter-rust-bridge,signal,cryptography,encryption
 upstream_crates: libsignal-protocol,libsignal-core,signal-crypto
+upstream_source: git_tag
 upstream_version: v0.105.1
 version_tag_prefix: v

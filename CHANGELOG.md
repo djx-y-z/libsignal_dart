@@ -226,6 +226,42 @@
   those permission assertions still pass unchanged. A default-branch config
   with no title entry only warns: `ai-review.yml` runs as a pull request's
   own copy, so the pull request that brings the check meets the old config.
+- **copier template adopted: v4.15.2 → v4.17.0** (`.copier-answers.yml`,
+  `Makefile`, `CLAUDE.md`, `scripts/src/pub_limits.dart`,
+  `scripts/verify_pub_limits.dart`, `scripts/src/release.dart`,
+  `scripts/src/upstream_source.dart`, `scripts/src/check_updates.dart`,
+  `scripts/src/common.dart`, `scripts/src/update_changelog.dart`,
+  `scripts/check_exists_frb_release.dart` and their tests,
+  `.github/workflows/test-reusable.yml`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.github/workflows/check-template-updates.yml`,
+  `.github/workflows/refresh-notices.yml`,
+  `.github/rulesets/signing-commit.json`, `.github/rulesets/README.md`,
+  `.claude/skills/release-package/SKILL.md`,
+  `.claude/skills/update-libsignal/SKILL.md`) — `make verify-pub-limits`
+  arrives. pub.dev refuses a README, CHANGELOG, LICENSE or example over
+  256 KiB, and a pubspec over 128 KiB, only at upload — after the tag, which is
+  how 7.4.0 was spent — and the dry-run measures none of them. The check now
+  runs before `make publish-dry-run`, inside `make release` once the CHANGELOG
+  is finalized, and in CI on every push, warning from 200 KiB; `CHANGELOG.md`
+  is at about 131 KB. The two update checkers no longer check out with the App
+  token and keep no credential in `.git/config` while project code and copier
+  run. **Signing commit** now excludes `update-libsignal-*` and
+  `update-template-v*`, so `force_update` can refresh an open update pull
+  request — a force-push that ruleset refused, measured in a generated
+  project; it takes effect on GitHub once the ruleset is re-applied with the
+  single-ruleset `PUT` in `.github/rulesets/README.md`. That README now also
+  says what `refresh-notices.yml` does: it commits through
+  `createCommitOnBranch`, which signs. The update scripts are reorganised
+  around `upstream_source` (`git_tag` here; `crates_io` is the template's new
+  alternative): a manual `target_version` is held to shell-safe characters and
+  validated by the checker, the release reads the crate pin strictly, and
+  `upstream_version` is validated. The agent, repair, lockfile and Dependabot
+  changes of 2026-10-19 were written here first and arrive as no diff. Kept
+  ours: `hook/build.dart` and its test (this project's 6.3.0 → 6.3.1 example),
+  `SECURITY.md` (it already lists the tag protection), the rulesets README's
+  dates and its eleven required checks, and `CLAUDE.md`'s two-stage release
+  docs, which gain the size check by hand.
 
 ## [8.0.0] - 2026-10-08
 

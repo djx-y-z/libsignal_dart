@@ -17,6 +17,7 @@ import 'dart:io';
 
 import 'ai_client.dart';
 import 'common.dart';
+import 'upstream_source.dart';
 
 /// What [updateChangelog] reports back to its caller.
 ///
@@ -64,34 +65,56 @@ Future<ChangelogUpdate> updateChangelog({
 }) async {
   final packageDir = getPackageDir();
 
-  // Step 1: Fetch release notes from GitHub.
-  logStep('Fetching release notes for $version...');
-  final releaseNotes = await _fetchReleaseNotes(version);
-  logInfo('Got ${releaseNotes.length} characters of release notes');
+  // Both pins reach GitHub API URLs below, so they are held to the shape this
+  // project's upstream source pins by before anything is fetched.
+  upstreamSource.validatePin(version, origin: '--version argument');
+  if (fromVersion != null) {
+    upstreamSource.validatePin(fromVersion, origin: '--from argument');
+  }
 
-  // Step 2: What this run's own tree says: which upstream crates the package
-  // builds, and how the resolved graph moved. Read before the compare, which
-  // needs the crates to tell their files from everything else in the range.
+  // Step 1: What this run's own tree says: which upstream crates the package
+  // builds, and how the resolved graph moved. Read first, because the release
+  // notes and the compare both need the crates: the notes to find a crate's
+  // own CHANGELOG.md, the compare to tell their files from everything else in
+  // the range.
   logStep('Reading the resolved dependency graph...');
   final crates = await _fetchUpstreamCrates(packageDir);
   logInfo(
     'Upstream crates in the graph: '
     '${crates.isEmpty ? 'none found' : crates.map((c) => c.name).join(', ')}',
   );
-  final lock = await _readLockfileChanges(packageDir);
+  final lock = await _readLockfileChanges(packageDir, crates: crates);
   logInfo('Got ${lock.prompt.length} characters of lockfile changes');
 
-  // Step 3: Fetch the actual commit list between the two tags — release notes
-  // alone are often terse, which produced incomplete changelog entries.
+  // Step 2: The upstream commits the two pins denote. For a tag they are the
+  // tags themselves and cost nothing; a registry source reads them out of the
+  // published crates, and when that fails the steps that need a commit are
+  // left out rather than the entry.
+  final to = await _revisionOf(version);
+  final from = fromVersion == null || fromVersion == version
+      ? null
+      : await _revisionOf(fromVersion);
+
+  // Step 3: Fetch the release's own notes, wherever the source keeps them.
+  logStep('Fetching release notes for $version...');
+  final releaseNotes = await _fetchReleaseNotes(
+    version,
+    ref: to?.ref,
+    crates: crates,
+  );
+  logInfo('Got ${releaseNotes.length} characters of release notes');
+
+  // Step 4: Fetch the actual commit list between the two releases — release
+  // notes alone are often terse, which produced incomplete changelog entries.
   var upstreamCommits = '';
   var upstreamFiles = '';
   var upstreamPatches = '';
-  if (fromVersion != null && fromVersion != version) {
-    logStep('Fetching upstream compare $fromVersion...$version...');
+  if (from != null && to != null) {
+    logStep('Fetching upstream compare ${from.ref}...${to.ref}...');
     try {
       final compare = await _fetchUpstreamCompare(
-        fromVersion,
-        version,
+        from.ref,
+        to.ref,
         crates: crates,
       );
       upstreamCommits = compare.commits;
@@ -105,18 +128,25 @@ Future<ChangelogUpdate> updateChangelog({
     } catch (e) {
       logWarning('Could not fetch upstream compare: $e');
     }
+    if (upstreamCommits.isNotEmpty && (from.dirty || to.dirty)) {
+      upstreamCommits =
+          '(At least one of these releases was published from a tree with '
+          'uncommitted changes, so the range below is of the commits nearest '
+          'to what shipped, not exactly of it.)\n$upstreamCommits';
+    }
   }
 
-  // Step 4: Read current CHANGELOG.
+  // Step 5: Read current CHANGELOG.
   logStep('Reading CHANGELOG.md...');
   final changelogFile = File('${packageDir.path}/CHANGELOG.md');
   final currentChangelog = changelogFile.readAsStringSync();
 
-  // Step 5: Analyze with AI.
+  // Step 6: Analyze with AI.
   logStep('Analyzing release notes with AI...');
   final entry = await _generateChangelogEntry(
     version: version,
-    fromVersion: fromVersion,
+    fromRef: from?.ref,
+    toRef: to?.ref,
     releaseNotes: releaseNotes,
     upstreamCommits: upstreamCommits,
     upstreamFiles: upstreamFiles,
@@ -135,7 +165,7 @@ Future<ChangelogUpdate> updateChangelog({
   logInfo('Generated libsignal highlight: $nativeHighlight');
   logInfo('Generated changed entry');
 
-  // Step 6: Update CHANGELOG.
+  // Step 7: Update CHANGELOG.
   logStep('Updating CHANGELOG.md...');
   // The new Highlights line supersedes this script's own default from an
   // earlier bump, but never a rewritten one — so say when one is left standing.
@@ -170,9 +200,64 @@ Future<ChangelogUpdate> updateChangelog({
 const emptyReleaseNotesPlaceholder =
     'No release notes were published for this release.';
 
-/// Fetch release notes, from the GitHub release if it has a body and from the
-/// upstream repository's own `RELEASE_NOTES.md` if it does not.
-Future<String> _fetchReleaseNotes(String version) async {
+/// Fetch the release's own notes from wherever the upstream source keeps them,
+/// in the order [UpstreamSource.releaseNotesKinds] gives: the GitHub release
+/// when it has a body, then `RELEASE_NOTES.md` and the release's section of
+/// `CHANGELOG.md` at [ref], the commit [version] denotes.
+///
+/// When nothing later in the order has more, what the GitHub release said is
+/// what comes back — its "no notes were published" included, which is a fact
+/// about that release. A source with no GitHub release to ask ends at
+/// [emptyReleaseNotesPlaceholder] instead.
+Future<String> _fetchReleaseNotes(
+  String version, {
+  required String? ref,
+  required List<UpstreamCrate> crates,
+}) async {
+  String? fromRelease;
+  for (final kind in upstreamSource.releaseNotesKinds) {
+    switch (kind) {
+      case ReleaseNotesKind.githubRelease:
+        fromRelease = await _fetchGithubReleaseNotes(version);
+        if (fromRelease != emptyReleaseNotesPlaceholder) return fromRelease;
+      case ReleaseNotesKind.releaseNotesFile:
+        if (ref == null) continue;
+        final notes = await _fetchInRepoReleaseNotes(version, ref: ref);
+        if (notes == null) continue;
+        logInfo(
+          fromRelease == null
+              ? 'Using RELEASE_NOTES.md at $ref'
+              : 'Release body was empty; using RELEASE_NOTES.md at $ref',
+        );
+        return notes;
+      case ReleaseNotesKind.changelogSection:
+        if (ref == null) continue;
+        final notes = await _fetchChangelogSection(
+          version,
+          ref: ref,
+          crates: crates,
+        );
+        if (notes == null) continue;
+        logInfo('Using the $version section of CHANGELOG.md at $ref');
+        return notes;
+    }
+  }
+  return fromRelease ?? emptyReleaseNotesPlaceholder;
+}
+
+/// The upstream commit [pin] denotes, or null — said in the log — when it
+/// cannot be named; see [UpstreamSource.revisionOf].
+Future<UpstreamRevision?> _revisionOf(String pin) async {
+  try {
+    return await upstreamSource.revisionOf(pin, upstreamHttp);
+  } on Object catch (e) {
+    logWarning('Could not name the upstream commit of $pin: $e');
+    return null;
+  }
+}
+
+/// The body of the GitHub release for the tag [version].
+Future<String> _fetchGithubReleaseNotes(String version) async {
   final result = await Process.run('curl', [
     '-s',
     'https://api.github.com/repos/signalapp/libsignal/releases/tags/$version',
@@ -182,33 +267,92 @@ Future<String> _fetchReleaseNotes(String version) async {
     throw Exception('Failed to fetch release from GitHub');
   }
 
-  final fromRelease = releaseNotesFrom(
+  return releaseNotesFrom(
     jsonDecode(result.stdout as String) as Map<String, dynamic>,
     version,
   );
-  if (fromRelease != emptyReleaseNotesPlaceholder) return fromRelease;
-
-  final fromRepo = await _fetchInRepoReleaseNotes(version);
-  if (fromRepo == null) return fromRelease;
-  logInfo('Release body was empty; using RELEASE_NOTES.md at $version');
-  return fromRepo;
 }
 
-/// Fetch `RELEASE_NOTES.md` at [version] from the upstream repository.
+/// The upstream repository's file at [path] and [ref], raw, or null when it
+/// cannot be fetched.
 ///
 /// Best-effort by design: an upstream that keeps no such file, a network
-/// failure and a rate-limited reply all land as null and leave the caller with
-/// the release body it already had.
-Future<String?> _fetchInRepoReleaseNotes(String version) async {
+/// failure and a rate-limited reply all land as null or as an error payload,
+/// and every reader of the result turns those into "no notes here" and leaves
+/// the caller with what it already had.
+Future<String?> _fetchUpstreamFile(String path, {required String ref}) async {
   final result = await Process.run('curl', [
     '-s',
     '-H',
     'Accept: application/vnd.github.raw',
-    'https://api.github.com/repos/signalapp/libsignal/contents/RELEASE_NOTES.md'
-        '?ref=$version',
+    'https://api.github.com/repos/signalapp/libsignal/contents/$path?ref=$ref',
   ]);
   if (result.exitCode != 0) return null;
-  return inRepoReleaseNotesFrom(result.stdout as String, version);
+  return result.stdout as String;
+}
+
+/// Fetch `RELEASE_NOTES.md` at [ref] from the upstream repository, and keep it
+/// only if it is the notes of [version] — see [inRepoReleaseNotesFrom].
+Future<String?> _fetchInRepoReleaseNotes(
+  String version, {
+  required String ref,
+}) async {
+  final content = await _fetchUpstreamFile('RELEASE_NOTES.md', ref: ref);
+  return content == null ? null : inRepoReleaseNotesFrom(content, version);
+}
+
+/// The section for [version] of the upstream's `CHANGELOG.md` at [ref]: the
+/// primary crate's own when it keeps one, the repository's otherwise.
+/// Best-effort, like [_fetchInRepoReleaseNotes].
+Future<String?> _fetchChangelogSection(
+  String version, {
+  required String ref,
+  required List<UpstreamCrate> crates,
+}) async {
+  final primaryDir =
+      crates.where((c) => c.name == upstreamSource.primary).firstOrNull?.dir ??
+      '';
+  for (final path in {'${primaryDir}CHANGELOG.md', 'CHANGELOG.md'}) {
+    final content = await _fetchUpstreamFile(path, ref: ref);
+    if (content == null) continue;
+    final section = changelogSectionFrom(
+      content,
+      upstreamSource.semverOf(version),
+    );
+    if (section != null) return section;
+  }
+  return null;
+}
+
+/// The section of a `CHANGELOG.md` whose heading names [version]: the text
+/// under that heading, up to the next heading of the same or a higher level.
+/// Null when no heading names it, or the section under it is empty.
+///
+/// The version has to stand alone in the heading — `## [1.2.3] - 2026-01-02`,
+/// `## v1.2.3`, `## 1.2.3 (2026-01-02)` all name `1.2.3`, while `1.2.30` and
+/// `1.2.3-rc.1` do not. Taking those would hand over another release's notes,
+/// which is worse than none: wrong rather than missing, the same trap
+/// [inRepoReleaseNotesFrom] guards against. Pure; exposed for testing.
+String? changelogSectionFrom(String content, String version) {
+  final heading = RegExp(r'^(#{1,6})\s+(.*)$');
+  final named = RegExp(
+    '(?<![0-9A-Za-z.+-])v?${RegExp.escape(version)}(?![0-9A-Za-z.+-])',
+  );
+  final lines = content.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    final match = heading.firstMatch(lines[i]);
+    if (match == null || !named.hasMatch(match.group(2)!)) continue;
+    final level = match.group(1)!.length;
+    final body = <String>[];
+    for (final line in lines.skip(i + 1)) {
+      final next = heading.firstMatch(line);
+      if (next != null && next.group(1)!.length <= level) break;
+      body.add(line);
+    }
+    final text = body.join('\n').trim();
+    return text.isEmpty ? null : text;
+  }
+  return null;
 }
 
 /// Read release notes out of the upstream repository's own `RELEASE_NOTES.md`.
@@ -469,69 +613,8 @@ String upstreamPatchesFrom(
   return out.join('\n\n');
 }
 
-/// An upstream crate this package builds, as `cargo metadata` resolves it: its
-/// name, its version, and its directory inside the upstream repository
-/// (`rust/protocol/`), which is what a compare file list is keyed on.
-typedef UpstreamCrate = ({String name, String version, String dir});
-
-/// Where `cargo metadata` reports a git dependency's manifest:
-/// `<CARGO_HOME>/git/checkouts/<repo>-<hash>/<short rev>/<dir>/Cargo.toml`.
-final _gitCheckoutManifest = RegExp(
-  r'/git/checkouts/[^/]+/[^/]+/(.*)Cargo\.toml$',
-);
-
-/// The crates from the GitHub repository [repo] in a decoded `cargo metadata`
-/// document.
-///
-/// Read from the resolved graph rather than declared, because the declaration
-/// was short: the generator answers name the crates this package depends on
-/// directly, and a crate they pull in from the same repository is in the graph
-/// all the same and was in no prompt. The manifest path is also the one place
-/// that joins a crate's NAME to its PATH upstream, which a compare file list
-/// needs and a name alone does not give — a crate need not live in a directory
-/// of its own name. A crate whose path cannot be read is left out rather than
-/// guessed. Pure; exposed for testing.
-///
-/// Git dependencies only, which is what `rust/Cargo.toml` declares for the
-/// upstream crates and what the update bot reads its tag from. An upstream
-/// taken from crates.io instead is not recognised here, and
-/// [thirdPartyParagraphFrom] would then list its crates as third-party — but
-/// the update bot would already have stopped finding a tag to bump, so that
-/// project has left this generator's contract before it gets here.
-List<UpstreamCrate> upstreamCratesFrom(
-  Map<String, dynamic> metadata, {
-  required String repo,
-}) {
-  final packages = metadata['packages'];
-  if (packages is! List) return const [];
-  final fromRepo = RegExp(
-    '^git\\+https://github\\.com/${RegExp.escape(repo)}(?:\\.git)?(?:[?#]|\$)',
-    caseSensitive: false,
-  );
-  final crates = <UpstreamCrate>[];
-  for (final package in packages) {
-    if (package is! Map<String, dynamic>) continue;
-    final name = package['name'];
-    final version = package['version'];
-    final source = package['source'];
-    final manifest = package['manifest_path'];
-    if (name is! String ||
-        version is! String ||
-        source is! String ||
-        manifest is! String ||
-        !fromRepo.hasMatch(source)) {
-      continue;
-    }
-    final dir = _gitCheckoutManifest
-        .firstMatch(manifest.replaceAll(r'\', '/'))
-        ?.group(1);
-    if (dir == null) continue;
-    crates.add((name: name, version: version, dir: dir));
-  }
-  return crates..sort((a, b) => a.name.compareTo(b.name));
-}
-
-/// Ask `cargo metadata` which upstream crates this package builds.
+/// Ask `cargo metadata` which upstream crates this package builds — which ones
+/// are upstream's is the source's call, [UpstreamSource.cratesIn].
 ///
 /// Best-effort: no toolchain, a checkout it cannot fetch or a lock out of step
 /// all land as an empty list, and every section that needs the crates then
@@ -553,13 +636,26 @@ Future<List<UpstreamCrate>> _fetchUpstreamCrates(Directory packageDir) async {
       );
       return const [];
     }
-    return upstreamCratesFrom(
+    return upstreamSource.cratesIn(
       jsonDecode(result.stdout as String) as Map<String, dynamic>,
-      repo: 'signalapp/libsignal',
+      vcsInfo: _readVcsInfo,
     );
   } on Object catch (e) {
     logWarning('cargo metadata could not be run: $e');
     return const [];
+  }
+}
+
+/// The [VcsInfo] of the crate unpacked in [crateDir], from the
+/// `.cargo_vcs_info.json` that `cargo package` put there, or null when there
+/// is none or it cannot be read — the crate is then left out, not guessed at.
+VcsInfo? _readVcsInfo(String crateDir) {
+  final file = File('$crateDir.cargo_vcs_info.json');
+  if (!file.existsSync()) return null;
+  try {
+    return vcsInfoFrom(file.readAsStringSync());
+  } on FormatException {
+    return null;
   }
 }
 
@@ -670,10 +766,29 @@ bool _isStill(LockDiff diff) =>
 /// holds, so it is handed over instead of asked for — and the paragraph itself
 /// is written by [thirdPartyParagraphFrom], not by the model.
 ///
+/// Registry crates named in [upstream] are listed apart: with a registry
+/// upstream source they are the entry's subject, not crates that moved with
+/// it.
+///
 /// Empty when nothing moved. Pure; exposed for testing.
-String lockfileChangesFrom(String before, String after) {
+String lockfileChangesFrom(
+  String before,
+  String after, {
+  Set<String> upstream = const {},
+}) {
   final diff = diffLockfiles(before, after);
   if (_isStill(diff)) return '';
+  final fromUpstream = [
+    for (final m in diff.moved)
+      if (upstream.contains(m.name))
+        '- `${m.name}` ${m.was.join(', ')} → ${m.now.join(', ')}',
+    for (final a in diff.added)
+      if (upstream.contains(a.name))
+        '- `${a.name}` ${a.versions.join(', ')}, added',
+    for (final r in diff.removed)
+      if (upstream.contains(r.name))
+        '- `${r.name}` removed (was ${r.versions.join(', ')})',
+  ];
 
   final git = [
     for (final g in diff.git)
@@ -690,15 +805,22 @@ String lockfileChangesFrom(String before, String after) {
       '$title (${lines.length}):\n${lines.isEmpty ? '(none)' : lines.join('\n')}';
   return [
     if (git.isNotEmpty) 'Git dependencies:\n${git.join('\n')}',
+    if (fromUpstream.isNotEmpty)
+      'Upstream crates, from the registry:\n${fromUpstream.join('\n')}',
     block('Registry crates that moved', [
       for (final m in diff.moved)
-        '- `${m.name}` ${m.was.join(', ')} → ${m.now.join(', ')}',
+        if (!upstream.contains(m.name))
+          '- `${m.name}` ${m.was.join(', ')} → ${m.now.join(', ')}',
     ]),
     block('Registry crates added', [
-      for (final a in diff.added) '- `${a.name}` ${a.versions.join(', ')}',
+      for (final a in diff.added)
+        if (!upstream.contains(a.name))
+          '- `${a.name}` ${a.versions.join(', ')}',
     ]),
     block('Registry crates removed', [
-      for (final r in diff.removed) '- `${r.name}` ${r.versions.join(', ')}',
+      for (final r in diff.removed)
+        if (!upstream.contains(r.name))
+          '- `${r.name}` ${r.versions.join(', ')}',
     ]),
   ].join('\n\n');
 }
@@ -711,16 +833,33 @@ String lockfileChangesFrom(String before, String after) {
 /// model copying sixteen names out of a prompt is exactly where one gets
 /// dropped or a version mistyped, and the model has nothing to add to it — it
 /// cannot read those crates' own changelogs. The upstream repository's crates
-/// are the entry's subject and are left to it.
+/// are the entry's subject and are left to it — and so are the registry crates
+/// named in [upstream], which is where a registry upstream source's crates are.
 ///
 /// Empty when nothing moved. Pure; exposed for testing.
 String thirdPartyParagraphFrom(
   String before,
   String after, {
   required String upstreamRepo,
+  Set<String> upstream = const {},
 }) {
-  final diff = diffLockfiles(before, after);
-  if (_isStill(diff)) return '';
+  final all = diffLockfiles(before, after);
+  if (_isStill(all)) return '';
+  final diff = (
+    git: all.git,
+    moved: [
+      for (final m in all.moved)
+        if (!upstream.contains(m.name)) m,
+    ],
+    added: [
+      for (final a in all.added)
+        if (!upstream.contains(a.name)) a,
+    ],
+    removed: [
+      for (final r in all.removed)
+        if (!upstream.contains(r.name)) r,
+    ],
+  );
 
   String named(String name, List<String> versions) =>
       '`$name` ${_inProse(versions)}';
@@ -812,8 +951,9 @@ String _describeSource(String source) {
 /// are simply left out: no section is better than one claiming that nothing
 /// moved.
 Future<({String prompt, String paragraph})> _readLockfileChanges(
-  Directory packageDir,
-) async {
+  Directory packageDir, {
+  required List<UpstreamCrate> crates,
+}) async {
   const path = 'rust/Cargo.lock';
   const none = (prompt: '', paragraph: '');
   try {
@@ -828,12 +968,17 @@ Future<({String prompt, String paragraph})> _readLockfileChanges(
     }
     final old = before.stdout as String;
     final now = file.readAsStringSync();
+    // The answers' crates and the graph's: the graph also holds the crates
+    // upstream pulls in from itself, and the answers stand in when `cargo
+    // metadata` could not run.
+    final upstream = {...upstreamSource.crates, for (final c in crates) c.name};
     return (
-      prompt: lockfileChangesFrom(old, now),
+      prompt: lockfileChangesFrom(old, now, upstream: upstream),
       paragraph: thirdPartyParagraphFrom(
         old,
         now,
         upstreamRepo: 'signalapp/libsignal',
+        upstream: upstream,
       ),
     );
   } on Object catch (e) {
@@ -963,6 +1108,13 @@ const _highlightVersionSlot = '<version>';
 const _defaultHighlightTemplate =
     '**libsignal $_highlightVersionSlot** — internal/dependency update, '
     'no public-API impact';
+
+/// How a Highlights line names the upstream release [pin]: `v` and the bare
+/// version, whatever the source pins by — the house format is
+/// `**<library> vX.Y.Z**`, and a pin is a tag with its own prefix, or a
+/// registry version with none. Pure; exposed for testing.
+String highlightVersionFor(UpstreamSource source, String pin) =>
+    'v${source.semverOf(pin)}';
 
 /// The mandated default Highlights line for [version].
 String defaultHighlightFor(String version) =>
@@ -1100,7 +1252,8 @@ const _changelogFields = <String, String>{
 Future<({String highlight, String changed, AiModel model})>
 _generateChangelogEntry({
   required String version,
-  required String? fromVersion,
+  required String? fromRef,
+  required String? toRef,
   required String releaseNotes,
   required String upstreamCommits,
   required String upstreamFiles,
@@ -1114,11 +1267,15 @@ _generateChangelogEntry({
   // Extract recent changelog entries for context (first 150 lines).
   final changelogContext = currentChangelog.split('\n').take(150).join('\n');
 
+  // The release as the Highlights line names it — see [highlightVersionFor].
+  final shown = highlightVersionFor(upstreamSource, version);
+
   // Prefer a compare link (the release notes are often incomplete); fall back
-  // to the release-notes link when the previous version is unknown.
-  final sourceLink = fromVersion != null && fromVersion != version
-      ? '[compare](https://github.com/signalapp/libsignal/compare/$fromVersion...$version)'
-      : '[release notes](https://github.com/signalapp/libsignal/releases/tag/$version)';
+  // to the release's page when there is no previous commit to compare from.
+  final page = upstreamSource.pageFor(version);
+  final sourceLink = fromRef != null && toRef != null && fromRef != toRef
+      ? '[compare](https://github.com/signalapp/libsignal/compare/$fromRef...$toRef)'
+      : '[${page.label}](${page.url})';
 
   // Injected only when the pipeline actually ran codegen and captured the
   // result. Absent, the prompt says nothing about codegen and rule 6 forbids
@@ -1148,7 +1305,7 @@ dependency bump this is unexpected and a reviewer needs to see it.
   final scope = readChangelogScope();
 
   // The resolved graph's answer when there is one, the generator answers'
-  // otherwise; see [upstreamCratesFrom] for why the two can differ.
+  // otherwise; see [UpstreamSource.cratesIn] for why the two can differ.
   final crateNames = crates.isEmpty
       ? boundCrates
       : crates.map((c) => '`${c.name}`').join(', ');
@@ -1258,9 +1415,9 @@ Return a JSON object with EXACTLY two string fields:
 2. "changed" — the "#### Changed" entry.
 
 ## Rules for "libsignal_highlight"
-1. Format exactly: "**libsignal $version** — <brief 3-7 word description>".
+1. Format exactly: "**libsignal $shown** — <brief 3-7 word description>".
 2. If nothing in this update touches our exposed surface (the common case), use:
-   "${defaultHighlightFor(version)}".
+   "${defaultHighlightFor(shown)}".
 3. Return the line WITHOUT a leading "- ". The list marker is added when the
    line is written into the file; one in your answer makes it "- - **…".
 

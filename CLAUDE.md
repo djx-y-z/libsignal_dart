@@ -239,6 +239,7 @@ make rust-update                  # Update Cargo.lock + regenerate notices
 make third-party-notices          # Regenerate THIRD_PARTY_NOTICES.txt
 make verify-third-party-notices   # Check it matches the dependency graph
 make verify-frb-pins              # Check every file names the same FRB version
+make verify-pub-limits            # Check no file is over what pub.dev accepts at upload
 make verify-android-alignment     # Check built Android libraries are 16 KB-aligned
 make verify-release-artifacts ARGS=<dir>  # Check release archives hold what their names say
 make actionlint                   # Lint the GitHub Actions workflows
@@ -519,8 +520,9 @@ wire signature moved (≥ minor; major if breaking).
 ```bash
 # After the stage-1 native build has finished. Same interactive signing flow.
 make release ARGS="--version X.Y.Z"                # verify frb binary + dry-run +
-                                                   # bump + finalize CHANGELOG
-                                                   # + signed commit/tag/push
+                                                   # bump + finalize CHANGELOG +
+                                                   # pub.dev size limits +
+                                                   # signed commit/tag/push
 make release ARGS="--version X.Y.Z --no-push"      # local only
 ```
 
@@ -540,8 +542,10 @@ checks; pass it only if you verified the binary by hand. It runs
 `make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`, then
 finalizes the CHANGELOG (renames `[Unreleased]` → `[X.Y.Z] - <today>` in place —
 no empty `[Unreleased]` is left behind — and rewrites the bottom `[Unreleased]:`
-compare link to `vX.Y.Z...HEAD`), then signs a commit + tag `vX.Y.Z` and pushes —
-`publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
+compare link to `vX.Y.Z...HEAD`), then measures the result against pub.dev's
+upload limits (`make verify-pub-limits` — the dry-run does not check them, and
+pub.dev refuses an oversized file only at upload, after the tag), then signs a
+commit + tag `vX.Y.Z` and pushes — `publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
 API** (independent of the crate version).
 
 **Between the stages, run the suite against the released binary.**
@@ -863,7 +867,7 @@ make rust-deny
 make verify-frb-pins
 make verify-third-party-notices
 make actionlint                 # workflows: static + shellcheck (CI runs it too)
-make publish-dry-run            # exits 65 on ANY warning, a dirty tree included
+make publish-dry-run            # size limits first; then exits 65 on ANY warning, a dirty tree included
 ```
 
 **Push first and let CI go green, then tag.** `make release-frb` only *warns*
