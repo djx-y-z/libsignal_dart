@@ -24,8 +24,9 @@ prefer concrete names over categories: a model can check "does this change touch
 This wrapper builds ONLY these upstream crates and exposes ONLY the Signal
 Protocol primitives on top of them:
 
-- Crates bound: `libsignal-protocol`, `libsignal-core`, `signal-crypto`, and
-  `libsignal-debug`, which `libsignal-core` pulls in
+- Crates bound: `libsignal-protocol` and `libsignal-core`, and two more from
+  the same repository that they pull in: `signal-crypto`, through
+  `libsignal-protocol`, and `libsignal-debug`, through `libsignal-core`
 - Exposed surface: identity / pre / signed-pre / Kyber keys, X3DH session
   establishment, Double Ratchet encrypt/decrypt, sealed sender, group messaging
   (SenderKey), and serialization of the above.

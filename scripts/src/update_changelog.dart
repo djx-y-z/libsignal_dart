@@ -1035,11 +1035,7 @@ const changelogScopePath = '.github/agent-prompts/changelog-scope.md';
 /// with six. A single string would be collapsed onto one line for the short
 /// answer and split for the long one, and the template source can only be
 /// correct for one of them.
-const boundCrateNames = <String>[
-  '`libsignal-protocol`',
-  '`libsignal-core`',
-  '`signal-crypto`',
-];
+const boundCrateNames = <String>['`libsignal-protocol`', '`libsignal-core`'];
 
 /// [boundCrateNames] as the prompt writes them; empty when none are answered.
 final boundCrates = boundCrateNames.join(', ');
@@ -1537,7 +1533,7 @@ verdict with nothing behind it:
 
   - Update libsignal native library to $version ($sourceLink)
     - Upstream changes cover <areas> — none of which this library exposes
-    - The crates we bind (`libsignal-protocol`, `libsignal-core`, `signal-crypto`) have no changes reaching the surface this package exposes
+    - The crates we bind (`libsignal-protocol`, `libsignal-core`) have no changes reaching the surface this package exposes
     - Note: These changes do not affect this library's public API
 
 Four things are wrong with it. The first line is a title, not the house

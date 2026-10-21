@@ -1076,6 +1076,6 @@ const UpstreamHttp upstreamHttp = NetworkUpstreamHttp(
 final UpstreamSource upstreamSource = upstreamSourceFor(
   kind: upstreamSourceKind,
   repo: 'signalapp/libsignal',
-  crates: const ['libsignal-protocol', 'libsignal-core', 'signal-crypto'],
+  crates: const ['libsignal-protocol', 'libsignal-core'],
   tagPrefix: 'v',
 );

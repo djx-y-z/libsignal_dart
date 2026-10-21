@@ -177,7 +177,6 @@ updates:
       - dependency-name: "flutter_rust_bridge"
       - dependency-name: "libsignal-protocol"
       - dependency-name: "libsignal-core"
-      - dependency-name: "signal-crypto"
       # `getrandom` is declared twice, under two names, because two majors are
       # live in the wasm32 graph at once and each needs its browser backend
       # enabled by name: `getrandom` 0.3 (reached through libsignal-core and

@@ -34,7 +34,7 @@ gh api "repos/signalapp/libsignal/compare/vOLD...vNEW" --paginate \
 
 ```bash
 gh api "repos/signalapp/libsignal/compare/vOLD...vNEW" --paginate --jq '.files[].filename' \
-  | grep -E 'libsignal-protocol|libsignal-core|signal-crypto'
+  | grep -E 'libsignal-protocol|libsignal-core'
 ```
 
 For large ranges the compare API truncates `files` — fall back to a shallow clone:
@@ -239,10 +239,9 @@ libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0
 
 ### Step 2: Update Version
 
-Edit `rust/Cargo.toml` and update the tag for all three libsignal crates:
+Edit `rust/Cargo.toml` and update the tag for both libsignal crates:
 - `libsignal-protocol`
 - `libsignal-core`
-- `signal-crypto`
 
 ### Step 3: Update Cargo.lock
 

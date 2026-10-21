@@ -357,6 +357,26 @@
   `native_repo`, and a range past GitHub's 300-file cap, which the section
   then states. No model was run: what the reviewer makes of the list shows on
   the next libsignal bump.
+- **`signal-crypto` is no longer a direct dependency** (`rust/Cargo.toml`,
+  `rust/Cargo.lock`, `.copier-answers.yml`, `.github/dependabot.yml`,
+  `.github/agent-prompts/changelog-scope.md`,
+  `scripts/src/upstream_source.dart`, `scripts/src/update_changelog.dart`,
+  `.claude/skills/update-libsignal/SKILL.md`) — nothing in `rust/src` or the
+  fuzz targets calls it, as with `thiserror` before it. It was a direct
+  dependency only because `upstream_crates` named it, which also gave it a
+  Dependabot ignore and a place in each of the update scripts' crate lists.
+  The answer now names `libsignal-protocol` and `libsignal-core`, and the
+  files that depend on it were re-rendered from the same template version
+  (`copier update --vcs-ref=v4.17.0`), so nothing else moved: a three-way
+  merge of every rendered file gives the same result outside
+  `.github/dependabot.yml`, which it conflicts on as copier did, and the scope
+  file, which this project owns, and nothing was merged in twice.
+  `signal-crypto` itself stays in the graph, through
+  `libsignal-protocol`, so `Cargo.lock` loses one line, the dependency edge,
+  and `THIRD_PARTY_NOTICES.txt` is unchanged. The changelog bot still names
+  it: it lists the crates from `cargo metadata`, and the answer's list is
+  only its fallback. The scope file now says how it arrives, as it already
+  did for `libsignal-debug`.
 
 ## [8.0.0] - 2026-10-08
 
