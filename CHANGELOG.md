@@ -417,6 +417,25 @@
   the four live rulesets now differ from their files only in the two
   defaults GitHub adds itself, which the README names. The template's file
   and README change the same way.
+- **Only their release tags may enter the two release environments**
+  (`scripts/setup_repo_protections.dart`, `scripts/src/repo_protections.dart`,
+  `test/scripts/repo_protections_test.dart`, `.github/workflows/publish.yml`,
+  `.github/rulesets/README.md`, `Makefile`, `CLAUDE.md`) — a run of
+  `build-libsignal.yml` or `publish.yml` started from any branch reached the
+  approval prompt, so one mistaken approval could publish a native binary or
+  the package, and `make setup-repo-protections` set up only `native-build`,
+  sending nothing but its reviewer. It now configures `native-build` and
+  `pub.dev` in full: you as the one required reviewer, no admin bypass,
+  approving one's own run allowed, and a deployment policy that lets in only
+  `libsignal_frb-*` tags and `v*` tags respectively. A re-run converges on the
+  same settings, each environment is read back afterwards, and
+  `ARGS="--dry-run"` only reads and prints what would change. `publish.yml`'s
+  `publish` job now runs on a tag only, since from a branch the environment
+  would refuse it and `validate-package` already makes the dry run;
+  `create-release` is left to its policy. The dry run against this
+  repository found `native-build` letting admins bypass and both environments
+  letting every ref in, the reviewer and self-review settings already right.
+  The template's script, module and tests are the same files.
 
 ## [8.0.0] - 2026-10-08
 

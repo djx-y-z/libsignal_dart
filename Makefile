@@ -43,7 +43,7 @@ help:
 	@echo "    make setup-protoc                 - Install protoc (Protocol Buffers compiler)"
 	@echo "    make setup-android                - Install Android build tools (cargo-ndk)"
 	@echo "    make setup-web                    - Install web build tools (wasm-pack)"
-	@echo "    make setup-repo-protections       - Apply GitHub rulesets + native-build env (one-time, needs gh admin)"
+	@echo "    make setup-repo-protections       - Apply GitHub rulesets + both release environments (needs gh admin)"
 	@echo ""
 	@echo "  BUILD & CODEGEN"
 	@echo "    make codegen                      - Generate Dart bindings from Rust code"
@@ -269,6 +269,7 @@ setup-web:
 # GitHub repo exists). Idempotent by ruleset name; needs `gh` as a repo admin.
 #   make setup-repo-protections                  # apply (skips existing rulesets)
 #   make setup-repo-protections ARGS="--update"  # overwrite existing rulesets
+#   make setup-repo-protections ARGS="--dry-run" # show what would change
 setup-repo-protections:
 	@$(FVM) dart scripts/setup_repo_protections.dart $(ARGS)
 

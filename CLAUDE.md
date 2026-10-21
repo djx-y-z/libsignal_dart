@@ -26,7 +26,7 @@ make setup-frb-codegen            # Install the pinned flutter_rust_bridge_codeg
 make setup-protoc                 # Install protoc (Protocol Buffers compiler)
 make setup-web                    # Install web build tools (wasm-pack)
 make setup-android                # Install Android build tools (cargo-ndk)
-make setup-repo-protections       # Apply the GitHub repo rulesets (.github/rulesets/)
+make setup-repo-protections       # Apply the rulesets (.github/rulesets/) and the two release environments
 ```
 
 ### Code Generation
