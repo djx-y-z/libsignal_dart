@@ -449,6 +449,23 @@
   named for. With a wrong code put into one of them, that test fails and
   names the code it got. A comment that said the error type "varies by
   implementation" now says which it is.
+- **The build repair's agent sees the update it is repairing**
+  (`.github/workflows/repair-build.yml`) — `Describe the update under repair`
+  gives the agent the pin that moved and the files the bot changed, from the
+  merge base of `main` and the commit under repair. It computed that base
+  locally, on a checkout one commit deep, and git treats a shallow commit as
+  having no parents: on every repair of a pull request the base came back
+  empty, and the file the agent reads said only that the bot's diff could not
+  be shown. It now asks the API (`compare/main...<sha>`, as ai-review takes
+  its diff), which needs no history and no anonymous fetch. Run on real heads,
+  the step shows #119's v0.105.1 → v0.105.2 pin move, and the API's merge base
+  equals local git's for #119, #122 and #123. Found by a rehearsal: a draft
+  pull request (#123, closed) broke one upstream call in
+  `rust/src/api/keys.rs`, and Repair Build was dispatched on its red Tests run
+  with `dry_run: true`. The agent (gpt-6-luna) repaired it with the one-word
+  change back, rejecting a wider public API because the value was in scope,
+  and the surface classifier ran for the first time and measured `unchanged`,
+  agreeing with the agent. The template carries the same change.
 
 ## [8.0.0] - 2026-10-08
 
