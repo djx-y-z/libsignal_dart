@@ -4,7 +4,7 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.105.2** — internal/dependency update, no public-API impact
+- **libsignal v0.105.4** — internal/dependency update, no public-API impact
 
 #### Changed
 
@@ -46,6 +46,11 @@
 - **The v0.105.2 update leaves this package's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.1...v0.105.2)) adds an accounts-capabilities API in `rust/net/chat` and changes its language bindings; this package does not build the networking crate or expose those bindings. SVR2/B changes are in `rust/attest` and the SVR2 bridge, which are not among the crates this package builds or the protocol primitives it exposes. Node and Java build and documentation changes are in language-binding and build tooling outside this package's exposed surface.
 
   The range changes exactly one file in the crates we bind, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.1` to `0.105.2`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+- **The certificate-verification update leaves this package's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.2...v0.105.4)) includes changes to certificate verification in `rust/net/infra/src/certs.rs`, outside this package's dependency graph, and to Java's `CertificateVerifier.kt`, a language binding this package does not expose.
+
+  Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
