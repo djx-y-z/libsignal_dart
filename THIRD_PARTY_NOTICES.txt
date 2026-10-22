@@ -447,7 +447,7 @@ indexmap 2.14.2
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T51]
 
-inout 0.2.3
+inout 0.2.5
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T87]
 
@@ -4245,7 +4245,7 @@ Crates:
   hkdf@0.13.0
   hmac@0.13.0
   hybrid-array@0.4.15
-  inout@0.2.3
+  inout@0.2.5
   md-5@0.10.6
   polyval@0.7.3
   sha1@0.11.0
@@ -8171,7 +8171,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  inout@0.2.3
+  inout@0.2.5
 
 Copyright (c) 2022-2025 The RustCrypto Project Developers
 Copyright (c) 2022 Artyom Pavlov
