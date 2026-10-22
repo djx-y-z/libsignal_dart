@@ -6,6 +6,7 @@ import 'package:libsignal/libsignal.dart';
 import 'package:libsignal/src/rust/api/sealed_sender.dart' as ss;
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
@@ -521,7 +522,7 @@ void main() {
             trustRoot: trustRootPublicKey.serialize(),
             timestamp: DateTime.now().millisecondsSinceEpoch,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
@@ -568,7 +569,7 @@ void main() {
             trustRoot: trustRootPublicKey.serialize(),
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.verificationFailure),
         );
       });
 

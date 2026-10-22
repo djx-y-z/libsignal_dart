@@ -1,6 +1,8 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
@@ -17,7 +19,7 @@ void main() {
         // libsignal requires device ID > 0
         expect(
           () => ProtocolAddress(name: 'user', deviceId: 0),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidArgument),
         );
       });
 

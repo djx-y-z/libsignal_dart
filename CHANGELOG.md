@@ -436,6 +436,19 @@
   repository found `native-build` letting admins bypass and both environments
   letting every ref in, the reviewer and self-review settings already right.
   The template's script, module and tests are the same files.
+- **Every test that expects a call to fail names the code it fails with**
+  (13 files under `test/groups/`, `test/protocol/` and `test/sealed_sender/`)
+  — 37 expectations accepted any throw at all (`throwsA(anything)`), so a
+  call failing for another reason, or with a plain Dart error, passed them as
+  readily as the failure they were written for. What each one catches was
+  measured first, with a probe in place of the matcher: all 37 throw a
+  `LibSignalException`, and each now asserts its code with `failsWith` —
+  `protobufError` 20 times, `invalidMessage` 9, `verificationFailure` 3,
+  `sessionNotFound` 2, and `invalidArgument`, `legacyCiphertextVersion` and
+  `unrecognizedMessageVersion` once each, every one the failure its test is
+  named for. With a wrong code put into one of them, that test fails and
+  names the code it got. A comment that said the error type "varies by
+  implementation" now says which it is.
 
 ## [8.0.0] - 2026-10-08
 

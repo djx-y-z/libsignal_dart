@@ -8,6 +8,8 @@ import 'dart:convert';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 const _idA = '11111111-1111-1111-1111-111111111111';
 const _idB = '22222222-2222-2222-2222-222222222222';
 
@@ -88,7 +90,7 @@ void main() {
       final skdmB = await alice.createDistributionMessage(aliceAddress, _idB);
       await expectLater(
         bob.processDistributionMessage(aliceAddress, _idA, skdmB),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.invalidMessage),
       );
 
       final ciphertext = await alice.encrypt(

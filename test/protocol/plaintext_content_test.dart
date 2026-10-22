@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 /// A decryption error report for a group message.
 ///
 /// The sender-key branch carries no ratchet key, so libsignal does not parse
@@ -42,7 +44,7 @@ void main() {
       );
       expect(
         () => DecryptionErrorMessage.extractFromSerializedContent(bytes: wire),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.protobufError),
         reason: 'the envelope must be stripped first',
       );
       expect(recovered.timestamp(), equals(dem.timestamp()));
@@ -64,7 +66,7 @@ void main() {
       // Missing the 0xC0 identifier byte.
       expect(
         () => PlaintextContent.deserialize(data: <int>[0x01, 0x02, 0x03]),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.unrecognizedMessageVersion),
       );
     });
   });

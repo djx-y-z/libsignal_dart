@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 const _distributionId = '33333333-3333-3333-3333-333333333333';
 
 void main() {
@@ -147,11 +149,11 @@ void main() {
 
       expect(
         () => SenderKeyMessage.deserialize(data: <int>[9, 9, 9]),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.invalidMessage),
       );
       expect(
         () => SenderKeyDistributionMessage.deserialize(data: <int>[9, 9, 9]),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.invalidMessage),
       );
     });
   });

@@ -1,6 +1,8 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
@@ -22,32 +24,32 @@ void main() {
       test('senderCertificateGetSenderName rejects invalid data', () {
         expect(
           () => senderCertificateGetSenderName(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
         expect(
           () => senderCertificateGetSenderName(certificate: [1, 2, 3]),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetSenderDeviceId rejects invalid data', () {
         expect(
           () => senderCertificateGetSenderDeviceId(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetKey rejects invalid data', () {
         expect(
           () => senderCertificateGetKey(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetExpiration rejects invalid data', () {
         expect(
           () => senderCertificateGetExpiration(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
@@ -60,7 +62,7 @@ void main() {
             trustRoot: [],
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
@@ -72,7 +74,7 @@ void main() {
             trustRoot: garbage,
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
