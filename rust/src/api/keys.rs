@@ -226,7 +226,7 @@ impl IdentityKeyPair {
     /// Generate a new identity key pair.
     #[flutter_rust_bridge::frb(sync)]
     pub fn generate() -> Result<IdentityKeyPair, LibSignalException> {
-        let native = NativeIdentityKeyPair::generate(&mut OsRng.unwrap_err());
+        let native = NativeIdentityKeyPair::generate_random(&mut OsRng.unwrap_err());
         Ok(IdentityKeyPair { inner: native })
     }
 
