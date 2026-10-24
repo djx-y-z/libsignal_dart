@@ -4,9 +4,9 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.105.4** — internal/dependency update, no public-API impact
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
+- **libsignal v0.106.0** — Tahini session management update
 
 #### Changed
 
@@ -73,6 +73,11 @@
 - **The certificate-verification update leaves this package's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.2...v0.105.4)) includes changes to certificate verification in `rust/net/infra/src/certs.rs`, outside this package's dependency graph, and to Java's `CertificateVerifier.kt`, a language binding this package does not expose.
 
   Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+- **Session management now changes how this package handles competing and archived sessions** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.4...v0.106.0)) replaces Sesame with Tahini: archived sessions are not made active again, a tiebreaker selects the active session in common races, and repeated switching between sessions is detected and settled. Session records now retain at most 3 archived sessions instead of 40, gain fields readable by earlier libsignal versions, and have no wire-format changes. These changes reach the exposed session-establishment and serialization surface.
+
+  In the bound crates, the complete range changes `rust/core/src/version.rs` and `rust/protocol/Cargo.toml`; protocol source files `consts.rs`, `lib.rs`, `sealed_sender.rs`, `session.rs`, `session_management.rs`, `state.rs`, `state/session.rs`, `triple_ratchet.rs`, and `proto/storage.proto`; it adds `tahini.rs` and removes `session_cipher_legacy.rs`. It also changes protocol cross-version tests, test support, and Tahini models. The release-note Rust API changes to `process_prekey` and `message_decrypt_prekey`, and the new `initiate_session` export, do not change this package's generated FFI: `make codegen` produced no change in `lib/src/rust/`. Java, Swift, Node, and upstream bridge/build changes are outside the crates this package builds and the Flutter Rust Bridge surface it exposes.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 

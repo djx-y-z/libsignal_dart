@@ -31,5 +31,5 @@ rust_version: 1.93.1
 topics: rust,flutter-rust-bridge,signal,cryptography,encryption
 upstream_crates: libsignal-protocol,libsignal-core
 upstream_source: git_tag
-upstream_version: v0.105.4
+upstream_version: v0.106.0
 version_tag_prefix: v
