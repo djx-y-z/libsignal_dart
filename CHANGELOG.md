@@ -27,7 +27,8 @@
   Third-party crates move with it, none added or removed. Each of these
   reaches every binary, the web module included: `libc` 0.2.191, `sha2`
   0.11.1, `tokio` 1.53.3, `uuid` 1.28.0, `zerocopy` 0.8.63, `smallvec`
-  1.16.3, `inout` 0.2.3 and `equivalent` 1.0.3; `unicode-ident` 1.0.27
+  1.16.3, `inout` 0.2.3 (yanked since; see the `inout` entry below) and
+  `equivalent` 1.0.3; `unicode-ident` 1.0.27
   reaches only the web module. `sha2` 0.11.1 fixes how its AArch64 backends
   load the round constants, to satisfy the Stacked Borrows model. `libc`
   0.2.191 ends the hold 8.0.0 put on 0.2.189: 0.2.190 had put the dyld
@@ -36,6 +37,25 @@
   targets type-check against it, and a full `cargo update` no longer brings
   the break back. `cc`, `syn`, `serde_json`, `toml_edit`, `toml_parser`,
   `toml_datetime` and `zerocopy-derive` move too and only run at compile time.
+- **`inout` 0.2.2 → 0.2.5** (`rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`)
+  — Dependabot's bump (#122). It reaches every binary, the web module
+  included, through `cipher` and `aead` (`aes`, `cbc`, `ctr`,
+  `aes-gcm-siv`). Crate 7.0.0 shipped 0.2.2; the v0.105.1 update above moved
+  it to 0.2.3, which was yanked two days after its release: refactoring a
+  Stacked Borrows fix had dropped the check that the output buffer of
+  `InOutBufReserved::into_padded_blocks` has room for the padding block, and
+  the unsafe code behind it relies on that check
+  ([RustCrypto/utils#1560](https://github.com/RustCrypto/utils/pull/1560)).
+  0.2.4 restores it, and 0.2.5 also returns `PadError` when a `Padding`
+  implementation breaks the block count the unsafe code assumes
+  ([RustCrypto/utils#1563](https://github.com/RustCrypto/utils/pull/1563)).
+  0.2.3 could not overrun a buffer here either: the only padded encryption
+  in this package is libsignal's AES-256-CBC with PKCS #7, the body of every
+  1:1 and group message, and it goes through `encrypt_padded_vec`, which
+  allocates one block more than the input's whole blocks — the room the
+  restored check asks for. No released version of this package carried
+  0.2.3, and no RustSec advisory covers it. Its floor stays at Rust 1.85,
+  below this crate's 1.93.1.
 - **The Linux libraries are built on Ubuntu 26.04 and still need only glibc
   2.34** — the release build moves from Ubuntu 24.04 along with every other
   Ubuntu job (see For Contributors). A Linux library records the glibc symbol
