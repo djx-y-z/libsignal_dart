@@ -214,7 +214,7 @@ ctr 0.10.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T69]
 
-ctutils 0.4.3
+ctutils 0.4.5
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T91]
 
@@ -1821,7 +1821,7 @@ Crates:
   allo-isolate@0.1.27
   clang-sys@1.9.1
   cmov@0.5.4
-  ctutils@0.4.3
+  ctutils@0.4.5
   derive-where@1.7.0
   zeroize@1.9.1
   zeroize_derive@1.5.0
@@ -8299,7 +8299,7 @@ the following restrictions:
 ------------------------------------------------------------------------------
 
 Crates:
-  ctutils@0.4.3
+  ctutils@0.4.5
 
 Copyright (c) 2025-2026 The RustCrypto Project Developers
 
