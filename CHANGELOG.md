@@ -5,6 +5,8 @@
 #### ✨ Highlights
 
 - **libsignal v0.105.4** — internal/dependency update, no public-API impact
+- **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
+  constant-time masks and `u128` comparisons (see Security)
 
 #### Changed
 
@@ -73,6 +75,24 @@
   Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+
+#### Security
+
+- **`ctutils` 0.4.3 → 0.4.5, for RUSTSEC-2026-0385** (`rust/Cargo.lock`,
+  `THIRD_PARTY_NOTICES.txt`) — `ctutils` is RustCrypto's constant-time
+  toolkit, and it reaches every binary, the web module included, through
+  `digest` (and so HMAC, HKDF, SHA-2 and `curve25519-dalek`), `aes-gcm-siv`
+  and `universal-hash`. Before 0.4.4 the mask functions of its `Choice` type
+  (`Choice::to_*_mask`) could compile to a branch on a secret value on common
+  platforms, and its `u128` comparisons branched on every target whose
+  pointers are 32 bits wide, this package's `armeabi-v7a` and `wasm32`
+  builds among them
+  ([RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385)).
+  0.4.4 routes the masks through an optimization barrier and checks the
+  generated code with BINSEC in its CI; 0.4.5 also hardens Thumb-1
+  comparisons and `Choice` composition. Crate 7.0.0, the native library of
+  8.0.0, was built with 0.4.3; whether its machine code contains such a
+  branch was not measured. Floor: Rust 1.87, below this crate's 1.93.1.
 
 #### Documentation
 
