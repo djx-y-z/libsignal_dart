@@ -101,6 +101,10 @@
   collaborator, because its bypass list held the `write` role as well as
   `admin`. The list now holds `admin` only (see For Contributors), and the
   section says so.
+- **`SECURITY.md`: the dependency check refuses yanked crate versions** —
+  its Dependency Auditing section now says that `rust/deny.toml` fails on a
+  crate version its publisher has yanked, beside the source and license rules
+  it already described.
 
 ### For Contributors
 
@@ -511,6 +515,18 @@
   change back, rejecting a wider public API because the value was in scope,
   and the surface classifier ran for the first time and measured `unchanged`,
   agreeing with the agent. The template carries the same change.
+- **`make rust-deny` fails on a yanked crate version** (`rust/deny.toml`) —
+  `[advisories]` gains `yanked = "deny"`; the default only warns. `inout`
+  0.2.3, yanked for losing the output-buffer check its unsafe padding code
+  relies on, sat in `rust/Cargo.lock` from #115 (18 October) to #122
+  (24 October) with this job green and `warning[yanked]` in every log.
+  Measured with cargo-deny 0.19.4 (CI installs 0.20.2): with the field,
+  `make rust-deny` fails on the tree that carried 0.2.3 (exit 2, `advisories
+  FAILED`) and passes on `main` with 0.2.5. The comment beside the field says
+  how to clear one: Dependabot's weekly cargo pull request, which moves
+  transitive crates here, or `cargo update -p`; `make rust-update` runs
+  `cargo update --workspace`, which leaves a transitive crate where it is,
+  measured on the same tree. The template carries the same change.
 
 ## [8.0.0] - 2026-10-08
 

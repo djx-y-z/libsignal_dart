@@ -516,7 +516,8 @@ make rust-deny    # cargo deny — advisories + license + source allow-list poli
 ```
 
 `rust/deny.toml` restricts dependency sources to crates.io and the official
-Signal git repositories, and constrains licenses to an AGPL-compatible set.
+Signal git repositories, constrains licenses to an AGPL-compatible set, and
+refuses a crate version its publisher has yanked.
 
 ## Static Analysis
 

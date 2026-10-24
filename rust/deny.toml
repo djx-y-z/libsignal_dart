@@ -16,6 +16,17 @@ all-features = false
 
 [advisories]
 version = 2
+# A yanked version is one its own publisher withdrew. cargo-deny only warns
+# about one by default, and a warning in a job that passes reaches nobody:
+# `inout` 0.2.3, yanked for losing a buffer check its unsafe code relies on,
+# sat in a generated project's lockfile for six days with this job green. As
+# an error it fails the job until the lockfile moves past it, through the next
+# Dependabot cargo pull request or by hand with the `cargo update -p` its
+# message names. `make rust-update` does not do it: it re-resolves the
+# workspace's own requirements and leaves such a crate where it is. A version
+# with no fixed release yet can be accepted under `ignore` below, as
+# `{ crate = "name@version", reason = "..." }`.
+yanked = "deny"
 # Add advisory IDs here (each with a justification comment) only to consciously
 # accept a risk that cannot yet be remediated, e.g. an unmaintained build-time
 # dependency pulled transitively by an upstream crate with no available upgrade.
