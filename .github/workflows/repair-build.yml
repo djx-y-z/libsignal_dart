@@ -1098,6 +1098,9 @@ jobs:
       - name: Describe the update under repair
         if: needs.detect.outputs.mode == 'pr'
         env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ needs.detect.outputs.sha }}
           BRANCH: ${{ needs.detect.outputs.branch }}
           PR_NUMBER: ${{ needs.detect.outputs.pr_number }}
           CODEGEN_FAILED: ${{ needs.detect.outputs.codegen_failed }}
@@ -1110,8 +1113,20 @@ jobs:
           # What the bot changed, from the repository rather than from the pull
           # request's prose. The body of that pull request is text a workflow
           # composed and a human may since have edited; the diff is the fact.
-          git fetch --no-tags --depth=200 origin main 2>/dev/null || true
-          BASE=$(git merge-base FETCH_HEAD HEAD 2>/dev/null || echo "")
+          #
+          # From the API, as ai-review takes its diff, and not from this
+          # checkout. The checkout is one commit deep, and git treats a shallow
+          # commit as having no parents, so `git merge-base` against a deeper
+          # `main` came back empty on every repair of a pull request and this
+          # file never showed the pin. Deepening the checkout would have fixed
+          # that only where an anonymous fetch works: `persist-credentials:
+          # false` leaves a private repository's fetch without credentials.
+          # `compare` with three dots is the same merge-base comparison and
+          # needs no history. Measured on a rehearsal pull request: the commit
+          # it was cut from and its one changed file, where the local merge
+          # base had been empty.
+          COMPARE=$(gh api "repos/${GH_REPO}/compare/main...${SHA}" 2>/dev/null || echo "")
+          BASE=$(jq -r '.merge_base_commit.sha // empty' <<<"$COMPARE" 2>/dev/null || echo "")
 
           {
             echo "# The update this branch carries"
@@ -1123,12 +1138,12 @@ jobs:
               echo "## The pin that moved"
               echo
               echo '```diff'
-              git --no-pager diff "$BASE" HEAD -- 'rust/Cargo.toml' | head -c 8000
+              jq -r '.files[]? | select(.filename == "rust/Cargo.toml") | .patch // empty' <<<"$COMPARE" | head -c 8000
               echo '```'
               echo
               echo "## Everything the bot changed"
               echo
-              git --no-pager diff --stat "$BASE" HEAD | head -c 8000
+              jq -r '.files[]? | "\(.filename) | +\(.additions) -\(.deletions)"' <<<"$COMPARE" | head -c 8000
             else
               echo "_The merge base could not be resolved, so the bot's own diff is not shown._"
             fi
@@ -1250,7 +1265,7 @@ jobs:
 
       - name: Run the agent (Claude Code)
         if: needs.detect.outputs.engine == 'claude-code' && steps.regenerate.outputs.recovered != 'true'
-        uses: anthropics/claude-code-action@f27be6b65a4652f08a2ba3cff79114829b588967 # v1.0.252
+        uses: anthropics/claude-code-action@5eb090f3c3afd701a0672cd32981197ca27688f6 # v1.0.253
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Read-only, and only so the action can resolve repository context.
@@ -1819,6 +1834,11 @@ jobs:
         run: |
           set -euo pipefail
 
+          # A new file counts too, and only because the step before staged it
+          # (`git add -A -- lib/src/rust/`): `git diff HEAD` shows a file the
+          # index knows and never an untracked one. Measured both ways — this
+          # step alone labels a new generated module `unchanged`, after that
+          # one `moved`.
           git diff HEAD -U0 -- 'lib/src/rust/api/' > "$RUNNER_TEMP/api.diff" 2>/dev/null || true
 
           MOVED=$( { grep -E '^[+-]' "$RUNNER_TEMP/api.diff" || true; } \

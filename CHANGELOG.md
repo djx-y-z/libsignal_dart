@@ -4,7 +4,7 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.105.2** — internal/dependency update, no public-API impact
+- **libsignal v0.105.4** — internal/dependency update, no public-API impact
 
 #### Changed
 
@@ -66,6 +66,11 @@
 - **The v0.105.2 update leaves this package's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.1...v0.105.2)) adds an accounts-capabilities API in `rust/net/chat` and changes its language bindings; this package does not build the networking crate or expose those bindings. SVR2/B changes are in `rust/attest` and the SVR2 bridge, which are not among the crates this package builds or the protocol primitives it exposes. Node and Java build and documentation changes are in language-binding and build tooling outside this package's exposed surface.
 
   The range changes exactly one file in the crates we bind, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.1` to `0.105.2`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+- **The certificate-verification update leaves this package's protocol surface unchanged** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.2...v0.105.4)) includes changes to certificate verification in `rust/net/infra/src/certs.rs`, outside this package's dependency graph, and to Java's `CertificateVerifier.kt`, a language binding this package does not expose.
+
+  Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
@@ -456,6 +461,36 @@
   repository found `native-build` letting admins bypass and both environments
   letting every ref in, the reviewer and self-review settings already right.
   The template's script, module and tests are the same files.
+- **Every test that expects a call to fail names the code it fails with**
+  (13 files under `test/groups/`, `test/protocol/` and `test/sealed_sender/`)
+  — 37 expectations accepted any throw at all (`throwsA(anything)`), so a
+  call failing for another reason, or with a plain Dart error, passed them as
+  readily as the failure they were written for. What each one catches was
+  measured first, with a probe in place of the matcher: all 37 throw a
+  `LibSignalException`, and each now asserts its code with `failsWith` —
+  `protobufError` 20 times, `invalidMessage` 9, `verificationFailure` 3,
+  `sessionNotFound` 2, and `invalidArgument`, `legacyCiphertextVersion` and
+  `unrecognizedMessageVersion` once each, every one the failure its test is
+  named for. With a wrong code put into one of them, that test fails and
+  names the code it got. A comment that said the error type "varies by
+  implementation" now says which it is.
+- **The build repair's agent sees the update it is repairing**
+  (`.github/workflows/repair-build.yml`) — `Describe the update under repair`
+  gives the agent the pin that moved and the files the bot changed, from the
+  merge base of `main` and the commit under repair. It computed that base
+  locally, on a checkout one commit deep, and git treats a shallow commit as
+  having no parents: on every repair of a pull request the base came back
+  empty, and the file the agent reads said only that the bot's diff could not
+  be shown. It now asks the API (`compare/main...<sha>`, as ai-review takes
+  its diff), which needs no history and no anonymous fetch. Run on real heads,
+  the step shows #119's v0.105.1 → v0.105.2 pin move, and the API's merge base
+  equals local git's for #119, #122 and #123. Found by a rehearsal: a draft
+  pull request (#123, closed) broke one upstream call in
+  `rust/src/api/keys.rs`, and Repair Build was dispatched on its red Tests run
+  with `dry_run: true`. The agent (gpt-6-luna) repaired it with the one-word
+  change back, rejecting a wider public API because the value was in scope,
+  and the surface classifier ran for the first time and measured `unchanged`,
+  agreeing with the agent. The template carries the same change.
 
 ## [8.0.0] - 2026-10-08
 

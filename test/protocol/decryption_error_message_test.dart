@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 void main() {
@@ -16,7 +17,7 @@ void main() {
       test('rejects empty data', () {
         expect(
           () => DecryptionErrorMessage.extractFromSerializedContent(bytes: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
@@ -26,7 +27,7 @@ void main() {
           () => DecryptionErrorMessage.extractFromSerializedContent(
             bytes: garbage,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
@@ -35,7 +36,7 @@ void main() {
       test('rejects empty data', () {
         expect(
           () => DecryptionErrorMessage.deserialize(bytes: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
@@ -43,7 +44,7 @@ void main() {
         final garbage = [0x99, 0x88, 0x77, 0x66, 0x55];
         expect(
           () => DecryptionErrorMessage.deserialize(bytes: garbage),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });

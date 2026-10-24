@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/test_party.dart';
 
 void main() {
@@ -142,10 +143,10 @@ void main() {
         final alice = TestParty.create(name: 'alice', registrationId: 111);
         final bob = TestParty.create(name: 'bob', registrationId: 222);
 
-        // Don't establish session - should throw an exception (type varies by implementation)
+        // No session established, so encrypting fails with sessionNotFound.
         expect(
           () => alice.sessionCipher.encrypt(bob.address, utf8.encode('Hello')),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.sessionNotFound),
         );
       });
     });

@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/test_party.dart';
 
 void main() {
@@ -112,7 +113,7 @@ void main() {
     test('deserialize rejects malformed input', () {
       expect(
         () => PreKeySignalMessage.deserialize(data: <int>[1, 2, 3]),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.legacyCiphertextVersion),
       );
       // A plain SignalMessage is not a PreKeySignalMessage.
       expect(
@@ -121,7 +122,7 @@ void main() {
             data: preKeyCiphertext.ciphertext,
           ).message().serialize(),
         ),
-        throwsA(anything),
+        failsWith(LibSignalErrorCode.protobufError),
       );
     });
   });

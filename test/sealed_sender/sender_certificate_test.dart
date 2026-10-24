@@ -1,6 +1,8 @@
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
@@ -178,7 +180,7 @@ void main() {
             trustRoot: wrongTrustRoot.serialize().toList(),
             timestamp: timestamp,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.verificationFailure),
         );
       });
 
@@ -206,7 +208,7 @@ void main() {
             trustRoot: trustRootPublic.serialize().toList(),
             timestamp: timestamp,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.verificationFailure),
         );
       });
 
@@ -217,7 +219,7 @@ void main() {
             trustRoot: [],
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
@@ -229,7 +231,7 @@ void main() {
             trustRoot: garbage,
             timestamp: BigInt.from(DateTime.now().millisecondsSinceEpoch),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });
@@ -238,28 +240,28 @@ void main() {
       test('senderCertificateGetSenderName rejects empty certificate', () {
         expect(
           () => senderCertificateGetSenderName(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetSenderDeviceId rejects empty certificate', () {
         expect(
           () => senderCertificateGetSenderDeviceId(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetKey rejects empty certificate', () {
         expect(
           () => senderCertificateGetKey(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
 
       test('senderCertificateGetExpiration rejects empty certificate', () {
         expect(
           () => senderCertificateGetExpiration(certificate: []),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.protobufError),
         );
       });
     });

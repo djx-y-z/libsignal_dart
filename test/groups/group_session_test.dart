@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
@@ -198,7 +200,7 @@ void main() {
             0x34,
             0x56,
           ]),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.sessionNotFound),
         );
       });
 
@@ -219,7 +221,7 @@ void main() {
             0x34,
             0x56,
           ]),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidMessage),
         );
       });
     });

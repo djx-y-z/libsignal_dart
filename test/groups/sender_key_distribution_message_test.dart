@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
+
 void main() {
   setUpAll(LibSignal.init);
   tearDownAll(LibSignal.cleanup);
@@ -99,7 +101,7 @@ void main() {
             distributionId,
             Uint8List(0),
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidMessage),
         );
       });
 
@@ -112,7 +114,7 @@ void main() {
             distributionId,
             garbage,
           ),
-          throwsA(anything),
+          failsWith(LibSignalErrorCode.invalidMessage),
         );
       });
     });
