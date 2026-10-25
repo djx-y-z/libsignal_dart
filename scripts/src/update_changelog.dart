@@ -53,15 +53,43 @@ String ciOutputsFor(ChangelogUpdate update) =>
     'ai_provider=${update.model}\n'
     'highlights_stacked=${update.highlightsStacked}\n';
 
+/// Whether an update could have been merged without anyone reading it, and if
+/// not, why not.
+///
+/// Report-only: nothing merges on it. It is published so the rule can be
+/// measured on real updates before anything acts on it, and a future merge
+/// job would still need a green CI and a branch no agent has committed to.
+class MergeEligibility {
+  /// Creates a verdict from its [blockers].
+  const MergeEligibility(this.blockers);
+
+  /// Each reason the update needs a human, as a short clause; empty when none.
+  final List<String> blockers;
+
+  /// Whether nothing stands in the way.
+  bool get eligible => blockers.isEmpty;
+}
+
+/// The `key=value` block [MergeEligibility] contributes to a `--ci-output`
+/// file. Both keys are written on both outcomes, for the reason [ciOutputsFor]
+/// gives: an absent key reads as an old script, not as "checked".
+String eligibilityOutputsFor(MergeEligibility eligibility) =>
+    'merge_eligible=${eligibility.eligible}\n'
+    'merge_blockers=${eligibility.blockers.join('; ').replaceAll('\n', ' ')}\n';
+
 /// Update CHANGELOG.md with a new libsignal version entry.
 ///
-/// Returns what the caller has to publish — see [ChangelogUpdate].
+/// Returns what the caller has to publish — see [ChangelogUpdate]. The
+/// [MergeEligibility] verdict goes to [onEligibility] before the model is
+/// asked, so a run whose entry never comes back still leaves it behind.
 Future<ChangelogUpdate> updateChangelog({
   required String version,
   required List<ResolvedAiModel> models,
   String? fromVersion,
   String? codegenResult,
   bool ciMode = false,
+  bool prerelease = false,
+  void Function(MergeEligibility eligibility)? onEligibility,
 }) async {
   final packageDir = getPackageDir();
 
@@ -109,6 +137,7 @@ Future<ChangelogUpdate> updateChangelog({
   var upstreamCommits = '';
   var upstreamFiles = '';
   var upstreamPatches = '';
+  Map<String, dynamic>? compareJson;
   if (from != null && to != null) {
     logStep('Fetching upstream compare ${from.ref}...${to.ref}...');
     try {
@@ -120,6 +149,7 @@ Future<ChangelogUpdate> updateChangelog({
       upstreamCommits = compare.commits;
       upstreamFiles = compare.files;
       upstreamPatches = compare.patches;
+      compareJson = compare.json;
       logInfo('Got ${upstreamCommits.length} characters of commit history');
       logInfo('Got ${upstreamFiles.length} characters of changed-file list');
       logInfo(
@@ -135,6 +165,27 @@ Future<ChangelogUpdate> updateChangelog({
           'to what shipped, not exactly of it.)\n$upstreamCommits';
     }
   }
+
+  // Step 4b: Whether the update could be taken unread. Report-only, and
+  // published before the model is asked, so it outlives an entry that fails.
+  final eligibility = mergeEligibilityFrom(
+    codegenResult: codegenResult,
+    compare: compareJson,
+    approximateRange: from != null && to != null && (from.dirty || to.dirty),
+    crates: crates,
+    lockBefore: lock.before,
+    lockAfter: lock.after,
+    upstreamRepo: 'signalapp/libsignal',
+    upstream: {...upstreamSource.crates, for (final c in crates) c.name},
+    prerelease: prerelease,
+  );
+  logInfo(
+    eligibility.eligible
+        ? 'Merge-eligible: only version strings moved in the crates this '
+              'package builds'
+        : 'Not merge-eligible: ${eligibility.blockers.join('; ')}',
+  );
+  onEligibility?.call(eligibility);
 
   // Step 5: Read current CHANGELOG.
   logStep('Reading CHANGELOG.md...');
@@ -438,8 +489,12 @@ String releaseNotesFrom(Map<String, dynamic> json, String version) {
 /// the same payload, and the file list is what tells a reader WHERE a change
 /// landed. Without it the model has only commit subject lines to go on, and a
 /// subject line is not evidence of location — an entry written from one put an
-/// upstream commit in the wrong crate.
-Future<({String commits, String files, String patches})> _fetchUpstreamCompare(
+/// upstream commit in the wrong crate. The decoded payload is returned too, for
+/// [mergeEligibilityFrom].
+Future<
+  ({String commits, String files, String patches, Map<String, dynamic> json})
+>
+_fetchUpstreamCompare(
   String from,
   String to, {
   required List<UpstreamCrate> crates,
@@ -462,6 +517,7 @@ Future<({String commits, String files, String patches})> _fetchUpstreamCompare(
     commits: upstreamCommitsFrom(json),
     files: upstreamFilesFrom(json, crates: crates),
     patches: upstreamPatchesFrom(json, crates: crates),
+    json: json,
   );
 }
 
@@ -612,6 +668,164 @@ String upstreamPatchesFrom(
   }
   return out.join('\n\n');
 }
+
+/// A quoted version string such as `"0.105.4"`: what a crate's version
+/// constant or manifest carries. A protocol version is a bare integer and does
+/// not match.
+final _quotedVersion = RegExp(r'"\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]*)?"');
+
+/// Whether [patch] changes nothing but quoted version strings. Pure; exposed
+/// for testing.
+///
+/// "Nothing changed in the crates this package builds but their version" is
+/// the claim that makes an update safe to take unread, so it is checked on the
+/// diff rather than inferred from which files moved. Every removed line must
+/// come back as an added line that is identical outside its quoted version,
+/// at least one of them must actually differ there, and every changed line
+/// must say `version`. A constant such as `CURRENT_VERSION: u8 = 4` is not a
+/// quoted version string, so it is never waved through, and neither is a
+/// `rust-version`: that is a toolchain floor, not the crate's version, and
+/// raising it is what the MSRV check fails on.
+bool isVersionOnlyPatch(String patch) {
+  final removed = <String>[];
+  final added = <String>[];
+  for (final line in patch.split('\n')) {
+    if (line.startsWith('---') || line.startsWith('+++')) continue;
+    if (line.startsWith('-')) removed.add(line.substring(1));
+    if (line.startsWith('+')) added.add(line.substring(1));
+  }
+  if (removed.isEmpty || removed.length != added.length) return false;
+  if ([...removed, ...added].any((line) => line.contains('rust-version'))) {
+    return false;
+  }
+  bool saysVersion(String line) =>
+      _quotedVersion.hasMatch(line) && line.toLowerCase().contains('version');
+  if (![...removed, ...added].every(saysVersion)) return false;
+  String outsideVersions(String line) =>
+      line.replaceAll(_quotedVersion, '"<version>"');
+  final unmatched = [for (final line in added) outsideVersions(line)];
+  for (final line in removed) {
+    if (!unmatched.remove(outsideVersions(line))) return false;
+  }
+  return removed.toSet().difference(added.toSet()).isNotEmpty;
+}
+
+/// Decides whether this update could be merged unread, from what the run
+/// already holds. Pure; exposed for testing.
+///
+/// Anything missing is a blocker, never a pass: bindings that were not
+/// regenerated, a range that could not be read or is approximate, crates that
+/// could not be named, a lockfile that could not be diffed. Beyond that it
+/// needs the FFI surface unchanged ([codegenResult] `unchanged`), every file
+/// of [crates] the range touches changed in its version strings only (see
+/// [isVersionOnlyPatch]; a file list at the API's 300-file cap may be missing
+/// some), no registry crate moved, added or removed except those in
+/// [upstream], and no git dependency from a repository other than
+/// [upstreamRepo] moved. A [prerelease] is never eligible.
+MergeEligibility mergeEligibilityFrom({
+  required String? codegenResult,
+  required Map<String, dynamic>? compare,
+  required bool approximateRange,
+  required List<UpstreamCrate> crates,
+  required String? lockBefore,
+  required String? lockAfter,
+  required String upstreamRepo,
+  Set<String> upstream = const {},
+  bool prerelease = false,
+}) {
+  final blockers = <String>[];
+  if (prerelease) {
+    blockers.add('the upstream release is a pre-release');
+  }
+  if (codegenResult == 'changed') {
+    blockers.add('the FFI surface moved when the bindings were regenerated');
+  } else if (codegenResult != 'unchanged') {
+    blockers.add(
+      'the bindings were not regenerated, so whether the FFI surface moved is '
+      'unknown',
+    );
+  }
+  if (crates.isEmpty) {
+    blockers.add('the upstream crates this package builds are unknown');
+  }
+
+  final files = compare?['files'];
+  if (files is! List) {
+    blockers.add('the upstream range could not be read');
+  } else {
+    if (approximateRange) {
+      blockers.add(
+        'a release in the range was published from uncommitted changes, so '
+        'the range is approximate',
+      );
+    }
+    if (files.length >= 300) {
+      blockers.add(
+        'the range touches at least 300 files, the most the compare API lists',
+      );
+    }
+    final beyond = <String>[];
+    for (final file in crates.isEmpty ? const <Object?>[] : files) {
+      if (file is! Map<String, dynamic>) continue;
+      final name = file['filename'];
+      if (name is! String) continue;
+      final previous = file['previous_filename'];
+      final bound =
+          _inAnyCrate(name, crates) ||
+          (previous is String && _inAnyCrate(previous, crates));
+      if (!bound) continue;
+      final patch = file['patch'];
+      if (file['status'] != 'modified' ||
+          patch is! String ||
+          !isVersionOnlyPatch(patch)) {
+        beyond.add('`$name`');
+      }
+    }
+    if (beyond.isNotEmpty) {
+      blockers.add(
+        'the crates this package builds change more than a version string: '
+        '${_listed(beyond)}',
+      );
+    }
+  }
+
+  if (lockBefore == null || lockAfter == null) {
+    blockers.add('the lockfile diff could not be read');
+  } else {
+    final diff = diffLockfiles(lockBefore, lockAfter);
+    final thirdParty = [
+      for (final m in diff.moved)
+        if (!upstream.contains(m.name))
+          '`${m.name}` ${m.was.join(', ')} → ${m.now.join(', ')}',
+      for (final a in diff.added)
+        if (!upstream.contains(a.name)) '`${a.name}` added',
+      for (final r in diff.removed)
+        if (!upstream.contains(r.name)) '`${r.name}` removed',
+    ];
+    if (thirdParty.isNotEmpty) {
+      blockers.add('third-party crates move with it: ${_listed(thirdParty)}');
+    }
+    bool fromUpstream(LockedPackage p) =>
+        _gitSource(p.source!)?.repo.toLowerCase() == upstreamRepo.toLowerCase();
+    final otherGit = [
+      for (final g in diff.git)
+        if (_lockedLabel(g.was) != _lockedLabel(g.now) &&
+            ![...g.was, ...g.now].every(fromUpstream))
+          '`${g.name}`',
+    ];
+    if (otherGit.isNotEmpty) {
+      blockers.add(
+        'a git dependency from another repository moves: ${_listed(otherGit)}',
+      );
+    }
+  }
+  return MergeEligibility(blockers);
+}
+
+/// [items] in prose, the first five of them, with how many were left out.
+String _listed(List<String> items) => items.length <= 5
+    ? _inProse(items)
+    : '${items.take(5).join(', ')} and ${items.length - 5} more';
 
 /// Ask `cargo metadata` which upstream crates this package builds — which ones
 /// are upstream's is the source's call, [UpstreamSource.cratesIn].
@@ -949,13 +1163,15 @@ String _describeSource(String source) {
 /// `HEAD` is the base the update branch was cut from, and the bump is not yet
 /// committed when this runs. Where it already is, the two are equal and both
 /// are simply left out: no section is better than one claiming that nothing
-/// moved.
-Future<({String prompt, String paragraph})> _readLockfileChanges(
+/// moved. The two texts are returned as well, for [mergeEligibilityFrom]; both
+/// are null when either could not be read.
+Future<({String prompt, String paragraph, String? before, String? after})>
+_readLockfileChanges(
   Directory packageDir, {
   required List<UpstreamCrate> crates,
 }) async {
   const path = 'rust/Cargo.lock';
-  const none = (prompt: '', paragraph: '');
+  const none = (prompt: '', paragraph: '', before: null, after: null);
   try {
     final before = await Process.run('git', [
       'show',
@@ -980,6 +1196,8 @@ Future<({String prompt, String paragraph})> _readLockfileChanges(
         upstreamRepo: 'signalapp/libsignal',
         upstream: upstream,
       ),
+      before: old,
+      after: now,
     );
   } on Object catch (e) {
     logWarning('Could not diff $path: $e');

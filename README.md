@@ -627,6 +627,8 @@ The CI automatically checks for new libsignal releases daily and creates PRs wit
 - Regenerated FRB bindings (if successful)
 - AI-generated CHANGELOG entry, when `AI_MODELS` names a model with a key
   (see CONTRIBUTING); otherwise the pull request is labelled `changelog-needed`
+- A verdict on whether the update could be merged unread, and if not, why
+  not — a report only; nothing merges on it
 
 It also checks for copier template updates daily. When one is found it applies
 it with `copier update` and opens a pull request carrying the result — a draft

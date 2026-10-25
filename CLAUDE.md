@@ -433,6 +433,12 @@ that wrote the entry.
 If no model answers, nothing is guessed: the entry is left unwritten, the run
 says why, and the pull request is labelled `changelog-needed`.
 
+The same run decides whether the update could be merged unread — `mergeEligibilityFrom`
+in `scripts/src/update_changelog.dart` — and the pull request says so under
+*Merge without review?*. It is a report: nothing merges on it yet. The rule is
+strict on purpose: in the crates this package builds only quoted version
+strings may move, so a protocol constant never passes.
+
 ### What the entry is judged against
 
 `.github/agent-prompts/changelog-scope.md` holds this project's own statement of

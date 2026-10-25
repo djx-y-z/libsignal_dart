@@ -206,6 +206,28 @@
   where libsignal decrypted, and an identity saved where libsignal saved
   none. The random scripts assert that they still reach the states they exist
   for. Runs in `make rust-test`, in about six seconds.
+- **The update pull request says whether it could be merged unread**
+  (`scripts/src/update_changelog.dart`, `scripts/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`,
+  `.github/workflows/check-libsignal-updates.yml`, `README.md`, `CLAUDE.md`)
+  — a first step toward handing routine updates to the bot, and a report
+  only: nothing merges on it. The CHANGELOG script, which already holds every
+  input, decides it before the model is asked and publishes `merge_eligible`
+  and `merge_blockers` on both outcomes; the pull request shows it under
+  *Merge without review?*. Eligible means the bindings were regenerated and
+  the FFI surface held, the upstream range was read in full, every file the
+  range touched in the four libsignal crates in the graph changed in quoted
+  version strings only — read off the diff, so a protocol version, an
+  integer, never passes, nor does a raised `rust-version` — no registry crate
+  moved, was added or removed, and no git dependency from another repository,
+  `spqr` among them, moved. A pre-release is never eligible. Each blocker
+  names what it found. Replayed on the last nine updates (v0.102.3 to
+  v0.106.0): v0.105.2 and v0.105.4 pass, and the other seven are blocked for
+  what a reviewer had to read there — session code, `spqr`, or third-party
+  crates a full `cargo update` moved along, the `libc` that broke iOS and the
+  since-yanked `inout` 0.2.3 among them. No label yet: a label is what a merge
+  job would key on, and the rule should be measured on real updates first.
+  The template carries the same change.
 
 #### Changed
 
