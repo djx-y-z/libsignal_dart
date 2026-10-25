@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -74,6 +74,8 @@ help:
 	@echo "    make actionlint                   - Lint the GitHub Actions workflows (actionlint)"
 	@echo "    make check-targets                - Check deployment target consistency (iOS/macOS/Android)"
 	@echo "                                        Example: make check-targets ARGS=\"--ios --set 14.0\""
+	@echo "    make check-msrv                   - Check the minimum Rust version against the dependency graph"
+	@echo "                                        Example: make check-msrv ARGS=\"--update\""
 	@echo "    make rust-update                  - Re-resolve Cargo.lock for rust/Cargo.toml (cargo update --workspace)"
 	@echo "    make update-changelog             - Update CHANGELOG.md with AI"
 	@echo "                                        Example: make update-changelog ARGS=\"--version v1.0.0\""
@@ -631,6 +633,12 @@ update-template:
 
 check-targets:
 	@$(FVM) dart scripts/check_deployment_targets.dart $(ARGS)
+
+# The minimum Rust version: rust/Cargo.toml, the rust_version answer and the
+# docs, against the highest floor a crate of the resolved graph declares.
+# `--update` raises them all; the update workflow runs it after rust-update.
+check-msrv:
+	@$(FVM) dart scripts/check_msrv.dart $(ARGS)
 
 # Regenerate the third-party notice inventory for the shipped native library.
 # Run after any dependency change; CI verifies the committed file matches.

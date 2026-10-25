@@ -460,6 +460,16 @@ jobs:
         run: make check-targets
         shell: bash
 
+      # The minimum Rust version against the highest floor a crate of the
+      # resolved graph declares, and against the docs and the copier answer
+      # that state it. Platform-independent too, so once. A floor below the
+      # graph's is what the MSRV job finds the hard way; this names the crate.
+      # Fails on drift (exit 1); fix with `make check-msrv ARGS="--update"`.
+      - name: Check the minimum Rust version
+        if: matrix.name == 'Linux x86_64'
+        run: make check-msrv
+        shell: bash
+
       # Documentation gate. The Dart surface in `lib/src/rust/` is generated
       # from the Rust docstrings in `rust/src/api/`, so a reference written in
       # Rust syntax (`[`Type::method`]`) is copied verbatim and reaches pub.dev

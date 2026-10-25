@@ -257,6 +257,8 @@ make check-template-updates       # Check for copier template updates
 make update-template ARGS="--version vX.Y.Z"  # Apply a template update (runs copier)
 make check-targets                # Check deployment targets (iOS/macOS/Android)
 make check-targets ARGS="--ios --set 14.0"  # Set iOS target everywhere
+make check-msrv                   # Check the minimum Rust version against the graph
+make check-msrv ARGS="--update"   # Raise it everywhere it is stated
 make update-changelog ARGS="--version vX.Y.Z"  # Update CHANGELOG with AI
 make help                         # Show all available commands
 ```

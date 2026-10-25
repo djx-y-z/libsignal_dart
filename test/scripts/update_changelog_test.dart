@@ -1754,6 +1754,15 @@ void _mergeEligibilityTests() {
       reg('libc', '0.2.189'),
     ]);
 
+    String manifest(String rustVersion) =>
+        '[package]\n'
+        'name = "wrapper_frb"\n'
+        'rust-version = "$rustVersion"\n'
+        '\n'
+        '[dependencies]\n'
+        'upstream-core = { git = "https://github.com/owner/upstream", '
+        'tag = "v0.1.1" }\n';
+
     MergeEligibility decide({
       String? codegen = 'unchanged',
       Object? files = const <Object?>[],
@@ -1763,7 +1772,11 @@ void _mergeEligibilityTests() {
       String? before,
       String? after,
       bool lockRead = true,
+      String rustBefore = '1.93.1',
+      String rustAfter = '1.93.1',
+      bool manifestRead = true,
       Set<String> upstream = const {},
+      bool prerelease = false,
     }) => mergeEligibilityFrom(
       codegenResult: codegen,
       compare: compareRead ? {'files': files} : null,
@@ -1771,8 +1784,11 @@ void _mergeEligibilityTests() {
       crates: crates,
       lockBefore: lockRead ? before ?? lockBefore : null,
       lockAfter: lockRead ? after ?? lockAfter : null,
+      manifestBefore: manifestRead ? manifest(rustBefore) : null,
+      manifestAfter: manifestRead ? manifest(rustAfter) : null,
       upstreamRepo: 'owner/upstream',
       upstream: upstream,
+      prerelease: prerelease,
     );
 
     final versionOnly = [
@@ -1789,17 +1805,25 @@ void _mergeEligibilityTests() {
 
     test('blocks a pre-release', () {
       expect(
-        mergeEligibilityFrom(
-          codegenResult: 'unchanged',
-          compare: {'files': versionOnly},
-          approximateRange: false,
-          crates: _crates,
-          lockBefore: lockBefore,
-          lockAfter: lockAfter,
-          upstreamRepo: 'owner/upstream',
-          prerelease: true,
-        ).blockers.single,
+        decide(files: versionOnly, prerelease: true).blockers.single,
         contains('pre-release'),
+      );
+    });
+
+    // `make check-msrv` raised it: every contributor building from source on
+    // the old toolchain is dropped, and the repair may not touch it.
+    test('blocks a raised minimum Rust version, naming both', () {
+      expect(
+        decide(files: versionOnly, rustAfter: '1.95.0').blockers.single,
+        'the minimum Rust version moves from 1.93.1 to 1.95.0',
+      );
+    });
+
+    // Anything missing blocks; nothing missing is ever a pass.
+    test('blocks an unreadable manifest', () {
+      expect(
+        decide(files: versionOnly, manifestRead: false).blockers.single,
+        contains('`rust/Cargo.toml` could not be read'),
       );
     });
 

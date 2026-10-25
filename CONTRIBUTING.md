@@ -29,7 +29,8 @@ Please be respectful and considerate of others. We expect all contributors to:
 ### Prerequisites
 
 - [Rust toolchain](https://rustup.rs/) (1.93.1+) — `rust-version` in
-  `rust/Cargo.toml` is the authority; this is the same number
+  `rust/Cargo.toml` is the authority; this is the same number, and
+  `make check-msrv` keeps the two together
 - [Dart SDK]( https://dart.dev/get-dart ) (^3.10.0) or Flutter
   (>=3.38.0) — `make setup` installs the pinned Flutter through fvm
 - `make` (see **Windows Users** below)

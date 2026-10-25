@@ -55,14 +55,16 @@ git -C /tmp/upstream diff vOLD..vNEW -- <crate>/src | grep -E '^[-+].*(pub fn|pu
 **1e. Upstream `Cargo.toml` deltas** — MSRV bumps, new/removed features,
 dependency updates with security advisories.
 
-⚠ **An MSRV bump moves two files, not one.** `rust-version` in
+⚠ **An MSRV bump moves more than one file.** `rust-version` in
 `rust/Cargo.toml` is what CI reads — `test-reusable.yml` greps it and feeds it
 to the toolchain action — but that line is *rendered* from the `rust_version`
-answer in `.copier-answers.yml`, and so is the version README.md advertises to
-contributors. Raise the answer together with the manifest. Otherwise the README
-keeps promising a toolchain that can no longer build the crate, nothing
-notices (the two are never compared), and the next `copier update` renders the
-stale number straight back over the manifest.
+answer in `.copier-answers.yml`, and so is the version README.md and
+CONTRIBUTING.md advertise to contributors. `make check-msrv ARGS="--update"`
+raises them together, to the highest floor a crate of the resolved graph
+declares, and the update workflow runs it after `make rust-update`. Raised in
+the manifest alone, the next `copier update` renders the stale number straight
+back over it. It reads what crates declare, so a crate that uses a feature
+newer than its own floor still only shows up in the MSRV job.
 
 Summarize findings as:
 - **Breaking changes** (API removals, signature changes) → Rust wrapper must adapt
@@ -206,7 +208,7 @@ git commit -m "fix: adapt for libsignal vX.Y.Z breaking changes"
 - [ ] No diagnostic/test-only upstream feature ships — checked with `strings`
       on the built artifacts, not by reading the manifest
 - [ ] Advisory ignores emptied and re-added from what still fires
-- [ ] MSRV: `rust-version` and the `rust_version` answer moved together
+- [ ] MSRV: `make check-msrv` passes (`--update` raises every copy together)
 - [ ] `make rust-check` — sync Cargo.lock
 - [ ] Commit all changes
 

@@ -17,6 +17,7 @@ import 'dart:io';
 
 import 'ai_client.dart';
 import 'common.dart';
+import 'msrv.dart';
 import 'upstream_source.dart';
 
 /// What [updateChangelog] reports back to its caller.
@@ -106,13 +107,15 @@ Future<ChangelogUpdate> updateChangelog({
   // own CHANGELOG.md, the compare to tell their files from everything else in
   // the range.
   logStep('Reading the resolved dependency graph...');
-  final crates = await _fetchUpstreamCrates(packageDir);
+  final graph = await _fetchUpstreamCrates(packageDir);
+  final crates = graph.crates;
   logInfo(
     'Upstream crates in the graph: '
     '${crates.isEmpty ? 'none found' : crates.map((c) => c.name).join(', ')}',
   );
   final lock = await _readLockfileChanges(packageDir, crates: crates);
   logInfo('Got ${lock.prompt.length} characters of lockfile changes');
+  final manifest = await _readManifestChanges(packageDir);
 
   // Step 2: The upstream commits the two pins denote. For a tag they are the
   // tags themselves and cost nothing; a registry source reads them out of the
@@ -175,6 +178,8 @@ Future<ChangelogUpdate> updateChangelog({
     crates: crates,
     lockBefore: lock.before,
     lockAfter: lock.after,
+    manifestBefore: manifest.before,
+    manifestAfter: manifest.after,
     upstreamRepo: 'signalapp/libsignal',
     upstream: {...upstreamSource.crates, for (final c in crates) c.name},
     prerelease: prerelease,
@@ -216,8 +221,17 @@ Future<ChangelogUpdate> updateChangelog({
 
   final nativeHighlight = entry.highlight;
   // The third-party paragraph is the lockfile's, appended rather than asked
-  // for; see [thirdPartyParagraphFrom].
-  final changed = composeChangedEntry(entry.changed, lock.paragraph);
+  // for; see [thirdPartyParagraphFrom]. A raised minimum Rust version closes
+  // it, from the same facts — see [msrvSentenceFor].
+  final msrv = msrvSentenceFor(
+    manifest.before == null ? null : rustVersionIn(manifest.before!),
+    manifest.after == null ? null : rustVersionIn(manifest.after!),
+    floor: graph.floor,
+  );
+  final changed = composeChangedEntry(
+    entry.changed,
+    [lock.paragraph, msrv].where((s) => s.isNotEmpty).join(' '),
+  );
   logInfo('Generated libsignal highlight: $nativeHighlight');
   logInfo('Generated changed entry');
 
@@ -727,7 +741,8 @@ bool isVersionOnlyPatch(String patch) {
 /// [isVersionOnlyPatch]; a file list at the API's 300-file cap may be missing
 /// some), no registry crate moved, added or removed except those in
 /// [upstream], and no git dependency from a repository other than
-/// [upstreamRepo] moved. A [prerelease] is never eligible.
+/// [upstreamRepo] moved, nor the minimum Rust version between
+/// [manifestBefore] and [manifestAfter]. A [prerelease] is never eligible.
 MergeEligibility mergeEligibilityFrom({
   required String? codegenResult,
   required Map<String, dynamic>? compare,
@@ -735,6 +750,8 @@ MergeEligibility mergeEligibilityFrom({
   required List<UpstreamCrate> crates,
   required String? lockBefore,
   required String? lockAfter,
+  required String? manifestBefore,
+  required String? manifestAfter,
   required String upstreamRepo,
   Set<String> upstream = const {},
   bool prerelease = false,
@@ -825,6 +842,21 @@ MergeEligibility mergeEligibilityFrom({
       );
     }
   }
+
+  // A raised floor drops every contributor and consumer building from source
+  // on an older toolchain, and is the one change the build repair may not make.
+  if (manifestBefore == null || manifestAfter == null) {
+    blockers.add('`rust/Cargo.toml` could not be read at HEAD and in the tree');
+  } else {
+    final was = rustVersionIn(manifestBefore);
+    final now = rustVersionIn(manifestAfter);
+    if (was != now) {
+      blockers.add(
+        'the minimum Rust version moves from ${was ?? 'none'} to '
+        '${now ?? 'none'}',
+      );
+    }
+  }
   return MergeEligibility(blockers);
 }
 
@@ -834,12 +866,17 @@ String _listed(List<String> items) => items.length <= 5
     : '${items.take(5).join(', ')} and ${items.length - 5} more';
 
 /// Ask `cargo metadata` which upstream crates this package builds — which ones
-/// are upstream's is the source's call, [UpstreamSource.cratesIn].
+/// are upstream's is the source's call, [UpstreamSource.cratesIn] — and the
+/// highest Rust floor in the graph, as `make check-msrv` reads it
+/// ([floorOf]), so the two cannot disagree.
 ///
 /// Best-effort: no toolchain, a checkout it cannot fetch or a lock out of step
-/// all land as an empty list, and every section that needs the crates then
-/// falls back to what it did without them.
-Future<List<UpstreamCrate>> _fetchUpstreamCrates(Directory packageDir) async {
+/// all land as an empty list and no floor, and every section that needs them
+/// then falls back to what it did without them.
+Future<({List<UpstreamCrate> crates, RustFloor? floor})> _fetchUpstreamCrates(
+  Directory packageDir,
+) async {
+  const none = (crates: <UpstreamCrate>[], floor: null);
   try {
     final result = await Process.run('cargo', [
       'metadata',
@@ -854,15 +891,17 @@ Future<List<UpstreamCrate>> _fetchUpstreamCrates(Directory packageDir) async {
         'cargo metadata failed, so the prompt names only the crates the '
         'generator was told about: ${(result.stderr as String).trim()}',
       );
-      return const [];
+      return none;
     }
-    return upstreamSource.cratesIn(
-      jsonDecode(result.stdout as String) as Map<String, dynamic>,
-      vcsInfo: _readVcsInfo,
+    final metadata =
+        jsonDecode(result.stdout as String) as Map<String, dynamic>;
+    return (
+      crates: upstreamSource.cratesIn(metadata, vcsInfo: _readVcsInfo),
+      floor: floorOf(metadata),
     );
   } on Object catch (e) {
     logWarning('cargo metadata could not be run: $e');
-    return const [];
+    return none;
   }
 }
 
@@ -1207,6 +1246,31 @@ _readLockfileChanges(
     );
   } on Object catch (e) {
     logWarning('Could not diff $path: $e');
+    return none;
+  }
+}
+
+/// `rust/Cargo.toml` at `HEAD` and in the tree, for the minimum Rust version
+/// the update moved — `make check-msrv` raises it before this runs. Both are
+/// null when either cannot be read, and [mergeEligibilityFrom] then blocks.
+Future<({String? before, String? after})> _readManifestChanges(
+  Directory packageDir,
+) async {
+  const path = 'rust/Cargo.toml';
+  const none = (before: null, after: null);
+  try {
+    final before = await Process.run('git', [
+      'show',
+      'HEAD:$path',
+    ], workingDirectory: packageDir.path);
+    final file = File('${packageDir.path}/$path');
+    if (before.exitCode != 0 || !file.existsSync()) {
+      logWarning('Could not read $path at HEAD');
+      return none;
+    }
+    return (before: before.stdout as String, after: file.readAsStringSync());
+  } on Object catch (e) {
+    logWarning('Could not read $path: $e');
     return none;
   }
 }
@@ -1757,8 +1821,9 @@ One house-format bullet, continued in indented paragraphs when it needs them:
     binding-regeneration result, if one is given above; and the rule-4
     conclusion, if it is true>
 
-    (no third-party paragraph: where a lockfile section is given above,
-    this script appends one)
+    (no third-party paragraph and no minimum Rust version: this script
+    appends the first where a lockfile section is given above, and states
+    the second whenever this package's floor moves)
 
 Inside the JSON string a newline is written \\n, and a continuation paragraph is
 a blank line followed by two spaces of indent.

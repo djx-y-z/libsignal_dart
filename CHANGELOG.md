@@ -228,6 +228,27 @@
   since-yanked `inout` 0.2.3 among them. No label yet: a label is what a merge
   job would key on, and the rule should be measured on real updates first.
   The template carries the same change.
+- **`make check-msrv` keeps the minimum Rust version at the graph's floor**
+  (`scripts/check_msrv.dart`, `scripts/src/msrv.dart`,
+  `test/scripts/msrv_test.dart`, `Makefile`,
+  `scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.github/workflows/test-reusable.yml`, `README.md`, `CONTRIBUTING.md`,
+  `CLAUDE.md`, `.claude/skills/update-libsignal/SKILL.md`) — it compares
+  `rust-version` in `rust/Cargo.toml`, the `rust_version` answer and
+  CONTRIBUTING's toolchain line with the highest `rust-version` a crate of the
+  resolved graph declares, and `--update` raises all three. They agree today at
+  1.93.1, and the crate that sets the graph's floor is `libsignal-debug`
+  0.106.0 — libsignal's own workspace floor. So the next upstream MSRV raise
+  would have reached the update pull request as a red MSRV job, which the
+  build repair leaves alone, and a hand edit in three files. The update
+  workflow now raises it after `make rust-update` and says so in the pull
+  request, the CHANGELOG entry gains a sentence naming the crate that set it,
+  a moved floor keeps the update from being eligible to merge unread, and CI
+  checks it on the Linux x86_64 leg. It reads what crates declare: one that
+  uses a feature newer than its own floor is still found only by the MSRV job.
+  The template carries the same change.
 
 #### Changed
 

@@ -200,6 +200,25 @@ jobs:
             echo "::warning::Failed to update Cargo.lock"
           fi
 
+      # The minimum Rust version, raised to the highest floor a crate of the new
+      # graph declares, everywhere it is stated — see `make check-msrv`. It
+      # reads what crates DECLARE: a crate that uses a feature newer than its
+      # own floor is invisible to it, and the pull request's MSRV job stays the
+      # oracle for that. A floor raised here that still fails there reaches the
+      # build repair, which leaves the manifest alone, so it ends at a person.
+      # A raised floor also keeps the update from being eligible to merge
+      # unread. Needs the new lock: `cargo metadata --locked` reads it.
+      - name: Raise the minimum Rust version
+        id: msrv
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true' && steps.cargo-lock.outputs.success == 'true'
+        run: |
+          if make check-msrv ARGS="--update --ci-output $GITHUB_OUTPUT"; then
+            echo "success=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "success=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Could not check the minimum Rust version"
+          fi
+
       # The codegen binary is not preinstalled on runners; without this step
       # `make codegen` fails with exit 127 on every run. Pinned so CI and
       # local runs generate identical bindings (cached by rust-cache).
@@ -321,6 +340,8 @@ jobs:
 
             ${{ steps.cargo-lock.outputs.success == 'false' && '> **Warning**: Failed to update Cargo.lock. Run `make rust-update` manually.' || '' }}
 
+            ${{ steps.msrv.outputs.success == 'false' && '> **Warning**: The minimum Rust version could not be checked against the new graph. Run `make check-msrv`.' || '' }}
+
             ${{ steps.codegen.outputs.success == 'false' && '> **Error**: FRB codegen failed. libsignal API may have changed. Manual intervention required.' || '' }}
 
             ${{ steps.changelog.outputs.success == 'false' && '> **Warning**: AI changelog update failed. Please update CHANGELOG.md manually.' || '' }}
@@ -338,6 +359,7 @@ jobs:
             - `README.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'version badge' || '**NOT UPDATED**' }}
             - `.copier-answers.yml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'upstream_version updated' || '**NOT UPDATED**' }}
             - `CLAUDE.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'example in documentation' || '**NOT UPDATED**' }}
+            ${{ steps.msrv.outputs.msrv_moved == 'true' && format('- **Minimum Rust version** — raised from {0} to {1} in `rust/Cargo.toml`, the `rust_version` answer and the docs that state it: the highest floor a crate of the new graph declares', steps.msrv.outputs.msrv_from, steps.msrv.outputs.msrv_to) || '' }}
 
             ### Merge without review?
 
