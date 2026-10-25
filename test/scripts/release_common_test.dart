@@ -139,4 +139,32 @@ void main() {
       );
     });
   });
+
+  group('isReleaseBranch', () {
+    test('accepts main', () {
+      expect(isReleaseBranch('main'), isTrue);
+    });
+
+    test('accepts a release/<line> maintenance branch', () {
+      expect(isReleaseBranch('release/8.0.x'), isTrue);
+    });
+
+    test('refuses any other branch', () {
+      // A feature branch, or a bot's update branch, must not be able to cut a
+      // release just because the script was started on it.
+      expect(isReleaseBranch('update-libsignal-v0.106.0'), isFalse);
+      expect(isReleaseBranch('fix/release'), isFalse);
+      expect(isReleaseBranch('mainline'), isFalse);
+    });
+
+    test('refuses a detached HEAD', () {
+      // `git rev-parse --abbrev-ref HEAD` prints HEAD there.
+      expect(isReleaseBranch('HEAD'), isFalse);
+    });
+
+    test('refuses release/ without a line, or nested under it', () {
+      expect(isReleaseBranch('release/'), isFalse);
+      expect(isReleaseBranch('release/8.0.x/extra'), isFalse);
+    });
+  });
 }

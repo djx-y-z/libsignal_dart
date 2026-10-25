@@ -76,12 +76,13 @@ Options:
   --help, -h         Show this help
 
 What it does:
-  1. Verifies you are on a clean, up-to-date main.
+  1. Verifies you are on a clean, up-to-date main — or release/<line>, a
+     maintenance branch cut from an earlier release tag and already on origin.
   2. Bumps the [package] version in rust/Cargo.toml.
   3. Stamps the "libsignal_frb vX.Y.Z" line into CHANGELOG [Unreleased].
   4. Creates a SIGNED commit and SIGNED tag "libsignal_frb-X.Y.Z"
      (you enter your passphrase during the command).
-  5. Pushes main and the tag, which triggers the native build workflow.
+  5. Pushes the branch and the tag, which triggers the native build workflow.
 
 If a signing or push step fails — a mistyped passphrase is the usual cause, and
 signing tools do not re-prompt on their own — it is simply run again, so the

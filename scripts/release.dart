@@ -91,7 +91,8 @@ Options:
   --help, -h         Show this help
 
 What it does:
-  1. Verifies you are on a clean, up-to-date main.
+  1. Verifies you are on a clean, up-to-date main — or release/<line>, a
+     maintenance branch cut from an earlier release tag and already on origin.
   2. Verifies the stage-1 native release libsignal_frb-<crate version> exists
      on GitHub Releases (the published build hook downloads it), and that
      rust/ (all but rust/fuzz and rust/deny.toml) and lib/src/rust/ at its
@@ -104,7 +105,7 @@ What it does:
      next unreleased change recreates it).
   6. Creates a SIGNED commit and SIGNED tag "vX.Y.Z" (you enter your passphrase
      during the command).
-  7. Pushes main and the tag, which triggers the pub.dev publish workflow.
+  7. Pushes the branch and the tag, which triggers the pub.dev publish workflow.
 
 If a signing or push step fails — a mistyped passphrase is the usual cause, and
 signing tools do not re-prompt on their own — it is simply run again, so the

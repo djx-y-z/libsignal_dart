@@ -38,6 +38,23 @@
   binary contains `AsyncFd`. `cargo audit` still lists it, as an allowed
   warning. `main` is on 1.53.3 already.
 
+### For Contributors
+
+#### Changed
+
+- **The release scripts also cut a release from a `release/<line>` branch**
+  (`scripts/src/release_common.dart`, `scripts/src/release_frb.dart`,
+  `scripts/src/release.dart`, `scripts/release_frb.dart`,
+  `scripts/release.dart`, `test/scripts/release_common_test.dart`) — this
+  release is cut from `release/8.0.x`, a branch from the `v8.0.0` tag,
+  because `main` already carries libsignal v0.106.0 and changes meant for the
+  next major. Both scripts refused every branch but `main`, and fetched,
+  compared with and pushed `main` by name. They now accept `main` or
+  `release/<line>` (`isReleaseBranch`), use the branch they run on for all
+  three, and refuse a branch origin does not have yet, so "push first, CI
+  green, then tag" holds on a maintenance branch as on `main`. The change
+  exists on this branch only.
+
 ## [8.0.0] - 2026-10-08
 
 ### For Users

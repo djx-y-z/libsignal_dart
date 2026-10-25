@@ -250,6 +250,16 @@ bool isResumableRelease({
     currentVersion == requestedVersion &&
     headSubject == expectedSubject;
 
+/// Whether a release may be cut from [branch]: `main`, or a maintenance branch
+/// `release/<line>` (`release/8.0.x`, say) cut from an earlier release tag, to
+/// ship a fix for that line without everything `main` has gathered since.
+///
+/// The release pushes whichever branch it ran on, so a maintenance branch must
+/// already be on origin when it starts — push first and let CI go green on it,
+/// exactly as on `main`. Both release scripts refuse a branch origin lacks.
+bool isReleaseBranch(String branch) =>
+    branch == 'main' || RegExp(r'^release/[^/\s]+$').hasMatch(branch);
+
 /// Returns true if [a] is a strictly greater X.Y.Z version than [b].
 ///
 /// If either side can't be parsed as X.Y.Z, logs a warning and returns true so

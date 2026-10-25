@@ -30,7 +30,8 @@ import 'third_party_notices.dart';
 /// native sources, runs `make publish-dry-run` (on the clean, pre-bump tree),
 /// bumps `pubspec.yaml`, finalizes the CHANGELOG,
 /// creates a signed commit + signed tag `vX.Y.Z`, and (unless [push] is false)
-/// pushes `main` and the tag. Prompts
+/// pushes the branch it ran on — `main`, or a `release/<line>` maintenance
+/// branch (see [isReleaseBranch]) — and the tag. Prompts
 /// for confirmation before committing unless [assumeYes]. Set [skipFrbCheck]
 /// only if you have manually verified that the native binary exists *and* was
 /// built from this tree — the flag skips both checks. [date] defaults
@@ -55,10 +56,11 @@ Future<void> releasePackage({
   await ensureGitRepo();
 
   final branch = await git(['rev-parse', '--abbrev-ref', 'HEAD']);
-  if (branch != 'main') {
+  if (!isReleaseBranch(branch)) {
     throw Exception(
-      'Not on main (on "$branch"). Package releases are cut from main; '
-      'check it out and pull first.',
+      'Not on main or a release/<line> branch (on "$branch"). Package '
+      'releases are cut from main, or from a maintenance branch cut from an '
+      'earlier release tag; check it out and pull first.',
     );
   }
 
@@ -127,10 +129,22 @@ Future<void> releasePackage({
   }
 
   logStep('Fetching origin...');
-  // Fetch only origin/main (all the behind/ahead check below needs). Not tags:
-  // the "tag already on origin?" check uses `git ls-remote` directly, so `--tags`
-  // adds nothing — but one diverged tag in the namespace would abort the release.
-  await git(['fetch', 'origin', 'main', '--no-tags', '--quiet']);
+  if ((await git([
+    'ls-remote',
+    '--heads',
+    'origin',
+    'refs/heads/$branch',
+  ])).isEmpty) {
+    throw Exception(
+      'origin has no $branch yet. Push it first (git push -u origin $branch) '
+      'and let CI go green on it before tagging.',
+    );
+  }
+  // Fetch only origin/<branch> (all the behind/ahead check below needs). Not
+  // tags: the "tag already on origin?" check uses `git ls-remote` directly, so
+  // `--tags` adds nothing — but one diverged tag in the namespace would abort
+  // the release.
+  await git(['fetch', 'origin', branch, '--no-tags', '--quiet']);
   if ((await git(['ls-remote', '--tags', 'origin', tag])).isNotEmpty) {
     throw Exception(
       'Tag $tag already exists on origin — v$version is already released. '
@@ -138,17 +152,17 @@ Future<void> releasePackage({
     );
   }
 
-  final behind = await git(['rev-list', '--count', 'HEAD..origin/main']);
+  final behind = await git(['rev-list', '--count', 'HEAD..origin/$branch']);
   if (behind != '0') {
     throw Exception(
-      'Local main is behind origin/main by $behind commit(s). '
-      'Run: git pull --ff-only origin main',
+      'Local $branch is behind origin/$branch by $behind commit(s). '
+      'Run: git pull --ff-only origin $branch',
     );
   }
-  final ahead = await git(['rev-list', '--count', 'origin/main..HEAD']);
+  final ahead = await git(['rev-list', '--count', 'origin/$branch..HEAD']);
   if (ahead != '0') {
     logWarn(
-      'Local main is ahead of origin/main by $ahead commit(s); these '
+      'Local $branch is ahead of origin/$branch by $ahead commit(s); these '
       'will be pushed together with the release commit.',
     );
   }
@@ -226,7 +240,7 @@ Future<void> releasePackage({
   // ---- Confirm -------------------------------------------------------------
   if (resuming && tagCreated && !push) {
     logSuccess('Nothing left to do: the commit and tag $tag already exist.');
-    logInfo('When ready: git push origin main && git push origin $tag');
+    logInfo('When ready: git push origin $branch && git push origin $tag');
     return;
   }
 
@@ -292,18 +306,18 @@ Future<void> releasePackage({
   // ---- Push ----------------------------------------------------------------
   if (!push) {
     logSuccess('Committed and tagged $tag locally (not pushed).');
-    logInfo('When ready: git push origin main && git push origin $tag');
+    logInfo('When ready: git push origin $branch && git push origin $tag');
     return;
   }
 
-  logStep('Pushing main and tag $tag...');
+  logStep('Pushing $branch and tag $tag...');
   await runInheritRetry(
     'git',
-    ['push', 'origin', 'main'],
-    what: 'git push origin main',
+    ['push', 'origin', branch],
+    what: 'git push origin $branch',
     failMessage:
-        'git push origin main failed. The commit and tag $tag exist locally; '
-        're-run the same command to resume from here.',
+        'git push origin $branch failed. The commit and tag $tag exist '
+        'locally; re-run the same command to resume from here.',
   );
   await runInheritRetry(
     'git',
