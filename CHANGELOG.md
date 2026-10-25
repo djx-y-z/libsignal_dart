@@ -6,7 +6,9 @@
 
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
-- **libsignal v0.106.0** — Tahini session management update
+- **libsignal v0.106.0** — session management moves from Sesame to Tahini:
+  an archived session is never made current again, and a record keeps at
+  most 3 of them instead of 40
 
 #### Changed
 
@@ -75,11 +77,53 @@
   Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
-- **Session management now changes how this package handles competing and archived sessions** — the range ([compare](https://github.com/signalapp/libsignal/compare/v0.105.4...v0.106.0)) replaces Sesame with Tahini: archived sessions are not made active again, a tiebreaker selects the active session in common races, and repeated switching between sessions is detected and settled. Session records now retain at most 3 archived sessions instead of 40, gain fields readable by earlier libsignal versions, and have no wire-format changes. These changes reach the exposed session-establishment and serialization surface.
+- **libsignal v0.106.0 replaces Sesame session management with Tahini** —
+  as upstream's notes for the release put it
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.105.4...v0.106.0)),
+  an archived session is never made current again, a tiebreaker picks the
+  current session when both sides start one at the same time, and a
+  conversation that keeps switching back and forth between sessions is
+  detected and settled. A session record keeps at most 3 archived sessions
+  instead of 40, and one holding more is trimmed the next time a session is
+  archived. Messages on the wire do not change; stored session records gain
+  fields, which earlier libsignal versions still read. What an application
+  sees: a message on an archived session still decrypts, but answering it
+  takes a new session — in 8.0.0 decrypting it made that session current
+  again. A record can also be left with no current session: after
+  `SessionRecord.archiveCurrentState`, or once libsignal archives the current
+  session itself to settle a conversation. `SessionCipher.encrypt` and
+  `SealedSenderCipher.encrypt` then throw `LibSignalErrorCode.sessionNotFound`,
+  as do `localRegistrationId` and `remoteRegistrationId`, until
+  `SessionBuilder.processPreKeyBundle` or the peer's next pre-key message
+  establishes a new session.
 
-  In the bound crates, the complete range changes `rust/core/src/version.rs` and `rust/protocol/Cargo.toml`; protocol source files `consts.rs`, `lib.rs`, `sealed_sender.rs`, `session.rs`, `session_management.rs`, `state.rs`, `state/session.rs`, `triple_ratchet.rs`, and `proto/storage.proto`; it adds `tahini.rs` and removes `session_cipher_legacy.rs`. It also changes protocol cross-version tests, test support, and Tahini models. The release-note Rust API changes to `process_prekey` and `message_decrypt_prekey`, and the new `initiate_session` export, do not change this package's generated FFI: `make codegen` produced no change in `lib/src/rust/`. Java, Swift, Node, and upstream bridge/build changes are outside the crates this package builds and the Flutter Rust Bridge surface it exposes.
+  In the four libsignal crates in this package's graph, the range rewrites
+  session management in `libsignal-protocol` (`session_management.rs`, the new
+  `tahini.rs`, `state/session.rs`, `proto/storage.proto`), and the other three
+  change no source beyond `libsignal-core`'s version constant. The Rust API
+  changes are the two the notes name: `process_prekey` is no longer public,
+  which this package never called, and `message_decrypt_prekey` returns a
+  `PreKeyDecryptResult` instead of the plaintext, which the bridge now takes
+  from it, as upstream's own `message_decrypt` does. The new
+  `initiate_session` wraps `process_prekey_bundle`, which this package keeps
+  calling. Regenerating the bindings changed only documentation in
+  `lib/src/rust/`.
 
-  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+  No third-party crate moves with it. None is added or removed. `spqr` stays
+  at 1.6.0 (`06959b4`).
+- **`saveIdentity` runs only when libsignal saves the identity, on every
+  decryption path** — the bridge now forwards the save libsignal made instead
+  of choosing a key itself. libsignal v0.106.0 saves nothing for a message
+  that decrypts on an archived session, so that a delayed message cannot roll
+  the stored identity back. 8.0.0 called `saveIdentity` on every decryption:
+  `SessionCipher.decrypt` with the identity of the record's current session —
+  a read that fails with `sessionNotFound` once a decryption can leave the
+  record without one, after libsignal has already decrypted — and
+  `SealedSenderCipher.decrypt` with the key its sender certificate names.
+  Sealed sender now saves the key the inner message's session is bound to,
+  which a genuine sender's certificate repeats;
+  `SealedSenderDecryptionResult.senderIdentityKey` is still the
+  certificate's.
 
 #### Security
 

@@ -633,16 +633,24 @@ before the operation returns its result, on all entry points:
 |---|---|
 | `SessionBuilder.processPreKeyBundle` | `storeSession`, `saveIdentity` |
 | `SessionCipher.encrypt` | `storeSession` |
-| `SessionCipher.decrypt` (Whisper) | `storeSession`, `saveIdentity` |
-| `SessionCipher.decrypt` (pre-key) | `saveIdentity`, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
+| `SessionCipher.decrypt` (Whisper) | `storeSession`, `saveIdentity`¹ |
+| `SessionCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `SealedSenderCipher.encrypt` | `storeSession` |
-| `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`, `storeSession` |
-| `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
+| `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`¹, `storeSession` |
+| `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
 | `sealedSenderEncryptFromUsmc` / `sealedSenderDecryptToUsmc` / `sealedSenderMultiRecipientEncrypt` | *(none — see below)* |
 
 There is no fire-and-forget write anywhere in the bridge, so the *ordering* half
 of the rule holds by construction.
+
+> **¹ `saveIdentity` runs only when libsignal saves the identity:** for a
+> message that establishes a session or decrypts on the current one. Since
+> libsignal v0.106.0 a message that decrypts on an archived session saves
+> nothing, so a delayed message cannot roll the stored identity back. The
+> bridge forwards what libsignal saved rather than deciding for itself — on
+> sealed sender that is the key the inner message's session is bound to, not
+> the one the sender certificate names.
 
 > **The three sealed-sender envelope entry points write nothing.** They do no
 > Double Ratchet work: `encryptFromUsmc` seals contents you already encrypted,
@@ -667,6 +675,12 @@ session at the same time.
 > the order load-bearing: if the session were persisted first and the process
 > died before `removePreKey`, the redelivered message would match the persisted
 > session, consume nothing, and leave a one-time pre-key usable forever.
+>
+> The order is the bridge's own. libsignal's has differed since v0.106.0: it
+> marks the Kyber pre-key first, as the check that rejects a replayed
+> agreement, and stores the session before it removes the one-time pre-key.
+> A Dart callback cannot reject anything (Known Limitations, item 5), so the
+> bridge keeps the session last for the reason above.
 >
 > Writing the session last does **not** make every crash recoverable — it picks
 > the safer failure. Crash after a durable `markKyberPreKeyUsed` but before
@@ -1090,8 +1104,11 @@ it to the user, and only after they have verified the new identity save it (or
 remove the old one) in your store. Note that after re-trusting a
 new identity, messages from sessions still bound to the old key are rejected too
 — archive or delete the old session for that address so a fresh one is
-established. Continue to offer fingerprint / safety-number verification via
-`Fingerprint`.
+established. An archived session is never made current again, so until the
+peer's new pre-key message arrives or you build one with
+`SessionBuilder.processPreKeyBundle`, encrypting to that address throws
+`LibSignalErrorCode.sessionNotFound`. Continue to offer fingerprint /
+safety-number verification via `Fingerprint`.
 
 This depends on your `IdentityKeyStore` implementing `getIdentity` correctly (the
 provided in-memory store does). A store that always returns `null` from

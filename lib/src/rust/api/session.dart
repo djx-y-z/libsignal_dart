@@ -13,6 +13,15 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SessionRecord>>
 abstract class SessionRecord implements RustOpaqueInterface {
   /// Archive the current session state.
+  ///
+  /// The archived session still decrypts what the peer sends on it, but
+  /// libsignal never makes it current again: until a new session is
+  /// established with `SessionBuilder.processPreKeyBundle`, encrypting to
+  /// this address throws `LibSignalErrorCode.sessionNotFound`. libsignal also
+  /// archives the current session itself when a conversation keeps switching
+  /// back and forth between two sessions, with the same result. A record
+  /// keeps at most 3 archived sessions, and archiving drops the oldest beyond
+  /// that.
   void archiveCurrentState();
 
   /// Create a copy of this session record.
@@ -34,9 +43,17 @@ abstract class SessionRecord implements RustOpaqueInterface {
   bool hasUsableSenderChain({required BigInt nowMillis});
 
   /// Get the local registration ID.
+  ///
+  /// Read from the current session, so it throws
+  /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+  /// `archiveCurrentState`.
   int localRegistrationId();
 
   /// Get the remote registration ID.
+  ///
+  /// Read from the current session, so it throws
+  /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+  /// `archiveCurrentState`.
   int remoteRegistrationId();
 
   /// Serialize this session record to bytes.

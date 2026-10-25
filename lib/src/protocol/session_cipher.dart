@@ -126,7 +126,13 @@ class SessionCipher {
   /// The message type indicates whether this is a pre-key message
   /// (for session establishment) or a regular Signal message.
   ///
-  /// Throws an exception if no session exists for the remote address.
+  /// Throws a `LibSignalException` with `LibSignalErrorCode.sessionNotFound`
+  /// when there is no current session for the remote address: none was ever
+  /// established, your application archived it
+  /// (`SessionRecord.archiveCurrentState`), or libsignal archived it because
+  /// the conversation kept switching back and forth between two sessions. An
+  /// archived session still decrypts what the peer sends on it but is never
+  /// made current again, so establish a new one with [SessionBuilder].
   Future<CiphertextMessage> encrypt(
     ProtocolAddress remoteAddress,
     Uint8List plaintext,
