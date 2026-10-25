@@ -527,6 +527,30 @@
   transitive crates here, or `cargo update -p`; `make rust-update` runs
   `cargo update --workspace`, which leaves a transitive crate where it is,
   measured on the same tree. The template carries the same change.
+- **The build repair asks what moved behind an upstream signature, not only
+  how to make it fit** (`.github/agent-prompts/repair-build.md`,
+  `.github/workflows/repair-build.yml`) — its first live repair of an update
+  branch, on #125 (libsignal v0.106.0), adapted to `message_decrypt_prekey`
+  returning a `PreKeyDecryptResult` by taking its `plaintext`, as upstream's
+  own `message_decrypt` does. It compiled, the matrix went green, and the
+  repair was incomplete: v0.106.0 no longer makes an archived session current
+  again when a message decrypts on it, and `SessionCipher.decrypt` read the
+  identity to save off the current session afterwards, so every such message
+  failed with `sessionNotFound` — after the application archived a session,
+  and after libsignal archived one itself to settle a conversation. The
+  release notes said so in their first line, and the update bot's CHANGELOG
+  entry, in the agent's own tree, repeated it; no test produced that state,
+  and the prompt sent the agent to the upstream source "to learn what shape a
+  function now has, and for nothing else". A new section, "When it compiles
+  again, ask what moved underneath", has the agent read the changed
+  function's documented behaviour and the bot's entry, find everything here
+  that rests on the old behaviour, drive each change through the public API
+  with a test run against its first compiling adaptation, write down what a
+  consumer can observe, and report it in `notes`. The path allowlist the
+  workflow enforces gains `CHANGELOG.md`, `README.md` and `SECURITY.md`: the
+  prompt already asked an agent that widens the API for a README update and
+  a CHANGELOG entry, and the allowlist refused both. The template carries the
+  same change.
 
 ## [8.0.0] - 2026-10-08
 

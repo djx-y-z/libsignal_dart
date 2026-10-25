@@ -1911,10 +1911,15 @@ jobs:
       #                  what reported it. That change has to be a human's.
       #   .githooks/** — carries an executable bit, which the signed-commit API
       #                  cannot represent; the push would be rejected anyway.
+      #
+      # The three documents are in it because the prompt asks for them: a
+      # widened API comes with its README and CHANGELOG entry, and a repair
+      # that changes what a consumer observes has to say so. Without them that
+      # work was refused here, after the agent had done it as asked.
       - name: Reject changes outside the allowlist
         if: steps.verdict.outputs.status == 'fixed'
         env:
-          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml)$'
+          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml|CHANGELOG\.md|README\.md|SECURITY\.md)$'
         run: |
           set -euo pipefail
           OUTSIDE=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
@@ -2189,7 +2194,7 @@ jobs:
       # assertion that the patch that arrived is the patch that was vetted.
       - name: Re-check the allowlist
         env:
-          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml)$'
+          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml|CHANGELOG\.md|README\.md|SECURITY\.md)$'
         run: |
           set -euo pipefail
           OUTSIDE=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
@@ -2354,7 +2359,7 @@ jobs:
       - name: Re-check the allowlist
         if: steps.apply.outputs.changed == 'true'
         env:
-          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml)$'
+          ALLOWED: '^(rust|lib|test|hook|scripts|example)/|^(Makefile|pubspec\.yaml|analysis_options\.yaml|CHANGELOG\.md|README\.md|SECURITY\.md)$'
         run: |
           set -euo pipefail
           OUTSIDE=$(git diff --cached --name-only | grep -Ev "$ALLOWED" || true)
@@ -2636,8 +2641,10 @@ jobs:
             echo "The checks on this pull request are the oracle; they run against the commit"
             echo "above exactly as they would against anybody's. A green matrix says the change"
             echo "compiles and passes, not that the adaptation is the right one — and on this"
-            echo "kind of change those are different questions. The one to ask is whether the"
-            echo "values it threaded through are the values upstream meant."
+            echo "kind of change those are different questions. Two are worth asking: whether"
+            echo "the values it threaded through are the values upstream meant, and whether"
+            echo "what this package does around the call still holds for what upstream now"
+            echo "does inside it."
           } > "$RUNNER_TEMP/comment.md"
 
           gh pr comment "$PR_NUMBER" --repo "$GH_REPO" --body-file "$RUNNER_TEMP/comment.md"
