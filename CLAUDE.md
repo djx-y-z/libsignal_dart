@@ -259,6 +259,7 @@ make check-targets                # Check deployment targets (iOS/macOS/Android)
 make check-targets ARGS="--ios --set 14.0"  # Set iOS target everywhere
 make check-msrv                   # Check the minimum Rust version against the graph
 make check-msrv ARGS="--update"   # Raise it everywhere it is stated
+make update-evidence ARGS="--out /tmp/evidence"  # What an upstream update changed
 make update-changelog ARGS="--version vX.Y.Z"  # Update CHANGELOG with AI
 make help                         # Show all available commands
 ```
@@ -451,18 +452,17 @@ template writes that file once and never overwrites it, so keeping it current is
 this project's job — a stale list is how somebody else's release notes end up
 described as our features.
 
-**The `spqr` range is read by hand, and this is where the command lives.** The
+**The `spqr` range is read by a person, from the update's evidence.** The
 sparse post-quantum ratchet runs inside the exposed Double Ratchet but is its
 own repository, so a bump leaves exactly one trace in the libsignal compare the
 prompt is given — a version number in a manifest. The model is sent a plain
 completion with no tools, so it cannot go and look, and the scope file is
-deliberately written so that it never asks it to. Whoever finishes the update
-pull request does:
-
-```bash
-gh api repos/signalapp/SparsePostQuantumRatchet/compare/<old>...<new> \
-  --jq '.files[] | "\(.status) +\(.additions)/-\(.deletions) \(.filename)"'
-```
+deliberately written so that it never asks it to. A moved `spqr` also keeps the
+update from being eligible to merge unread. Its range — commits, files and
+patches — is `other-git-deps/spqr.md` in the `update-evidence` artifact the
+update workflow attaches to its run (the pull request links it), and
+`make update-evidence ARGS="--out <dir>"` writes the same locally; the build
+repair's agent gets it in `.agent-scratch/evidence/`.
 
 ⚠ **Then diff the encoder, not just the file list.** On 1.5.3 → 1.6.0 the
 serializer moved in the diff and was byte-identical all the same — the parsing

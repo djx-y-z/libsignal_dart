@@ -627,6 +627,9 @@ The CI automatically checks for new libsignal releases daily and creates PRs wit
 - Regenerated FRB bindings (if successful)
 - The minimum Rust version, raised when a crate of the new graph declares a
   higher one (`make check-msrv`)
+- An `update-evidence` artifact with what upstream changed: the release notes,
+  the range and its patches, the lockfile diff, and the range of every other
+  git dependency that moved (`make update-evidence`)
 - AI-generated CHANGELOG entry, when `AI_MODELS` names a model with a key
   (see CONTRIBUTING); otherwise the pull request is labelled `changelog-needed`
 - A verdict on whether the update could be merged unread, and if not, why

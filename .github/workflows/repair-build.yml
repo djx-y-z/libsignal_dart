@@ -1096,6 +1096,7 @@ jobs:
       # errors and from the upstream source, rather than from a CI log and an
       # inference.
       - name: Describe the update under repair
+        id: describe
         if: needs.detect.outputs.mode == 'pr'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -1148,6 +1149,39 @@ jobs:
               echo "_The merge base could not be resolved, so the bot's own diff is not shown._"
             fi
           } > .agent-scratch/update-context.md
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+
+      # What upstream CHANGED, beside `upstream/` below, which is what it IS
+      # now: the release notes, the range with its patches to the crates this
+      # package builds, the lockfile diff, and the range of every other git
+      # dependency that moved. The target the update workflow runs for the
+      # reviewer, fed the files the update started from — through the API,
+      # because this checkout is one commit deep and holds no credential, and
+      # the API works on a private repository too. Evidence rather than a gate,
+      # like the vendoring: what is missing is named in its README.md.
+      - name: Gather the update's evidence
+        if: needs.detect.outputs.mode == 'pr'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BASE: ${{ steps.describe.outputs.base }}
+        run: |
+          set -uo pipefail
+          if [ -z "$BASE" ]; then
+            echo "::warning::The merge base is unknown, so there is no evidence of what upstream changed. The agent will work without it."
+            exit 0
+          fi
+          B="$RUNNER_TEMP/update-base"
+          mkdir -p "$B/rust"
+          for f in rust/Cargo.lock rust/Cargo.toml .copier-answers.yml; do
+            gh api "repos/${GH_REPO}/contents/${f}?ref=${BASE}" \
+              -H 'Accept: application/vnd.github.raw' > "$B/$f" 2>/dev/null \
+              || rm -f "$B/$f"
+          done
+          if ! make update-evidence ARGS="--base-dir $B --out .agent-scratch/evidence"; then
+            echo "::warning::The update's evidence could not be gathered. The agent will work without it."
+          fi
+          exit 0
 
       # `Grep` and `Glob` are scoped to the workspace — deliberately, so the
       # agent cannot read `/proc/self/environ`, where this job's secrets live.

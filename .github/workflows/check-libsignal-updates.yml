@@ -219,6 +219,33 @@ jobs:
             echo "::warning::Could not check the minimum Rust version"
           fi
 
+      # What the update changed, written down for the reviewer of this pull
+      # request: the release notes, the upstream range with the patches to the
+      # crates this package builds, the lockfile diff, and the range of every
+      # git dependency from another repository that moved — the one nothing
+      # else fetches. The build repair writes the same, with the same target,
+      # for its agent. Into the runner's temp directory, never the checkout:
+      # the pull request step commits untracked files. Evidence, not a gate,
+      # and not gated on the lock either: the index says what is missing.
+      - name: Gather the update's evidence
+        id: evidence
+        if: steps.check.outputs.needs_update == 'true' && steps.existing.outputs.skip != 'true'
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          LATEST_VERSION: ${{ steps.check.outputs.latest_version }}
+          CURRENT_VERSION: ${{ steps.check.outputs.current_version }}
+        run: make update-evidence ARGS="--version $LATEST_VERSION --from $CURRENT_VERSION --out $RUNNER_TEMP/update-evidence"
+
+      - name: Upload the update's evidence
+        id: evidence-upload
+        if: steps.evidence.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: update-evidence
+          path: ${{ runner.temp }}/update-evidence
+
       # The codegen binary is not preinstalled on runners; without this step
       # `make codegen` fails with exit 127 on every run. Pinned so CI and
       # local runs generate identical bindings (cached by rust-cache).
@@ -360,6 +387,8 @@ jobs:
             - `.copier-answers.yml` — ${{ steps.cargo-toml.outputs.success == 'true' && 'upstream_version updated' || '**NOT UPDATED**' }}
             - `CLAUDE.md` — ${{ steps.cargo-toml.outputs.success == 'true' && 'example in documentation' || '**NOT UPDATED**' }}
             ${{ steps.msrv.outputs.msrv_moved == 'true' && format('- **Minimum Rust version** — raised from {0} to {1} in `rust/Cargo.toml`, the `rust_version` answer and the docs that state it: the highest floor a crate of the new graph declares', steps.msrv.outputs.msrv_from, steps.msrv.outputs.msrv_to) || '' }}
+
+            ${{ steps.evidence-upload.outcome == 'success' && format('**Evidence**: the `update-evidence` artifact of [this run]({0}/{1}/actions/runs/{2}) holds the release notes, the upstream range with its patches to the crates this package builds, the lockfile diff, and the range of every other git dependency that moved.', github.server_url, github.repository, github.run_id) || '' }}
 
             ### Merge without review?
 

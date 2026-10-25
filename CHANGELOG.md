@@ -249,6 +249,29 @@
   checks it on the Linux x86_64 leg. It reads what crates declare: one that
   uses a feature newer than its own floor is still found only by the MSRV job.
   The template carries the same change.
+- **`make update-evidence` writes down what an upstream update changed**
+  (`scripts/update_evidence.dart`, `scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`, `Makefile`,
+  `.github/workflows/check-libsignal-updates.yml`,
+  `.github/workflows/repair-build.yml`, `.github/agent-prompts/repair-build.md`,
+  `README.md`, `CLAUDE.md`) — the release notes, the libsignal range with its
+  patches to the crates we build, the lockfile diff, and the range of every git
+  dependency from another repository that moved, `spqr` among them: until now
+  CLAUDE.md told whoever finished the update pull request to fetch that range
+  by hand with `gh api`. The update workflow attaches it to its run as the
+  `update-evidence` artifact and links it from the pull request; the build
+  repair writes the same into `.agent-scratch/evidence/`, and its prompt starts
+  "ask what moved underneath" from those release notes and patches — #125's
+  agent had the new source but not the diff that said what moved. The
+  CHANGELOG script gathers its facts through the same code
+  (`gatherUpdateEvidence`), unchanged. Measured: v0.105.4 → v0.106.0 gives the
+  26 KB of patches to the crates we build and no other range, which is right,
+  since `spqr` did not move there; on the v0.102.3 → v0.103.0 locks the
+  selector names exactly `spqr` 1.5.3 → 1.6.0, and its range carries the
+  `serialize.rs` patch the old instruction said to diff by hand. The repair
+  step's shell, run under a stubbed `gh`, read the range from the copier
+  answers at both ends. A real repair run first exercises it at the next one.
+  The template carries the same change.
 
 #### Changed
 
