@@ -22,6 +22,11 @@ mod utils;
 #[cfg(test)]
 mod ssv2_equivalence_tests;
 
+// Differential tests for the session entry points against libsignal's own API,
+// step by step. Outside `api/` for the same reason.
+#[cfg(test)]
+mod session_equivalence_tests;
+
 pub mod api;
 
 // Re-export utilities for internal use

@@ -184,6 +184,28 @@
   next adoption here is already checked. `scripts/src/update_changelog.dart`
   takes the template's wrapping of one doc comment, so the file is the
   template's render byte for byte.
+- **A differential test holds the session bridge to libsignal's own API**
+  (`rust/src/session_equivalence_tests.rs`) — the bridge does not hand
+  libsignal the application's stores: it loads per-call in-memory copies,
+  calls libsignal, reads the record back and replays the writes to Dart, and
+  each of those steps rests on what libsignal does inside the call. v0.106.0
+  changed that without changing a signature the bridge depended on, and the
+  whole suite stayed green over a bridge that failed every message on an
+  archived session. The test runs each operation twice from one snapshot —
+  once through the FRB entry point, against stores standing in for the Dart
+  ones, and once through libsignal's own function against its reference
+  stores — and requires the same outcome, the same consuming and trusting
+  writes, and the same session, identity and pre-key state, across the four
+  1:1 session entry points: fetching a bundle, sending, delivering in order,
+  out of order, twice or never, and archiving, in four scripted conversations
+  and forty seeded random ones. Sealed sender and a change of identity are not
+  covered yet.
+  libsignal's behaviour is the expectation, so an upstream change moves it;
+  only a bridge that stops following fails. On the repair commit alone
+  (`84b3691`) three of its five tests fail, naming the step: `sessionNotFound`
+  where libsignal decrypted, and an identity saved where libsignal saved
+  none. The random scripts assert that they still reach the states they exist
+  for. Runs in `make rust-test`, in about six seconds.
 
 #### Changed
 
