@@ -655,6 +655,7 @@ fn message_decrypt_prekey_inner(
         .await
     })
     .map_err(LibSignalException::from)?;
+    let plaintext = plaintext.plaintext;
 
     // Get the updated session
     let updated_session =

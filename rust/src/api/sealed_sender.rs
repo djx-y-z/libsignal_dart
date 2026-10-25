@@ -640,7 +640,7 @@ where
                 &mut kyber_prekey_store,
                 &mut OsRng.unwrap_err(),
             ).await
-        }).map_err(LibSignalException::from)?
+        }).map_err(LibSignalException::from)?.plaintext
     } else if msg_type == CiphertextMessageType::Whisper {
         // Regular signal message
         let signal_message = libsignal_protocol::SignalMessage::try_from(message_bytes)
