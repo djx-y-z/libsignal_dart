@@ -698,67 +698,61 @@ void _breakingContradictionTests() {
       expect(highlightVersionFor(registry, '1.2.3'), 'v1.2.3');
     });
 
-    test('a default line is recognised whatever the version looks like', () {
-      for (final version in ['v1.2.3', '1.2.3', 'upstream-v1.2.3']) {
-        expect(
-          isOwnDefaultHighlight('- ${defaultHighlightFor(version)}'),
-          isTrue,
-          reason: version,
+    // The line the next run must find and replace, whatever the pin looked
+    // like: the prompt always names the version this way.
+    test('a default line is found again whatever the pin looks like', () {
+      const git = GitTagSource(
+        repo: 'owner/upstream',
+        crates: ['upstream-core'],
+        tagPrefix: 'upstream-v',
+      );
+      const registry = CratesIoSource(
+        repo: 'owner/upstream',
+        crates: ['upstream-core'],
+      );
+      for (final (source, pin) in [
+        (git, 'upstream-v1.2.3'),
+        (registry, '1.2.3'),
+      ]) {
+        final line =
+            '- ${defaultHighlightFor(highlightVersionFor(source, pin))}';
+        final changelog = _withUnreleased.replaceFirst(
+          '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+          line,
         );
+        expect(nativeHighlightsIn(changelog), [line], reason: pin);
       }
     });
   });
 
-  group('isOwnDefaultHighlight', () {
-    test('matches the prompt default at any version', () {
-      expect(
-        isOwnDefaultHighlight('- ${defaultHighlightFor('v0.102.1')}'),
-        isTrue,
-      );
-      expect(
-        isOwnDefaultHighlight('- ${defaultHighlightFor('v1.2.3')}'),
-        isTrue,
-      );
-    });
-
-    // What it must never match. This entry gets replaced by hand whenever a
-    // release deserves more than the default; superseding one of those would
-    // delete prose the default cannot reproduce.
-    test('does not match a rewritten line', () {
-      expect(
-        isOwnDefaultHighlight(
-          '- **libsignal v0.102.1** — upstream bump. Of the four crates from '
-          'that',
-        ),
-        isFalse,
-      );
-    });
-
-    test('does not match the crate line or a Changed bullet', () {
-      expect(
-        isOwnDefaultHighlight('- **libsignal_frb v1.5.2** — Rust FFI bindings'),
-        isFalse,
-      );
-      expect(isOwnDefaultHighlight('- Update libsignal to v0.8.2'), isFalse);
-    });
-  });
-
-  group('hasRewrittenNativeHighlight', () {
-    test('is false when the only native line is the prompt default', () {
+  group('nativeHighlightsIn', () {
+    test('finds the line, with its continuation lines', () {
+      const bullet =
+          '- **libsignal v0.8.1** — upstream bump. Of the four crates\n'
+          '  from that repository, the range changes one file';
       final changelog = _withUnreleased.replaceFirst(
         '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **headline** — first\n'
+            '$bullet\n'
+            '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+      );
+      expect(nativeHighlightsIn(changelog), [bullet]);
+    });
+
+    test('finds every one, in order', () {
+      final changelog = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- ${defaultHighlightFor('v0.8.1')}\n'
+            '- **libsignal v0.8.2** — another',
+      );
+      expect(nativeHighlightsIn(changelog), [
         '- ${defaultHighlightFor('v0.8.1')}',
-      );
-      expect(hasRewrittenNativeHighlight(changelog), isFalse);
+        '- **libsignal v0.8.2** — another',
+      ]);
     });
 
-    test('is true when a rewritten line is standing', () {
-      final changelog = _withUnreleased.replaceFirst(
-        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
-        '- **libsignal v0.8.1** — upstream bump. Of the four crates from that\n'
-            '  repository in this package, the range changes one file',
-      );
-      expect(hasRewrittenNativeHighlight(changelog), isTrue);
+    test('never takes the crate line or a Changed bullet', () {
+      expect(nativeHighlightsIn(_withUnreleased), isEmpty);
     });
 
     // Released sections are immutable and are not the caller's business.
@@ -781,7 +775,23 @@ void _breakingContradictionTests() {
           '#### ✨ Highlights\n'
           '\n'
           '- **libsignal v0.8.0** — shipped then, hand-written\n';
-      expect(hasRewrittenNativeHighlight(changelog), isFalse);
+      expect(nativeHighlightsIn(changelog), isEmpty);
+    });
+  });
+
+  group('asOneLine', () {
+    test('joins a wrapped line', () {
+      expect(
+        asOneLine('**libsignal v1.2.3** — a long\n  description,\nwrapped'),
+        '**libsignal v1.2.3** — a long description, wrapped',
+      );
+    });
+
+    test('leaves one line as it is', () {
+      expect(
+        asOneLine(defaultHighlightFor('v1.2.3')),
+        defaultHighlightFor('v1.2.3'),
+      );
     });
   });
 
@@ -841,7 +851,7 @@ void _breakingContradictionTests() {
     });
   });
 
-  group('insertChangelogEntry supersedes its own native highlight', () {
+  group('insertChangelogEntry supersedes the upstream highlight', () {
     // Dependency bumps accumulate on the main branch between releases now, so
     // the second bump in a window meets the first one's Highlights line. That
     // line names the version the section ships, so two of them make the
@@ -864,17 +874,54 @@ void _breakingContradictionTests() {
       expect(result, contains('**libsignal_frb v1.5.2**'));
     });
 
-    // The safe half of the rule, and the one with the sharp edge: a rewritten
-    // highlight runs onto continuation lines, so dropping it by line match
-    // would leave those behind as a dangling paragraph. It is not dropped.
-    test('keeps a rewritten multi-line highlight intact', () {
+    // A rewritten line used to be kept, and the next bump then stacked its
+    // own beside it for a person to collapse. It is replaced now, continuation
+    // lines and all — the model is shown it and carries forward what holds —
+    // and the bullets around it survive byte for byte.
+    test('replaces a rewritten multi-line highlight, continuation lines too', () {
+      const headline =
+          '- **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:\n'
+          '  constant-time masks and `u128` comparisons (see Security)';
       const rewritten =
-          '- **libsignal v0.8.1** — upstream bump. Of the four crates from that\n'
-          '  repository in this package, the range changes exactly one file,\n'
-          '  and it is the version string';
+          '- **libsignal v0.106.0** — session management moves from Sesame to Tahini:\n'
+          '  an archived session is never made current again, and a record keeps at\n'
+          '  most 3 of them instead of 40';
       final before = _withUnreleased.replaceFirst(
         '- **libsignal_frb v1.5.2** — Rust FFI bindings',
-        '- **libsignal_frb v1.5.2** — Rust FFI bindings\n$rewritten',
+        '$headline\n$rewritten\n- **libsignal_frb v1.5.2** — Rust FFI bindings',
+      );
+      final result = insertChangelogEntry(
+        currentChangelog: before,
+        nativeHighlight:
+            '**libsignal v0.106.1** — Tahini session management, since v0.106.0',
+        changed: '- **Bumped** — detail',
+      );
+
+      expect(
+        result,
+        contains(
+          '#### ✨ Highlights\n'
+          '\n'
+          '$headline\n'
+          '- **libsignal v0.106.1** — Tahini session management, since v0.106.0\n'
+          '- **libsignal_frb v1.5.2** — Rust FFI bindings\n'
+          '\n'
+          '#### Changed',
+        ),
+      );
+      expect(result, isNot(contains('most 3 of them')));
+      expect(result, isNot(contains('v0.106.0** —')));
+    });
+
+    // Two already standing is the one case a run cannot settle on its own: it
+    // replaces the first, keeps the second, and reports the section stacked.
+    test('replaces only the first of two standing lines', () {
+      final before = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **libsignal v0.8.0** — first\n'
+            '  continued\n'
+            '- **libsignal v0.8.1** — second\n'
+            '- **libsignal_frb v1.5.2** — Rust FFI bindings',
       );
       final result = insertChangelogEntry(
         currentChangelog: before,
@@ -882,8 +929,36 @@ void _breakingContradictionTests() {
         changed: '- **Bumped** — detail',
       );
 
-      expect(result, contains(rewritten));
-      expect(result, contains(defaultHighlightFor('v0.8.2')));
+      expect(result, isNot(contains('— first')));
+      expect(result, isNot(contains('  continued')));
+      expect(result, contains('- **libsignal v0.8.1** — second'));
+      expect(result, contains('- ${defaultHighlightFor('v0.8.2')}'));
+    });
+
+    // The only line of the block: the replacement takes its place, with one
+    // blank line on either side and no stray continuation.
+    test('replaces a multi-line highlight that was the only bullet', () {
+      final before = _withUnreleased.replaceFirst(
+        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
+        '- **libsignal v0.8.1** — upstream bump. Of the four crates\n'
+            '  from that repository, the range changes one file',
+      );
+      final result = insertChangelogEntry(
+        currentChangelog: before,
+        nativeHighlight: defaultHighlightFor('v0.8.2'),
+        changed: '- **Bumped** — detail',
+      );
+
+      expect(
+        result,
+        contains(
+          '#### ✨ Highlights\n'
+          '\n'
+          '- ${defaultHighlightFor('v0.8.2')}\n'
+          '\n'
+          '#### Changed',
+        ),
+      );
     });
 
     // Nothing outside [Unreleased] is rewritten, ever.

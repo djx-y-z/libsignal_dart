@@ -288,7 +288,7 @@ jobs:
             # this read: move the --ci-output write later and the grep finds
             # nothing, and the warning disappears with nothing to notice.
             if grep -qx 'highlights_stacked=true' "$GITHUB_OUTPUT"; then
-              echo "::warning::[Unreleased] now names two upstream versions — a rewritten Highlights line was kept beside the new one. Collapse them before releasing: make release renames the heading in place, so the section ships as it stands."
+              echo "::warning::[Unreleased] still names more than one upstream version — it already carried several Highlights lines, and this run replaced only the first. Collapse them before releasing: make release renames the heading in place, so the section ships as it stands."
             fi
           else
             echo "success=false" >> "$GITHUB_OUTPUT"
@@ -325,7 +325,7 @@ jobs:
 
             ${{ steps.changelog.outputs.success == 'false' && '> **Warning**: AI changelog update failed. Please update CHANGELOG.md manually.' || '' }}
 
-            ${{ steps.changelog.outputs.success == 'true' && steps.changelog.outputs.highlights_stacked == 'true' && '> **Warning**: `[Unreleased]` now names two upstream versions. The Highlights line states one per release section, and a rewritten one is never replaced automatically — so this run added its line beside it. Collapse them into one before releasing: `make release` renames the heading in place, freezing the section as it stands.' || '' }}
+            ${{ steps.changelog.outputs.success == 'true' && steps.changelog.outputs.highlights_stacked == 'true' && '> **Warning**: `[Unreleased]` still names more than one upstream version. The Highlights line states one per release section; this run replaced the first one it found, and the section already carried others. Collapse them into one before releasing: `make release` renames the heading in place, freezing the section as it stands.' || '' }}
 
             > **Note**: This PR does NOT bump the `libsignal_frb` crate version and does NOT build native binaries. It only updates the libsignal dependency. Cut a native release later with `make release-frb` (stage 1), then the Dart release (stage 2). See CLAUDE.md → Release Flow.
 

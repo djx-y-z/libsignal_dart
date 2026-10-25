@@ -33,10 +33,10 @@ class ChangelogUpdate {
 
   /// Whether `[Unreleased]` was left naming two upstream versions.
   ///
-  /// True when a REWRITTEN libsignal Highlights line was
-  /// standing and this run's line was therefore added beside it instead of
-  /// superseding it — see [hasRewrittenNativeHighlight] for why a rewritten one
-  /// is never replaced. The condition is legitimate; going unreported is not.
+  /// True when the section already carried more than one
+  /// libsignal Highlights line: this run replaced the first
+  /// and kept the rest — see [nativeHighlightsIn]. Rare, since a run replaces
+  /// the line it finds; going unreported would still ship it.
   final bool highlightsStacked;
 }
 
@@ -191,6 +191,10 @@ Future<ChangelogUpdate> updateChangelog({
   logStep('Reading CHANGELOG.md...');
   final changelogFile = File('${packageDir.path}/CHANGELOG.md');
   final currentChangelog = changelogFile.readAsStringSync();
+  // The upstream Highlights line(s) already in [Unreleased]: the first is the
+  // one this run replaces, and the model is shown it so what it says carries
+  // forward — see [nativeHighlightsIn].
+  final standing = nativeHighlightsIn(currentChangelog);
 
   // Step 6: Analyze with AI.
   logStep('Analyzing release notes with AI...');
@@ -205,6 +209,7 @@ Future<ChangelogUpdate> updateChangelog({
     crates: crates,
     lockChanges: lock.prompt,
     currentChangelog: currentChangelog,
+    replacedHighlight: standing.isEmpty ? null : standing.first,
     codegenResult: codegenResult,
     models: models,
   );
@@ -218,15 +223,16 @@ Future<ChangelogUpdate> updateChangelog({
 
   // Step 7: Update CHANGELOG.
   logStep('Updating CHANGELOG.md...');
-  // The new Highlights line supersedes this script's own default from an
-  // earlier bump, but never a rewritten one — so say when one is left standing.
-  // Both then name a version, and the section would ship claiming two.
-  final highlightsStacked = hasRewrittenNativeHighlight(currentChangelog);
+  // The new Highlights line replaces the first one standing. A section that
+  // already carried more than one keeps the rest, and then still names more
+  // than one upstream version — so say so.
+  final highlightsStacked = standing.length > 1;
   if (highlightsStacked) {
     logWarning(
-      '[Unreleased] already carries a rewritten libsignal Highlights line. '
-      'It was kept, so the section now names two upstream versions — collapse '
-      'them by hand before releasing.',
+      '[Unreleased] already carried ${standing.length} libsignal Highlights '
+      'lines. The first was replaced and the rest kept, so the section still '
+      'names more than one upstream version — collapse them by hand before '
+      'releasing.',
     );
   }
   final updatedChangelog = insertChangelogEntry(
@@ -1315,10 +1321,7 @@ const _highlightVersionSlot = '<version>';
 /// the exposed surface — the common case, and so the line most [Unreleased]
 /// sections already carry from the previous bump.
 ///
-/// Interpolated into rule 2 of the highlight rules AND matched by
-/// [isOwnDefaultHighlight], on the same reasoning as [noImpactPhrase]: the
-/// check exists to recognise this script's own boilerplate, and it can only do
-/// that while the prompt and the check name one string between them.
+/// Interpolated into rule 2 of the highlight rules.
 const _defaultHighlightTemplate =
     '**libsignal $_highlightVersionSlot** — internal/dependency update, '
     'no public-API impact';
@@ -1334,42 +1337,38 @@ String highlightVersionFor(UpstreamSource source, String pin) =>
 String defaultHighlightFor(String version) =>
     _defaultHighlightTemplate.replaceFirst(_highlightVersionSlot, version);
 
-/// Whether [line] is a Highlights bullet this script wrote on an earlier bump.
-///
-/// Deliberately exact. Dependency bumps now accumulate on the main branch
-/// between releases, so the second bump in a release window meets the first
-/// one's Highlights line and the section ends up naming two upstream versions
-/// at once, which has happened for real. That line is a STATE line, one per
-/// release section, so the new one supersedes the old.
-///
-/// What it must never supersede is a REWRITTEN one. Rewrites of this entry are
-/// multi-line and say something the default cannot, and dropping one by line
-/// match would also leave its continuation lines behind as a dangling
-/// paragraph. So the test is the prompt's mandated default at any version and
-/// nothing else: anything reworded, extended or continued onto a second line
-/// fails it and is left alone. Pure; exposed for testing.
-bool isOwnDefaultHighlight(String line) {
-  final at = _defaultHighlightTemplate.indexOf(_highlightVersionSlot);
-  final prefix = '- ${_defaultHighlightTemplate.substring(0, at)}';
-  final suffix = _defaultHighlightTemplate.substring(
-    at + _highlightVersionSlot.length,
-  );
-  final trimmed = line.trimRight();
-  return trimmed.length > prefix.length + suffix.length &&
-      trimmed.startsWith(prefix) &&
-      trimmed.endsWith(suffix);
-}
+/// The opening of an upstream Highlights bullet. The crate's own line,
+/// `- **libsignal_frb v…`, is a different bullet and never matches.
+const _nativeHighlightPrefix = '- **libsignal v';
 
-/// Whether `[Unreleased]` already carries a native-library Highlights line that
-/// [isOwnDefaultHighlight] will NOT supersede — a rewritten one.
+/// Whether [line] continues the list item above it: indented two spaces, and
+/// not blank.
+bool _continuesItem(String line) =>
+    line.startsWith('  ') && line.trim().isNotEmpty;
+
+/// The upstream Highlights bullets in `[Unreleased]`, in order, each with its
+/// continuation lines. Pure; exposed for testing.
 ///
-/// Reported by the caller rather than resolved here: leaving both lines is the
-/// safe outcome, but it is also a silent one, and the section would ship naming
-/// two upstream versions. Pure; exposed for testing.
-bool hasRewrittenNativeHighlight(String currentChangelog) {
+/// That bullet is a STATE line, one per release section: it names the version
+/// the section ships. Dependency bumps accumulate on the main branch between
+/// releases, so the second bump in a release window meets the first one's, and
+/// [insertChangelogEntry] replaces it: the whole bullet, continuation lines
+/// included, whether this script wrote it or a person rewrote it since. What
+/// it said is not lost: the prompt hands it to the model, which carries forward
+/// what still holds. Only the first is replaced; a section that already
+/// carries more than one keeps the rest, and [ChangelogUpdate.highlightsStacked]
+/// says so.
+///
+/// A rewritten bullet used to be left alone, so the next bump stacked a second
+/// line beside it and someone had to collapse the two by hand. That made a
+/// human edit to this line a reason for a human edit on every later bump.
+List<String> nativeHighlightsIn(String changelog) {
+  final bullets = <String>[];
   var inUnreleased = false;
   var inHighlights = false;
-  for (final line in currentChangelog.split('\n')) {
+  final lines = changelog.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    final line = lines[i];
     if (line.startsWith('## ')) {
       inUnreleased = line.startsWith('## [Unreleased]');
       inHighlights = false;
@@ -1384,14 +1383,22 @@ bool hasRewrittenNativeHighlight(String currentChangelog) {
       inHighlights = line.contains('Highlights');
       continue;
     }
-    if (inHighlights &&
-        line.startsWith('- **libsignal ') &&
-        !isOwnDefaultHighlight(line)) {
-      return true;
+    if (inHighlights && line.startsWith(_nativeHighlightPrefix)) {
+      final bullet = [line];
+      while (i + 1 < lines.length && _continuesItem(lines[i + 1])) {
+        bullet.add(lines[++i]);
+      }
+      bullets.add(bullet.join('\n'));
     }
   }
-  return false;
+  return bullets;
 }
+
+/// [highlight] as the one line it is. A model that wraps it gets its lines
+/// joined: a continuation the list item does not indent would end the item and
+/// leave the rest as a stray paragraph. Pure; exposed for testing.
+String asOneLine(String highlight) =>
+    highlight.trim().replaceAll(RegExp(r'\s*\n\s*'), ' ');
 
 /// Strip a leading Markdown list marker from a model-returned Highlights line.
 ///
@@ -1475,6 +1482,7 @@ _generateChangelogEntry({
   required List<UpstreamCrate> crates,
   required String lockChanges,
   required String currentChangelog,
+  required String? replacedHighlight,
   required String? codegenResult,
   required List<ResolvedAiModel> models,
 }) async {
@@ -1623,6 +1631,9 @@ so make no claim either way.'''}
 $changelogContext
 $codegenSection
 
+## The libsignal Highlights line yours replaces
+${replacedHighlight ?? '(none: no update since the last release has written one)'}
+
 ## Your task
 Return a JSON object with EXACTLY two string fields:
 1. "libsignal_highlight" — a single Highlights line for libsignal.
@@ -1630,10 +1641,18 @@ Return a JSON object with EXACTLY two string fields:
 
 ## Rules for "libsignal_highlight"
 1. Format exactly: "**libsignal $shown** — <brief 3-7 word description>".
-2. If nothing in this update touches our exposed surface (the common case), use:
+2. If nothing in this update touches our exposed surface (the common case), and
+   the line yours replaces is absent or is itself this default (at any
+   version), use:
    "${defaultHighlightFor(shown)}".
 3. Return the line WITHOUT a leading "- ". The list marker is added when the
    line is written into the file; one in your answer makes it "- - **…".
+4. Your line REPLACES the one under "The libsignal Highlights line yours
+   replaces". It is the section's one line for libsignal, so it has to hold
+   for the whole release, every update since the last release included: keep
+   what that line says that this update leaves true, add what this update
+   changes, and name $shown. It may need more words than rule 1's few to carry
+   that forward; it stays one line. Do not mention that a line was replaced.
 
 ## Rules for "changed" (THIS IS THE IMPORTANT PART — match the house style)
 1. Write ONE bullet in the house format every bullet in the entries above
@@ -1816,7 +1835,7 @@ code blocks.
   }
 
   return (
-    highlight: withStraightQuotes(stripLeadingListMarker(highlight)),
+    highlight: asOneLine(withStraightQuotes(stripLeadingListMarker(highlight))),
     changed: withStraightQuotes(changed.trimRight()),
     model: response.model,
   );
@@ -1893,6 +1912,8 @@ String _insertIntoUnreleased(
   final result = <String>[];
   var inUnreleased = false;
   var inForUsers = false;
+  // Whether the first upstream Highlights bullet has been dropped yet.
+  var supersededNative = false;
   var insertedHighlights = false;
   var insertedChanged = false;
   // Index of the `## [Unreleased]` heading within [result], so a missing
@@ -2097,12 +2118,18 @@ String _insertIntoUnreleased(
       continue;
     }
 
-    // A native-library Highlights line from an earlier bump in the same release
-    // window is superseded by this one: that line names the version the
-    // section ships, so two of them make the section name two. Only this
-    // script's own mandated default matches — see [isOwnDefaultHighlight] — so
-    // a rewritten line is never dropped here.
-    if (highlightsIdx >= 0 && isOwnDefaultHighlight(line)) continue;
+    // The first upstream Highlights bullet is superseded by this one, with its
+    // continuation lines: that bullet names the version the section ships, so
+    // two of them make the section name two. See [nativeHighlightsIn].
+    if (highlightsIdx >= 0 &&
+        !supersededNative &&
+        line.startsWith(_nativeHighlightPrefix)) {
+      supersededNative = true;
+      while (i + 1 < lines.length && _continuesItem(lines[i + 1])) {
+        i++;
+      }
+      continue;
+    }
 
     result.add(line);
   }

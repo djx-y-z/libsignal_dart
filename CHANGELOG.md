@@ -644,6 +644,23 @@
   prompt already asked an agent that widens the API for a README update and
   a CHANGELOG entry, and the allowlist refused both. The template carries the
   same change.
+- **The update bot replaces the libsignal Highlights line, whoever last wrote
+  it** (`scripts/src/update_changelog.dart`,
+  `test/scripts/update_changelog_test.dart`,
+  `.github/workflows/check-libsignal-updates.yml`) — the line names the version
+  a release section ships, one per section, and the bot replaced only its own
+  default wording. The v0.106.0 line rewritten by hand in #125 would have been
+  kept by the next bump, which would have added its own beside it and left the
+  section naming two versions for someone to collapse. The first upstream
+  bullet is now replaced whole, continuation lines included, and the prompt
+  hands the model the line it replaces: keep what still holds for the whole
+  release, add what the new update changes, name its version, and use the
+  default wording only when the replaced line was the default too. Replayed on
+  this `[Unreleased]` with a v0.106.1 line, the three-line v0.106.0 bullet goes
+  and the `ctutils` headline above it stays byte for byte. Only a section that
+  already carries two upstream lines keeps the rest and raises
+  `highlights_stacked`. What the model writes when it merges two lines is
+  first seen on the next bump. The template carries the same change.
 
 ## [8.0.0] - 2026-10-08
 
