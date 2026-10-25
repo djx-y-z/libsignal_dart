@@ -58,7 +58,9 @@ Future<EncryptResult> messageEncryptWithCallbacks({
 /// - `store_session(name, device_id, record)` - Store the updated session record
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
-/// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
+/// - `save_identity(name, device_id, identity_key)` - Save the remote identity
+///   key. Called only when libsignal saves it: not for a message that decrypts
+///   on an archived session.
 ///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
@@ -97,7 +99,9 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
 /// - `store_session(name, device_id, record)` - Store the new session record
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
-/// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
+/// - `save_identity(name, device_id, identity_key)` - Save the remote identity
+///   key. Called only when libsignal saves it: not for a redelivered message
+///   that decrypts on an archived session.
 /// - `load_signed_pre_key(id)` - Load a signed pre-key by ID (may return None if not found)
 /// - `load_pre_key(id)` - Load a one-time pre-key by ID (may return None)
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
@@ -108,11 +112,14 @@ Future<Uint8List> messageDecryptSignalWithCallbacks({
 ///   last-resort anti-replay check that trait documents.
 ///
 /// # Write ordering
-/// The write-back callbacks run in libsignal's own order — `save_identity`,
-/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last. The
-/// session must land after the consumption writes: if it landed first and the
-/// process died before them, the redelivered message would match the
-/// now-persisted session, consume nothing, and leave the pre-keys usable.
+/// The write-back callbacks run in this order, each one only if libsignal made
+/// that write: `save_identity`, `mark_kyber_pre_key_used`, `remove_pre_key`,
+/// then `store_session` last. The session must land after the consumption
+/// writes: if it landed first and the process died before them, the
+/// redelivered message would match the now-persisted session, consume nothing,
+/// and leave the pre-keys usable. The order is this bridge's own: since
+/// v0.106.0 libsignal stores the session before it removes the one-time
+/// pre-key.
 ///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)

@@ -13313,6 +13313,15 @@ class SessionRecordImpl extends RustOpaque implements SessionRecord {
   );
 
   /// Archive the current session state.
+  ///
+  /// The archived session still decrypts what the peer sends on it, but
+  /// libsignal never makes it current again: until a new session is
+  /// established with `SessionBuilder.processPreKeyBundle`, encrypting to
+  /// this address throws `LibSignalErrorCode.sessionNotFound`. libsignal also
+  /// archives the current session itself when a conversation keeps switching
+  /// back and forth between two sessions, with the same result. A record
+  /// keeps at most 3 archived sessions, and archiving drops the oldest beyond
+  /// that.
   void archiveCurrentState() => RustLib.instance.api
       .crateApiSessionSessionRecordArchiveCurrentState(that: this);
 
@@ -13335,10 +13344,18 @@ class SessionRecordImpl extends RustOpaque implements SessionRecord {
       );
 
   /// Get the local registration ID.
+  ///
+  /// Read from the current session, so it throws
+  /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+  /// `archiveCurrentState`.
   int localRegistrationId() => RustLib.instance.api
       .crateApiSessionSessionRecordLocalRegistrationId(that: this);
 
   /// Get the remote registration ID.
+  ///
+  /// Read from the current session, so it throws
+  /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+  /// `archiveCurrentState`.
   int remoteRegistrationId() => RustLib.instance.api
       .crateApiSessionSessionRecordRemoteRegistrationId(that: this);
 

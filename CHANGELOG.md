@@ -4,9 +4,11 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.105.4** — internal/dependency update, no public-API impact
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
+- **libsignal v0.106.0** — session management moves from Sesame to Tahini:
+  an archived session is never made current again, and a record keeps at
+  most 3 of them instead of 40
 
 #### Changed
 
@@ -75,6 +77,53 @@
   Within the crates we bind, the range changes exactly one file, `rust/core/src/version.rs`, updating only the `VERSION` string from `0.105.2` to `0.105.4`. `make codegen` produced no change in `lib/src/rust/`, so these changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+- **libsignal v0.106.0 replaces Sesame session management with Tahini** —
+  as upstream's notes for the release put it
+  ([compare](https://github.com/signalapp/libsignal/compare/v0.105.4...v0.106.0)),
+  an archived session is never made current again, a tiebreaker picks the
+  current session when both sides start one at the same time, and a
+  conversation that keeps switching back and forth between sessions is
+  detected and settled. A session record keeps at most 3 archived sessions
+  instead of 40, and one holding more is trimmed the next time a session is
+  archived. Messages on the wire do not change; stored session records gain
+  fields, which earlier libsignal versions still read. What an application
+  sees: a message on an archived session still decrypts, but answering it
+  takes a new session — in 8.0.0 decrypting it made that session current
+  again. A record can also be left with no current session: after
+  `SessionRecord.archiveCurrentState`, or once libsignal archives the current
+  session itself to settle a conversation. `SessionCipher.encrypt` and
+  `SealedSenderCipher.encrypt` then throw `LibSignalErrorCode.sessionNotFound`,
+  as do `localRegistrationId` and `remoteRegistrationId`, until
+  `SessionBuilder.processPreKeyBundle` or the peer's next pre-key message
+  establishes a new session.
+
+  In the four libsignal crates in this package's graph, the range rewrites
+  session management in `libsignal-protocol` (`session_management.rs`, the new
+  `tahini.rs`, `state/session.rs`, `proto/storage.proto`), and the other three
+  change no source beyond `libsignal-core`'s version constant. The Rust API
+  changes are the two the notes name: `process_prekey` is no longer public,
+  which this package never called, and `message_decrypt_prekey` returns a
+  `PreKeyDecryptResult` instead of the plaintext, which the bridge now takes
+  from it, as upstream's own `message_decrypt` does. The new
+  `initiate_session` wraps `process_prekey_bundle`, which this package keeps
+  calling. Regenerating the bindings changed only documentation in
+  `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays
+  at 1.6.0 (`06959b4`).
+- **`saveIdentity` runs only when libsignal saves the identity, on every
+  decryption path** — the bridge now forwards the save libsignal made instead
+  of choosing a key itself. libsignal v0.106.0 saves nothing for a message
+  that decrypts on an archived session, so that a delayed message cannot roll
+  the stored identity back. 8.0.0 called `saveIdentity` on every decryption:
+  `SessionCipher.decrypt` with the identity of the record's current session —
+  a read that fails with `sessionNotFound` once a decryption can leave the
+  record without one, after libsignal has already decrypted — and
+  `SealedSenderCipher.decrypt` with the key its sender certificate names.
+  Sealed sender now saves the key the inner message's session is bound to,
+  which a genuine sender's certificate repeats;
+  `SealedSenderDecryptionResult.senderIdentityKey` is still the
+  certificate's.
 
 #### Security
 
@@ -135,6 +184,28 @@
   next adoption here is already checked. `scripts/src/update_changelog.dart`
   takes the template's wrapping of one doc comment, so the file is the
   template's render byte for byte.
+- **A differential test holds the session bridge to libsignal's own API**
+  (`rust/src/session_equivalence_tests.rs`) — the bridge does not hand
+  libsignal the application's stores: it loads per-call in-memory copies,
+  calls libsignal, reads the record back and replays the writes to Dart, and
+  each of those steps rests on what libsignal does inside the call. v0.106.0
+  changed that without changing a signature the bridge depended on, and the
+  whole suite stayed green over a bridge that failed every message on an
+  archived session. The test runs each operation twice from one snapshot —
+  once through the FRB entry point, against stores standing in for the Dart
+  ones, and once through libsignal's own function against its reference
+  stores — and requires the same outcome, the same consuming and trusting
+  writes, and the same session, identity and pre-key state, across the four
+  1:1 session entry points: fetching a bundle, sending, delivering in order,
+  out of order, twice or never, and archiving, in four scripted conversations
+  and forty seeded random ones. Sealed sender and a change of identity are not
+  covered yet.
+  libsignal's behaviour is the expectation, so an upstream change moves it;
+  only a bridge that stops following fails. On the repair commit alone
+  (`84b3691`) three of its five tests fail, naming the step: `sessionNotFound`
+  where libsignal decrypted, and an identity saved where libsignal saved
+  none. The random scripts assert that they still reach the states they exist
+  for. Runs in `make rust-test`, in about six seconds.
 
 #### Changed
 

@@ -9,7 +9,9 @@
 //! All sensitive cryptographic data is explicitly zeroed after use via the `zeroize` crate.
 
 use crate::api::error::{LibSignalErrorCode, LibSignalException};
-use crate::recording_stores::{KyberPreKeyUsed, RecordingKyberPreKeyStore, RecordingPreKeyStore};
+use crate::recording_stores::{
+    KyberPreKeyUsed, RecordingIdentityKeyStore, RecordingKyberPreKeyStore, RecordingPreKeyStore,
+};
 use flutter_rust_bridge::DartFnFuture;
 use futures::executor::block_on;
 use libsignal_protocol::{
@@ -326,7 +328,8 @@ pub struct SealedSenderDecryptResult {
     pub sender_name: String,
     /// The sender's device ID.
     pub sender_device_id: u32,
-    /// The sender's identity key (for verification).
+    /// The sender's identity key as their sender certificate names it (for
+    /// verification).
     pub sender_identity_key: Vec<u8>,
     /// The updated or new session record.
     pub session_record: Vec<u8>,
@@ -334,14 +337,16 @@ pub struct SealedSenderDecryptResult {
 
 /// Everything the inner decryption produced, for the wrapper to write back.
 ///
-/// The two consumption fields report what libsignal *actually* did, as observed
-/// by the recording stores — see [`crate::recording_stores`].
+/// The identity and the two consumption fields report what libsignal
+/// *actually* did, as observed by the recording stores — see
+/// [`crate::recording_stores`].
 struct SealedSenderDecryptOutcome {
     plaintext: Vec<u8>,
     sender_name: String,
     sender_device_id: u32,
     sender_identity_key: Vec<u8>,
     session_record: Vec<u8>,
+    identity_to_save: Option<Vec<u8>>,
     pre_key_to_remove: Option<u32>,
     kyber_pre_key_used: Option<KyberPreKeyUsed>,
 }
@@ -356,7 +361,10 @@ struct SealedSenderDecryptOutcome {
 /// IdentityKeyStore:
 /// - `get_identity_key_pair()` - Get our identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
-/// - `save_identity(name, device_id, identity_bytes)` - Save sender's identity
+/// - `save_identity(name, device_id, identity_bytes)` - Save sender's identity.
+///   Called only when libsignal saves one — not for a message that decrypts on
+///   an archived session — and with the key libsignal saved: the identity the
+///   inner message's session is bound to, rather than the certificate's.
 ///
 /// PreKeyStores:
 /// - `load_signed_pre_key(id)` - Load signed pre-key
@@ -369,8 +377,9 @@ struct SealedSenderDecryptOutcome {
 ///
 /// # Write ordering
 /// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
-/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, so a
-/// crash cannot persist the session while leaving the consumed pre-keys usable.
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, each
+/// only if libsignal made that write, so a crash cannot persist the session
+/// while leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -423,14 +432,17 @@ pub async fn sealed_sender_decrypt_with_callbacks(
 
     let outcome = result?;
 
-    // Step 3: Store results, in libsignal's order — `store_session` last, so a
-    // crash cannot leave a persisted session next to unconsumed pre-keys.
-    save_identity(
-        outcome.sender_name.clone(),
-        outcome.sender_device_id,
-        outcome.sender_identity_key.clone(),
-    )
-    .await;
+    // Step 3: Store results, each only if libsignal made that write —
+    // `store_session` last, so a crash cannot leave a persisted session next to
+    // unconsumed pre-keys.
+    if let Some(identity_key) = outcome.identity_to_save {
+        save_identity(
+            outcome.sender_name.clone(),
+            outcome.sender_device_id,
+            identity_key,
+        )
+        .await;
+    }
 
     if let Some(used) = outcome.kyber_pre_key_used {
         mark_kyber_pre_key_used(
@@ -550,6 +562,11 @@ where
     // libsignal's is_trusted_identity is consulted.
     let known_sender_identity = get_identity(sender_name.clone(), sender_device_id).await;
     super::preseed_identity(&mut identity_store, &sender_address, &known_sender_identity)?;
+    // Wrapped after the seeding, so only libsignal's own save is reported.
+    // Upstream's `sealed_sender_decrypt` saves no identity of its own either —
+    // only the two decrypt calls below do — so the certificate's key is not
+    // written back.
+    let mut identity_store = RecordingIdentityKeyStore::new(identity_store);
 
     // Load existing session if we have one.
     // SECURITY: a serialized SessionRecord carries root, chain and message
@@ -627,7 +644,9 @@ where
             }).map_err(LibSignalException::from)?;
         }
 
-        // Decrypt pre-key message
+        // Decrypt pre-key message. Only its plaintext is taken: the sender the
+        // result names is `sender_address`, from the certificate, and its
+        // identity is the recorded save.
         block_on(async {
             libsignal_protocol::message_decrypt_prekey(
                 &prekey_message,
@@ -640,7 +659,7 @@ where
                 &mut kyber_prekey_store,
                 &mut OsRng.unwrap_err(),
             ).await
-        }).map_err(LibSignalException::from)?
+        }).map_err(LibSignalException::from)?.plaintext
     } else if msg_type == CiphertextMessageType::Whisper {
         // Regular signal message
         let signal_message = libsignal_protocol::SignalMessage::try_from(message_bytes)
@@ -678,8 +697,10 @@ where
         sender_device_id,
         sender_identity_key,
         session_record: session_bytes,
-        // What libsignal actually consumed, straight from the stores it used.
-        // The Whisper branch touches neither, so both stay `None` there.
+        // What libsignal actually saved and consumed, straight from the stores
+        // it used. The Whisper branch consumes no pre-key, so both of those
+        // stay `None` there.
+        identity_to_save: identity_store.take_saved(),
         pre_key_to_remove: prekey_store.take_removed(),
         kyber_pre_key_used: kyber_prekey_store.take_used(),
     })

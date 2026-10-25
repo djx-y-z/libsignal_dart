@@ -51,6 +51,15 @@ impl SessionRecord {
     }
 
     /// Archive the current session state.
+    ///
+    /// The archived session still decrypts what the peer sends on it, but
+    /// libsignal never makes it current again: until a new session is
+    /// established with `SessionBuilder.processPreKeyBundle`, encrypting to
+    /// this address throws `LibSignalErrorCode.sessionNotFound`. libsignal also
+    /// archives the current session itself when a conversation keeps switching
+    /// back and forth between two sessions, with the same result. A record
+    /// keeps at most 3 archived sessions, and archiving drops the oldest beyond
+    /// that.
     #[flutter_rust_bridge::frb(sync)]
     pub fn archive_current_state(&mut self) -> Result<(), LibSignalException> {
         self.inner
@@ -76,6 +85,10 @@ impl SessionRecord {
     }
 
     /// Get the local registration ID.
+    ///
+    /// Read from the current session, so it throws
+    /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+    /// `archiveCurrentState`.
     #[flutter_rust_bridge::frb(sync)]
     pub fn local_registration_id(&self) -> Result<u32, LibSignalException> {
         self.inner
@@ -84,6 +97,10 @@ impl SessionRecord {
     }
 
     /// Get the remote registration ID.
+    ///
+    /// Read from the current session, so it throws
+    /// `LibSignalErrorCode.sessionNotFound` on a record that has none — see
+    /// `archiveCurrentState`.
     #[flutter_rust_bridge::frb(sync)]
     pub fn remote_registration_id(&self) -> Result<u32, LibSignalException> {
         self.inner

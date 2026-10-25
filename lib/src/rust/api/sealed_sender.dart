@@ -145,7 +145,10 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
 /// IdentityKeyStore:
 /// - `get_identity_key_pair()` - Get our identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
-/// - `save_identity(name, device_id, identity_bytes)` - Save sender's identity
+/// - `save_identity(name, device_id, identity_bytes)` - Save sender's identity.
+///   Called only when libsignal saves one — not for a message that decrypts on
+///   an archived session — and with the key libsignal saved: the identity the
+///   inner message's session is bound to, rather than the certificate's.
 ///
 /// PreKeyStores:
 /// - `load_signed_pre_key(id)` - Load signed pre-key
@@ -158,8 +161,9 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
 ///
 /// # Write ordering
 /// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
-/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, so a
-/// crash cannot persist the session while leaving the consumed pre-keys usable.
+/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, each
+/// only if libsignal made that write, so a crash cannot persist the session
+/// while leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -461,7 +465,8 @@ class SealedSenderDecryptResult {
   /// The sender's device ID.
   final int senderDeviceId;
 
-  /// The sender's identity key (for verification).
+  /// The sender's identity key as their sender certificate names it (for
+  /// verification).
   final Uint8List senderIdentityKey;
 
   /// The updated or new session record.

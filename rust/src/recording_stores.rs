@@ -1,14 +1,22 @@
-//! Per-call stores that record what libsignal actually consumed.
+//! Per-call stores that record what libsignal actually wrote.
 //!
 //! The high-level ciphers hand libsignal a set of fresh in-memory stores and
 //! then replay the resulting writes to the Dart stores. Deriving those writes
-//! from the *message* fields over-reports: libsignal consumes the pre-key
-//! bundle only when the pre-key message really establishes a new session.
-//! `session_management::message_decrypt_prekey` gates both
-//! `mark_kyber_pre_key_used` and `remove_pre_key` behind a `PreKeysUsed`, and
-//! `session::process_prekey_impl` returns `None` for it as soon as
-//! `promote_matching_session` matched an already-established session — the
-//! redelivery case, where the keys were consumed by the first delivery.
+//! from the *message* fields, or from the session record afterwards,
+//! over-reports, because libsignal decides which writes happen:
+//!
+//! - It consumes the pre-key bundle only when the pre-key message really
+//!   establishes a new session. `message_decrypt_prekey` first looks for a
+//!   session with the message's base key, and when one exists — the
+//!   redelivery case, where the first delivery consumed the keys — it
+//!   decrypts against that session and calls neither `mark_kyber_pre_key_used`
+//!   nor `remove_pre_key`.
+//! - It saves the remote identity only for a message that decrypts on the
+//!   current session or establishes a new one. Since libsignal v0.106.0 a
+//!   message that decrypts on an archived session saves nothing, so a delayed
+//!   message cannot roll the stored identity back. That session also stays
+//!   archived, so the record may have no current session left to read an
+//!   identity from.
 //!
 //! These wrappers observe the real calls instead of guessing. For Kyber they
 //! also capture the full argument triple: `mark_kyber_pre_key_used` is handed
@@ -18,8 +26,10 @@
 
 use async_trait::async_trait;
 use libsignal_protocol::{
-    InMemKyberPreKeyStore, InMemPreKeyStore, KyberPreKeyId, KyberPreKeyRecord, KyberPreKeyStore,
-    PreKeyId, PreKeyRecord, PreKeyStore, PublicKey, SignalProtocolError, SignedPreKeyId,
+    Direction, IdentityChange, IdentityKey, IdentityKeyPair, IdentityKeyStore,
+    InMemIdentityKeyStore, InMemKyberPreKeyStore, InMemPreKeyStore, KyberPreKeyId,
+    KyberPreKeyRecord, KyberPreKeyStore, PreKeyId, PreKeyRecord, PreKeyStore, ProtocolAddress,
+    PublicKey, SignalProtocolError, SignedPreKeyId,
 };
 
 type Result<T> = std::result::Result<T, SignalProtocolError>;
@@ -122,5 +132,62 @@ impl KyberPreKeyStore for RecordingKyberPreKeyStore {
         self.inner
             .mark_kyber_pre_key_used(kyber_prekey_id, ec_prekey_id, base_key)
             .await
+    }
+}
+
+/// [`IdentityKeyStore`] that records the identity libsignal saved.
+///
+/// Wrap the store only once the bridge has seeded it (`preseed_identity`): the
+/// seeding goes through `save_identity` too, and it is not a write libsignal
+/// made.
+pub(crate) struct RecordingIdentityKeyStore {
+    inner: InMemIdentityKeyStore,
+    saved: Option<Vec<u8>>,
+}
+
+impl RecordingIdentityKeyStore {
+    pub(crate) fn new(inner: InMemIdentityKeyStore) -> Self {
+        Self { inner, saved: None }
+    }
+
+    /// The serialized identity key libsignal saved, if it saved one. It saves
+    /// only for the address it was handed, which is the one written back to.
+    pub(crate) fn take_saved(&mut self) -> Option<Vec<u8>> {
+        self.saved.take()
+    }
+}
+
+#[async_trait(?Send)]
+impl IdentityKeyStore for RecordingIdentityKeyStore {
+    async fn get_identity_key_pair(&self) -> Result<IdentityKeyPair> {
+        self.inner.get_identity_key_pair().await
+    }
+
+    async fn get_local_registration_id(&self) -> Result<u32> {
+        self.inner.get_local_registration_id().await
+    }
+
+    async fn save_identity(
+        &mut self,
+        address: &ProtocolAddress,
+        identity: &IdentityKey,
+    ) -> Result<IdentityChange> {
+        self.saved = Some(identity.serialize().to_vec());
+        self.inner.save_identity(address, identity).await
+    }
+
+    async fn is_trusted_identity(
+        &self,
+        address: &ProtocolAddress,
+        identity: &IdentityKey,
+        direction: Direction,
+    ) -> Result<bool> {
+        self.inner
+            .is_trusted_identity(address, identity, direction)
+            .await
+    }
+
+    async fn get_identity(&self, address: &ProtocolAddress) -> Result<Option<IdentityKey>> {
+        self.inner.get_identity(address).await
     }
 }

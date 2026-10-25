@@ -173,6 +173,14 @@ which reads `rust/Cargo.toml` to keep `panic = "abort"` out of the shipped
 profile — abort skips unwinding, and unwinding is what runs every
 zeroize-on-Drop in the crate.
 
+It also carries `rust/src/session_equivalence_tests.rs`, which runs each
+session operation through the bridge and through libsignal's own API from the
+same snapshot and requires the same outcome, writes and state. It is the check
+that catches an upstream release changing what happens *inside* a call the
+bridge wraps — the v0.106.0 failure, which no signature showed. When it fails
+on an update, the bridge no longer follows libsignal: fix the bridge, not the
+test.
+
 ### Fuzzing
 ```bash
 make setup-fuzz                   # One-time: install nightly + cargo-fuzz
@@ -349,7 +357,7 @@ The libsignal version is specified in `rust/Cargo.toml`:
 
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.105.4" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.106.0" }
 ```
 
 To check/update the version:
