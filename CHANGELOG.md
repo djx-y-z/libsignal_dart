@@ -8,6 +8,7 @@
   constant-time masks and `u128` comparisons (see Security). Nothing else
   moves: this is 8.0.0 with that one crate replaced
 - **libsignal v0.105.0** — unchanged this release
+- **libsignal_frb v7.0.1** — Rust FFI bindings
 
 #### Security
 
