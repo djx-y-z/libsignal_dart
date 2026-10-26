@@ -265,6 +265,9 @@ fn message_encrypt_inner(
 ///   key. Called only when libsignal saves it: not for a message that decrypts
 ///   on an archived session.
 ///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
+///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID
@@ -325,12 +328,12 @@ pub async fn message_decrypt_signal_with_callbacks(
 
     let (plaintext, updated_session, identity_to_save) = result?;
 
-    // Step 3: Store results via callbacks. The identity only if libsignal
+    // Step 3: Write back in libsignal's order. The identity only if libsignal
     // saved one — see `crate::recording_stores`.
-    store_session(remote_name.clone(), remote_device_id, updated_session).await;
     if let Some(identity_key) = identity_to_save {
-        save_identity(remote_name, remote_device_id, identity_key).await;
+        save_identity(remote_name.clone(), remote_device_id, identity_key).await;
     }
+    store_session(remote_name, remote_device_id, updated_session).await;
 
     Ok(plaintext)
 }

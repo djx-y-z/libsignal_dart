@@ -23,6 +23,9 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 /// - `get_local_registration_id()` - Get our registration ID
 /// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
 ///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
+///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID

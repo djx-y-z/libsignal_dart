@@ -207,6 +207,18 @@
   `SealedSenderDecryptionResult.senderIdentityKey` is still the
   certificate's. Encrypting follows the same rule, and libsignal saves there
   on every message: see Changed (Breaking).
+- **`saveIdentity` comes before `storeSession` when a Whisper message
+  decrypts and when `processPreKeyBundle` builds a session**
+  (`rust/src/api/session_cipher.rs`, `rust/src/api/session_builder.rs`,
+  `SECURITY.md`, `test/protocol/write_order_test.dart`) — libsignal saves the
+  identity first wherever it does both, and the bridge did too everywhere
+  else; these two paths stored the session first. On decrypt that was the
+  worse order to be interrupted in: a crash between the two writes left a
+  session already past a message whose plaintext was never returned, so the
+  redelivered message no longer decrypted. The session now stays where it
+  was until the identity is saved. A test pins the order of the writes on
+  every entry point, which nothing did before; it failed on exactly these two
+  paths against the previous library.
 
 - **`hooks` and `code_assets` admit 2.x as well as 1.x** (`pubspec.yaml`,
   `.github/dependabot.yml`) — `^1.0.0` held every app on 1.x, on a Flutter
@@ -222,6 +234,16 @@
   `hooks` 2.2.0 with `code_assets` 2.1.0, and `example/` resolves 2.0.2 with
   1.2.1 on Flutter 3.38.4 and analyzes clean. Dependabot still holds back
   3.x. From template v4.18.0.
+
+#### Security
+
+- **Sealed sender clears its key material before writing the results back**
+  (`rust/src/api/sealed_sender.rs`) — `SealedSenderCipher.encrypt` held the
+  session record and identity key pair it had loaded, and `decrypt` the
+  identity key pair, until the call returned: across the store callbacks
+  that write the results back, which wait on the application.
+  `SessionCipher` and `SessionBuilder` clear theirs as soon as libsignal is
+  done, and sealed sender now does too.
 
 #### Fixed
 
@@ -295,6 +317,13 @@
   `InMemoryIdentityKeyStore` even described its trust-on-first-use rule as
   living there. The interface now says where trust is decided and how to
   apply a stricter policy, and `saveIdentity` lists when it is called.
+- **`SECURITY.md` shows `saveIdentity` on encrypt in its table of writes**
+  — the table of what each entry point writes, and in what order, still had
+  `SessionCipher.encrypt` and `SealedSenderCipher.encrypt` writing only
+  `storeSession`, although both call `saveIdentity` first on every message
+  (see Changed (Breaking)), and its footnote named only decryption. It now
+  shows every entry point as it writes today, with a note on why the
+  identity comes first.
 - **Releases 7.3.0 to 7.4.1 moved to `CHANGELOG-ARCHIVE.md`**
   (`CHANGELOG.md`, `CHANGELOG-ARCHIVE.md`) — this file was 169 KB with this
   release's 56 KB still open, and the releases before it added 20 to 45 KB

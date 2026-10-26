@@ -38,6 +38,9 @@ pub struct ProcessPreKeyBundleResult {
 /// - `get_local_registration_id()` - Get our registration ID
 /// - `save_identity(name, device_id, identity_key)` - Save the remote identity key
 ///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
+///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID
@@ -93,17 +96,17 @@ pub async fn process_prekey_bundle_with_callbacks(
 
     let bundle_result = result?;
 
-    // Step 3: Store results via callbacks
-    store_session(
+    // Step 3: Write back in libsignal's order.
+    save_identity(
         remote_name.clone(),
         remote_device_id,
-        bundle_result.session_record,
+        bundle_result.remote_identity_key,
     )
     .await;
-    save_identity(
+    store_session(
         remote_name,
         remote_device_id,
-        bundle_result.remote_identity_key,
+        bundle_result.session_record,
     )
     .await;
 

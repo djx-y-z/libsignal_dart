@@ -72,6 +72,9 @@ Future<EncryptResult> messageEncryptWithCallbacks({
 ///   key. Called only when libsignal saves it: not for a message that decrypts
 ///   on an archived session.
 ///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
+///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
 /// - `local_device_id` - Our device ID

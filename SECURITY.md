@@ -631,11 +631,11 @@ before the operation returns its result, on all entry points:
 
 | Entry point | Awaited writes, in order, before the result is returned |
 |---|---|
-| `SessionBuilder.processPreKeyBundle` | `storeSession`, `saveIdentity` |
-| `SessionCipher.encrypt` | `storeSession` |
-| `SessionCipher.decrypt` (Whisper) | `storeSession`, `saveIdentity`¹ |
+| `SessionBuilder.processPreKeyBundle` | `saveIdentity`, `storeSession` |
+| `SessionCipher.encrypt` | `saveIdentity`², `storeSession` |
+| `SessionCipher.decrypt` (Whisper) | `saveIdentity`¹, `storeSession` |
 | `SessionCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
-| `SealedSenderCipher.encrypt` | `storeSession` |
+| `SealedSenderCipher.encrypt` | `saveIdentity`², `storeSession` |
 | `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`¹, `storeSession` |
 | `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
 | `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
@@ -651,6 +651,20 @@ of the rule holds by construction.
 > bridge forwards what libsignal saved rather than deciding for itself — on
 > sealed sender that is the key the inner message's session is bound to, not
 > the one the sender certificate names.
+>
+> **² On encrypt it runs on every message:** libsignal's `message_encrypt`, and
+> sealed sender's encrypt through it, saves the key the session is bound to
+> right after checking it against the stored one. While that identity is stored
+> this changes nothing; for an address whose stored identity you deleted, it
+> stores the key again — see
+> [Identity trust](#identity-trust--mitm-detection).
+
+> **Why `saveIdentity` comes before `storeSession`.** It is libsignal's order
+> wherever it does both, and on decrypt it is the safer one to be interrupted
+> in: a crash between the two writes leaves the session where it was, so the
+> redelivered message still decrypts, rather than a session already past a
+> message whose plaintext was never returned. The pre-key rows store the
+> session last for a reason of their own, below.
 
 > **The three sealed-sender envelope entry points write nothing.** They do no
 > Double Ratchet work: `encryptFromUsmc` seals contents you already encrypted,

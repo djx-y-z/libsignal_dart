@@ -248,6 +248,10 @@ pub async fn sealed_sender_encrypt_with_callbacks(
         &known_recipient_identity,
     );
 
+    // Clear now rather than across the write-back awaits below.
+    drop(session_bytes);
+    drop(identity_key_pair_bytes);
+
     let (ciphertext, updated_session_bytes, identity_to_save) = result?;
 
     // Step 3: Write back in libsignal's order. The identity only if libsignal
@@ -450,6 +454,9 @@ pub async fn sealed_sender_decrypt_with_callbacks(
         &load_kyber_pre_key,
         &get_identity,
     ).await;
+
+    // Clear now rather than across the write-back awaits below.
+    drop(identity_key_pair_bytes);
 
     let outcome = result?;
 
