@@ -126,6 +126,12 @@ class SessionCipher {
   /// The message type indicates whether this is a pre-key message
   /// (for session establishment) or a regular Signal message.
   ///
+  /// Stores the recipient's identity key through
+  /// [IdentityKeyStore.saveIdentity] on every message, as libsignal does: the
+  /// key the session is bound to, just checked against the stored one. While
+  /// that identity is stored this changes nothing; for an address whose stored
+  /// identity was deleted, it stores the key again.
+  ///
   /// Throws a `LibSignalException` with `LibSignalErrorCode.sessionNotFound`
   /// when there is no current session for the remote address: none was ever
   /// established, your application archived it
@@ -159,6 +165,16 @@ class SessionCipher {
       },
       getLocalRegistrationId: () async {
         return _identityKeyStore.getLocalRegistrationId();
+      },
+      // libsignal saves the identity it has just checked, on every message:
+      // a no-op while it is stored, and the key again for an address whose
+      // stored identity was deleted.
+      saveIdentity: (name, deviceId, identityKeyBytes) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identityKey = PublicKey.deserialize(
+          bytes: identityKeyBytes.toList(),
+        );
+        await _identityKeyStore.saveIdentity(addr, identityKey);
       },
       // Enforces identity-trust when sending: the Rust layer pre-seeds this
       // known identity so libsignal rejects encryption to a session whose

@@ -5807,6 +5807,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> store_session,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> save_identity,
     ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__session_cipher__message_encrypt_with_callbacks(
@@ -5820,6 +5821,7 @@ class RustLibWire implements BaseWire {
       store_session,
       get_identity_key_pair,
       get_local_registration_id,
+      save_identity,
       get_identity,
     );
   }
@@ -5834,6 +5836,7 @@ class RustLibWire implements BaseWire {
             ffi.Pointer<wire_cst_list_prim_u_8_strict>,
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -5854,6 +5857,7 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_strict>,
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
@@ -6193,6 +6197,7 @@ class RustLibWire implements BaseWire {
     ffi.Pointer<ffi.Void> store_session,
     ffi.Pointer<ffi.Void> get_identity_key_pair,
     ffi.Pointer<ffi.Void> get_local_registration_id,
+    ffi.Pointer<ffi.Void> save_identity,
     ffi.Pointer<ffi.Void> get_identity,
   ) {
     return _wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
@@ -6205,6 +6210,7 @@ class RustLibWire implements BaseWire {
       store_session,
       get_identity_key_pair,
       get_local_registration_id,
+      save_identity,
       get_identity,
     );
   }
@@ -6218,6 +6224,7 @@ class RustLibWire implements BaseWire {
             ffi.Uint32,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+            ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
             ffi.Pointer<ffi.Void>,
@@ -6237,6 +6244,7 @@ class RustLibWire implements BaseWire {
               int,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
+              ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,
               ffi.Pointer<ffi.Void>,

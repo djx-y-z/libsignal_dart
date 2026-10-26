@@ -3627,6 +3627,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_cipher__message_encrypt_with_callbacks(
@@ -3640,6 +3641,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        save_identity,
         get_identity,
       );
 
@@ -3785,6 +3787,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
@@ -3797,6 +3800,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        save_identity,
         get_identity,
       );
 
@@ -4901,6 +4905,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   );
 
@@ -4987,6 +4992,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   );
 

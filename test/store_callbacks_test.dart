@@ -316,6 +316,7 @@ void main() {
         storeSession: alice.storeSession,
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
+        saveIdentity: alice.saveIdentity,
         getIdentity: alice.getIdentity,
       );
 
@@ -374,6 +375,7 @@ void main() {
         storeSession: bob.storeSession,
         getIdentityKeyPair: bob.getIdentityKeyPair,
         getLocalRegistrationId: bob.getLocalRegistrationId,
+        saveIdentity: bob.saveIdentity,
         getIdentity: bob.getIdentity,
       );
 
@@ -415,6 +417,7 @@ void main() {
         storeSession: alice.storeSession,
         getIdentityKeyPair: alice.getIdentityKeyPair,
         getLocalRegistrationId: alice.getLocalRegistrationId,
+        saveIdentity: alice.saveIdentity,
         getIdentity: alice.getIdentity,
       );
 

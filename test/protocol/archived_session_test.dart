@@ -13,10 +13,12 @@
 ///    The bridge used to read the identity to save off the record's current
 ///    session, which threw `sessionNotFound` after libsignal had already
 ///    decrypted, so the message never decrypted at all.
-/// 2. `saveIdentity` runs only when libsignal saves the identity: for a message
-///    on the current session or one that establishes a session, and not for
-///    one on an archived session. That holds for sealed sender too, which used
-///    to save the certificate's key on every decryption.
+/// 2. Decrypting, `saveIdentity` runs only when libsignal saves the identity:
+///    for a message on the current session or one that establishes a session,
+///    and not for one on an archived session. That holds for sealed sender too,
+///    which used to save the certificate's key on every decryption. Encrypting
+///    saves it on every message, as libsignal does, which these tests count
+///    apart.
 /// 3. With no current session, encrypting throws `sessionNotFound`, and
 ///    `processPreKeyBundle` is the way back.
 library;
@@ -224,11 +226,17 @@ void main() {
     test('a session the recipient archived still decrypts, and its message '
         'saves no identity', () async {
       // The pre-key message established Bob's session, so libsignal saved
-      // Alice's identity; the answer on that session is not his to save.
-      expect(bob.identityStore.saved, [isKey(alice.identityKey)]);
-      // Alice saved Bob's identity building the session from his bundle, and
-      // again for his answer, which decrypted on her current session.
+      // Alice's identity, and saved it again for his answer: every message
+      // out saves the identity it was checked against.
+      expect(bob.identityStore.saved, [
+        isKey(alice.identityKey),
+        isKey(alice.identityKey),
+      ]);
+      // Alice saved Bob's identity building the session from his bundle,
+      // again for her message, and again for his answer, which decrypted on
+      // her current session.
       expect(alice.identityStore.saved, [
+        isKey(bob.identityKey),
         isKey(bob.identityKey),
         isKey(bob.identityKey),
       ]);
@@ -306,16 +314,21 @@ void main() {
         alice.address,
         alice.keys.toBundle(),
       );
-      bob.identityStore.saved.clear();
+      // What Bob's store saves while decrypting Alice's messages, which arrive
+      // on his archived session. His own messages save the identity they
+      // were checked against; that is not what is pinned here.
+      final savedDecrypting = <PublicKey>[];
 
       int? settledAt;
       for (var round = 0; round < 20 && settledAt == null; round++) {
         await bob.cipher.encrypt(alice.address, utf8.encode('bob $round'));
+        bob.identityStore.saved.clear();
         expect(
           await alice.send(bob, 'alice $round'),
           'alice $round',
           reason: 'round $round',
         );
+        savedDecrypting.addAll(bob.identityStore.saved);
         if (!await bob.canSendTo(alice)) settledAt = round;
       }
 
@@ -323,7 +336,7 @@ void main() {
       // This is the case the record comes out of a decryption with no current
       // session; the test needs it to have happened.
       expect(settledAt, isNotNull);
-      expect(bob.identityStore.saved, isEmpty);
+      expect(savedDecrypting, isEmpty);
       expect(await alice.send(bob, 'after'), 'after');
       await expectLater(
         bob.cipher.encrypt(alice.address, utf8.encode('stuck?')),

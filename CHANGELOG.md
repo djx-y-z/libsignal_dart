@@ -4,11 +4,40 @@
 
 #### ✨ Highlights
 
+- **Encrypting saves the recipient's identity, as libsignal does** —
+  **(breaking)** for code calling `messageEncryptWithCallbacks` or
+  `sealedSenderEncryptWithCallbacks` directly, which now take a
+  `saveIdentity` callback; `SessionCipher` and `SealedSenderCipher` keep
+  their signatures and call your `IdentityKeyStore.saveIdentity` on every
+  message they encrypt
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
   an archived session is never made current again, and a record keeps at
   most 3 of them instead of 40
+
+#### Changed (Breaking)
+
+- **`messageEncryptWithCallbacks` and `sealedSenderEncryptWithCallbacks`
+  take a `saveIdentity` callback** (`rust/src/api/session_cipher.rs`,
+  `rust/src/api/sealed_sender.rs`, `rust/src/recording_stores.rs`,
+  `lib/src/rust/api/`, `lib/src/protocol/session_cipher.dart`,
+  `lib/src/sealed_sender/sealed_sender_cipher.dart`,
+  `lib/src/stores/identity_key_store.dart`) — libsignal's `message_encrypt`,
+  and `sealed_sender_encrypt` through it, save the recipient's identity on
+  every message, right after checking it against the stored one. The bridge
+  had no callback to pass that write on, so the per-call store libsignal
+  wrote to dropped it. While the identity is stored that changes nothing;
+  for an address whose stored identity the application deleted, libsignal
+  stores it again on the next message, and this package did not until the
+  next decryption. Both functions now take `saveIdentity`, called with the
+  key libsignal saved and before `storeSession`, in libsignal's order.
+  `SessionCipher.encrypt` and `SealedSenderCipher.encrypt` keep their
+  signatures and pass your `IdentityKeyStore.saveIdentity`, which is
+  therefore called on every message you send. **Action required:** code
+  that calls either function directly passes `saveIdentity`; and an
+  `IdentityKeyStore.saveIdentity` that writes even when the key is unchanged
+  now writes on every send, so make that case cheap.
 
 #### Changed
 
@@ -123,7 +152,8 @@
   Sealed sender now saves the key the inner message's session is bound to,
   which a genuine sender's certificate repeats;
   `SealedSenderDecryptionResult.senderIdentityKey` is still the
-  certificate's.
+  certificate's. Encrypting follows the same rule, and libsignal saves there
+  on every message: see Changed (Breaking).
 
 #### Security
 
@@ -195,17 +225,27 @@
   once through the FRB entry point, against stores standing in for the Dart
   ones, and once through libsignal's own function against its reference
   stores — and requires the same outcome, the same consuming and trusting
-  writes, and the same session, identity and pre-key state, across the four
-  1:1 session entry points: fetching a bundle, sending, delivering in order,
-  out of order, twice or never, and archiving, in four scripted conversations
-  and forty seeded random ones. Sealed sender and a change of identity are not
-  covered yet.
+  writes, and the same session, identity and pre-key state, across the six
+  session entry points: fetching a bundle, sending plain or sealed, and
+  delivering in order, out of order, twice or never, through sealed sender
+  as well, which runs against libsignal's `sealed_sender_encrypt` and
+  `sealed_sender_decrypt` with a trust root and certificates of its own.
+  Between the steps an application archives a session, forgets the identity
+  it stored for a peer, or trusts a peer's new identity after the peer
+  reinstalled. Those steps change the state both runs start from, so they
+  need no libsignal counterpart. Seven scripted conversations and forty
+  seeded random ones reach all of it: across the seeds about 508
+  decryptions, 100 of them sealed, 48 that leave no current session, 17
+  identities stored again on encrypt and 20 refused identities.
   libsignal's behaviour is the expectation, so an upstream change moves it;
   only a bridge that stops following fails. On the repair commit alone
-  (`84b3691`) three of its five tests fail, naming the step: `sessionNotFound`
-  where libsignal decrypted, and an identity saved where libsignal saved
-  none. The random scripts assert that they still reach the states they exist
-  for. Runs in `make rust-test`, in about six seconds.
+  (`84b3691`) three of the first five tests fail, naming the step:
+  `sessionNotFound` where libsignal decrypted, and an identity saved where
+  libsignal saved none. The identity encryption writes (see Changed
+  (Breaking)) is compared too: dropping it again fails seven of the eight
+  tests on the plain path and four on the sealed one. The random scripts
+  assert that they still reach the states they exist for. Runs in `make
+  rust-test`, in about seven seconds.
 - **The update pull request says whether it could be merged unread**
   (`scripts/src/update_changelog.dart`, `scripts/update_changelog.dart`,
   `test/scripts/update_changelog_test.dart`,

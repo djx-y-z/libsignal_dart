@@ -95,6 +95,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
           getIdentity: (name, deviceId) =>
               aliceIdentityStorage['$name:$deviceId'],
         );
@@ -154,6 +156,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
           getIdentity: (name, deviceId) =>
               aliceIdentityStorage['$name:$deviceId'],
         );
@@ -218,6 +222,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
           getIdentity: (name, deviceId) =>
               aliceIdentityStorage['$name:$deviceId'],
         );
@@ -271,6 +277,8 @@ void main() {
               aliceSessionStorage['$name:$deviceId'] = data,
           getIdentityKeyPair: () => aliceIdentity.serialize(),
           getLocalRegistrationId: () => 111,
+          saveIdentity: (name, deviceId, key) =>
+              aliceIdentityStorage['$name:$deviceId'] = key,
           getIdentity: (name, deviceId) =>
               aliceIdentityStorage['$name:$deviceId'],
         );

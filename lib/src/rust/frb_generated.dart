@@ -803,6 +803,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -882,6 +883,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -6800,6 +6802,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -6826,6 +6829,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             getLocalRegistrationId,
           );
           var arg9 =
+              cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                saveIdentity,
+              );
+          var arg10 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
               );
@@ -6842,6 +6849,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg7,
                 arg8,
                 arg9,
+                arg10,
               );
         },
         codec: DcoCodec(
@@ -6859,6 +6867,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          saveIdentity,
           getIdentity,
         ],
         apiImpl: this,
@@ -6880,6 +6889,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "saveIdentity",
           "getIdentity",
         ],
       );
@@ -7367,6 +7377,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -7392,6 +7403,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             getLocalRegistrationId,
           );
           var arg8 =
+              cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                saveIdentity,
+              );
+          var arg9 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
               );
@@ -7407,6 +7422,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg6,
                 arg7,
                 arg8,
+                arg9,
               );
         },
         codec: DcoCodec(
@@ -7424,6 +7440,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          saveIdentity,
           getIdentity,
         ],
         apiImpl: this,
@@ -7444,6 +7461,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "saveIdentity",
           "getIdentity",
         ],
       );

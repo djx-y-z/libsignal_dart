@@ -434,6 +434,24 @@ void main() {
         expect(utf8.decode(plaintext), equals('whisper'));
       },
     );
+
+    test('stores the recipient identity again when encrypting after the '
+        'application deleted it', () async {
+      final session = await buildEstablishedSession();
+      final bobIdentity =
+          (await session.bobIdentityStore.getIdentityKeyPair()).publicKey;
+
+      // The application lost or cleared its trust store; the session survives.
+      session.aliceIdentityStore.clear();
+      expect(await session.aliceIdentityStore.getIdentity(bobAddress), isNull);
+
+      // libsignal saves the identity it has just checked, on every message,
+      // so the next one out stores the key the session is bound to again.
+      await session.aliceCipher.encrypt(bobAddress, utf8.encode('again'));
+
+      final stored = await session.aliceIdentityStore.getIdentity(bobAddress);
+      expect(stored?.serialize(), equals(bobIdentity));
+    });
   });
 
   // Exercises the *sealed-sender decryption* enforcement path: the identity is
@@ -599,54 +617,80 @@ void main() {
       expect(result.senderAddress.name(), equals('alice-uuid'));
     });
 
+    // Minimal sender-side setup: certificate chain + a session with Bob.
+    Future<
+      ({
+        SealedSenderCipher aliceCipher,
+        InMemoryIdentityKeyStore aliceIdentityStore,
+        Uint8List aliceSenderCertificate,
+        ProtocolAddress bobAddress,
+        Uint8List bobIdentity,
+      })
+    >
+    buildSealedSender() async {
+      final trustRootPrivateKey = PrivateKey.generate();
+      final serverPrivateKey = PrivateKey.generate();
+      final serverCertificate = createServerCertificate(
+        keyId: 1,
+        serverPublicKey: serverPrivateKey.getPublicKey().serialize(),
+        trustRootPrivateKey: trustRootPrivateKey.serialize(),
+      );
+      final bobKeys = generateRemotePartyKeys(
+        registrationId: 222,
+        deviceId: 1,
+        preKeyId: 61,
+        signedPreKeyId: 10,
+        kyberPreKeyId: 4,
+      );
+      final bobAddress = ProtocolAddress(name: 'bob-uuid', deviceId: 1);
+
+      final alice = IdentityKeyPair.generate();
+      final aliceSessionStore = InMemorySessionStore();
+      final aliceIdentityStore = InMemoryIdentityKeyStore(alice, 111);
+      final aliceBuilder = SessionBuilder(
+        localAddress: aliceAddress,
+        sessionStore: aliceSessionStore,
+        identityKeyStore: aliceIdentityStore,
+      );
+      await aliceBuilder.processPreKeyBundle(bobAddress, bobKeys.toBundle());
+      final expiration = DateTime.now()
+          .add(const Duration(hours: 1))
+          .millisecondsSinceEpoch;
+      final aliceSenderCertificate = createSenderCertificate(
+        senderUuid: aliceAddress.name(),
+        senderDeviceId: aliceAddress.deviceId(),
+        senderIdentityKey: alice.publicKey,
+        expiration: BigInt.from(expiration),
+        serverCertificate: serverCertificate,
+        serverPrivateKey: serverPrivateKey.serialize(),
+      );
+      final aliceCipher = SealedSenderCipher(
+        localAddress: aliceAddress,
+        sessionStore: aliceSessionStore,
+        identityKeyStore: aliceIdentityStore,
+        preKeyStore: InMemoryPreKeyStore(),
+        signedPreKeyStore: InMemorySignedPreKeyStore(),
+        kyberPreKeyStore: InMemoryKyberPreKeyStore(),
+      );
+      return (
+        aliceCipher: aliceCipher,
+        aliceIdentityStore: aliceIdentityStore,
+        aliceSenderCertificate: aliceSenderCertificate,
+        bobAddress: bobAddress,
+        bobIdentity: bobKeys.identityKeyPair.publicKey,
+      );
+    }
+
     test(
       'rejects sealed encryption when the stored recipient identity changed',
       () async {
-        // Minimal sender-side setup: certificate chain + a session with Bob.
-        final trustRootPrivateKey = PrivateKey.generate();
-        final serverPrivateKey = PrivateKey.generate();
-        final serverCertificate = createServerCertificate(
-          keyId: 1,
-          serverPublicKey: serverPrivateKey.getPublicKey().serialize(),
-          trustRootPrivateKey: trustRootPrivateKey.serialize(),
-        );
-        final bobKeys = generateRemotePartyKeys(
-          registrationId: 222,
-          deviceId: 1,
-          preKeyId: 61,
-          signedPreKeyId: 10,
-          kyberPreKeyId: 4,
-        );
-        final bobAddress = ProtocolAddress(name: 'bob-uuid', deviceId: 1);
-
-        final alice = IdentityKeyPair.generate();
-        final aliceSessionStore = InMemorySessionStore();
-        final aliceIdentityStore = InMemoryIdentityKeyStore(alice, 111);
-        final aliceBuilder = SessionBuilder(
-          localAddress: aliceAddress,
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-        );
-        await aliceBuilder.processPreKeyBundle(bobAddress, bobKeys.toBundle());
-        final expiration = DateTime.now()
-            .add(const Duration(hours: 1))
-            .millisecondsSinceEpoch;
-        final aliceSenderCertificate = createSenderCertificate(
-          senderUuid: aliceAddress.name(),
-          senderDeviceId: aliceAddress.deviceId(),
-          senderIdentityKey: alice.publicKey,
-          expiration: BigInt.from(expiration),
-          serverCertificate: serverCertificate,
-          serverPrivateKey: serverPrivateKey.serialize(),
-        );
-        final aliceCipher = SealedSenderCipher(
-          localAddress: aliceAddress,
-          sessionStore: aliceSessionStore,
-          identityKeyStore: aliceIdentityStore,
-          preKeyStore: InMemoryPreKeyStore(),
-          signedPreKeyStore: InMemorySignedPreKeyStore(),
-          kyberPreKeyStore: InMemoryKyberPreKeyStore(),
-        );
+        final (
+          :aliceCipher,
+          :aliceIdentityStore,
+          :aliceSenderCertificate,
+          :bobAddress,
+          bobIdentity: _,
+        ) = await buildSealedSender();
 
         // Control: with the identity stored by processPreKeyBundle, sealed
         // encryption succeeds.
@@ -682,5 +726,29 @@ void main() {
         );
       },
     );
+
+    test('sealed encryption stores the recipient identity again after the '
+        'application deleted it', () async {
+      final sender = await buildSealedSender();
+
+      sender.aliceIdentityStore.clear();
+      expect(
+        await sender.aliceIdentityStore.getIdentity(sender.bobAddress),
+        isNull,
+      );
+
+      // Sealed sender encrypts through libsignal's message_encrypt, which
+      // saves the identity it has just checked.
+      await sender.aliceCipher.encrypt(
+        recipientAddress: sender.bobAddress,
+        plaintext: Uint8List.fromList(utf8.encode('again')),
+        senderCertificate: sender.aliceSenderCertificate,
+      );
+
+      final stored = await sender.aliceIdentityStore.getIdentity(
+        sender.bobAddress,
+      );
+      expect(stored?.serialize(), equals(sender.bobIdentity));
+    });
   });
 }

@@ -78,6 +78,12 @@ abstract interface class IdentityKeyStore {
   /// Returns `true` if this is a new identity or the identity changed,
   /// `false` if the identity was already known and unchanged.
   ///
+  /// Called whenever libsignal saves an identity: when a session is built from
+  /// a bundle or a pre-key message, for every message decrypted on the current
+  /// session, and for every message encrypted, plain or sealed, with the key
+  /// that was just checked. Most of those calls store a key that is already
+  /// there, so make an unchanged save cheap.
+  ///
   /// **Do not complete the returned future until the identity is durably
   /// persisted.** A lost write leaves the address in the trust-on-first-use
   /// state, which disables safety-number-change detection for it.

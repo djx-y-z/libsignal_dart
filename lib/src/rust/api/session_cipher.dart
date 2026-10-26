@@ -23,6 +23,14 @@ PreKeyMessageIds extractPrekeyMessageIds({required List<int> message}) =>
 /// - `store_session(name, device_id, record)` - Store the updated session record
 /// - `get_identity_key_pair()` - Get our serialized identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
+/// - `save_identity(name, device_id, identity_key)` - Save the recipient's
+///   identity key: the one the session is bound to, which libsignal has just
+///   checked against the stored one. libsignal saves it on every message, so
+///   an address whose stored identity was deleted has it stored again.
+/// - `get_identity(name, device_id)` - Get the recipient's stored identity key
+///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
 ///
 /// # Parameters
 /// - `local_name` - Our user identifier (UUID)
@@ -37,6 +45,7 @@ Future<EncryptResult> messageEncryptWithCallbacks({
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
   required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSessionCipherMessageEncryptWithCallbacks(
   remoteName: remoteName,
@@ -48,6 +57,7 @@ Future<EncryptResult> messageEncryptWithCallbacks({
   storeSession: storeSession,
   getIdentityKeyPair: getIdentityKeyPair,
   getLocalRegistrationId: getLocalRegistrationId,
+  saveIdentity: saveIdentity,
   getIdentity: getIdentity,
 );
 
