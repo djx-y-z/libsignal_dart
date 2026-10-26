@@ -113,6 +113,15 @@ abstract interface class IdentityKeyStore {
   /// **Security Note**: Different applications may have different trust
   /// policies. Some may always trust on first use, others may require
   /// explicit verification for all new identities.
+  ///
+  /// **The ciphers in this package never call this method.** They enforce
+  /// trust through [getIdentity] instead: libsignal is handed the identity you
+  /// return there and refuses a key that differs from it with
+  /// `LibSignalErrorCode.untrustedIdentity`, while an address you return
+  /// `null` for is trusted on first use. A policy written here — refusing a
+  /// contact the user has not verified, say — is therefore applied to no
+  /// message. Apply it before the call instead, and keep returning the old key
+  /// from [getIdentity] until the user accepts a changed one.
   Future<bool> isTrustedIdentity(
     ProtocolAddress address,
     PublicKey identityKey,

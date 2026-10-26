@@ -11,11 +11,13 @@ import '../identity_key_store.dart';
 /// testing and prototyping. For production use, implement a persistent
 /// store backed by secure storage.
 ///
-/// **Warning**: This implementation uses a simple Trust-On-First-Use (TOFU)
-/// policy in [isTrustedIdentity]: it trusts any new identity automatically
-/// and only rejects identities that differ from a previously stored one.
-/// This may not be appropriate for all security contexts. Production
-/// implementations should consider:
+/// **Warning**: Trust-On-First-Use (TOFU) applies whatever the store: the
+/// ciphers in this package trust a new identity automatically and reject only
+/// one that differs from what [getIdentity] returns. They never call
+/// [isTrustedIdentity], which here implements the same rule for code that
+/// asks it directly (see [IdentityKeyStore.isTrustedIdentity]). That may not
+/// be appropriate for all security contexts. Production implementations
+/// should consider:
 /// - Notifying users when a contact's identity key changes
 /// - Requiring explicit user verification for new contacts
 /// - Implementing key verification UI (e.g., safety numbers)

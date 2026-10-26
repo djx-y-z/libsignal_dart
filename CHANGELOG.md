@@ -215,6 +215,16 @@
   its Dependency Auditing section now says that `rust/deny.toml` fails on a
   crate version its publisher has yanked, beside the source and license rules
   it already described.
+- **`IdentityKeyStore.isTrustedIdentity` says the ciphers never call it**
+  (`lib/src/stores/identity_key_store.dart`,
+  `lib/src/stores/in_memory/in_memory_identity_key_store.dart`) — trust is
+  enforced through `getIdentity`: libsignal is handed the identity it
+  returns and refuses a key that differs from it, and an address it returns
+  `null` for is trusted on first use. A policy written into
+  `isTrustedIdentity` was applied to no message, and nothing said so;
+  `InMemoryIdentityKeyStore` even described its trust-on-first-use rule as
+  living there. The interface now says where trust is decided and how to
+  apply a stricter policy, and `saveIdentity` lists when it is called.
 
 ### For Contributors
 
