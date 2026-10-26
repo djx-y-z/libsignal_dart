@@ -91,6 +91,18 @@ before the stamp existed, or by a bare `cargo build`, is refused: run
 So after `make release-frb` bumps the crate, `make test` needs a `make build`
 first.
 
+⚠ **Each stamp comes with `.cargo-lock`, a copy of the `rust/Cargo.lock` the
+build was made from, and the hook refuses a local build whose copy differs from
+the lock file in the tree.** An upstream update moves the dependencies while the
+crate version stays put — the crate moves at release time — so a build made
+before the update used to pass the version check and run the previous upstream
+code. After any change to the lock file, build again; a build from before the
+copy existed is refused the same way. `make build` also drops the hook's cached
+result for this package, `.dart_tool/hooks_runner/libsignal/`: when the
+hook last ran without a host build here, it downloaded the released library and
+declared only `rust/Cargo.toml`, so `dart test` kept loading that download after
+the build.
+
 ### Web
 
 ```bash
@@ -143,14 +155,17 @@ revision, the entrypoint, the build mode and the output path — the target
 platform is **not** in that key — so a debug run for macOS and a debug run for
 Chrome share one `dart_build` stamp. Whichever ran first makes the other skip
 the build hook outright (`Skipping target: dart_build`, visible under
-`--verbose`), and `example/web/pkg/` is then never provisioned:
-`RustLib.init()` never completes: flutter_rust_bridge waits for the `load`
-event of `pkg/libsignal_frb.js` with no error path or timeout, so a missing
+`--verbose`), and `example/web/pkg/` is then never provisioned: `init()`
+throws a `StateError` naming the missing `pkg/libsignal_frb.js`. It checks
+for the module first because flutter_rust_bridge's loader waits for the
+`load` event of that script with no error path or timeout, so a missing
 module (a 404, or the app's HTML page the dev server serves in its place
-with a 200) leaves the call pending. The hook cannot
+with a 200) would leave the call pending. The hook cannot
 declare its way out of it — the skip happens above `hooks_runner`, where
-nothing it declares is read. Consumers of the published package hit the same
-thing; the README's *Known Limitations* names the escapes.
+nothing it declares is read. This is Flutter 3.38 to 3.41 only: from 3.44
+`flutter run` runs build hooks per target platform, outside that stamp.
+Consumers of the published package on those versions hit the same thing; the
+README's *Known Limitations* names the escapes.
 
 
 ### Rust Quality
@@ -252,9 +267,11 @@ make verify-android-alignment     # Check built Android libraries are 16 KB-alig
 make verify-release-artifacts ARGS=<dir>  # Check release archives hold what their names say
 make actionlint                   # Lint the GitHub Actions workflows
 make check-new-libsignal-version  # Check for new upstream libsignal version
+make check-upstream-advisories    # Check signalapp/libsignal's published advisories against Cargo.lock
 make check-new-libsignal-version ARGS="--update"  # Apply update
 make check-template-updates       # Check for copier template updates
 make update-template ARGS="--version vX.Y.Z"  # Apply a template update (runs copier)
+make update-template ARGS="--version vX.Y.Z --data key=value"  # ...answering a question it adds
 make check-targets                # Check deployment targets (iOS/macOS/Android)
 make check-targets ARGS="--ios --set 14.0"  # Set iOS target everywhere
 make check-msrv                   # Check the minimum Rust version against the graph
@@ -639,6 +656,13 @@ cd - && git worktree remove ../stage2-check
   for Linux the release build is the one to measure first: its image sets the
   oldest glibc a consumer needs
   (`build-libsignal.yml`)
+- signalapp/libsignal's own security advisories are read daily
+  (`make check-upstream-advisories`, a job of `check-libsignal-updates.yml`)
+  and held against the crates `rust/Cargo.lock` resolves. `make rust-audit`
+  reads RustSec and Dependabot reads GitHub's global database, and an advisory
+  an upstream publishes only in its own repository reaches neither until
+  someone files it there. A covered version, a range the check cannot read and
+  a fetch that failed all turn the run red; drafts are never asked for
 
 ### Code Review Checklist
 1. No hardcoded keys or secrets

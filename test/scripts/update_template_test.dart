@@ -646,4 +646,124 @@ void main() {
       expect(out, contains('duplicates_error=no network at all\n'));
     });
   });
+
+  group('parseCopierData', () {
+    test('collects both spellings, a later answer to a key winning', () {
+      expect(
+        parseCopierData([
+          '--version',
+          'v4.18.0',
+          '--data',
+          'upstream_source=crates_io',
+          '--data=enable_fuzzing=false',
+          '--data',
+          'enable_fuzzing=true',
+        ]),
+        {'upstream_source': 'crates_io', 'enable_fuzzing': 'true'},
+      );
+    });
+
+    test('keeps an empty value, and an equals sign inside one', () {
+      expect(
+        parseCopierData([
+          '--data',
+          'upstream_crates=',
+          '--data',
+          'forbidden_features=upstream=test-utils',
+        ]),
+        {'upstream_crates': '', 'forbidden_features': 'upstream=test-utils'},
+      );
+    });
+
+    test('is empty when nothing is answered', () {
+      expect(parseCopierData(['--version', 'v4.18.0', '--json']), isEmpty);
+    });
+
+    test('refuses a --data with nothing after it', () {
+      expect(() => parseCopierData(['--data']), throwsFormatException);
+    });
+
+    test('refuses a key that cannot name a question', () {
+      for (final raw in ['upstream-source=crates_io', '=x', 'no_value']) {
+        expect(
+          () => parseCopierData(['--data', raw]),
+          throwsFormatException,
+          reason: raw,
+        );
+      }
+    });
+  });
+
+  group('copierUpdateArguments', () {
+    test('is the plain update when nothing is answered', () {
+      expect(copierUpdateArguments(version: 'v4.18.0'), [
+        'update',
+        '--trust',
+        '--defaults',
+        '--skip-tasks',
+        '--vcs-ref=v4.18.0',
+      ]);
+    });
+
+    test('hands each answer to copier as --data, after the fixed flags', () {
+      expect(
+        copierUpdateArguments(
+          version: 'v4.18.0',
+          data: {'upstream_source': 'crates_io', 'upstream_crates': ''},
+        ),
+        [
+          'update',
+          '--trust',
+          '--defaults',
+          '--skip-tasks',
+          '--vcs-ref=v4.18.0',
+          '--data',
+          'upstream_source=crates_io',
+          '--data',
+          'upstream_crates=',
+        ],
+      );
+    });
+  });
+
+  group('unrecordedData', () {
+    const answers =
+        '# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY\n'
+        '_commit: v4.18.0\n'
+        '_src_path: https://github.com/example/template.git\n'
+        "description: 'A: quoted, and it''s escaped'\n"
+        'enable_fuzzing: false\n'
+        "upstream_crates: ''\n"
+        'upstream_source: crates_io\n';
+
+    test('is empty when every answer was recorded as given', () {
+      expect(
+        unrecordedData(
+          answers: answers,
+          data: {
+            'description': "A: quoted, and it's escaped",
+            'enable_fuzzing': 'false',
+            'upstream_crates': '',
+            'upstream_source': 'crates_io',
+          },
+        ),
+        isEmpty,
+      );
+    });
+
+    // `version_tag_prefix` is what copier drops once `upstream_source` is
+    // `crates_io`: its `when:` is false, so it is never recorded.
+    test('names a key never recorded, and one recorded differently', () {
+      expect(
+        unrecordedData(
+          answers: answers,
+          data: {
+            'version_tag_prefix': 'upstream-v',
+            'upstream_source': 'git_tag',
+          },
+        ),
+        ['upstream_source', 'version_tag_prefix'],
+      );
+    });
+  });
 }

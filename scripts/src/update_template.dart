@@ -59,6 +59,7 @@ class TemplateUpdateResult {
     this.duplicatesError = '',
     this.changelogError = '',
     this.aiProvider = '',
+    this.unrecordedData = const [],
   });
 
   /// Template version recorded before the update ran.
@@ -92,6 +93,10 @@ class TemplateUpdateResult {
   /// shows up only as entries that drift in style, months later.
   final String aiProvider;
 
+  /// `--data` keys `.copier-answers.yml` does not record as given, sorted:
+  /// answers the next update would render without. See [unrecordedData].
+  final List<String> unrecordedData;
+
   bool get hasConflicts => conflicts.isNotEmpty;
 
   bool get hasDuplicates => duplicates.isNotEmpty;
@@ -111,6 +116,7 @@ class TemplateUpdateResult {
     'changelog_updated': changelogUpdated,
     'changelog_error': changelogError,
     'ai_provider': aiProvider,
+    'unrecorded_data': unrecordedData,
   };
 }
 
@@ -203,7 +209,110 @@ Future<List<String>> dirtyPaths({String? workingDirectory}) async {
       .toList();
 }
 
+/// A question's name: the key a `--data` answer must have.
+final _questionName = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$');
+
+/// Every `--data key=value` and `--data=key=value` in [args], in order, as the
+/// answers [runCopierUpdate] hands to copier. A later answer to the same key
+/// wins, as it would on copier's own command line. Pure; exposed for testing.
+///
+/// This is how an update answers what its version newly asks. `copier update`
+/// runs with `--defaults`, so a question nobody answered takes its default:
+/// `forbidden_features` did when 4.15.0 introduced it, and moving a project's
+/// `upstream_source` to `crates_io` meant calling copier by hand.
+///
+/// Throws [FormatException] for a `--data` with nothing after it, or for a key
+/// that cannot be a question's name (`upstream-source=…`, `=…`): copier would
+/// take such a key as data no question reads, and the update would land as
+/// though it had never been given.
+Map<String, String> parseCopierData(List<String> args) {
+  final data = <String, String>{};
+  for (var i = 0; i < args.length; i++) {
+    final String raw;
+    if (args[i] == '--data') {
+      if (i + 1 >= args.length) {
+        throw const FormatException('--data needs a key=value after it');
+      }
+      raw = args[++i];
+    } else if (args[i].startsWith('--data=')) {
+      raw = args[i].substring('--data='.length);
+    } else {
+      continue;
+    }
+    final eq = raw.indexOf('=');
+    if (eq < 0 || !_questionName.hasMatch(raw.substring(0, eq))) {
+      throw FormatException(
+        '--data takes key=value, with a question\'s name as the key; '
+        'got "$raw"',
+      );
+    }
+    data[raw.substring(0, eq)] = raw.substring(eq + 1);
+  }
+  return data;
+}
+
+/// The command line [runCopierUpdate] runs, after `copier`. Pure; exposed for
+/// testing.
+List<String> copierUpdateArguments({
+  required String version,
+  Map<String, String> data = const {},
+}) => [
+  'update',
+  '--trust',
+  '--defaults',
+  '--skip-tasks',
+  '--vcs-ref=$version',
+  for (final answer in data.entries) ...[
+    '--data',
+    '${answer.key}=${answer.value}',
+  ],
+];
+
+/// The keys of [data] that [answers], the text of `.copier-answers.yml` after
+/// the update, does not record with the value given, sorted. Pure; exposed for
+/// testing.
+///
+/// Copier records an answer only for a question it asked. A key that names no
+/// question, or a question whose `when:` is false under the other answers,
+/// never reaches the file — measured on this template: `version_tag_prefix` is
+/// not recorded once `upstream_source` is `crates_io` — so the next update
+/// renders without it, whatever this one did. The file is the one place that
+/// says what an update will be repeated with, so that is what is checked.
+///
+/// Compared as text once YAML's quoting is taken off, which is how copier
+/// writes the scalars these questions take. A value it had to write across
+/// lines reads as unrecorded and is reported rather than assumed.
+List<String> unrecordedData({
+  required String answers,
+  required Map<String, String> data,
+}) {
+  final recorded = <String, String>{};
+  final line = RegExp(r'^([A-Za-z_][A-Za-z0-9_]*):(?: (.*))?$');
+  for (final text in answers.split('\n')) {
+    final m = line.firstMatch(text);
+    if (m != null) recorded[m.group(1)!] = _unquoteYaml(m.group(2) ?? '');
+  }
+  return [
+    for (final answer in data.entries)
+      if (recorded[answer.key] != answer.value) answer.key,
+  ]..sort();
+}
+
+String _unquoteYaml(String raw) {
+  final value = raw.trim();
+  if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
+    return value.substring(1, value.length - 1).replaceAll("''", "'");
+  }
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    return value.substring(1, value.length - 1);
+  }
+  return value;
+}
+
 /// Runs `copier update` for [version], streaming its output to this process.
+///
+/// [data] answers questions as `--data` does on copier's own command line —
+/// see [parseCopierData].
 ///
 /// `--defaults` is what makes the run non-interactive: without it copier
 /// re-asks every question and blocks forever on a runner. `--trust` is still
@@ -250,15 +359,19 @@ Future<List<String>> dirtyPaths({String? workingDirectory}) async {
 /// all three renders at once; do not guard them in `copier.yml`.
 Future<int> runCopierUpdate({
   required String version,
+  Map<String, String> data = const {},
   String? workingDirectory,
 }) async {
   await requireCommand('copier');
   final dir = workingDirectory ?? getPackageDir().path;
 
   logStep('Running copier update --vcs-ref=$version ...');
+  for (final answer in data.entries) {
+    logInfo('  answering ${answer.key}=${answer.value}');
+  }
   final process = await Process.start(
     'copier',
-    ['update', '--trust', '--defaults', '--skip-tasks', '--vcs-ref=$version'],
+    copierUpdateArguments(version: version, data: data),
     workingDirectory: dir,
     mode: ProcessStartMode.inheritStdio,
   );
@@ -580,7 +693,9 @@ String copierDataFromAnswers(String answers) => answers
 /// way to have it: copier renders the new version into a temporary directory
 /// of its own and deletes it before returning. Run after the update, because
 /// the answers file then records what the update rendered with — new
-/// questions answered by their defaults included.
+/// questions answered by their defaults included. That is also why `--data`
+/// answers are not passed again: the ones copier recorded are in the file, and
+/// handing it the rest would render a value the update itself did not keep.
 Future<Directory> renderTemplate({
   required String version,
   String? workingDirectory,
@@ -962,6 +1077,7 @@ Future<TemplateUpdateResult> applyTemplateUpdate({
   required String toVersion,
   List<ResolvedAiModel> models = const [],
   bool skipChangelog = false,
+  Map<String, String> data = const {},
 }) async {
   final packageDir = getPackageDir().path;
 
@@ -1004,10 +1120,24 @@ Future<TemplateUpdateResult> applyTemplateUpdate({
 
   final exitCode = await runCopierUpdate(
     version: toVersion,
+    data: data,
     workingDirectory: packageDir,
   );
   if (exitCode != 0) {
     throw Exception('copier update failed with exit code $exitCode');
+  }
+
+  // Read before anything else here touches the answers file. An answer it does
+  // not record is one the next update renders without.
+  final unrecorded = unrecordedData(
+    answers: File('$packageDir/.copier-answers.yml').readAsStringSync(),
+    data: data,
+  );
+  for (final key in unrecorded) {
+    logWarn(
+      '.copier-answers.yml does not record --data $key=${data[key]}: no '
+      'question by that name was asked in this version.',
+    );
   }
 
   final conflicts = await findConflicts(workingDirectory: packageDir);
@@ -1098,6 +1228,7 @@ Future<TemplateUpdateResult> applyTemplateUpdate({
     changelogUpdated: changelogUpdated,
     changelogError: changelogError,
     aiProvider: aiProvider,
+    unrecordedData: unrecorded,
   );
 }
 
@@ -1160,6 +1291,12 @@ void printUpdateSummary({required TemplateUpdateResult result}) {
   );
   for (final path in result.conflicts) {
     print('                     $path');
+  }
+  if (result.unrecordedData.isNotEmpty) {
+    print(
+      '  Not recorded:    '
+      '${Colors.colorize(result.unrecordedData.join(', '), Colors.yellow)}',
+    );
   }
   print(
     '  Duplicates:      ${!result.duplicatesChecked

@@ -52,12 +52,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       // below runs forever, and the only trace is a line in the console — a
       // hang that says nothing about its cause.
       //
-      // A missing `web/pkg/` never lands here, though it is the common web
-      // failure: `flutter run -d chrome` after a run for another platform
-      // reuses that run's `dart_build` stamp — the build directory key does
-      // not include the target platform — and skips the build hook outright,
-      // so the WASM module is never provisioned, and `init()` then never
-      // completes instead of throwing (README, Known Limitations).
+      // The common web failure lands here too: `flutter run -d chrome` on
+      // Flutter 3.38 to 3.41 after a run for another platform reuses that
+      // run's `dart_build` stamp — the build directory key does not include
+      // the target platform — and skips the build hook outright, so the WASM
+      // module is never provisioned. `init()` checks for it and throws a
+      // `StateError` naming `pkg/libsignal_frb.js` (README, Known
+      // Limitations).
       if (!mounted) return;
       setState(() => _initError = '$e');
     }
@@ -66,7 +67,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   /// Shown instead of the spinner when [LibSignal.init] threw.
   ///
   /// The raw error is kept in the text on purpose: the hint below is a remedy
-  /// to try, not a diagnosis, and a missing `web/pkg/` never gets this far.
+  /// to try, not a diagnosis.
   Widget _buildInitError() {
     return Center(
       child: Padding(
