@@ -16,6 +16,10 @@
 - **`PreKeyRecord.privateKey()` and `SignedPreKeyRecord.privateKey()` are
   gone** — **(breaking)** a record travels whole, private half included,
   through `serialize()`
+- **No storage migration** — none of the breaking changes needs one: the
+  store interfaces are unchanged and records are still persisted whole
+  through `serialize()`. Session records gain fields under Tahini, which
+  libsignal writes on the next save and earlier versions still read.
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
@@ -186,6 +190,21 @@
   certificate's. Encrypting follows the same rule, and libsignal saves there
   on every message: see Changed (Breaking).
 
+- **`hooks` and `code_assets` admit 2.x as well as 1.x** (`pubspec.yaml`,
+  `.github/dependabot.yml`) — `^1.0.0` held every app on 1.x, on a Flutter
+  that ships 2.x itself as well. The range is now `>=1.0.0 <3.0.0`, so each
+  Flutter resolves the major it supports: on 3.38 to 3.44, which pin `meta`
+  below the 1.19.0 that `hooks` 2.1 needs, an app resolves `hooks` 2.0.x
+  with `code_assets` 1.x, and from 3.47 `hooks` 2.2 with `code_assets` 2.1.
+  The build hook needs no change: the one breaking change of `code_assets`
+  2.0 — `OS`, `Architecture` and `Sanitizer` define `==` and no longer key
+  a const map — touches nothing it uses. Measured on Flutter 3.38.4 and
+  3.47.4 in a project generated from the same template: the example app
+  builds and the package's tests pass on both. Here, the suite passes on
+  `hooks` 2.2.0 with `code_assets` 2.1.0, and `example/` resolves 2.0.2 with
+  1.2.1 on Flutter 3.38.4 and analyzes clean. Dependabot still holds back
+  3.x. From template v4.18.0.
+
 #### Security
 
 - **`ctutils` 0.4.3 → 0.4.5, for RUSTSEC-2026-0385** (`rust/Cargo.lock`,
@@ -203,6 +222,44 @@
   comparisons and `Choice` composition. Crate 7.0.0, the native library of
   8.0.0, was built with 0.4.3; whether its machine code contains such a
   branch was not measured. Floor: Rust 1.87, below this crate's 1.93.1.
+
+#### Fixed
+
+- **Every isolate that initializes libsignal is counted by it, whichever
+  flutter_rust_bridge library the isolate initialized first**
+  (`lib/src/libsignal.dart`, `lib/src/platform/`,
+  `test/platform/isolate_count_test.dart`) — 8.0.0 named this hang and left
+  it: flutter_rust_bridge keeps one shutdown watcher per isolate for all of
+  its libraries, so an isolate was counted only by the first library it
+  initialized, and a worker that initialized libsignal alone and exited could
+  switch libsignal's Rust-to-Dart channel off for the whole process; every
+  async call from the main isolate then waited forever. `LibSignal.init()` now
+  registers the isolate with libsignal's own native library, through a
+  finalizer of its own, before `RustLib.init()` runs, so the rule 8.0.0 gave
+  — initialize the flutter_rust_bridge libraries in the same order in every
+  isolate — is no longer needed for libsignal. Counting the isolate before
+  `RustLib.init()` installs its pointer also closes the initialization race
+  8.0.0 fixed, so `init()` no longer installs the pointer a second time.
+  Measured on a bench of two libraries and with the race hammer: the hang and
+  the race are both gone, and moving the count after `RustLib.init()` brings
+  the race back in 6 rounds of 6. The tests run both scenarios in a process
+  of their own. The count calls an internal flutter_rust_bridge symbol, so a
+  release that changes it makes `init()` fail rather than hang. From template
+  v4.18.0.
+- **On the web, `LibSignal.init()` throws instead of waiting forever when the
+  WASM module is not served** (`lib/src/libsignal.dart`,
+  `lib/src/platform/platform_web.dart`, `README.md`) — flutter_rust_bridge
+  loads `pkg/libsignal_frb.js` with a `<script>` tag and waits for its `load`
+  event with no error path, so a missing module — a 404, or the app's HTML
+  page that a dev server returns in its place with a 200 — left `init()`
+  pending. `init()` now fetches the script first and throws a `StateError`
+  naming it, with the HTTP status, the content type and the remedy, when it
+  is not served as a script. A fetch that fails outright, under a strict
+  content security policy for instance, throws nothing, and loading goes on
+  as before. The usual cause is `flutter run -d chrome` on Flutter 3.38 to
+  3.41 after a run for another platform, which skips the build hook; README's
+  Known Limitations now says Flutter 3.44 and later are not affected. From
+  template v4.18.0.
 
 #### Documentation
 
@@ -364,26 +421,56 @@
 
 #### Changed
 
-- **copier template adopted: v4.17.0 -> v4.18.0** — adds update-template
-  checks and upstream advisory scanning, and tightens generated-library builds.
-  `scripts/src/update_template.dart` and `scripts/update_template.dart` let
-  `make update-template` pass answers for new questions and report lines merged
-  in more often than in the project and fresh render. The update workflow now
-  runs the libsignal advisory check, backed by
-  `scripts/src/upstream_advisories.dart` and
-  `scripts/check_upstream_advisories.dart`; it compares published advisories
-  with versions in `rust/Cargo.lock`. `hook/build.dart` records the Cargo lock
-  beside local build stamps and refuses stale builds, so a build made before an
-  upstream dependency change is not loaded. In `lib/src/libsignal.dart` and
-  `lib/src/platform/platform_io.dart`, isolate shutdown counting is registered
-  before flutter_rust_bridge initialization, preventing a worker exit from
-  disabling async replies. On web, `lib/src/platform/platform_web.dart` reports
-  a missing or HTML WASM module instead of leaving `init()` pending. The
-  dependency ranges in `pubspec.yaml` and `.github/dependabot.yml` now admit
-  `hooks` 2.x and `code_assets` 2.x; `scripts/src/common.dart` orders versions
-  as SemVer does. The update changelog generator replaces the upstream
-  Highlights line, including its continuation, rather than preserving an old
-  version beside the new one.
+- **copier template adopted: v4.17.0 → v4.18.0** (`.copier-answers.yml` and
+  the files named here and in the For Users entries above) — beyond the
+  isolate count, the web check and the `hooks` range above, it brings:
+  - `make check-upstream-advisories`, which holds signalapp/libsignal's own
+    published security advisories against the crates `rust/Cargo.lock`
+    resolves: neither `make rust-audit` (RustSec) nor Dependabot (GitHub's
+    global database) is guaranteed to see them. `check-libsignal-updates.yml`
+    runs it daily in a job of its own, so a finding never stops the update
+    pull request, which is often the fix, and the job fails as well when the
+    advisories cannot be fetched (`scripts/check_upstream_advisories.dart`,
+    `scripts/src/upstream_advisories.dart`,
+    `test/scripts/upstream_advisories_test.dart`, `Makefile`; the new answer
+    `enable_upstream_advisories: true`). `compareVersions` in
+    `scripts/src/common.dart` now orders prereleases as SemVer 2.0 does and
+    ignores build metadata, since the check decides by it whether a locked
+    version is affected. Run on this lock file before merging, it passes:
+    signalapp/libsignal has published no advisory yet.
+  - `--data key=value` for `make update-template`, to answer a question a new
+    template version adds; the run then names any answer
+    `.copier-answers.yml` did not record (`scripts/src/update_template.dart`,
+    `scripts/update_template.dart`, `test/scripts/update_template_test.dart`,
+    `.claude/skills/update-template/SKILL.md`).
+
+  The rest of the range was here already — the merge-eligibility report, the
+  minimum Rust version check, the evidence artifact, the Highlights fix and
+  the scan for text merged in twice, each with its own entry — and the
+  adoption leaves those files as they were. Eight files conflicted where both
+  sides had changed the same lines. The template's
+  `scripts/src/update_changelog.dart` and its test differ from this
+  repository's only in line breaks, which `dart format` decides here, so ours
+  stay; `CONTRIBUTING.md` keeps its own text, which never carried the
+  template's list of what the update automation does; the other five take the
+  template's side, which contains ours. The scan for text merged in twice, on
+  its first live run, found one block: `scripts/src/update_template.dart`
+  printed its summary of duplicates twice. It is kept once, in the template's
+  order, and the file equals the template's render.
+- **A local build made from another `rust/Cargo.lock` is refused, and
+  `make build` drops the build hook's cache** (`hook/build.dart`, `Makefile`,
+  `CLAUDE.md`, `test/hook/build_hook_test.dart`) — the hook took a local
+  library in `rust/target/release/` or `rust/target/wasm32/` whenever its
+  stamp named the current crate version, and the crate version does not move
+  with the dependencies, so after a dependency update the previous build
+  passed. `make build` and `make build-web` now copy `rust/Cargo.lock` beside
+  the stamp as `.cargo-lock`, and the hook refuses a local build whose copy
+  is missing or differs from the tree's, with a `HookException` that names
+  the remedy. `make build` also removes `.dart_tool/hooks_runner/libsignal/`:
+  a hook run that took the download path declares only `rust/Cargo.toml`, so
+  a local build made after it went unnoticed until that cache was dropped.
+  ⚠ A local build made before this has no copy and is refused: run
+  `make build` (and `make build-web`) once. From template v4.18.0.
 
 - **Only an Admin can create, move or delete a tag**
   (`.github/rulesets/protect-release-tags.json`, `.github/rulesets/README.md`,

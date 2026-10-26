@@ -646,8 +646,6 @@ void main() {
       expect(out, contains('duplicates_error=no network at all\n'));
     });
   });
-<<<<<<< before updating
-=======
 
   group('parseCopierData', () {
     test('collects both spellings, a later answer to a key winning', () {
@@ -768,5 +766,4 @@ void main() {
       );
     });
   });
->>>>>>> after updating
 }

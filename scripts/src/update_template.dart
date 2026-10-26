@@ -693,13 +693,9 @@ String copierDataFromAnswers(String answers) => answers
 /// way to have it: copier renders the new version into a temporary directory
 /// of its own and deletes it before returning. Run after the update, because
 /// the answers file then records what the update rendered with — new
-<<<<<<< before updating
-/// questions answered by their defaults included.
-=======
 /// questions answered by their defaults included. That is also why `--data`
 /// answers are not passed again: the ones copier recorded are in the file, and
 /// handing it the rest would render a value the update itself did not keep.
->>>>>>> after updating
 Future<Directory> renderTemplate({
   required String version,
   String? workingDirectory,
@@ -1300,19 +1296,6 @@ void printUpdateSummary({required TemplateUpdateResult result}) {
     print(
       '  Not recorded:    '
       '${Colors.colorize(result.unrecordedData.join(', '), Colors.yellow)}',
-    );
-  }
-  print(
-    '  Duplicates:      ${!result.duplicatesChecked
-        ? Colors.colorize('not checked (${result.duplicatesError})', Colors.yellow)
-        : result.duplicates.isEmpty
-        ? Colors.colorize('none', Colors.green)
-        : Colors.colorize('${result.duplicates.length}', Colors.red)}',
-  );
-  for (final d in result.duplicates) {
-    print(
-      '                     ${d.path} — ${d.lines.length} line(s), the first '
-      'at lines ${d.firstAt.join(', ')}',
     );
   }
   print(

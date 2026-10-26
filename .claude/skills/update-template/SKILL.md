@@ -68,9 +68,6 @@ make update-template ARGS="--version vX.Y.Z"
 ```
 
 This runs copier, reports what it could not merge and any text it merged in
-<<<<<<< before updating
-twice, and checks that `_commit` landed. It refuses to start on a dirty tree and
-=======
 twice, and checks that `_commit` landed.
 
 A question the new version adds takes its default unless it is answered:
@@ -79,7 +76,6 @@ A question the new version adds takes its default unless it is answered:
 The run then names any answer `.copier-answers.yml` did not record (no such
 question, or one not asked under the other answers), since the next update
 would render without it. It refuses to start on a dirty tree and
->>>>>>> after updating
 names the files — copier rejects a dirty destination, **untracked files
 included**.
 

@@ -8,11 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-<<<<<<< before updating
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
-=======
 .PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
->>>>>>> after updating
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm

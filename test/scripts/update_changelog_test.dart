@@ -717,12 +717,8 @@ void _breakingContradictionTests() {
         (git, 'upstream-v1.2.3'),
         (registry, '1.2.3'),
       ]) {
-<<<<<<< before updating
         final line =
             '- ${defaultHighlightFor(highlightVersionFor(source, pin))}';
-=======
-        final line = '- ${defaultHighlightFor(highlightVersionFor(source, pin))}';
->>>>>>> after updating
         final changelog = _withUnreleased.replaceFirst(
           '- **libsignal_frb v1.5.2** — Rust FFI bindings',
           line,
@@ -893,7 +889,6 @@ void _breakingContradictionTests() {
           '- **libsignal v0.106.0** — session management moves from Sesame to Tahini:\n'
           '  an archived session is never made current again, and a record keeps at\n'
           '  most 3 of them instead of 40';
-<<<<<<< before updating
       final before = _withUnreleased.replaceFirst(
         '- **libsignal_frb v1.5.2** — Rust FFI bindings',
         '$headline\n$rewritten\n- **libsignal_frb v1.5.2** — Rust FFI bindings',
@@ -926,40 +921,6 @@ void _breakingContradictionTests() {
     test('replaces only the first of two standing lines', () {
       final before = _withUnreleased.replaceFirst(
         '- **libsignal_frb v1.5.2** — Rust FFI bindings',
-=======
-      final before = _withUnreleased.replaceFirst(
-        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
-        '$headline\n$rewritten\n- **libsignal_frb v1.5.2** — Rust FFI bindings',
-      );
-      final result = insertChangelogEntry(
-        currentChangelog: before,
-        nativeHighlight:
-            '**libsignal v0.106.1** — Tahini session management, since v0.106.0',
-        changed: '- **Bumped** — detail',
-      );
-
-      expect(
-        result,
-        contains(
-          '#### ✨ Highlights\n'
-          '\n'
-          '$headline\n'
-          '- **libsignal v0.106.1** — Tahini session management, since v0.106.0\n'
-          '- **libsignal_frb v1.5.2** — Rust FFI bindings\n'
-          '\n'
-          '#### Changed',
-        ),
-      );
-      expect(result, isNot(contains('most 3 of them')));
-      expect(result, isNot(contains('v0.106.0** —')));
-    });
-
-    // Two already standing is the one case a run cannot settle on its own: it
-    // replaces the first, keeps the second, and reports the section stacked.
-    test('replaces only the first of two standing lines', () {
-      final before = _withUnreleased.replaceFirst(
-        '- **libsignal_frb v1.5.2** — Rust FFI bindings',
->>>>>>> after updating
         '- **libsignal v0.8.0** — first\n'
             '  continued\n'
             '- **libsignal v0.8.1** — second\n'
@@ -1706,14 +1667,7 @@ void _mergeEligibilityTests() {
     });
 
     test('blocks a quoted version on a line that does not say version', () {
-<<<<<<< before updating
       expect(isVersionOnlyPatch('-other = "1.2.3"\n+other = "1.2.4"'), isFalse);
-=======
-      expect(
-        isVersionOnlyPatch('-other = "1.2.3"\n+other = "1.2.4"'),
-        isFalse,
-      );
->>>>>>> after updating
     });
 
     test('blocks a version line that changes anything else as well', () {
@@ -1748,13 +1702,9 @@ void _mergeEligibilityTests() {
     // check fails on, and what an agent may not touch.
     test('blocks a rust-version', () {
       expect(
-<<<<<<< before updating
         isVersionOnlyPatch(
           '-rust-version = "1.93.1"\n+rust-version = "1.95.0"',
         ),
-=======
-        isVersionOnlyPatch('-rust-version = "1.93.1"\n+rust-version = "1.95.0"'),
->>>>>>> after updating
         isFalse,
       );
     });
@@ -1867,14 +1817,7 @@ void _mergeEligibilityTests() {
     // the old toolchain is dropped, and the repair may not touch it.
     test('blocks a raised minimum Rust version, naming both', () {
       expect(
-<<<<<<< before updating
         decide(files: versionOnly, rustAfter: '1.95.0').blockers.single,
-=======
-        decide(
-          files: versionOnly,
-          rustAfter: '1.95.0',
-        ).blockers.single,
->>>>>>> after updating
         'the minimum Rust version moves from 1.93.1 to 1.95.0',
       );
     });
@@ -2146,14 +2089,10 @@ void _updateEvidenceTests() {
       expect(deps.unranged, hasLength(2));
       expect(deps.unranged, contains(contains('`newcomer` joins the graph')));
       // `_gitSource` reads any host; only GitHub has a compare to fetch.
-<<<<<<< before updating
       expect(
         deps.unranged,
         contains(contains('`elsewhere` is not one GitHub')),
       );
-=======
-      expect(deps.unranged, contains(contains('`elsewhere` is not one GitHub')));
->>>>>>> after updating
     });
   });
 
@@ -2186,13 +2125,7 @@ void _updateEvidenceTests() {
       expect(text, startsWith('# `ratchet` 1.5.3 → 1.6.0'));
       expect(
         text,
-<<<<<<< before updating
         contains('https://github.com/owner/ratchet/compare/$oldRev...$newRev'),
-=======
-        contains(
-          'https://github.com/owner/ratchet/compare/$oldRev...$newRev',
-        ),
->>>>>>> after updating
       );
       expect(text, contains('- Regroup the parser'));
       expect(text, contains('modified src/serialize.rs'));
@@ -2202,14 +2135,10 @@ void _updateEvidenceTests() {
 
   group('upstreamVersionIn', () {
     test('reads the pin the update bot records', () {
-<<<<<<< before updating
       expect(
         upstreamVersionIn('a: 1\nupstream_version: v0.106.0\n'),
         'v0.106.0',
       );
-=======
-      expect(upstreamVersionIn('a: 1\nupstream_version: v0.106.0\n'), 'v0.106.0');
->>>>>>> after updating
       expect(upstreamVersionIn("upstream_version: '1.2.3'\n"), '1.2.3');
       expect(upstreamVersionIn('upstream_source: git_tag\n'), isNull);
     });

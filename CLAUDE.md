@@ -91,8 +91,6 @@ before the stamp existed, or by a bare `cargo build`, is refused: run
 So after `make release-frb` bumps the crate, `make test` needs a `make build`
 first.
 
-<<<<<<< before updating
-=======
 ⚠ **Each stamp comes with `.cargo-lock`, a copy of the `rust/Cargo.lock` the
 build was made from, and the hook refuses a local build whose copy differs from
 the lock file in the tree.** An upstream update moves the dependencies while the
@@ -105,7 +103,6 @@ hook last ran without a host build here, it downloaded the released library and
 declared only `rust/Cargo.toml`, so `dart test` kept loading that download after
 the build.
 
->>>>>>> after updating
 ### Web
 
 ```bash
