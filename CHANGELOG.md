@@ -421,6 +421,33 @@
 
 #### Changed
 
+- **copier template adopted: v4.18.0 -> v4.19.0** — fixes build and release code.
+  `rust/build.rs` now passes `-headerpad_max_install_names` when linking Apple
+  cdylibs, leaving room for `install_name_tool -id` to set the copied library's
+  install name. `scripts/verify_release_artifacts.py` rejects Mach-O libraries
+  with less than 1,024 characters of header padding; `CLAUDE.md` documents the
+  change.
+
+  `scripts/src/update_changelog.dart` now checks HTTP status when fetching
+  upstream notes: it accepts files only on 200, treats 404 as absence, and
+  reports other statuses as unknown rather than claiming no notes were
+  published. `test/scripts/update_changelog_test.dart` covers the behavior.
+
+  `CONTRIBUTING.md` names the bot branches excluded from the signed-commit
+  ruleset and explains that their commits are still signed by GitHub.
+  `scripts/src/release.dart` now requires exactly one `[Unreleased]:` compare
+  link below every release heading; `test/scripts/release_test.dart` covers
+  invalid placement and duplicates.
+
+  `.github/workflows/publish.yml` uses a random delimiter for the multiline
+  release-notes output, so a notes line reading `EOF` cannot truncate it.
+  `.github/workflows/repair-build.yml` refuses a named run whose
+  `head_repository` is not this repository, before proceeding with the repair.
+
+  `scripts/src/ai_client.dart` rejects keys containing non-printable ASCII and
+  reports header errors without exposing header values; its tests were extended
+  in `test/scripts/ai_client_test.dart`.
+
 - **copier template adopted: v4.17.0 → v4.18.0** (`.copier-answers.yml` and
   the files named here and in the For Users entries above) — beyond the
   isolate count, the web check and the `hooks` range above, it brings:
