@@ -364,6 +364,27 @@
 
 #### Changed
 
+- **copier template adopted: v4.17.0 -> v4.18.0** — adds update-template
+  checks and upstream advisory scanning, and tightens generated-library builds.
+  `scripts/src/update_template.dart` and `scripts/update_template.dart` let
+  `make update-template` pass answers for new questions and report lines merged
+  in more often than in the project and fresh render. The update workflow now
+  runs the libsignal advisory check, backed by
+  `scripts/src/upstream_advisories.dart` and
+  `scripts/check_upstream_advisories.dart`; it compares published advisories
+  with versions in `rust/Cargo.lock`. `hook/build.dart` records the Cargo lock
+  beside local build stamps and refuses stale builds, so a build made before an
+  upstream dependency change is not loaded. In `lib/src/libsignal.dart` and
+  `lib/src/platform/platform_io.dart`, isolate shutdown counting is registered
+  before flutter_rust_bridge initialization, preventing a worker exit from
+  disabling async replies. On web, `lib/src/platform/platform_web.dart` reports
+  a missing or HTML WASM module instead of leaving `init()` pending. The
+  dependency ranges in `pubspec.yaml` and `.github/dependabot.yml` now admit
+  `hooks` 2.x and `code_assets` 2.x; `scripts/src/common.dart` orders versions
+  as SemVer does. The update changelog generator replaces the upstream
+  Highlights line, including its continuation, rather than preserving an old
+  version beside the new one.
+
 - **Only an Admin can create, move or delete a tag**
   (`.github/rulesets/protect-release-tags.json`, `.github/rulesets/README.md`,
   `CONTRIBUTING.md`, `CLAUDE.md`, `.claude/skills/release-package/SKILL.md`,

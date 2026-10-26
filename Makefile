@@ -8,7 +8,11 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
+<<<<<<< before updating
 .PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+=======
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+>>>>>>> after updating
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -58,10 +62,12 @@ help:
 	@echo "  CI / VERSION CHECKS"
 	@echo "    make check-new-libsignal-version  - Check for new upstream libsignal version"
 	@echo "                                        Example: make check-new-libsignal-version ARGS=\"--update\""
+	@echo "    make check-upstream-advisories    - Check signalapp/libsignal's published advisories against Cargo.lock"
 	@echo "    make check-exists-libsignal-frb-release - Check if FRB release exists on GitHub"
 	@echo "    make check-template-updates       - Check for new copier template version"
 	@echo "    make update-template              - Apply a copier template update"
 	@echo "                                        Example: make update-template ARGS=\"--version v4.3.0\""
+	@echo "                                        Answer a new question: ARGS=\"--version v4.3.0 --data key=value\""
 	@echo "    make third-party-notices          - Regenerate THIRD_PARTY_NOTICES.txt from the dep graph"
 	@echo "    make verify-third-party-notices   - Verify THIRD_PARTY_NOTICES.txt is up to date"
 	@echo "    make verify-frb-pins              - Verify every file names the same flutter_rust_bridge version"
@@ -314,6 +320,18 @@ build:
 # another crate version. A --target build lands in rust/target/<triple>/,
 # which the hook never reads, and gets no stamp.
 	$(if $(findstring --target,$(ARGS)),,@$(READ_CRATE_VERSION) > rust/target/release/.crate-version)
+# Keep a copy of the lock file the build was made from: an upstream update
+# moves the dependencies under an unchanged crate version, and the hook refuses
+# a build whose copy differs from rust/Cargo.lock.
+	$(if $(findstring --target,$(ARGS)),,@cp rust/Cargo.lock rust/target/release/.cargo-lock)
+# Drop the hook's cached result for this package, or the build may never be
+# used. When the hook last ran without a host build here it downloaded the
+# released library and declared only rust/Cargo.toml — it cannot declare a
+# library that does not exist yet, since hooks_runner re-runs a hook on every
+# build for a missing dependency — so nothing it watches changes now, and
+# `dart test` / `dart run` keep loading the download. The shared download
+# cache stays; Flutter's own dart_build stamp in an app is another matter.
+	$(if $(findstring --target,$(ARGS)),,@rm -rf .dart_tool/hooks_runner/libsignal)
 	@echo ""
 	@echo "Build complete! Library at: rust/target/"
 
@@ -345,6 +363,9 @@ build-web:
 # names, which a patch release leaves unchanged while replacing the native
 # code behind them. The same first-`version` match the hook's own parser uses.
 	@$(READ_CRATE_VERSION) > rust/target/wasm32/.crate-version
+# And the lock file it was made from, which the hook compares with
+# rust/Cargo.lock: the dependencies move without the crate version.
+	@cp rust/Cargo.lock rust/target/wasm32/.cargo-lock
 	@echo ""
 	@echo "Build complete! WASM files at: rust/target/wasm32/ (crate $$(cat rust/target/wasm32/.crate-version))"
 
@@ -368,13 +389,14 @@ build-web:
 #      `Skipping target: dart_build`, and the build hook is never invoked at
 #      all. The hook cannot declare its way out of that: the skip happens above
 #      `hooks_runner`, so nothing the hook declares is ever read. Together with
-#      step 2 it turns a stale `web/pkg/` into a missing one, and
-#      `RustLib.init()` then never completes: flutter_rust_bridge waits for
-#      `pkg/libsignal_frb.js` to fire `load`, with no error path or timeout,
-#      and a missing module never does — the dev server serves the app's
-#      HTML page in its place, with a 200. A
+#      step 2 it turns a stale `web/pkg/` into a missing one, and `init()`
+#      then throws a StateError for it — flutter_rust_bridge itself would
+#      wait forever for `pkg/libsignal_frb.js` to fire `load`, since the dev
+#      server serves the app's HTML page in its place, with a 200. A
 #      stamp that does not exist cannot be stale, and an unmatched glob is
-#      a no-op under `rm -f`.
+#      a no-op under `rm -f`. Flutter 3.44 and later run build hooks per
+#      target platform, outside that stamp, so the step matters on 3.38 to
+#      3.41 only.
 #   4. `flutter run -d chrome` last, and NOT `--wasm`: that flag compiles the
 #      Dart half with dart2wasm, which flutter_rust_bridge's generated decoders
 #      do not support. The Rust side is a wasm module either way.
@@ -619,6 +641,14 @@ fuzz:
 
 check-new-libsignal-version:
 	@$(FVM) dart scripts/check_new_upstream_version.dart $(ARGS)
+
+# signalapp/libsignal's published security advisories, held against the crates
+# rust/Cargo.lock resolves: neither rust-audit (RustSec) nor Dependabot
+# (GitHub's global database) is guaranteed to see them. Run daily by
+# check-libsignal-updates.yml. Exits 1 when one covers a locked
+# version, 2 when they could not be fetched — which make reports as 2 either way.
+check-upstream-advisories:
+	@$(FVM) dart scripts/check_upstream_advisories.dart $(ARGS)
 
 check-exists-libsignal-frb-release:
 	@$(FVM) dart scripts/check_exists_frb_release.dart $(ARGS)

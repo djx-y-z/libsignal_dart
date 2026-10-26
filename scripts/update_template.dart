@@ -15,6 +15,7 @@
 ///   - `--skip-changelog`       Apply the update without a CHANGELOG entry
 ///   - `--json`                 Output the result as JSON
 ///   - `--ci-output <path>`     Append key=value outputs to a file
+///   - `--data <key=value>`     Answer a template question; repeatable
 ///   - `--help, -h`             Show this help
 ///
 /// The CHANGELOG entry needs `AI_MODELS` plus a key for each provider it names
@@ -36,6 +37,10 @@
 ///   # CI: apply and publish the result as step outputs
 ///   fvm dart scripts/update_template.dart --version v4.3.0 \
 ///     --ci-output $GITHUB_OUTPUT
+///
+///   # Answer a question the new version asks, instead of its default
+///   fvm dart scripts/update_template.dart --version v4.3.0 \
+///     --data enable_fuzzing=false
 ///   ```
 library;
 
@@ -83,6 +88,16 @@ void main(List<String> args) async {
     exit(2);
   }
 
+  final Map<String, String> data;
+  try {
+    data = parseCopierData(args);
+  } on FormatException catch (e) {
+    print('Error: ${e.message}');
+    print('');
+    _printUsage();
+    exit(2);
+  }
+
   if (!jsonOutput) {
     print('');
     print('========================================');
@@ -104,6 +119,7 @@ void main(List<String> args) async {
       toVersion: targetVersion,
       models: resolution.usable,
       skipChangelog: skipChangelog,
+      data: data,
     );
 
     if (ciOutputPath != null) {
@@ -135,6 +151,9 @@ Options:
   --skip-changelog       Apply the update without a CHANGELOG entry
   --json                 Output the result as JSON
   --ci-output <path>     Append key=value outputs to a file
+  --data <key=value>     Answer a template question; repeatable. Without one a
+                         question the new version asks takes its default, and
+                         the run says which answers copier did not record.
   --help, -h             Show this help
 
 Environment:
@@ -159,6 +178,10 @@ Examples:
   # CI: apply and publish the result as step outputs
   fvm dart scripts/update_template.dart --version v4.3.0 \\
     --ci-output \$GITHUB_OUTPUT
+
+  # Answer a question the new version asks, instead of its default
+  fvm dart scripts/update_template.dart --version v4.3.0 \\
+    --data enable_fuzzing=false
 
 Exit codes:
   0 - copier ran and the update is in the working tree (conflicts included;

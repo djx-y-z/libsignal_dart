@@ -499,3 +499,29 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             echo "Current version **${CURRENT_VERSION}** is the latest." >> "$GITHUB_STEP_SUMMARY"
           fi
+
+  # signalapp/libsignal's own published advisories, held against the crates
+  # rust/Cargo.lock resolves — see `make check-upstream-advisories`. A job of
+  # its own, so a finding never stops the update pull request above, which is
+  # often the fix, and the red run is the notification. It fails as well when
+  # the advisories could not be fetched: a check that quietly stopped working
+  # would otherwise look exactly like a clean one.
+  upstream-advisories:
+    name: Upstream security advisories
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Setup FVM and Flutter
+        uses: ./.github/actions/setup-fvm
+
+      # The token is for quota, not access: the advisories are public, and an
+      # anonymous call shares 60 an hour with every job on the runner's address.
+      - name: Check the locked upstream crates against their advisories
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: make check-upstream-advisories ARGS="--ci"
