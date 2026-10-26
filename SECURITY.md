@@ -292,6 +292,14 @@ Future<CiphertextMessage> sendTo(ProtocolAddress to, Uint8List body) {
 }
 ```
 
+**Identity changes take the cipher locks too.** An identity is stored per
+contact — the in-memory store keys it by name, as Signal's clients do — and
+every encryption reads it when it starts and saves it again when it finishes.
+Saving, replacing or removing a contact's identity while an encryption to one of
+its devices is in flight therefore loses the change to that encryption's write.
+Hold the locks of all the contact's devices around the change, or key the
+cipher locks by contact rather than by device.
+
 Thread-safety inside the store is still worth having (it protects the store's own
 invariants), but it is the call-site lock that prevents key reuse. See
 [Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback)
@@ -1121,11 +1129,17 @@ the exception's `code`, not on its text). On a pre-key message the new key comes
 from the message itself and is compared before the message is authenticated, so
 the code shows that someone presented another key for that address, not that
 the contact changed keys. Treat it as a possible safety-number change: surface
-it to the user, and only after they have verified the new identity save it (or
-remove the old one) in your store. Note that after re-trusting a
-new identity, messages from sessions still bound to the old key are rejected too
-— archive or delete the old session for that address so a fresh one is
-established. An archived session is never made current again, so until the
+it to the user, and only after they have verified the new identity save it in
+your store and, in the same step, archive or delete the sessions still bound to
+the old key: messages on them are rejected once the new key is trusted, so a
+fresh session has to be established. Removing the stored identity instead is not
+a way to accept the new one — while the old session is current, the next message
+sent on it stores the old key again, because libsignal saves the key a session
+is bound to on every message it encrypts. Make the change under the locks of
+all that contact's devices: an encryption already in flight read the old
+identity and writes it back when it finishes (see
+[H: Concurrency Safety](#h-concurrency-safety)). An archived session is never
+made current again, so until the
 peer's new pre-key message arrives or you build one with
 `SessionBuilder.processPreKeyBundle`, encrypting to that address throws
 `LibSignalErrorCode.sessionNotFound`. Continue to offer fingerprint /

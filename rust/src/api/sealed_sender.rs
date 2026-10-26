@@ -353,8 +353,9 @@ pub struct SealedSenderDecryptResult {
     pub sender_name: String,
     /// The sender's device ID.
     pub sender_device_id: u32,
-    /// The sender's identity key as their sender certificate names it (for
-    /// verification).
+    /// The identity key the sender certificate names, validated against the
+    /// trust root. Not necessarily the one `saveIdentity` stores, which is the
+    /// key the inner message's session is bound to.
     pub sender_identity_key: Vec<u8>,
     /// The updated or new session record.
     pub session_record: Vec<u8>,

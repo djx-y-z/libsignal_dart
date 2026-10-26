@@ -80,10 +80,11 @@ impl SessionRecord {
     /// These are libsignal's `NotStale`, `EstablishedWithPqxdh` and `Spqr`, the
     /// set its Java, Swift and Node bindings ask for. libsignal warns that the
     /// last one also accepts an unanswered session whose pre-key message
-    /// carries SPQR, and that a peer that drops SPQR from its answer turns such
-    /// a session from usable to unusable. A `false` is the point at which a
-    /// Signal client archives the session and builds a new one with
-    /// `SessionBuilder.processPreKeyBundle`.
+    /// carries SPQR, which an answer without SPQR turns from usable to unusable
+    /// where the client accepts that downgrade. This libsignal does not: the
+    /// sessions it creates require SPQR, so such an answer fails to decrypt
+    /// instead. A `false` is the point at which a Signal client archives the
+    /// session and builds a new one with `SessionBuilder.processPreKeyBundle`.
     #[flutter_rust_bridge::frb(sync)]
     pub fn has_usable_sender_chain(&self, now_millis: u64) -> Result<bool, LibSignalException> {
         let now = UNIX_EPOCH + Duration::from_millis(now_millis);

@@ -479,8 +479,9 @@ class SealedSenderDecryptResult {
   /// The sender's device ID.
   final int senderDeviceId;
 
-  /// The sender's identity key as their sender certificate names it (for
-  /// verification).
+  /// The identity key the sender certificate names, validated against the
+  /// trust root. Not necessarily the one `saveIdentity` stores, which is the
+  /// key the inner message's session is bound to.
   final Uint8List senderIdentityKey;
 
   /// The updated or new session record.

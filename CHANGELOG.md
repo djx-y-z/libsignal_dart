@@ -61,8 +61,10 @@
   PQXDH or without SPQR is unusable. The sessions this package builds from a
   bundle are PQXDH and SPQR, so in practice the difference is the 30 days.
   libsignal warns that `Spqr` also accepts an unanswered session whose
-  pre-key message carries SPQR, which a peer that answers without it turns
-  unusable; the docstring repeats that. **Action required:** where
+  pre-key message carries SPQR, which an answer without SPQR turns unusable
+  where the client accepts that downgrade; the sessions this libsignal
+  creates require SPQR, so such an answer fails to decrypt instead, and the
+  docstring says so. **Action required:** where
   `hasUsableSenderChain` decides whether to send, `false` now comes where a
   Signal client archives the session and builds a new one with
   `SessionBuilder.processPreKeyBundle`.
@@ -75,7 +77,10 @@
   they go with this major. **Action required:** keep a record and
   pass it whole (`serialize()` / `deserialize()`); the private key itself is
   a `PrivateKey` where you generated it. `IdentityKeyPair.privateKey`,
-  `PrivateKey.serialize()` and `KyberSecretKey.serialize()` stay.
+  `PrivateKey.serialize()` and `KyberSecretKey.serialize()` stay, and so do
+  `KyberPreKeyRecord.getSecretKey()` and `getKeyPair()`, as in Signal's own
+  bindings: they take a stored Kyber key pair apart, the way back from
+  `KyberKeyPair.fromKeys()` (#103).
 - **`KyberPreKeyStore.markKyberPreKeyUsed` returns `Future<bool>`, and
   `false` refuses the message** (`rust/src/api/session_cipher.rs`,
   `rust/src/api/sealed_sender.rs`, `rust/src/recording_stores.rs`,
@@ -355,6 +360,24 @@
   `InMemoryIdentityKeyStore` even described its trust-on-first-use rule as
   living there. The interface now says where trust is decided and how to
   apply a stricter policy, and `saveIdentity` lists when it is called.
+- **`SECURITY.md`: accepting a new identity means saving it and archiving the
+  old sessions, under every device's lock** — its advice to save the new
+  identity "or remove the old one" stopped holding once encryption saves the
+  identity (see Changed (Breaking)): a removed identity is stored again by
+  the next message sent on the old session. The section now says to save the
+  new key and archive or delete the sessions bound to the old one in the same
+  step, and the concurrency section that identity changes take the locks of
+  all the contact's devices, since an encryption in flight writes back the
+  identity it read when it started.
+- **`SealedSenderDecryptionResult.senderIdentityKey` says whose key it is**
+  (`lib/src/sealed_sender/sealed_sender_cipher.dart`,
+  `rust/src/api/sealed_sender.rs`, `lib/src/rust/api/sealed_sender.dart`) —
+  documented as the sender's key "for verification", it is the key the
+  sender certificate names, validated against the trust root; the key
+  `saveIdentity` stores is the one the inner message's session is bound to,
+  which a genuine sender's certificate repeats. `SealedSenderCipher`'s class
+  documentation also said the identity is saved on decrypt; it is saved on
+  encrypt too.
 - **`SECURITY.md` shows `saveIdentity` on encrypt in its table of writes**
   — the table of what each entry point writes, and in what order, still had
   `SessionCipher.encrypt` and `SealedSenderCipher.encrypt` writing only

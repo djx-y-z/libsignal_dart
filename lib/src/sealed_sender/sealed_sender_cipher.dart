@@ -28,7 +28,12 @@ class SealedSenderDecryptionResult {
   /// The sender's protocol address (name and device ID).
   final ProtocolAddress senderAddress;
 
-  /// The sender's identity key for verification.
+  /// The identity key the sender certificate names, validated against the
+  /// trust root.
+  ///
+  /// Not necessarily the key stored for the sender:
+  /// [IdentityKeyStore.saveIdentity] receives the key the inner message's
+  /// session is bound to, which a genuine sender's certificate repeats.
   final PublicKey senderIdentityKey;
 }
 
@@ -68,11 +73,12 @@ class SealedSenderDecryptionResult {
 ///
 /// Sealed sender wraps the same Double Ratchet session as `SessionCipher`, so
 /// it carries the same requirements: the library persists the advanced session
-/// (and the sender identity, on decrypt) through your stores before returning
-/// the ciphertext or plaintext, but the store writes must be **durable** and
-/// operations for one address must be **serialized** — including against plain
-/// `SessionCipher` calls on the same address, since both advance the same
-/// session. See [SessionStore] and `SECURITY.md`.
+/// (and the peer's identity: the recipient's on encrypt, the sender's on
+/// decrypt) through your stores before returning the ciphertext or plaintext,
+/// but the store writes must be **durable** and operations for one address must
+/// be **serialized** — including against plain `SessionCipher` calls on the
+/// same address, since both advance the same session. See [SessionStore] and
+/// `SECURITY.md`.
 class SealedSenderCipher {
   /// Creates a new SealedSenderCipher with the given stores.
   ///
