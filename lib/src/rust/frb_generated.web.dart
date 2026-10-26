@@ -2905,10 +2905,6 @@ class RustLibWire implements BaseWire {
   );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__prekey__PreKeyRecord_private_key(int that) =>
-      wasmModule.wire__crate__api__prekey__PreKeyRecord_private_key(that);
-
-  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__prekey__PreKeyRecord_public_key(int that) =>
       wasmModule.wire__crate__api__prekey__PreKeyRecord_public_key(that);
 
@@ -3301,13 +3297,6 @@ class RustLibWire implements BaseWire {
     private_key,
     signature,
   );
-
-  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(int that) =>
-      wasmModule
-          .wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-            that,
-          );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(int that) =>
@@ -4470,9 +4459,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__prekey__PreKeyRecord_private_key(int that);
-
-  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__prekey__PreKeyRecord_public_key(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -4711,9 +4697,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     int private_key,
     JSAny signature,
   );
-
-  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(int that);

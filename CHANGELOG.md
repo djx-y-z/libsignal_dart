@@ -13,6 +13,9 @@
 - **`SessionRecord.hasUsableSenderChain` asks what Signal's clients ask** —
   **(breaking)** a session nobody answered is no longer usable once it is
   30 days old
+- **`PreKeyRecord.privateKey()` and `SignedPreKeyRecord.privateKey()` are
+  gone** — **(breaking)** a record travels whole, private half included,
+  through `serialize()`
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
@@ -56,6 +59,16 @@
   `hasUsableSenderChain` decides whether to send, `false` now comes where a
   Signal client archives the session and builds a new one with
   `SessionBuilder.processPreKeyBundle`.
+- **`PreKeyRecord.privateKey()` and `SignedPreKeyRecord.privateKey()` are
+  removed** (`rust/src/api/prekey.rs`, `rust/src/api/signed_prekey.rs`,
+  `lib/src/rust/api/`) — nothing in the package used them: libsignal reads
+  a record's private half inside its own calls, and a store persists the
+  record whole through `serialize()`, private half included. They handed
+  raw private-key bytes to Dart, and only their own tests called them, so
+  they go with this major. **Action required:** keep a record and
+  pass it whole (`serialize()` / `deserialize()`); the private key itself is
+  a `PrivateKey` where you generated it. `IdentityKeyPair.privateKey`,
+  `PrivateKey.serialize()` and `KyberSecretKey.serialize()` stay.
 
 #### Changed
 

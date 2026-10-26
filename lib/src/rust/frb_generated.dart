@@ -78,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1630330622;
+  int get rustContentHash => 870843153;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -360,8 +360,6 @@ abstract class RustLibApi extends BaseApi {
     required PrivateKey privateKey,
   });
 
-  Uint8List crateApiPrekeyPreKeyRecordPrivateKey({required PreKeyRecord that});
-
   Uint8List crateApiPrekeyPreKeyRecordPublicKey({required PreKeyRecord that});
 
   Uint8List crateApiPrekeyPreKeyRecordSerialize({required PreKeyRecord that});
@@ -621,10 +619,6 @@ abstract class RustLibApi extends BaseApi {
     required PublicKey publicKey,
     required PrivateKey privateKey,
     required List<int> signature,
-  });
-
-  Uint8List crateApiSignedPrekeySignedPreKeyRecordPrivateKey({
-    required SignedPreKeyRecord that,
   });
 
   Uint8List crateApiSignedPrekeySignedPreKeyRecordPublicKey({
@@ -3290,34 +3284,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Uint8List crateApiPrekeyPreKeyRecordPrivateKey({required PreKeyRecord that}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
-                that,
-              );
-          return wire.wire__crate__api__prekey__PreKeyRecord_private_key(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_lib_signal_exception,
-        ),
-        constMeta: kCrateApiPrekeyPreKeyRecordPrivateKeyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPrekeyPreKeyRecordPrivateKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "PreKeyRecord_private_key",
-        argNames: ["that"],
-      );
-
-  @override
   Uint8List crateApiPrekeyPreKeyRecordPublicKey({required PreKeyRecord that}) {
     return handler.executeSync(
       SyncTask(
@@ -5537,40 +5503,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(
         debugName: "SignedPreKeyRecord_new",
         argNames: ["id", "timestamp", "publicKey", "privateKey", "signature"],
-      );
-
-  @override
-  Uint8List crateApiSignedPrekeySignedPreKeyRecordPrivateKey({
-    required SignedPreKeyRecord that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
-                that,
-              );
-          return wire
-              .wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-                arg0,
-              );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_lib_signal_exception,
-        ),
-        constMeta: kCrateApiSignedPrekeySignedPreKeyRecordPrivateKeyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiSignedPrekeySignedPreKeyRecordPrivateKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "SignedPreKeyRecord_private_key",
-        argNames: ["that"],
       );
 
   @override
@@ -12927,15 +12859,6 @@ class PreKeyRecordImpl extends RustOpaque implements PreKeyRecord {
   /// Get the pre-key ID.
   int id() => RustLib.instance.api.crateApiPrekeyPreKeyRecordId(that: this);
 
-  /// Get the private key.
-  ///
-  /// # Security
-  /// The returned bytes contain sensitive private key material.
-  /// The caller is responsible for securely zeroing these bytes when done.
-  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-  Uint8List privateKey() =>
-      RustLib.instance.api.crateApiPrekeyPreKeyRecordPrivateKey(that: this);
-
   /// Get the public key.
   Uint8List publicKey() =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordPublicKey(that: this);
@@ -13502,15 +13425,6 @@ class SignedPreKeyRecordImpl extends RustOpaque implements SignedPreKeyRecord {
   /// Get the signed pre-key ID.
   int id() =>
       RustLib.instance.api.crateApiSignedPrekeySignedPreKeyRecordId(that: this);
-
-  /// Get the private key.
-  ///
-  /// # Security
-  /// The returned bytes contain sensitive private key material.
-  /// The caller is responsible for securely zeroing these bytes when done.
-  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-  Uint8List privateKey() => RustLib.instance.api
-      .crateApiSignedPrekeySignedPreKeyRecordPrivateKey(that: this);
 
   /// Get the public key.
   Uint8List publicKey() => RustLib.instance.api

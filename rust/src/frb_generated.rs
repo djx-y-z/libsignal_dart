@@ -49,7 +49,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueNom,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.13.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1630330622;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 870843153;
 
 // Section: executor
 
@@ -2229,40 +2229,6 @@ fn wire__crate__api__prekey__PreKeyRecord_new_impl(
                     &*api_public_key_guard,
                     &*api_private_key_guard,
                 )?;
-                std::result::Result::Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__prekey__PreKeyRecord_private_key_impl(
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<PreKeyRecord>>,
-    >,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "PreKeyRecord_private_key",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok = crate::api::prekey::PreKeyRecord::private_key(&*api_that_guard)?;
                 std::result::Result::Ok(output_ok)
             })())
         },
@@ -4585,41 +4551,6 @@ fn wire__crate__api__signed_prekey__SignedPreKeyRecord_new_impl(
                     &*api_private_key_guard,
                     api_signature,
                 )?;
-                std::result::Result::Ok(output_ok)
-            })())
-        },
-    )
-}
-fn wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key_impl(
-    that: impl CstDecode<
-        RustOpaqueNom<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<SignedPreKeyRecord>>,
-    >,
-) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-    FLUTTER_RUST_BRIDGE_HANDLER.wrap_sync::<flutter_rust_bridge::for_generated::DcoCodec, _>(
-        flutter_rust_bridge::for_generated::TaskInfo {
-            debug_name: "SignedPreKeyRecord_private_key",
-            port: None,
-            mode: flutter_rust_bridge::for_generated::FfiCallMode::Sync,
-        },
-        move || {
-            let api_that = that.cst_decode();
-            transform_result_dco::<_, _, crate::api::error::LibSignalException>((move || {
-                let mut api_that_guard = None;
-                let decode_indices_ =
-                    flutter_rust_bridge::for_generated::lockable_compute_decode_order(vec![
-                        flutter_rust_bridge::for_generated::LockableOrderInfo::new(
-                            &api_that, 0, false,
-                        ),
-                    ]);
-                for i in decode_indices_ {
-                    match i {
-                        0 => api_that_guard = Some(api_that.lockable_decode_sync_ref()),
-                        _ => unreachable!(),
-                    }
-                }
-                let api_that_guard = api_that_guard.unwrap();
-                let output_ok =
-                    crate::api::signed_prekey::SignedPreKeyRecord::private_key(&*api_that_guard)?;
                 std::result::Result::Ok(output_ok)
             })())
         },
@@ -10152,13 +10083,6 @@ mod io {
     }
 
     #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_libsignal_wire__crate__api__prekey__PreKeyRecord_private_key(
-        that: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__prekey__PreKeyRecord_private_key_impl(that)
-    }
-
-    #[unsafe(no_mangle)]
     pub extern "C" fn frbgen_libsignal_wire__crate__api__prekey__PreKeyRecord_public_key(
         that: usize,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
@@ -10667,13 +10591,6 @@ mod io {
             private_key,
             signature,
         )
-    }
-
-    #[unsafe(no_mangle)]
-    pub extern "C" fn frbgen_libsignal_wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-        that: usize,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key_impl(that)
     }
 
     #[unsafe(no_mangle)]
@@ -13458,13 +13375,6 @@ mod web {
     }
 
     #[wasm_bindgen]
-    pub fn wire__crate__api__prekey__PreKeyRecord_private_key(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__prekey__PreKeyRecord_private_key_impl(that)
-    }
-
-    #[wasm_bindgen]
     pub fn wire__crate__api__prekey__PreKeyRecord_public_key(
         that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
     ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
@@ -13973,13 +13883,6 @@ mod web {
             private_key,
             signature,
         )
-    }
-
-    #[wasm_bindgen]
-    pub fn wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-        that: flutter_rust_bridge::for_generated::wasm_bindgen::JsValue,
-    ) -> flutter_rust_bridge::for_generated::WireSyncRust2DartDco {
-        wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key_impl(that)
     }
 
     #[wasm_bindgen]

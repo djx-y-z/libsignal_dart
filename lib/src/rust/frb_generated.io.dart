@@ -3787,20 +3787,6 @@ class RustLibWire implements BaseWire {
       _wire__crate__api__prekey__PreKeyRecord_newPtr
           .asFunction<WireSyncRust2DartDco Function(int, int, int)>();
 
-  WireSyncRust2DartDco wire__crate__api__prekey__PreKeyRecord_private_key(
-    int that,
-  ) {
-    return _wire__crate__api__prekey__PreKeyRecord_private_key(that);
-  }
-
-  late final _wire__crate__api__prekey__PreKeyRecord_private_keyPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-        'frbgen_libsignal_wire__crate__api__prekey__PreKeyRecord_private_key',
-      );
-  late final _wire__crate__api__prekey__PreKeyRecord_private_key =
-      _wire__crate__api__prekey__PreKeyRecord_private_keyPtr
-          .asFunction<WireSyncRust2DartDco Function(int)>();
-
   WireSyncRust2DartDco wire__crate__api__prekey__PreKeyRecord_public_key(
     int that,
   ) {
@@ -4985,21 +4971,6 @@ class RustLibWire implements BaseWire {
               ffi.Pointer<wire_cst_list_prim_u_8_loose>,
             )
           >();
-
-  WireSyncRust2DartDco
-  wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(int that) {
-    return _wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-      that,
-    );
-  }
-
-  late final _wire__crate__api__signed_prekey__SignedPreKeyRecord_private_keyPtr =
-      _lookup<ffi.NativeFunction<WireSyncRust2DartDco Function(ffi.UintPtr)>>(
-        'frbgen_libsignal_wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key',
-      );
-  late final _wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key =
-      _wire__crate__api__signed_prekey__SignedPreKeyRecord_private_keyPtr
-          .asFunction<WireSyncRust2DartDco Function(int)>();
 
   WireSyncRust2DartDco
   wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(int that) {
