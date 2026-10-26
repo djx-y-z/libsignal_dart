@@ -261,6 +261,19 @@
   Known Limitations now says Flutter 3.44 and later are not affected. From
   template v4.18.0.
 
+- **The Apple libraries leave room for the install name a consumer's tools
+  write** (`rust/build.rs`) — `dart run`, `dart test` and `flutter test` copy
+  the dylib into the consuming project and rewrite its install name to the
+  copy's absolute path with `install_name_tool -id`. Crate 7.0.1 and earlier
+  were linked with only the room the build machine's own path needed —
+  measured on 7.0.1's macOS and iOS simulator libraries, 167 to 215
+  characters — so that rewrite failed, with "larger updated load commands do
+  not fit", once the copy's path was longer. They are now linked with
+  `-headerpad_max_install_names`, which leaves room for any path up to
+  `MAXPATHLEN`, and the release check refuses an Apple library with less than
+  1,024. Flutter app builds were never affected: they install the library as
+  a framework under a short `@rpath/` name. From template v4.19.0.
+
 #### Documentation
 
 - **`SECURITY.md`: only repository Admins can create a release tag**
@@ -420,6 +433,36 @@
   The template carries the same change.
 
 #### Changed
+
+- **copier template adopted: v4.18.0 → v4.19.0** (`.copier-answers.yml` and
+  the files named here and in the For Users entry above) — beyond the Apple
+  install-name room above, it brings:
+  - `scripts/verify_release_artifacts.py` refuses a release whose Apple
+    libraries leave less than 1,024 characters for the install name, so a lost
+    link flag fails the release instead of a consumer's build; `CLAUDE.md`
+    describes it.
+  - `scripts/src/update_changelog.dart` checks the HTTP status when it reads
+    the upstream's notes: a file counts only on 200, 404 means there is none,
+    and any other status is reported as unread instead of as a release without
+    notes (`test/scripts/update_changelog_test.dart`).
+  - `scripts/src/release.dart` rewrites only the footer's `[Unreleased]:`
+    compare link and refuses a CHANGELOG that holds another one at the start
+    of a line, or one above a release heading; it used to take the first from
+    the top (`test/scripts/release_test.dart`). This CHANGELOG has the footer's
+    alone.
+  - `.github/workflows/publish.yml` hands the release notes to the next step
+    behind a random delimiter, so a notes line reading `EOF` no longer cuts
+    them short.
+  - `.github/workflows/repair-build.yml` refuses a named run whose commit comes
+    from another repository, a fork's pull request among them.
+  - `scripts/src/ai_client.dart` refuses an AI key with a control character, a
+    non-breaking space or a typographic quote inside it, and reports the
+    header error without the header's value
+    (`test/scripts/ai_client_test.dart`).
+  - `CONTRIBUTING.md` names the branches the signing ruleset leaves out.
+
+  Nothing conflicted and nothing was merged in twice: the scan's first clean
+  live run.
 
 - **copier template adopted: v4.17.0 → v4.18.0** (`.copier-answers.yml` and
   the files named here and in the For Users entries above) — beyond the
