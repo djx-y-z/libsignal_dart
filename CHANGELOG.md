@@ -10,6 +10,9 @@
   `saveIdentity` callback; `SessionCipher` and `SealedSenderCipher` keep
   their signatures and call your `IdentityKeyStore.saveIdentity` on every
   message they encrypt
+- **`SessionRecord.hasUsableSenderChain` asks what Signal's clients ask** —
+  **(breaking)** a session nobody answered is no longer usable once it is
+  30 days old
 - **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
   constant-time masks and `u128` comparisons (see Security)
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
@@ -38,6 +41,21 @@
   that calls either function directly passes `saveIdentity`; and an
   `IdentityKeyStore.saveIdentity` that writes even when the key is unchanged
   now writes on every send, so make that case cheap.
+- **`SessionRecord.hasUsableSenderChain` requires what Signal's clients
+  require** (`rust/src/api/session.rs`) — it handed libsignal no
+  requirements, so it answered whether the current session has a sender
+  chain at all. It now asks for `NotStale`, `EstablishedWithPqxdh` and
+  `Spqr`, the set libsignal's own Java, Swift and Node bindings use: a
+  session nobody answered is unusable once it is 30 days old, which is also
+  when libsignal stops encrypting on it, and a session established without
+  PQXDH or without SPQR is unusable. The sessions this package builds from a
+  bundle are PQXDH and SPQR, so in practice the difference is the 30 days.
+  libsignal warns that `Spqr` also accepts an unanswered session whose
+  pre-key message carries SPQR, which a peer that answers without it turns
+  unusable; the docstring repeats that. **Action required:** where
+  `hasUsableSenderChain` decides whether to send, `false` now comes where a
+  Signal client archives the session and builds a new one with
+  `SessionBuilder.processPreKeyBundle`.
 
 #### Changed
 

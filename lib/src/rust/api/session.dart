@@ -39,7 +39,23 @@ abstract class SessionRecord implements RustOpaqueInterface {
       .api
       .crateApiSessionSessionRecordDeserialize(bytes: bytes);
 
-  /// Check if this session has a usable sender chain.
+  /// Whether the current session can be sent on at `now_millis`, by the
+  /// requirements Signal's own clients apply.
+  ///
+  /// The session must have a sender chain, and it must be:
+  /// - not stale: started by the peer, answered by the peer, or less than
+  ///   30 days old — an unanswered session older than that is one libsignal
+  ///   itself no longer encrypts on;
+  /// - established with PQXDH rather than X3DH;
+  /// - using the post-quantum ratchet, SPQR.
+  ///
+  /// These are libsignal's `NotStale`, `EstablishedWithPqxdh` and `Spqr`, the
+  /// set its Java, Swift and Node bindings ask for. libsignal warns that the
+  /// last one also accepts an unanswered session whose pre-key message
+  /// carries SPQR, and that a peer that drops SPQR from its answer turns such
+  /// a session from usable to unusable. A `false` is the point at which a
+  /// Signal client archives the session and builds a new one with
+  /// `SessionBuilder.processPreKeyBundle`.
   bool hasUsableSenderChain({required BigInt nowMillis});
 
   /// Get the local registration ID.
