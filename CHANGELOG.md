@@ -20,8 +20,6 @@
   store interfaces are unchanged and records are still persisted whole
   through `serialize()`. Session records gain fields under Tahini, which
   libsignal writes on the next save and earlier versions still read.
-- **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
-  constant-time masks and `u128` comparisons (see Security)
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
   an archived session is never made current again, and a record keeps at
   most 3 of them instead of 40
@@ -224,24 +222,6 @@
   `hooks` 2.2.0 with `code_assets` 2.1.0, and `example/` resolves 2.0.2 with
   1.2.1 on Flutter 3.38.4 and analyzes clean. Dependabot still holds back
   3.x. From template v4.18.0.
-
-#### Security
-
-- **`ctutils` 0.4.3 → 0.4.5, for RUSTSEC-2026-0385** (`rust/Cargo.lock`,
-  `THIRD_PARTY_NOTICES.txt`) — `ctutils` is RustCrypto's constant-time
-  toolkit, and it reaches every binary, the web module included, through
-  `digest` (and so HMAC, HKDF, SHA-2 and `curve25519-dalek`), `aes-gcm-siv`
-  and `universal-hash`. Before 0.4.4 the mask functions of its `Choice` type
-  (`Choice::to_*_mask`) could compile to a branch on a secret value on common
-  platforms, and its `u128` comparisons branched on every target whose
-  pointers are 32 bits wide, this package's `armeabi-v7a` and `wasm32`
-  builds among them
-  ([RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385)).
-  0.4.4 routes the masks through an optimization barrier and checks the
-  generated code with BINSEC in its CI; 0.4.5 also hardens Thumb-1
-  comparisons and `Choice` composition. Crate 7.0.0, the native library of
-  8.0.0, was built with 0.4.3; whether its machine code contains such a
-  branch was not measured. Floor: Rust 1.87, below this crate's 1.93.1.
 
 #### Fixed
 
@@ -918,10 +898,68 @@
   release, add what the new update changes, name its version, and use the
   default wording only when the replaced line was the default too. Replayed on
   this `[Unreleased]` with a v0.106.1 line, the three-line v0.106.0 bullet goes
-  and the `ctutils` headline above it stays byte for byte. Only a section that
-  already carries two upstream lines keeps the rest and raises
+  and the `ctutils` headline then above it stays byte for byte. Only a
+  section that already carries two upstream lines keeps the rest and raises
   `highlights_stacked`. What the model writes when it merges two lines is
   first seen on the next bump. The template carries the same change.
+
+## [8.0.1] - 2026-10-26
+
+### For Users
+
+#### ✨ Highlights
+
+- **`ctutils` 0.4.5** — fixes RUSTSEC-2026-0385 in the native library:
+  constant-time masks and `u128` comparisons (see Security). Nothing else
+  moves: this is 8.0.0 with that one crate replaced
+- **libsignal v0.105.0** — unchanged this release
+- **libsignal_frb v7.0.1** — Rust FFI bindings
+
+#### Security
+
+- **`ctutils` 0.4.3 → 0.4.5, for RUSTSEC-2026-0385** (`rust/Cargo.lock`,
+  `THIRD_PARTY_NOTICES.txt`) — `ctutils` is RustCrypto's constant-time
+  toolkit, and it reaches every binary, the web module included, through
+  `digest` (and so HMAC, HKDF, SHA-2 and `curve25519-dalek`), `aes-gcm-siv`
+  and `universal-hash`. Before 0.4.4 the mask functions of its `Choice` type
+  (`Choice::to_*_mask`) could compile to a branch on a secret value on common
+  platforms, and its `u128` comparisons branched on every target whose
+  pointers are 32 bits wide, this package's `armeabi-v7a` and `wasm32`
+  builds among them
+  ([RUSTSEC-2026-0385](https://rustsec.org/advisories/RUSTSEC-2026-0385)).
+  0.4.4 routes the masks through an optimization barrier and checks the
+  generated code with BINSEC in its CI; 0.4.5 also hardens Thumb-1
+  comparisons and `Choice` composition. Crate 7.0.0, the native library of
+  8.0.0, was built with 0.4.3; whether its machine code contains such a
+  branch was not measured. `cargo update -p ctutils --precise 0.4.5` on
+  8.0.0's lock file moves no other crate, so the native library differs from
+  7.0.0's by this one dependency. Floor: Rust 1.87, below this crate's
+  1.93.1.
+- **RUSTSEC-2026-0386 (`tokio` 1.53.2, unsound) does not reach the library,
+  so `tokio` stays** — the advisory concerns the safe constructors of
+  `tokio::io::unix::AsyncFd`
+  ([RUSTSEC-2026-0386](https://rustsec.org/advisories/RUSTSEC-2026-0386)),
+  which tokio compiles only with its `net` feature. What pulls tokio in here
+  enables `rt`, `rt-multi-thread`, `sync` and `time`, on every target, so no
+  binary contains `AsyncFd`. `cargo audit` still lists it, as an allowed
+  warning. `main` is on 1.53.3 already.
+
+### For Contributors
+
+#### Changed
+
+- **The release scripts also cut a release from a `release/<line>` branch**
+  (`scripts/src/release_common.dart`, `scripts/src/release_frb.dart`,
+  `scripts/src/release.dart`, `scripts/release_frb.dart`,
+  `scripts/release.dart`, `test/scripts/release_common_test.dart`) — this
+  release is cut from `release/8.0.x`, a branch from the `v8.0.0` tag,
+  because `main` already carries libsignal v0.106.0 and changes meant for the
+  next major. Both scripts refused every branch but `main`, and fetched,
+  compared with and pushed `main` by name. They now accept `main` or
+  `release/<line>` (`isReleaseBranch`), use the branch they run on for all
+  three, and refuse a branch origin does not have yet, so "push first, CI
+  green, then tag" holds on a maintenance branch as on `main`. The change
+  exists on this branch only.
 
 ## [8.0.0] - 2026-10-08
 
@@ -1395,5 +1433,6 @@
 7.4.1 and everything before it are in
 [CHANGELOG-ARCHIVE.md](https://github.com/djx-y-z/libsignal_dart/blob/main/CHANGELOG-ARCHIVE.md).
 
-[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v8.0.0...HEAD
+[Unreleased]: https://github.com/djx-y-z/libsignal_dart/compare/v8.0.1...HEAD
+[8.0.1]: https://github.com/djx-y-z/libsignal_dart/compare/v8.0.0...v8.0.1
 [8.0.0]: https://github.com/djx-y-z/libsignal_dart/compare/v7.4.1...v8.0.0
