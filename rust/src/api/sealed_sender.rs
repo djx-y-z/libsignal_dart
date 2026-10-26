@@ -184,6 +184,15 @@ pub struct SealedSenderEncryptResult {
 /// - `store_session(name, device_id, bytes)` - Store the updated session
 /// - `get_identity_key_pair()` - Get our identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
+/// - `save_identity(name, device_id, identity_bytes)` - Save the recipient's
+///   identity key: the one the session is bound to, which libsignal has just
+///   checked against the stored one. libsignal's sealed sender encrypts through
+///   `message_encrypt`, which saves it on every message, so an address whose
+///   stored identity was deleted has it stored again.
+/// - `get_identity(name, device_id)` - Get the recipient's stored identity key
+///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
 ///
 /// # Parameters
 /// - `recipient_name` - Recipient's user identifier
@@ -204,6 +213,7 @@ pub async fn sealed_sender_encrypt_with_callbacks(
     // IdentityKeyStore callbacks
     get_identity_key_pair: impl Fn() -> DartFnFuture<Vec<u8>> + Send + Sync + 'static,
     get_local_registration_id: impl Fn() -> DartFnFuture<u32> + Send + Sync + 'static,
+    save_identity: impl Fn(String, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<SealedSenderEncryptResult, LibSignalException> {
     // Step 1: Load data via callbacks
@@ -238,9 +248,13 @@ pub async fn sealed_sender_encrypt_with_callbacks(
         &known_recipient_identity,
     );
 
-    let (ciphertext, updated_session_bytes) = result?;
+    let (ciphertext, updated_session_bytes, identity_to_save) = result?;
 
-    // Step 3: Store updated session
+    // Step 3: Write back in libsignal's order. The identity only if libsignal
+    // saved one — see `crate::recording_stores`.
+    if let Some(identity_key) = identity_to_save {
+        save_identity(recipient_name.clone(), recipient_device_id, identity_key).await;
+    }
     store_session(recipient_name, recipient_device_id, updated_session_bytes.clone()).await;
 
     Ok(SealedSenderEncryptResult {
@@ -249,7 +263,10 @@ pub async fn sealed_sender_encrypt_with_callbacks(
     })
 }
 
-#[allow(clippy::too_many_arguments)]
+// too_many_arguments: mirrors the store-callback surface above. type_complexity:
+// the returned tuple bundles the serialized outputs handed back to the async
+// wrapper (ciphertext + updated session + the identity libsignal saved, if any).
+#[allow(clippy::too_many_arguments, clippy::type_complexity)]
 fn sealed_sender_encrypt_inner(
     recipient_name: &str,
     recipient_device_id: u32,
@@ -259,7 +276,7 @@ fn sealed_sender_encrypt_inner(
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
     known_recipient_identity: &Option<Vec<u8>>,
-) -> Result<(Vec<u8>, Vec<u8>), LibSignalException> {
+) -> Result<(Vec<u8>, Vec<u8>, Option<Vec<u8>>), LibSignalException> {
     // Parse sender certificate
     let cert = SenderCertificate::deserialize(sender_certificate)
         .map_err(LibSignalException::from)?;
@@ -286,6 +303,10 @@ fn sealed_sender_encrypt_inner(
     // consults is_trusted_identity(Sending), so a stored identity that differs
     // from the session's yields UntrustedIdentity.
     super::preseed_identity(&mut identity_store, &recipient_address, known_recipient_identity)?;
+    // Wrapped after the seeding, so only libsignal's own save is reported:
+    // message_encrypt, under sealed_sender_encrypt, saves the identity it has
+    // just checked.
+    let mut identity_store = RecordingIdentityKeyStore::new(identity_store);
 
     // Populate session store
     block_on(async {
@@ -313,7 +334,7 @@ fn sealed_sender_encrypt_inner(
 
     let session_bytes = updated_session.serialize().map_err(LibSignalException::from)?;
 
-    Ok((ciphertext, session_bytes))
+    Ok((ciphertext, session_bytes, identity_store.take_saved()))
 }
 
 // ============================================================================

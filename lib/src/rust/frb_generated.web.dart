@@ -2905,10 +2905,6 @@ class RustLibWire implements BaseWire {
   );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__prekey__PreKeyRecord_private_key(int that) =>
-      wasmModule.wire__crate__api__prekey__PreKeyRecord_private_key(that);
-
-  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__prekey__PreKeyRecord_public_key(int that) =>
       wasmModule.wire__crate__api__prekey__PreKeyRecord_public_key(that);
 
@@ -3303,13 +3299,6 @@ class RustLibWire implements BaseWire {
   );
 
   JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(int that) =>
-      wasmModule
-          .wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-            that,
-          );
-
-  JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(int that) =>
       wasmModule.wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(
         that,
@@ -3627,6 +3616,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__session_cipher__message_encrypt_with_callbacks(
@@ -3640,6 +3630,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        save_identity,
         get_identity,
       );
 
@@ -3785,6 +3776,7 @@ class RustLibWire implements BaseWire {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   ) => wasmModule
       .wire__crate__api__sealed_sender__sealed_sender_encrypt_with_callbacks(
@@ -3797,6 +3789,7 @@ class RustLibWire implements BaseWire {
         store_session,
         get_identity_key_pair,
         get_local_registration_id,
+        save_identity,
         get_identity,
       );
 
@@ -4466,9 +4459,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__prekey__PreKeyRecord_private_key(int that);
-
-  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__prekey__PreKeyRecord_public_key(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -4709,9 +4699,6 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
   );
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
-  wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(int that);
-
-  external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
   wire__crate__api__signed_prekey__SignedPreKeyRecord_public_key(int that);
 
   external JSAny? /* flutter_rust_bridge::for_generated::WireSyncRust2DartDco */
@@ -4901,6 +4888,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   );
 
@@ -4987,6 +4975,7 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
     PlatformPointer store_session,
     PlatformPointer get_identity_key_pair,
     PlatformPointer get_local_registration_id,
+    PlatformPointer save_identity,
     PlatformPointer get_identity,
   );
 

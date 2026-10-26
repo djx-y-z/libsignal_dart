@@ -92,19 +92,20 @@ updates:
       # `make setup-frb-codegen` + `make codegen` is the procedure.
       - dependency-name: "flutter_rust_bridge"
 
-      # The build-hook protocol packages. Majors are blocked by the pinned
-      # Flutter SDK rather than by anything in this repository, so the pull
-      # request cannot be merged and cannot be fixed here either: hooks >= 2.1.0
-      # pulls `record_use ^1.0.0`, which needs `meta ^1.19.0`, while Flutter
-      # 3.38.4 pins `meta: 1.17.0` exactly (packages/flutter/pubspec.yaml). The
-      # first stable SDK to relax that is 3.47.0.
+      # The build-hook protocol packages. pubspec.yaml admits 1.x and 2.x, so
+      # each Flutter resolves the major it can: hooks >= 2.1.0 pulls
+      # `record_use ^1.0.0`, which needs `meta ^1.19.0`, while Flutter 3.38–3.44
+      # pins `meta` below it exactly (packages/flutter/pubspec.yaml); 3.47.0 is
+      # the first stable SDK to relax that. What stays ignored is the next
+      # major, 3.x — a migration again, which a single-file bump cannot carry.
       #
       # Ignoring rather than merging-and-fixing, because the damage is not
       # local: the root package resolves fine — it has no `flutter: sdk`
-      # dependency — so a bump breaks `example/` and every Flutter *consumer* on
-      # an SDK that pins meta below 1.19.0, while this repository's own CI looks
-      # merely red. code_assets 2.0.0 requires hooks ^2.2.0, so the two move
-      # together and ignoring one alone only changes which pull request arrives.
+      # dependency — so a bump that a supported Flutter cannot resolve breaks
+      # `example/` and every Flutter *consumer* on that SDK, while this
+      # repository's own CI looks merely red. code_assets 2.0.0 requires hooks
+      # ^2.2.0, so the two move together and ignoring one alone only changes
+      # which pull request arrives.
       #
       # ⚠ Written as `update-types` rather than `versions: ["2.x"]` on purpose.
       # A wildcard is not a version requirement: this template already shipped
@@ -114,9 +115,10 @@ updates:
       # ignore sat in the file looking like protection. `update-types` needs no
       # parsing of a version string and says what is meant: no majors.
       #
-      # Lift when .fvmrc moves to Flutter >= 3.47.0. pubspec.yaml says the same
-      # thing in its own comment ("Majors are a deliberate migration, not a
-      # bump"); this is what stops the proposal arriving weekly in the meantime.
+      # Lift once a new major has been measured against hook/build.dart on the
+      # oldest Flutter this package supports. pubspec.yaml says the same thing
+      # in its own comment ("A 3.x is a migration again, not a bump"); this is
+      # what stops the proposal arriving weekly in the meantime.
       - dependency-name: "hooks"
         update-types:
           - "version-update:semver-major"

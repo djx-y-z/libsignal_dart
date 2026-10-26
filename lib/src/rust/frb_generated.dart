@@ -78,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1630330622;
+  int get rustContentHash => 870843153;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -360,8 +360,6 @@ abstract class RustLibApi extends BaseApi {
     required PrivateKey privateKey,
   });
 
-  Uint8List crateApiPrekeyPreKeyRecordPrivateKey({required PreKeyRecord that});
-
   Uint8List crateApiPrekeyPreKeyRecordPublicKey({required PreKeyRecord that});
 
   Uint8List crateApiPrekeyPreKeyRecordSerialize({required PreKeyRecord that});
@@ -623,10 +621,6 @@ abstract class RustLibApi extends BaseApi {
     required List<int> signature,
   });
 
-  Uint8List crateApiSignedPrekeySignedPreKeyRecordPrivateKey({
-    required SignedPreKeyRecord that,
-  });
-
   Uint8List crateApiSignedPrekeySignedPreKeyRecordPublicKey({
     required SignedPreKeyRecord that,
   });
@@ -803,6 +797,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -882,6 +877,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -3288,34 +3284,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Uint8List crateApiPrekeyPreKeyRecordPrivateKey({required PreKeyRecord that}) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerPreKeyRecord(
-                that,
-              );
-          return wire.wire__crate__api__prekey__PreKeyRecord_private_key(arg0);
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_lib_signal_exception,
-        ),
-        constMeta: kCrateApiPrekeyPreKeyRecordPrivateKeyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiPrekeyPreKeyRecordPrivateKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "PreKeyRecord_private_key",
-        argNames: ["that"],
-      );
-
-  @override
   Uint8List crateApiPrekeyPreKeyRecordPublicKey({required PreKeyRecord that}) {
     return handler.executeSync(
       SyncTask(
@@ -5538,40 +5506,6 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Uint8List crateApiSignedPrekeySignedPreKeyRecordPrivateKey({
-    required SignedPreKeyRecord that,
-  }) {
-    return handler.executeSync(
-      SyncTask(
-        callFfi: () {
-          var arg0 =
-              cst_encode_Auto_Ref_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerSignedPreKeyRecord(
-                that,
-              );
-          return wire
-              .wire__crate__api__signed_prekey__SignedPreKeyRecord_private_key(
-                arg0,
-              );
-        },
-        codec: DcoCodec(
-          decodeSuccessData: dco_decode_list_prim_u_8_strict,
-          decodeErrorData: dco_decode_lib_signal_exception,
-        ),
-        constMeta: kCrateApiSignedPrekeySignedPreKeyRecordPrivateKeyConstMeta,
-        argValues: [that],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta
-  get kCrateApiSignedPrekeySignedPreKeyRecordPrivateKeyConstMeta =>
-      const TaskConstMeta(
-        debugName: "SignedPreKeyRecord_private_key",
-        argNames: ["that"],
-      );
-
-  @override
   Uint8List crateApiSignedPrekeySignedPreKeyRecordPublicKey({
     required SignedPreKeyRecord that,
   }) {
@@ -6800,6 +6734,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -6826,6 +6761,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             getLocalRegistrationId,
           );
           var arg9 =
+              cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                saveIdentity,
+              );
+          var arg10 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
               );
@@ -6842,6 +6781,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg7,
                 arg8,
                 arg9,
+                arg10,
               );
         },
         codec: DcoCodec(
@@ -6859,6 +6799,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          saveIdentity,
           getIdentity,
         ],
         apiImpl: this,
@@ -6880,6 +6821,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "saveIdentity",
           "getIdentity",
         ],
       );
@@ -7367,6 +7309,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<void> Function(String, int, Uint8List) storeSession,
     required FutureOr<Uint8List> Function() getIdentityKeyPair,
     required FutureOr<int> Function() getLocalRegistrationId,
+    required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -7392,6 +7335,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             getLocalRegistrationId,
           );
           var arg8 =
+              cst_encode_DartFn_Inputs_String_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                saveIdentity,
+              );
+          var arg9 =
               cst_encode_DartFn_Inputs_String_u_32_Output_opt_list_prim_u_8_strict_AnyhowException(
                 getIdentity,
               );
@@ -7407,6 +7354,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 arg6,
                 arg7,
                 arg8,
+                arg9,
               );
         },
         codec: DcoCodec(
@@ -7424,6 +7372,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           storeSession,
           getIdentityKeyPair,
           getLocalRegistrationId,
+          saveIdentity,
           getIdentity,
         ],
         apiImpl: this,
@@ -7444,6 +7393,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "storeSession",
           "getIdentityKeyPair",
           "getLocalRegistrationId",
+          "saveIdentity",
           "getIdentity",
         ],
       );
@@ -12909,15 +12859,6 @@ class PreKeyRecordImpl extends RustOpaque implements PreKeyRecord {
   /// Get the pre-key ID.
   int id() => RustLib.instance.api.crateApiPrekeyPreKeyRecordId(that: this);
 
-  /// Get the private key.
-  ///
-  /// # Security
-  /// The returned bytes contain sensitive private key material.
-  /// The caller is responsible for securely zeroing these bytes when done.
-  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-  Uint8List privateKey() =>
-      RustLib.instance.api.crateApiPrekeyPreKeyRecordPrivateKey(that: this);
-
   /// Get the public key.
   Uint8List publicKey() =>
       RustLib.instance.api.crateApiPrekeyPreKeyRecordPublicKey(that: this);
@@ -13336,7 +13277,23 @@ class SessionRecordImpl extends RustOpaque implements SessionRecord {
         key: key,
       );
 
-  /// Check if this session has a usable sender chain.
+  /// Whether the current session can be sent on at `now_millis`, by the
+  /// requirements Signal's own clients apply.
+  ///
+  /// The session must have a sender chain, and it must be:
+  /// - not stale: started by the peer, answered by the peer, or less than
+  ///   30 days old — an unanswered session older than that is one libsignal
+  ///   itself no longer encrypts on;
+  /// - established with PQXDH rather than X3DH;
+  /// - using the post-quantum ratchet, SPQR.
+  ///
+  /// These are libsignal's `NotStale`, `EstablishedWithPqxdh` and `Spqr`, the
+  /// set its Java, Swift and Node bindings ask for. libsignal warns that the
+  /// last one also accepts an unanswered session whose pre-key message
+  /// carries SPQR, and that a peer that drops SPQR from its answer turns such
+  /// a session from usable to unusable. A `false` is the point at which a
+  /// Signal client archives the session and builds a new one with
+  /// `SessionBuilder.processPreKeyBundle`.
   bool hasUsableSenderChain({required BigInt nowMillis}) =>
       RustLib.instance.api.crateApiSessionSessionRecordHasUsableSenderChain(
         that: this,
@@ -13468,15 +13425,6 @@ class SignedPreKeyRecordImpl extends RustOpaque implements SignedPreKeyRecord {
   /// Get the signed pre-key ID.
   int id() =>
       RustLib.instance.api.crateApiSignedPrekeySignedPreKeyRecordId(that: this);
-
-  /// Get the private key.
-  ///
-  /// # Security
-  /// The returned bytes contain sensitive private key material.
-  /// The caller is responsible for securely zeroing these bytes when done.
-  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-  Uint8List privateKey() => RustLib.instance.api
-      .crateApiSignedPrekeySignedPreKeyRecordPrivateKey(that: this);
 
   /// Get the public key.
   Uint8List publicKey() => RustLib.instance.api

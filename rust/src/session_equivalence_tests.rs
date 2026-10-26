@@ -29,14 +29,17 @@
 //! state is made on the same inputs, and what the bridge produced — its state
 //! and its ciphertexts — carries on to the next step.
 //!
+//! Covered: session establishment from a bundle, encryption and decryption of
+//! plain and sealed-sender messages, and three things an application does
+//! between them — archiving a session, forgetting the identity it stored for
+//! a peer, and trusting a peer's new identity after that peer reinstalled.
+//! The application's steps change the state both runs start from, so they
+//! need no libsignal counterpart: libsignal is judged on what it does with
+//! the state they leave.
+//!
 //! Deliberately not compared:
 //! - The bytes of session records and ciphertexts, which depend on fresh
 //!   randomness. Their observable properties are compared instead.
-//! - `save_identity` on encrypt. libsignal saves the identity it has just
-//!   checked, and the bridge's encrypt entry point has no callback for it.
-//!   With the identity already stored that write changes nothing; it would
-//!   matter only for an address whose identity the application deleted, and
-//!   no script here deletes one.
 //! - Write order. The bridge stores the session last on purpose (see
 //!   `message_decrypt_prekey_with_callbacks`); only the end state counts.
 //! - libsignal's last-resort Kyber replay check. The reference store refuses a
@@ -45,17 +48,14 @@
 //!   bundle here carries a one-time pre-key, so a replayed agreement fails on
 //!   the consumed pre-key first, on both sides, and never reaches that check.
 //!
-//! Not covered yet: the sealed-sender entry points, and a change of identity.
-//! Sealed sender decrypts through the same libsignal functions with a
-//! write-back of its own, which `test/protocol/archived_session_test.dart`
-//! pins for now. An identity change needs an application step, re-trusting
-//! the new key, that has no libsignal counterpart to compare against.
-//!
 //! Run with `make rust-test`. Deliberately outside `api/`, which FRB codegen
 //! scans.
 
 use crate::api::bundle::PreKeyBundle as BridgeBundle;
 use crate::api::error::{LibSignalErrorCode, LibSignalException};
+use crate::api::sealed_sender::{
+    sealed_sender_decrypt_with_callbacks, sealed_sender_encrypt_with_callbacks,
+};
 use crate::api::session::SessionRecord as BridgeSessionRecord;
 use crate::api::session_builder::process_prekey_bundle_with_callbacks;
 use crate::api::session_cipher::{
@@ -76,7 +76,7 @@ use std::future::Future;
 use std::pin::pin;
 use std::sync::{Arc, Mutex};
 use std::task::{Context, Poll, Waker};
-use std::time::SystemTime;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const ALICE: usize = 0;
 const BOB: usize = 1;
@@ -463,6 +463,45 @@ impl Party {
     }
 }
 
+/// The server's half of sealed sender: a trust root, the server certificate it
+/// signs, and the key that signs each party's sender certificate.
+struct Trust {
+    root: up::KeyPair,
+    server: up::ServerCertificate,
+    server_key: up::KeyPair,
+}
+
+impl Trust {
+    fn new() -> Self {
+        let mut rng = OsRng.unwrap_err();
+        let root = up::KeyPair::generate(&mut rng);
+        let server_key = up::KeyPair::generate(&mut rng);
+        let server =
+            up::ServerCertificate::new(1, server_key.public_key, &root.private_key, &mut rng).unwrap();
+        Trust { root, server, server_key }
+    }
+
+    /// A day's sender certificate for the party's current identity, which a
+    /// reinstall replaces.
+    fn certificate(&self, party: &Party) -> up::SenderCertificate {
+        up::SenderCertificate::new(
+            party.name.clone(),
+            None,
+            *party.identity.public_key(),
+            up::DeviceId::new(DEVICE as u8).unwrap(),
+            up::Timestamp::from_epoch_millis(now_millis() + 86_400_000),
+            self.server.clone(),
+            &self.server_key.private_key,
+            &mut OsRng.unwrap_err(),
+        )
+        .unwrap()
+    }
+}
+
+fn now_millis() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis() as u64
+}
+
 // ---------------------------------------------------------------------------
 // What is compared
 // ---------------------------------------------------------------------------
@@ -471,6 +510,8 @@ impl Party {
 enum Outcome {
     Done,
     Encrypted { pre_key_message: bool },
+    /// A sealed-sender message, whose inner type the envelope hides.
+    Sealed,
     Decrypted(Vec<u8>),
     Failed(LibSignalErrorCode),
 }
@@ -529,11 +570,24 @@ enum Op {
     /// `.0` archives its current session with `.1`, as an application does on
     /// a session reset. The bridge's own `SessionRecord` does it.
     Archive(usize, usize),
+    /// `.0` seals a new message to `.1` with sealed sender; it is in flight
+    /// until delivered.
+    SealedSend(usize, usize),
+    /// `.0`'s application deletes the identity it stored for `.1`, as one that
+    /// lost or cleared its trust store does.
+    Forget(usize, usize),
+    /// `.0` reinstalls: a new identity, new keys, nothing stored. What it sent
+    /// is still in flight, and so is what was sent to it.
+    Reinstall(usize),
+    /// `.0`'s application trusts `.1`'s current identity in place of the one
+    /// it stored — the user accepted a changed safety number.
+    Retrust(usize, usize),
 }
 
 #[derive(Clone)]
 struct InFlight {
     pre_key_message: bool,
+    sealed: bool,
     bytes: Vec<u8>,
     plaintext: Vec<u8>,
     delivered: bool,
@@ -542,6 +596,7 @@ struct InFlight {
 struct Conversation {
     label: String,
     parties: [Party; 2],
+    trust: Trust,
     sent: BTreeMap<(usize, usize), Vec<InFlight>>,
     script: Vec<String>,
     reached: Reached,
@@ -552,6 +607,7 @@ impl Conversation {
         Conversation {
             label: label.to_owned(),
             parties: [Party::new("alice", 1111), Party::new("bob", 2222)],
+            trust: Trust::new(),
             sent: BTreeMap::new(),
             script: Vec::new(),
             reached: Reached::default(),
@@ -613,7 +669,7 @@ impl Conversation {
                     upstream.map_or_else(|e| Outcome::Failed(code(e)), |()| Outcome::Done),
                     &snapshot,
                     &reference,
-                    Compare { session_id: false, identity_writes: true },
+                    false,
                 );
             }
             Op::Send(from, to) => {
@@ -631,6 +687,7 @@ impl Conversation {
                     store_session(&p.stores),
                     identity_key_pair(p),
                     registration_id(p),
+                    save_identity(&p.stores),
                     get_identity(&p.stores),
                 ));
                 let upstream = block_on(up::message_encrypt(
@@ -657,11 +714,62 @@ impl Conversation {
                     },
                     &snapshot,
                     &reference,
-                    Compare { session_id: true, identity_writes: false },
+                    true,
                 );
                 if let Ok(result) = bridge {
                     self.sent.entry((from, to)).or_default().push(InFlight {
                         pre_key_message: result.message_type == 3,
+                        sealed: false,
+                        bytes: result.ciphertext,
+                        plaintext,
+                        delivered: false,
+                    });
+                }
+            }
+            Op::SealedSend(from, to) => {
+                let plaintext =
+                    format!("sealed message {} from {}", self.script.len(), self.parties[from].name);
+                let plaintext = plaintext.into_bytes();
+                let (snapshot, mut reference) = self.begin(from);
+                let (p, peer) = (&self.parties[from], &self.parties[to]);
+                let certificate = self.trust.certificate(p);
+                let bridge = run(sealed_sender_encrypt_with_callbacks(
+                    peer.name.clone(),
+                    DEVICE,
+                    plaintext.clone(),
+                    certificate.serialized().unwrap().to_vec(),
+                    load_session(&p.stores),
+                    store_session(&p.stores),
+                    identity_key_pair(p),
+                    registration_id(p),
+                    save_identity(&p.stores),
+                    get_identity(&p.stores),
+                ));
+                let upstream = block_on(up::sealed_sender_encrypt(
+                    &address(&peer.name),
+                    &certificate,
+                    &plaintext,
+                    &mut reference.sessions,
+                    &mut reference.identities,
+                    SystemTime::now(),
+                    &mut OsRng.unwrap_err(),
+                ));
+                self.compare(
+                    from,
+                    to,
+                    match &bridge {
+                        Ok(_) => Outcome::Sealed,
+                        Err(e) => Outcome::Failed(e.code),
+                    },
+                    upstream.map_or_else(|e| Outcome::Failed(code(e)), |_| Outcome::Sealed),
+                    &snapshot,
+                    &reference,
+                    true,
+                );
+                if let Ok(result) = bridge {
+                    self.sent.entry((from, to)).or_default().push(InFlight {
+                        pre_key_message: false,
+                        sealed: true,
                         bytes: result.ciphertext,
                         plaintext,
                         delivered: false,
@@ -672,7 +780,27 @@ impl Conversation {
                 let message = self.sent(from, to)[index].clone();
                 let (snapshot, mut reference) = self.begin(to);
                 let (p, peer) = (&self.parties[to], &self.parties[from]);
-                let bridge = if message.pre_key_message {
+                let bridge = if message.sealed {
+                    run(sealed_sender_decrypt_with_callbacks(
+                        message.bytes.clone(),
+                        self.trust.root.public_key.serialize().to_vec(),
+                        now_millis(),
+                        p.name.clone(),
+                        DEVICE,
+                        load_session(&p.stores),
+                        store_session(&p.stores),
+                        identity_key_pair(p),
+                        registration_id(p),
+                        save_identity(&p.stores),
+                        load_signed_pre_key(&p.stores),
+                        load_pre_key(&p.stores),
+                        remove_pre_key(&p.stores),
+                        load_kyber_pre_key(&p.stores),
+                        mark_kyber_pre_key_used(&p.stores),
+                        get_identity(&p.stores),
+                    ))
+                    .map(|result| result.plaintext)
+                } else if message.pre_key_message {
                     run(message_decrypt_prekey_with_callbacks(
                         peer.name.clone(),
                         DEVICE,
@@ -706,28 +834,48 @@ impl Conversation {
                         get_identity(&p.stores),
                     ))
                 };
-                let ciphertext = if message.pre_key_message {
-                    up::CiphertextMessage::PreKeySignalMessage(
-                        up::PreKeySignalMessage::try_from(&message.bytes[..]).unwrap(),
-                    )
+                let upstream = if message.sealed {
+                    block_on(up::sealed_sender_decrypt(
+                        &message.bytes,
+                        &self.trust.root.public_key,
+                        up::Timestamp::from_epoch_millis(now_millis()),
+                        None,
+                        p.name.clone(),
+                        up::DeviceId::new(DEVICE as u8).unwrap(),
+                        &mut reference.identities,
+                        &mut reference.sessions,
+                        &mut reference.pre_keys,
+                        &reference.signed_pre_keys,
+                        &mut reference.kyber_pre_keys,
+                    ))
+                    .map(|result| result.message)
                 } else {
-                    up::CiphertextMessage::SignalMessage(
-                        up::SignalMessage::try_from(&message.bytes[..]).unwrap(),
-                    )
+                    let ciphertext = if message.pre_key_message {
+                        up::CiphertextMessage::PreKeySignalMessage(
+                            up::PreKeySignalMessage::try_from(&message.bytes[..]).unwrap(),
+                        )
+                    } else {
+                        up::CiphertextMessage::SignalMessage(
+                            up::SignalMessage::try_from(&message.bytes[..]).unwrap(),
+                        )
+                    };
+                    block_on(up::message_decrypt(
+                        &ciphertext,
+                        &address(&peer.name),
+                        &address(&p.name),
+                        &mut reference.sessions,
+                        &mut reference.identities,
+                        &mut reference.pre_keys,
+                        &reference.signed_pre_keys,
+                        &mut reference.kyber_pre_keys,
+                        &mut OsRng.unwrap_err(),
+                    ))
                 };
-                let upstream = block_on(up::message_decrypt(
-                    &ciphertext,
-                    &address(&peer.name),
-                    &address(&p.name),
-                    &mut reference.sessions,
-                    &mut reference.identities,
-                    &mut reference.pre_keys,
-                    &reference.signed_pre_keys,
-                    &mut reference.kyber_pre_keys,
-                    &mut OsRng.unwrap_err(),
-                ));
                 if let Ok(plaintext) = &upstream {
                     assert_eq!(plaintext, &message.plaintext, "[{}] upstream decrypted another message", self.label);
+                }
+                if message.sealed && upstream.is_ok() {
+                    self.reached.sealed_decrypted += 1;
                 }
                 self.compare(
                     to,
@@ -736,7 +884,7 @@ impl Conversation {
                     upstream.map_or_else(|e| Outcome::Failed(code(e)), Outcome::Decrypted),
                     &snapshot,
                     &reference,
-                    Compare { session_id: true, identity_writes: true },
+                    true,
                 );
                 self.sent.get_mut(&(from, to)).unwrap()[index].delivered = true;
             }
@@ -748,6 +896,19 @@ impl Conversation {
                     record.archive_current_state().unwrap();
                     s.sessions.insert(name, record.serialize().unwrap());
                 }
+            }
+            Op::Forget(who, peer) => {
+                let name = self.parties[peer].name.clone();
+                self.parties[who].stores.lock().unwrap().identities.remove(&name);
+            }
+            Op::Reinstall(who) => {
+                let (name, registration_id) =
+                    (self.parties[who].name.clone(), self.parties[who].registration_id + 1);
+                self.parties[who] = Party::new(&name, registration_id);
+            }
+            Op::Retrust(who, peer) => {
+                let (name, key) = (self.parties[peer].name.clone(), self.parties[peer].identity_key());
+                self.parties[who].stores.lock().unwrap().identities.insert(name, key);
             }
         }
     }
@@ -764,6 +925,10 @@ impl Conversation {
         (snapshot, reference)
     }
 
+    /// Compares one step's two runs: the outcome, the consuming and trusting
+    /// writes, and the state they leave. [session_id] says whether the current
+    /// session's id is comparable, which it is not after a fetch: each side
+    /// draws a fresh one.
     #[allow(clippy::too_many_arguments)]
     fn compare(
         &mut self,
@@ -773,7 +938,7 @@ impl Conversation {
         upstream: Outcome,
         snapshot: &DartStores,
         reference: &Reference,
-        compare: Compare,
+        session_id: bool,
     ) {
         let context = || {
             format!(
@@ -787,19 +952,15 @@ impl Conversation {
         assert_eq!(bridge, upstream, "the outcome differs from libsignal's {}", context());
 
         let (p, peer) = (&self.parties[party], &self.parties[peer]);
-        let mut bridge_writes = p.stores.lock().unwrap().writes.clone();
-        let mut upstream_writes = reference.writes();
-        if !compare.identity_writes {
-            bridge_writes.identities_saved.clear();
-            upstream_writes.identities_saved.clear();
-        }
+        let bridge_writes = p.stores.lock().unwrap().writes.clone();
+        let upstream_writes = reference.writes();
         assert_eq!(bridge_writes, upstream_writes, "the writes differ from libsignal's {}", context());
 
         let bridge_view = {
             let s = p.stores.lock().unwrap();
             PartyView {
                 session_with_peer: s.sessions.get(&peer.name).map(|bytes| {
-                    SessionView::of(&up::SessionRecord::deserialize(bytes).unwrap(), compare.session_id)
+                    SessionView::of(&up::SessionRecord::deserialize(bytes).unwrap(), session_id)
                 }),
                 identity_of_peer: s.identities.get(&peer.name).cloned(),
                 pre_keys: s.pre_keys.keys().copied().collect(),
@@ -808,7 +969,7 @@ impl Conversation {
         let upstream_view = PartyView {
             session_with_peer: block_on(reference.sessions.load_session(&address(&peer.name)))
                 .unwrap()
-                .map(|record| SessionView::of(&record, compare.session_id)),
+                .map(|record| SessionView::of(&record, session_id)),
             identity_of_peer: block_on(reference.identities.get_identity(&address(&peer.name)))
                 .unwrap()
                 .map(|key| key.serialize().to_vec()),
@@ -821,6 +982,14 @@ impl Conversation {
         };
         assert_eq!(bridge_view, upstream_view, "the state differs from libsignal's {}", context());
 
+        // An encryption that stored the identity again after the application
+        // had forgotten it: the write the bridge used to drop.
+        if matches!(bridge, Outcome::Encrypted { .. } | Outcome::Sealed)
+            && !snapshot.identities.contains_key(&peer.name)
+            && !bridge_writes.identities_saved.is_empty()
+        {
+            self.reached.identity_restored_on_encrypt += 1;
+        }
         match &bridge {
             Outcome::Decrypted(_) => {
                 self.reached.decrypted += 1;
@@ -838,12 +1007,6 @@ impl Conversation {
     }
 }
 
-#[derive(Clone, Copy)]
-struct Compare {
-    session_id: bool,
-    identity_writes: bool,
-}
-
 /// What a script reached, so the random one can show it still reaches the
 /// states it exists for.
 #[derive(Default)]
@@ -852,6 +1015,8 @@ struct Reached {
     /// Decrypted, and the record came out with no current session: the state
     /// v0.106.0 introduced, after an application's archive or libsignal's own.
     decrypted_leaving_no_current_session: usize,
+    sealed_decrypted: usize,
+    identity_restored_on_encrypt: usize,
     failures: BTreeMap<String, usize>,
 }
 
@@ -941,8 +1106,73 @@ fn redelivery_and_reordering() {
     c.apply(Op::Deliver(ALICE, BOB, 1));
 }
 
-/// Random scripts: messages delivered in order, out of order, twice or never;
-/// sessions archived and started over by either side.
+/// The identity the application forgot is stored again by the next message
+/// out, plain or sealed: libsignal saves the identity it has just checked.
+#[test]
+fn an_identity_the_application_forgot_is_stored_again_on_encrypt() {
+    let mut c = Conversation::new("forgotten identity");
+    c.establish(ALICE, BOB);
+    c.apply(Op::Forget(ALICE, BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    c.apply(Op::Forget(ALICE, BOB));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    assert_eq!(c.reached.identity_restored_on_encrypt, 2, "an encryption did not store the identity again");
+}
+
+/// Bob reinstalls: his new identity is refused by Alice, from his messages and
+/// from his bundle alike, until her application trusts it.
+#[test]
+fn a_peer_that_reinstalls_is_refused_until_trusted_again() {
+    let mut c = Conversation::new("reinstall");
+    c.establish(ALICE, BOB);
+    c.apply(Op::Reinstall(BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    c.apply(Op::Fetch(BOB, ALICE));
+    c.apply(Op::Send(BOB, ALICE));
+    c.deliver_last(BOB, ALICE);
+    c.apply(Op::Fetch(ALICE, BOB));
+    assert_eq!(
+        c.reached.failures.get("UntrustedIdentity").copied(),
+        Some(2),
+        "the new identity was not refused from both the message and the bundle"
+    );
+    c.apply(Op::Retrust(ALICE, BOB));
+    c.deliver_last(BOB, ALICE);
+    c.apply(Op::Send(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    c.apply(Op::SealedSend(BOB, ALICE));
+    c.deliver_last(BOB, ALICE);
+    c.apply(Op::Fetch(ALICE, BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+}
+
+/// Sealed sender both ways: a pre-key message inside the envelope, delivery out
+/// of order and twice, and a message on a session the recipient archived.
+#[test]
+fn sealed_sender_messages() {
+    let mut c = Conversation::new("sealed sender");
+    c.apply(Op::Fetch(ALICE, BOB));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    c.apply(Op::SealedSend(BOB, ALICE));
+    c.deliver_last(BOB, ALICE);
+    c.apply(Op::Archive(BOB, ALICE));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    c.apply(Op::SealedSend(BOB, ALICE));
+    assert!(c.reached.sealed_decrypted >= 4, "too few sealed messages decrypted");
+}
+
+/// Random scripts: messages plain and sealed, delivered in order, out of order,
+/// twice or never; sessions archived and started over by either side; an
+/// identity forgotten, a party reinstalling, its new identity trusted again.
 #[test]
 fn seeded_random_conversations() {
     const SEEDS: u64 = 40;
@@ -957,10 +1187,20 @@ fn seeded_random_conversations() {
             let undelivered: Vec<usize> = (0..c.sent(from, to).len())
                 .filter(|&i| !c.sent(from, to)[i].delivered)
                 .collect();
-            let op = match rng.random_range(0..100) {
+            // Whether `from` holds an identity for `to` that is no longer
+            // `to`'s: what a reinstall leaves until it is trusted again.
+            let stale = c.parties[from]
+                .stores
+                .lock()
+                .unwrap()
+                .identities
+                .get(&c.parties[to].name)
+                .is_some_and(|key| *key != c.parties[to].identity_key());
+            let op = match rng.random_range(0..106) {
                 0..10 => Op::Fetch(from, to),
                 10..14 => Op::Archive(from, to),
-                14..50 => Op::Send(from, to),
+                14..40 => Op::Send(from, to),
+                40..50 => Op::SealedSend(from, to),
                 // In order, which is the usual case.
                 50..80 if !undelivered.is_empty() => Op::Deliver(from, to, undelivered[0]),
                 // Out of order, or never: the oldest is skipped.
@@ -971,19 +1211,29 @@ fn seeded_random_conversations() {
                 92..100 if !c.sent(from, to).is_empty() => {
                     Op::Deliver(from, to, rng.random_range(0..c.sent(from, to).len()))
                 }
+                100..102 => Op::Forget(from, to),
+                102 => Op::Reinstall(from),
+                103..106 if stale => Op::Retrust(from, to),
                 _ => Op::Send(from, to),
             };
             c.apply(op);
         }
         reached.decrypted += c.reached.decrypted;
         reached.decrypted_leaving_no_current_session += c.reached.decrypted_leaving_no_current_session;
+        reached.sealed_decrypted += c.reached.sealed_decrypted;
+        reached.identity_restored_on_encrypt += c.reached.identity_restored_on_encrypt;
         for (failure, n) in c.reached.failures {
             *reached.failures.entry(failure).or_default() += n;
         }
     }
     let summary = format!(
-        "decrypted {}, of which {} left no current session; failures {:?}",
-        reached.decrypted, reached.decrypted_leaving_no_current_session, reached.failures
+        "decrypted {}, of which {} left no current session and {} were sealed; identities stored \
+         again on encrypt {}; failures {:?}",
+        reached.decrypted,
+        reached.decrypted_leaving_no_current_session,
+        reached.sealed_decrypted,
+        reached.identity_restored_on_encrypt,
+        reached.failures
     );
     eprintln!("{summary}");
 
@@ -992,11 +1242,17 @@ fn seeded_random_conversations() {
     // compares nothing there and still passes, so falling below one is a
     // failure: re-tune the weights above.
     let failures = |code: &str| reached.failures.get(code).copied().unwrap_or(0);
-    assert!(reached.decrypted >= 300, "too few messages decrypted: {summary}");
+    assert!(reached.decrypted >= 250, "too few messages decrypted: {summary}");
     assert!(
-        reached.decrypted_leaving_no_current_session >= 30,
+        reached.decrypted_leaving_no_current_session >= 24,
         "too few decryptions left a record with no current session: {summary}"
     );
-    assert!(failures("DuplicatedMessage") >= 45, "too few redeliveries: {summary}");
-    assert!(failures("InvalidMessage") >= 5, "too few undecryptable messages: {summary}");
+    assert!(reached.sealed_decrypted >= 50, "too few sealed messages decrypted: {summary}");
+    assert!(
+        reached.identity_restored_on_encrypt >= 8,
+        "too few encryptions stored a forgotten identity again: {summary}"
+    );
+    assert!(failures("DuplicatedMessage") >= 38, "too few redeliveries: {summary}");
+    assert!(failures("InvalidMessage") >= 13, "too few undecryptable messages: {summary}");
+    assert!(failures("UntrustedIdentity") >= 10, "too few refused identities: {summary}");
 }

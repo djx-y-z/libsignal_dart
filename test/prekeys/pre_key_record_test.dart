@@ -49,20 +49,6 @@ void main() {
         final retrievedPubKeyBytes = preKey.publicKey();
         expect(retrievedPubKeyBytes, equals(publicKey.serialize()));
       });
-
-      test('created pre-key returns correct private key', () {
-        final privateKey = PrivateKey.generate();
-        final publicKey = privateKey.getPublicKey();
-
-        final preKey = PreKeyRecord(
-          id: 42,
-          publicKey: publicKey,
-          privateKey: privateKey,
-        );
-
-        final retrievedPrivKeyBytes = preKey.privateKey();
-        expect(retrievedPrivKeyBytes.length, equals(32));
-      });
     });
 
     group('serialize() / deserialize()', () {
@@ -83,7 +69,8 @@ void main() {
 
         expect(restored.id(), equals(original.id()));
         expect(restored.publicKey(), equals(original.publicKey()));
-        expect(restored.privateKey(), equals(original.privateKey()));
+        // The private half has no accessor; it travels inside the record.
+        expect(restored.serialize(), equals(serialized));
       });
 
       // Note: The Rust implementation may not throw for some invalid data formats.
@@ -136,44 +123,6 @@ void main() {
         final pub2 = preKey.publicKey();
 
         expect(pub1, equals(pub2));
-      });
-    });
-
-    group('privateKey()', () {
-      test('returns valid private key bytes', () {
-        final privateKey = PrivateKey.generate();
-        final publicKey = privateKey.getPublicKey();
-
-        final preKey = PreKeyRecord(
-          id: 1,
-          publicKey: publicKey,
-          privateKey: privateKey,
-        );
-
-        final retrievedPriv = preKey.privateKey();
-
-        expect(retrievedPriv, isNotNull);
-        expect(retrievedPriv.length, equals(32));
-      });
-
-      test('retrieved private key can derive same public key', () {
-        final privateKey = PrivateKey.generate();
-        final publicKey = privateKey.getPublicKey();
-
-        final preKey = PreKeyRecord(
-          id: 1,
-          publicKey: publicKey,
-          privateKey: privateKey,
-        );
-
-        final retrievedPrivBytes = preKey.privateKey();
-        final retrievedPriv = PrivateKey.deserialize(
-          bytes: retrievedPrivBytes.toList(),
-        );
-        final derivedPub = retrievedPriv.getPublicKey();
-        final preKeyPub = preKey.publicKey();
-
-        expect(derivedPub.serialize(), equals(preKeyPub));
       });
     });
   });

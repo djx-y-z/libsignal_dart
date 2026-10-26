@@ -92,18 +92,6 @@ impl SignedPreKeyRecord {
         Ok(key.serialize().into_vec())
     }
 
-    /// Get the private key.
-    ///
-    /// # Security
-    /// The returned bytes contain sensitive private key material.
-    /// The caller is responsible for securely zeroing these bytes when done.
-    /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-    #[flutter_rust_bridge::frb(sync)]
-    pub fn private_key(&self) -> Result<Vec<u8>, LibSignalException> {
-        let key = self.inner.private_key().map_err(LibSignalException::from)?;
-        Ok(key.serialize())
-    }
-
     /// Get the signature.
     #[flutter_rust_bridge::frb(sync)]
     pub fn signature(&self) -> Result<Vec<u8>, LibSignalException> {

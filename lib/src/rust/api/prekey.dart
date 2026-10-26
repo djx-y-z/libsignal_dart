@@ -38,14 +38,6 @@ abstract class PreKeyRecord implements RustOpaqueInterface {
     privateKey: privateKey,
   );
 
-  /// Get the private key.
-  ///
-  /// # Security
-  /// The returned bytes contain sensitive private key material.
-  /// The caller is responsible for securely zeroing these bytes when done.
-  /// Consider using `SecureBytes.wrap()` on the Dart side to ensure automatic zeroing.
-  Uint8List privateKey();
-
   /// Get the public key.
   Uint8List publicKey();
 

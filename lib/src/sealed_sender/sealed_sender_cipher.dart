@@ -123,6 +123,12 @@ class SealedSenderCipher {
   ///
   /// Returns the sealed sender ciphertext.
   ///
+  /// Stores the recipient's identity key through
+  /// [IdentityKeyStore.saveIdentity] on every message, as libsignal does: the
+  /// key the session is bound to, just checked against the stored one. While
+  /// that identity is stored this changes nothing; for an address whose stored
+  /// identity was deleted, it stores the key again.
+  ///
   /// Throws an exception if no session exists for the recipient.
   Future<Uint8List> encrypt({
     required ProtocolAddress recipientAddress,
@@ -150,6 +156,15 @@ class SealedSenderCipher {
       },
       getLocalRegistrationId: () async {
         return _identityKeyStore.getLocalRegistrationId();
+      },
+      // sealed_sender_encrypt goes through libsignal's message_encrypt, which
+      // saves the identity it has just checked, on every message: a no-op
+      // while it is stored, and the key again for an address whose stored
+      // identity was deleted.
+      saveIdentity: (name, deviceId, identityBytes) async {
+        final addr = ProtocolAddress(name: name, deviceId: deviceId);
+        final identityKey = PublicKey.deserialize(bytes: identityBytes);
+        await _identityKeyStore.saveIdentity(addr, identityKey);
       },
       // Enforces identity-trust when sending: sealed_sender_encrypt goes
       // through libsignal's message_encrypt, so a stored recipient identity

@@ -107,6 +107,15 @@ Uint8List createSenderCertificate({
 /// - `store_session(name, device_id, bytes)` - Store the updated session
 /// - `get_identity_key_pair()` - Get our identity key pair
 /// - `get_local_registration_id()` - Get our registration ID
+/// - `save_identity(name, device_id, identity_bytes)` - Save the recipient's
+///   identity key: the one the session is bound to, which libsignal has just
+///   checked against the stored one. libsignal's sealed sender encrypts through
+///   `message_encrypt`, which saves it on every message, so an address whose
+///   stored identity was deleted has it stored again.
+/// - `get_identity(name, device_id)` - Get the recipient's stored identity key
+///
+/// # Write ordering
+/// libsignal's own: `save_identity`, then `store_session`.
 ///
 /// # Parameters
 /// - `recipient_name` - Recipient's user identifier
@@ -122,6 +131,7 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
   required FutureOr<void> Function(String, int, Uint8List) storeSession,
   required FutureOr<Uint8List> Function() getIdentityKeyPair,
   required FutureOr<int> Function() getLocalRegistrationId,
+  required FutureOr<void> Function(String, int, Uint8List) saveIdentity,
   required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSealedSenderSealedSenderEncryptWithCallbacks(
   recipientName: recipientName,
@@ -132,6 +142,7 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
   storeSession: storeSession,
   getIdentityKeyPair: getIdentityKeyPair,
   getLocalRegistrationId: getLocalRegistrationId,
+  saveIdentity: saveIdentity,
   getIdentity: getIdentity,
 );
 

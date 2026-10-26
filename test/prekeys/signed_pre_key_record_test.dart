@@ -138,7 +138,8 @@ void main() {
         expect(restored.timestamp(), equals(original.timestamp()));
         expect(restored.signature(), equals(original.signature()));
         expect(restored.publicKey(), equals(original.publicKey()));
-        expect(restored.privateKey(), equals(original.privateKey()));
+        // The private half has no accessor; it travels inside the record.
+        expect(restored.serialize(), equals(serialized));
       });
 
       // Note: The Rust implementation may not throw for some invalid data formats.
@@ -186,29 +187,6 @@ void main() {
         final pub2 = signedPreKey.publicKey();
 
         expect(pub1, equals(pub2));
-      });
-    });
-
-    group('privateKey()', () {
-      test('returns valid private key bytes', () {
-        final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
-        final priv = signedPreKey.privateKey();
-
-        expect(priv, isNotNull);
-        expect(priv.length, equals(32));
-      });
-
-      test('retrieved private key can derive same public key', () {
-        final signedPreKey = createSignedPreKey(id: 1, timestamp: 1000);
-
-        final retrievedPrivBytes = signedPreKey.privateKey();
-        final retrievedPriv = PrivateKey.deserialize(
-          bytes: retrievedPrivBytes.toList(),
-        );
-        final derivedPub = retrievedPriv.getPublicKey();
-        final signedPreKeyPub = signedPreKey.publicKey();
-
-        expect(derivedPub.serialize(), equals(signedPreKeyPub));
       });
     });
   });

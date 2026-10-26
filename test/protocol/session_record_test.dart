@@ -89,6 +89,103 @@ void main() {
         expect(session.hasUsableSenderChain(nowMillis: now), isTrue);
       });
 
+      test('hasUsableSenderChain is false for a session nobody answered once '
+          'it is 30 days old', () {
+        final session = SessionRecord.deserialize(
+          bytes: aliceSessionStorage['bob:1']!.toList(),
+        );
+        final in31Days = DateTime.now().add(const Duration(days: 31));
+
+        // libsignal calls it stale and no longer encrypts on it; a Signal
+        // client archives it and fetches a new bundle.
+        expect(
+          session.hasUsableSenderChain(
+            nowMillis: BigInt.from(in31Days.millisecondsSinceEpoch),
+          ),
+          isFalse,
+        );
+      });
+
+      test('hasUsableSenderChain stays true for an answered session, however '
+          'old', () async {
+        final alice = ProtocolAddress(name: 'alice', deviceId: 1);
+        final bob = ProtocolAddress(name: 'bob', deviceId: 1);
+        final ts = BigInt.from(DateTime.now().millisecondsSinceEpoch);
+        final bobPreKeys = InMemoryPreKeyStore();
+        await bobPreKeys.storePreKey(
+          bobKeys.preKeyId,
+          PreKeyRecord(
+            id: bobKeys.preKeyId,
+            publicKey: bobKeys.preKeyPublic,
+            privateKey: bobKeys.preKeyPrivate,
+          ),
+        );
+        final bobSignedPreKeys = InMemorySignedPreKeyStore();
+        await bobSignedPreKeys.storeSignedPreKey(
+          bobKeys.signedPreKeyId,
+          SignedPreKeyRecord(
+            id: bobKeys.signedPreKeyId,
+            publicKey: bobKeys.signedPreKeyPublic,
+            privateKey: bobKeys.signedPreKeyPrivate,
+            signature: bobKeys.signedPreKeySignature.toList(),
+            timestamp: ts,
+          ),
+        );
+        final bobKyberPreKeys = InMemoryKyberPreKeyStore();
+        await bobKyberPreKeys.storeKyberPreKey(
+          bobKeys.kyberPreKeyId,
+          KyberPreKeyRecord.create(
+            id: bobKeys.kyberPreKeyId,
+            keyPair: bobKeys.kyberKeyPair,
+            signature: bobKeys.kyberPreKeySignature.toList(),
+            timestamp: ts,
+          ),
+        );
+        final bobCipher = SessionCipher(
+          localAddress: bob,
+          sessionStore: InMemorySessionStore(),
+          identityKeyStore: InMemoryIdentityKeyStore(
+            bobKeys.identityKeyPair,
+            222,
+          ),
+          preKeyStore: bobPreKeys,
+          signedPreKeyStore: bobSignedPreKeys,
+          kyberPreKeyStore: bobKyberPreKeys,
+        );
+        final aliceSessions = InMemorySessionStore();
+        final aliceIdentities = InMemoryIdentityKeyStore(aliceIdentity, 111);
+        await SessionBuilder(
+          localAddress: alice,
+          sessionStore: aliceSessions,
+          identityKeyStore: aliceIdentities,
+        ).processPreKeyBundle(bob, bobBundle);
+        final aliceCipher = SessionCipher(
+          localAddress: alice,
+          sessionStore: aliceSessions,
+          identityKeyStore: aliceIdentities,
+          preKeyStore: InMemoryPreKeyStore(),
+          signedPreKeyStore: InMemorySignedPreKeyStore(),
+          kyberPreKeyStore: InMemoryKyberPreKeyStore(),
+        );
+        await bobCipher.decrypt(
+          alice,
+          await aliceCipher.encrypt(bob, Uint8List.fromList([1])),
+        );
+        await aliceCipher.decrypt(
+          bob,
+          await bobCipher.encrypt(alice, Uint8List.fromList([2])),
+        );
+
+        final in31Days = DateTime.now().add(const Duration(days: 31));
+        final record = (await aliceSessions.loadSession(bob))!;
+        expect(
+          record.hasUsableSenderChain(
+            nowMillis: BigInt.from(in31Days.millisecondsSinceEpoch),
+          ),
+          isTrue,
+        );
+      });
+
       test('hasUsableSenderChain returns false for empty session', () {
         final emptySession = SessionRecord.deserialize(bytes: []);
         final now = BigInt.from(DateTime.now().millisecondsSinceEpoch);

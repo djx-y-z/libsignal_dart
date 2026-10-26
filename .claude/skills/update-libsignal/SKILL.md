@@ -146,25 +146,19 @@ Verify the AI-generated entry against YOUR findings from Step 1 — the AI only
 sees the release notes and commit subjects, not the diffs:
 - Fix incorrect descriptions
 - Add breaking changes, workarounds, and security fixes you found in the diff
-- Ensure `libsignal_frb` version in Highlights matches `rust/Cargo.toml`
+- Leave the `libsignal_frb` line out of Highlights: `make release-frb` stamps
+  it when the crate is released
 
-### Step 8: Verify libsignal_frb Version Bump
+### Step 8: Leave the libsignal_frb Version Alone
 
-The automated update bumps the version in `rust/Cargo.toml` in two stages:
-a deterministic bump mirroring the upstream SemVer delta, then an AI severity
-check (from the release notes and commit list) that can raise it — e.g. to
-major when a 0.x upstream ships breaking changes in a minor release.
-
-- If the PR carries the **`bump-unverified`** label (or the ⚠️ warning in the
-  PR body), the AI check did not run — classify the update yourself using
-  your Step 1 findings and fix the version if needed.
-- Even when verified, adjust if the *wrapper's own* API changed differently —
-  e.g. bump major if adapting to upstream forced breaking changes in
-  `rust/src/api/`:
-
-```toml
-version = "X.Y.Z"
-```
+The automated update does not touch `[package] version` in `rust/Cargo.toml`,
+and neither should the review. The crate version is chosen when the crate is
+released — `make release-frb ARGS="--version X.Y.Z"`, by SemVer of the FFI
+surface across everything merged since the last `libsignal_frb-*` tag — so
+an update that lands now is versioned together with whatever lands after it.
+What this review contributes to that choice is the codegen diff (see *Binding
+Regeneration* below), and, if adapting to upstream forced a breaking change in
+`rust/src/api/`, a CHANGELOG entry that says so.
 
 ### Step 9: Sync Cargo.lock
 
@@ -202,7 +196,7 @@ git commit -m "fix: adapt for libsignal vX.Y.Z breaking changes"
 - [ ] `make test` — all tests pass
 - [ ] `make analyze` — no issues
 - [ ] CHANGELOG.md — accurate and complete (breaking changes, security fixes)
-- [ ] `rust/Cargo.toml` — `libsignal_frb` version bumped (automatic; verify)
+- [ ] `rust/Cargo.toml` — `[package] version` untouched (`make release-frb` moves it)
 - [ ] An `E0599` was checked against the upstream feature table before being
       treated as a removal
 - [ ] No diagnostic/test-only upstream feature ships — checked with `strings`
@@ -298,9 +292,11 @@ Files automatically updated by `make check-new-libsignal-version ARGS="--update"
 |------|------|-------------|
 | `rust/Cargo.toml` | upstream tags | Native library dependency version |
 | `.copier-answers.yml` | `upstream_version` | What the next `copier update` renders |
-| `rust/Cargo.toml` | `version` | `libsignal_frb` bump mirroring upstream SemVer delta (adjust manually if wrapper API changed differently) |
 | `README.md` | Badge | Version badge in header |
 | `CLAUDE.md` | Example | Code example in documentation |
+
+Not touched: `[package] version` in `rust/Cargo.toml`. The `libsignal_frb`
+version moves with `make release-frb`, not with an upstream update.
 
 Files that need manual update:
 

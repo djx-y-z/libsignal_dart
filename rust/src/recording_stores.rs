@@ -17,6 +17,10 @@
 //!   message cannot roll the stored identity back. That session also stays
 //!   archived, so the record may have no current session left to read an
 //!   identity from.
+//! - On the way out it saves the identity it has just checked, on every
+//!   message: `message_encrypt`, and `sealed_sender_encrypt` through it. With
+//!   the identity already stored that changes nothing; for an address whose
+//!   identity the application deleted it stores the key again.
 //!
 //! These wrappers observe the real calls instead of guessing. For Kyber they
 //! also capture the full argument triple: `mark_kyber_pre_key_used` is handed

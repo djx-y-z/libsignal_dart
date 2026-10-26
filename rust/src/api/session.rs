@@ -67,12 +67,33 @@ impl SessionRecord {
             .map_err(LibSignalException::from)
     }
 
-    /// Check if this session has a usable sender chain.
+    /// Whether the current session can be sent on at `now_millis`, by the
+    /// requirements Signal's own clients apply.
+    ///
+    /// The session must have a sender chain, and it must be:
+    /// - not stale: started by the peer, answered by the peer, or less than
+    ///   30 days old — an unanswered session older than that is one libsignal
+    ///   itself no longer encrypts on;
+    /// - established with PQXDH rather than X3DH;
+    /// - using the post-quantum ratchet, SPQR.
+    ///
+    /// These are libsignal's `NotStale`, `EstablishedWithPqxdh` and `Spqr`, the
+    /// set its Java, Swift and Node bindings ask for. libsignal warns that the
+    /// last one also accepts an unanswered session whose pre-key message
+    /// carries SPQR, and that a peer that drops SPQR from its answer turns such
+    /// a session from usable to unusable. A `false` is the point at which a
+    /// Signal client archives the session and builds a new one with
+    /// `SessionBuilder.processPreKeyBundle`.
     #[flutter_rust_bridge::frb(sync)]
     pub fn has_usable_sender_chain(&self, now_millis: u64) -> Result<bool, LibSignalException> {
         let now = UNIX_EPOCH + Duration::from_millis(now_millis);
         self.inner
-            .has_usable_sender_chain(now, SessionUsabilityRequirements::empty())
+            .has_usable_sender_chain(
+                now,
+                SessionUsabilityRequirements::NotStale
+                    | SessionUsabilityRequirements::EstablishedWithPqxdh
+                    | SessionUsabilityRequirements::Spqr,
+            )
             .map_err(LibSignalException::from)
     }
 
