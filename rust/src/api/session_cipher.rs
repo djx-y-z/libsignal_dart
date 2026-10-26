@@ -438,17 +438,21 @@ fn message_decrypt_signal_inner(
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load a Kyber pre-key by ID (may return None)
 /// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
-///   Kyber pre-key as used. The three arguments mirror libsignal's
-///   `KyberPreKeyStore::mark_kyber_pre_key_used`, so a store can implement the
-///   last-resort anti-replay check that trait documents.
+///   Kyber pre-key as used, and answer whether this agreement is new. The
+///   three arguments mirror libsignal's `KyberPreKeyStore::mark_kyber_pre_key_used`
+///   and identify one PQXDH agreement. `false` — the store has seen it, so
+///   the message is a replay — fails the call with `InvalidMessage` before
+///   anything is written, as libsignal's own check does.
 ///
 /// # Write ordering
 /// The write-back callbacks run in this order, each one only if libsignal made
-/// that write: `save_identity`, `mark_kyber_pre_key_used`, `remove_pre_key`,
-/// then `store_session` last. The session must land after the consumption
+/// that write: `mark_kyber_pre_key_used`, `save_identity`, `remove_pre_key`,
+/// then `store_session` last. The Kyber mark comes first because it is the
+/// check that refuses a replayed agreement — libsignal makes it before any
+/// write, and so does the bridge. The session must land after the consumption
 /// writes: if it landed first and the process died before them, the
 /// redelivered message would match the now-persisted session, consume nothing,
-/// and leave the pre-keys usable. The order is this bridge's own: since
+/// and leave the pre-keys usable. That part is this bridge's own: since
 /// v0.106.0 libsignal stores the session before it removes the one-time
 /// pre-key.
 ///
@@ -474,7 +478,7 @@ pub async fn message_decrypt_prekey_with_callbacks(
     load_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     remove_pre_key: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
+    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<bool> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<Vec<u8>, LibSignalException> {
     // Extract pre-key IDs from the message first
@@ -550,20 +554,24 @@ pub async fn message_decrypt_prekey_with_callbacks(
     let outcome = result?;
 
     // Step 3: Store results and cleanup via callbacks, each only if libsignal
-    // made that write. `store_session` goes last on purpose — see "Write
-    // ordering" above.
-    if let Some(identity_key) = outcome.identity_to_save {
-        save_identity(remote_name.clone(), remote_device_id, identity_key).await;
-    }
+    // made that write, in the order "Write ordering" above gives.
 
     // Mark the Kyber pre-key libsignal consumed, with the full argument triple.
-    if let Some(used) = outcome.kyber_pre_key_used {
-        mark_kyber_pre_key_used(
+    // This is libsignal's replay check: an agreement the store has seen fails
+    // the message before anything is written.
+    if let Some(used) = outcome.kyber_pre_key_used
+        && !mark_kyber_pre_key_used(
             used.kyber_pre_key_id,
             used.signed_pre_key_id,
             used.base_key,
         )
-        .await;
+        .await
+    {
+        return Err(crate::recording_stores::reused_base_key().into());
+    }
+
+    if let Some(identity_key) = outcome.identity_to_save {
+        save_identity(remote_name.clone(), remote_device_id, identity_key).await;
     }
 
     // Remove the one-time pre-key libsignal consumed.

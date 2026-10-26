@@ -206,6 +206,10 @@ class SessionCipher {
   /// Returns the decrypted plaintext.
   ///
   /// Throws an exception if decryption fails (invalid MAC, missing keys, etc.).
+  /// A pre-key message whose agreement your
+  /// [KyberPreKeyStore.markKyberPreKeyUsed] answers `false` for — one it has
+  /// recorded before, so a replay — throws a `LibSignalException` with
+  /// `LibSignalErrorCode.invalidMessage`, and nothing is written.
   Future<Uint8List> decrypt(
     ProtocolAddress remoteAddress,
     CiphertextMessage ciphertext,
@@ -333,13 +337,14 @@ class SessionCipher {
         final record = await _kyberPreKeyStore.loadKyberPreKey(id);
         return record != null ? Uint8List.fromList(record.serialize()) : null;
       },
-      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
-        await _kyberPreKeyStore.markKyberPreKeyUsed(
-          id,
-          signedPreKeyId,
-          PublicKey.deserialize(bytes: baseKey),
-        );
-      },
+      // The store's answer is libsignal's replay check: `false` fails the
+      // decryption before anything is written.
+      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) =>
+          _kyberPreKeyStore.markKyberPreKeyUsed(
+            id,
+            signedPreKeyId,
+            PublicKey.deserialize(bytes: baseKey),
+          ),
       // Enforces identity-trust for the new session: the Rust layer pre-seeds
       // this known identity so libsignal rejects a changed sender key with
       // UntrustedIdentity instead of silently accepting it.

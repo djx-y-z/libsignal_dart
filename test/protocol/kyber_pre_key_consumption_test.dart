@@ -1,7 +1,7 @@
 // ignore_for_file: unreachable_from_main, sort_constructors_first
 /// Which pre-keys a decryption consumes, and what it tells the store.
 ///
-/// Two behaviours are pinned here:
+/// Three behaviours are pinned here:
 ///
 /// 1. Consumption follows what libsignal actually did, not what the message
 ///    referenced. A pre-key message that lands on a session already established
@@ -9,6 +9,8 @@
 /// 2. `markKyberPreKeyUsed` fires on **both** decryption paths, and carries the
 ///    full `(kyberPreKeyId, signedPreKeyId, baseKey)` triple that libsignal's
 ///    own `KyberPreKeyStore` receives.
+/// 3. Its answer is libsignal's replay check: an agreement the store has seen
+///    fails the decryption with `invalidMessage` before anything is written.
 library;
 
 import 'dart:convert';
@@ -17,6 +19,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 /// One `markKyberPreKeyUsed` call.
@@ -35,17 +38,17 @@ class RecordingKyberPreKeyStore implements KyberPreKeyStore {
   final List<KyberMark> marks = [];
 
   @override
-  Future<void> markKyberPreKeyUsed(
+  Future<bool> markKyberPreKeyUsed(
     int kyberPreKeyId,
     int signedPreKeyId,
     PublicKey baseKey,
-  ) async {
+  ) {
     marks.add((
       kyberPreKeyId: kyberPreKeyId,
       signedPreKeyId: signedPreKeyId,
       baseKey: baseKey,
     ));
-    await _inner.markKyberPreKeyUsed(kyberPreKeyId, signedPreKeyId, baseKey);
+    return _inner.markKyberPreKeyUsed(kyberPreKeyId, signedPreKeyId, baseKey);
   }
 
   @override
@@ -218,7 +221,11 @@ void main() {
       InMemoryIdentityKeyStore identityStore,
     })
   >
-  createSender(Recipient bob, {String name = 'alice-uuid'}) async {
+  createSender(
+    Recipient bob, {
+    String name = 'alice-uuid',
+    bool oneTimePreKey = true,
+  }) async {
     final address = ProtocolAddress(name: name, deviceId: 1);
     final identity = IdentityKeyPair.generate();
     final sessionStore = InMemorySessionStore();
@@ -228,7 +235,10 @@ void main() {
       localAddress: address,
       sessionStore: sessionStore,
       identityKeyStore: identityStore,
-    ).processPreKeyBundle(bob.address, bob.keys.toBundle());
+    ).processPreKeyBundle(
+      bob.address,
+      bob.keys.toBundle(oneTimePreKey: oneTimePreKey),
+    );
 
     return (
       address: address,
@@ -330,7 +340,7 @@ void main() {
       },
     );
 
-    test('a genuine replay re-marks the identical triple', () async {
+    test('a genuine replay is refused before anything is written', () async {
       final bob = await createRecipient();
       final alice = await createSender(bob);
 
@@ -346,8 +356,11 @@ void main() {
       await bob.sessionStore.deleteSession(alice.address);
       await bob.republishOneTimePreKey(preKeyId);
 
-      // The same message now establishes a session all over again.
-      await bob.cipher.decrypt(alice.address, ciphertext);
+      // The same message would establish a session all over again.
+      await expectLater(
+        bob.cipher.decrypt(alice.address, ciphertext),
+        failsWith(LibSignalErrorCode.invalidMessage),
+      );
 
       // Two marks carrying the *same* triple. That repetition is the only
       // signal a last-resort key gets that a pre-key message was replayed, and
@@ -360,7 +373,45 @@ void main() {
         base64Encode(second.baseKey.serialize()),
         equals(base64Encode(first.baseKey.serialize())),
       );
+
+      // The store's answer came before every write: no session was stored,
+      // and the republished one-time pre-key is still there.
+      expect(await bob.sessionStore.containsSession(alice.address), isFalse);
+      expect(bob.preKeyStore.removed, equals([preKeyId]));
+      expect(await bob.preKeyStore.containsPreKey(preKeyId), isTrue);
     });
+
+    test(
+      'a replayed message that used no one-time pre-key is refused',
+      () async {
+        final bob = await createRecipient();
+        // A bundle without a one-time pre-key: what a server hands out once they
+        // have run out, or chooses to.
+        final alice = await createSender(bob, oneTimePreKey: false);
+
+        final ciphertext = await alice.cipher.encrypt(
+          bob.address,
+          utf8.encode('first'),
+        );
+        expect(
+          utf8.decode(await bob.cipher.decrypt(alice.address, ciphertext)),
+          equals('first'),
+        );
+        expect(bob.preKeyStore.removed, isEmpty);
+
+        // Bob's record lets the session go, as it does once three newer
+        // sessions are archived after it. Nothing else stands in the way of the
+        // same message: the signed and the Kyber pre-key are both still served.
+        await bob.sessionStore.deleteSession(alice.address);
+
+        await expectLater(
+          bob.cipher.decrypt(alice.address, ciphertext),
+          failsWith(LibSignalErrorCode.invalidMessage),
+        );
+        expect(await bob.sessionStore.containsSession(alice.address), isFalse);
+        expect(bob.kyberPreKeyStore.marks, hasLength(2));
+      },
+    );
 
     test('both messages still decrypt correctly', () async {
       final bob = await createRecipient();
@@ -538,5 +589,49 @@ void main() {
       expect(bob.kyberPreKeyStore.marks, hasLength(1));
       expect(bob.preKeyStore.removed, equals([preKeyId]));
     });
+
+    test(
+      'a replayed message that used no one-time pre-key is refused',
+      () async {
+        final bob = await createRecipient();
+        final alice = await createSender(bob, oneTimePreKey: false);
+
+        final aliceSealed = SealedSenderCipher(
+          localAddress: alice.address,
+          sessionStore: alice.sessionStore,
+          identityKeyStore: alice.identityStore,
+          preKeyStore: InMemoryPreKeyStore(),
+          signedPreKeyStore: InMemorySignedPreKeyStore(),
+          kyberPreKeyStore: InMemoryKyberPreKeyStore(),
+        );
+        final ciphertext = await aliceSealed.encrypt(
+          recipientAddress: bob.address,
+          plaintext: Uint8List.fromList(utf8.encode('sealed hello')),
+          senderCertificate: certificateFor(alice.address, alice.identity),
+        );
+
+        Future<SealedSenderDecryptionResult> deliver() =>
+            bob.sealedCipher.decrypt(
+              ciphertext: ciphertext,
+              trustRoot: trustRootPublicKey.serialize(),
+              timestamp: DateTime.now().millisecondsSinceEpoch,
+            );
+
+        expect(
+          utf8.decode((await deliver()).plaintext),
+          equals('sealed hello'),
+        );
+
+        // Same as on the SessionCipher path: once the session has left Bob's
+        // record, only the remembered agreement refuses the message.
+        await bob.sessionStore.deleteSession(alice.address);
+        await expectLater(
+          deliver(),
+          failsWith(LibSignalErrorCode.invalidMessage),
+        );
+        expect(await bob.sessionStore.containsSession(alice.address), isFalse);
+        expect(bob.kyberPreKeyStore.marks, hasLength(2));
+      },
+    );
   });
 }

@@ -422,8 +422,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   dco_decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(dynamic raw);
 
   @protected
-  FutureOr<void> Function(int, int, Uint8List)
-  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+  FutureOr<bool> Function(int, int, Uint8List)
+  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
     dynamic raw,
   );
 
@@ -1738,8 +1738,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   PlatformPointer
-  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(int, int, Uint8List) raw,
+  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(int, int, Uint8List) raw,
   );
 
   @protected
@@ -2251,8 +2251,8 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
-  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(int, int, Uint8List) self,
+  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(int, int, Uint8List) self,
     SseSerializer serializer,
   );
 

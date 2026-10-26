@@ -510,8 +510,9 @@ class DurableSignedPreKeyStore implements SignedPreKeyStore {
 ///   it, so a replayed pre-key message no longer decrypts.
 /// - **Last-resort:** kept in service, but every
 ///   `(kyberPreKeyId, signedPreKeyId, baseKey)` agreement is recorded. A repeat
-///   is the replay libsignal's own trait documents, surfaced through
-///   [replayedAgreements] rather than thrown — see [markKyberPreKeyUsed].
+///   is the replay libsignal's own trait documents: [markKyberPreKeyUsed]
+///   answers `false`, the library refuses the message, and the repeat is
+///   listed in [replayedAgreements].
 ///
 /// Both `SessionCipher.decrypt` and `SealedSenderCipher.decrypt` mark through
 /// this store, so neither path can consume a key without it being recorded.
@@ -527,7 +528,7 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
 
   static final Uint8List _marker = Uint8List.fromList(const [1]);
 
-  /// Agreements seen twice, for the application to inspect after a decrypt.
+  /// Agreements seen twice, and so refused, for the application to inspect.
   ///
   /// Kept in memory on purpose: it is a report about this run, not state the
   /// protocol depends on. The journal holds the durable record.
@@ -577,7 +578,8 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
   Future<bool> containsKyberPreKey(int kyberPreKeyId) async =>
       _journal.get(_key(kyberPreKeyId)) != null;
 
-  /// Records that [kyberPreKeyId] was consumed in one PQXDH agreement.
+  /// Records that [kyberPreKeyId] was consumed in one PQXDH agreement, and
+  /// answers whether that agreement is new.
   ///
   /// For a one-time key the durable `used` mark is the whole story: it retires
   /// the key, and [loadKyberPreKey] enforces that. A last-resort key stays in
@@ -586,13 +588,12 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
   /// agreement, and seeing it twice means one pre-key message was processed
   /// twice.
   ///
-  /// A repeat is appended to [replayedAgreements] rather than thrown: this
-  /// callback runs after libsignal produced the plaintext, so throwing cannot
-  /// prevent the decryption — and the bridge treats the callback as infallible,
-  /// so an exception panics the Rust worker instead of surfacing cleanly. The
-  /// caller checks the list and drops the message.
+  /// A repeat answers `false`, and the library refuses the message with
+  /// `invalidMessage` before writing anything else; it is also appended to
+  /// [replayedAgreements]. Refusing is the answer, not an exception: a store
+  /// callback that throws panics the Rust worker instead of surfacing cleanly.
   @override
-  Future<void> markKyberPreKeyUsed(
+  Future<bool> markKyberPreKeyUsed(
     int kyberPreKeyId,
     int signedPreKeyId,
     PublicKey baseKey,
@@ -612,9 +613,10 @@ class DurableKyberPreKeyStore implements KyberPreKeyStore {
         signedPreKeyId: signedPreKeyId,
         baseKey: encodedBaseKey,
       ));
-      return;
+      return false;
     }
     await _journal.put(agreement, _marker);
+    return true;
   }
 
   @override

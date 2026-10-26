@@ -26,17 +26,29 @@
 //! also capture the full argument triple: `mark_kyber_pre_key_used` is handed
 //! the signed EC pre-key ID and the sender's base key alongside the Kyber ID,
 //! and those are exactly what a store needs for the last-resort anti-replay
-//! check that the upstream trait documents.
+//! check that the upstream trait documents. libsignal treats that call as a
+//! gate — a store that has seen the agreement fails it, and the decryption
+//! with it, before anything is written — and the per-call store here cannot
+//! refuse anything, so the cipher entry points put the same question to the
+//! Dart store before their first write-back and fail with [`reused_base_key`]
+//! when it answers that it has.
 
 use async_trait::async_trait;
 use libsignal_protocol::{
-    Direction, IdentityChange, IdentityKey, IdentityKeyPair, IdentityKeyStore,
-    InMemIdentityKeyStore, InMemKyberPreKeyStore, InMemPreKeyStore, KyberPreKeyId,
-    KyberPreKeyRecord, KyberPreKeyStore, PreKeyId, PreKeyRecord, PreKeyStore, ProtocolAddress,
-    PublicKey, SignalProtocolError, SignedPreKeyId,
+    CiphertextMessageType, Direction, IdentityChange, IdentityKey, IdentityKeyPair,
+    IdentityKeyStore, InMemIdentityKeyStore, InMemKyberPreKeyStore, InMemPreKeyStore,
+    KyberPreKeyId, KyberPreKeyRecord, KyberPreKeyStore, PreKeyId, PreKeyRecord, PreKeyStore,
+    ProtocolAddress, PublicKey, SignalProtocolError, SignedPreKeyId,
 };
 
 type Result<T> = std::result::Result<T, SignalProtocolError>;
+
+/// The error libsignal's reference store refuses a repeated agreement with,
+/// which `message_decrypt_prekey` passes on unchanged. The bridge returns the
+/// same when the Dart store answers `mark_kyber_pre_key_used` with `false`.
+pub(crate) fn reused_base_key() -> SignalProtocolError {
+    SignalProtocolError::InvalidMessage(CiphertextMessageType::PreKey, "reused base key".to_owned())
+}
 
 /// The arguments of the `mark_kyber_pre_key_used` call libsignal made.
 pub(crate) struct KyberPreKeyUsed {
@@ -131,8 +143,8 @@ impl KyberPreKeyStore for RecordingKyberPreKeyStore {
         });
         // Delegating keeps the reference anti-replay bookkeeping in place. It
         // cannot fire here — the store is fresh for every call — but the Dart
-        // store this call is forwarded to is not, which is the whole point of
-        // handing it the triple.
+        // store this call is forwarded to is not, and its answer is what
+        // refuses a replay; see `reused_base_key`.
         self.inner
             .mark_kyber_pre_key_used(kyber_prekey_id, ec_prekey_id, base_key)
             .await

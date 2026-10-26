@@ -167,7 +167,11 @@ Two consequences:
 Note that a write-back callback invoked *after* the operation's real work is
 done cannot abort that work whatever it returns — the result already exists. If
 a check has to be able to stop an operation, it must run before it, which
-usually means a read callback rather than a write one.
+usually means a read callback rather than a write one. It can still stop the
+operation's *effects* if it runs before every other write-back and before the
+result is returned: `markKyberPreKeyUsed` answers `bool` and comes first, so a
+`false` leaves nothing written and no plaintext released — the point at which
+libsignal makes the same check inside its own call.
 
 ### Bridging Sync Traits to Async Callbacks
 

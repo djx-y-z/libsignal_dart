@@ -16,10 +16,15 @@
 - **`PreKeyRecord.privateKey()` and `SignedPreKeyRecord.privateKey()` are
   gone** — **(breaking)** a record travels whole, private half included,
   through `serialize()`
-- **No storage migration** — none of the breaking changes needs one: the
-  store interfaces are unchanged and records are still persisted whole
-  through `serialize()`. Session records gain fields under Tahini, which
-  libsignal writes on the next save and earlier versions still read.
+- **A replayed pre-key message is refused before anything is written** —
+  **(breaking)** `KyberPreKeyStore.markKyberPreKeyUsed` returns
+  `Future<bool>`, and `false` for an agreement the store has seen fails the
+  decryption with `invalidMessage`, as libsignal's own check does
+- **No storage migration** — none of the breaking changes needs one: records
+  are still persisted whole through `serialize()`, and a Kyber pre-key store
+  that records the agreements it marks, as this package already asked, only
+  has to answer from that record. Session records gain fields under Tahini,
+  which libsignal writes on the next save and earlier versions still read.
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
   an archived session is never made current again, and a record keeps at
   most 3 of them instead of 40
@@ -71,6 +76,28 @@
   pass it whole (`serialize()` / `deserialize()`); the private key itself is
   a `PrivateKey` where you generated it. `IdentityKeyPair.privateKey`,
   `PrivateKey.serialize()` and `KyberSecretKey.serialize()` stay.
+- **`KyberPreKeyStore.markKyberPreKeyUsed` returns `Future<bool>`, and
+  `false` refuses the message** (`rust/src/api/session_cipher.rs`,
+  `rust/src/api/sealed_sender.rs`, `rust/src/recording_stores.rs`,
+  `lib/src/rust/api/`, `lib/src/stores/kyber_pre_key_store.dart`,
+  `lib/src/stores/in_memory/in_memory_kyber_pre_key_store.dart`,
+  `lib/src/protocol/session_cipher.dart`,
+  `lib/src/sealed_sender/sealed_sender_cipher.dart`, `SECURITY.md`) —
+  libsignal makes this call a check: a store that has seen the
+  `(kyberPreKeyId, signedPreKeyId, baseKey)` agreement fails it, and the
+  decryption with it, before anything is written. The bridge called it
+  after `saveIdentity` and could not be refused, so a replayed pre-key
+  message decrypted again and its session was stored; `SECURITY.md` listed
+  that as a known limitation and left the application to drop the message.
+  The callback now comes first on both decryption paths, and `false` fails
+  `SessionCipher.decrypt` and `SealedSenderCipher.decrypt` with
+  `LibSignalErrorCode.invalidMessage`, with nothing written.
+  `InMemoryKyberPreKeyStore` answers from the agreements it already
+  recorded. **Action required:** a `KyberPreKeyStore` returns `false` for a
+  triple it has recorded before, and otherwise records it durably and
+  returns `true`; code that calls `messageDecryptPrekeyWithCallbacks` or
+  `sealedSenderDecryptWithCallbacks` directly passes a
+  `markKyberPreKeyUsed` that answers the same way.
 
 #### Changed
 
@@ -237,6 +264,17 @@
 
 #### Security
 
+- **A replayed pre-key message that used no one-time pre-key is refused** —
+  a pre-key message carries a one-time EC pre-key only when the server's
+  bundle had one, and the Kyber pre-key it used may be a last-resort one,
+  reused by design. Once the session it built had left the record — since
+  libsignal v0.106.0 after three newer archived sessions, not forty — the
+  same message built that session again: its plaintext was returned a
+  second time and the rebuilt session written back to the record. A store
+  that records the agreements now refuses it before any of that, as
+  libsignal does (see Changed (Breaking)). The differential tests against
+  libsignal cover the replay, plain and sealed, and fail at the replayed
+  message when the bridge ignores the store's answer.
 - **Sealed sender clears its key material before writing the results back**
   (`rust/src/api/sealed_sender.rs`) — `SealedSenderCipher.encrypt` held the
   session record and identity key pair it had loaded, and `decrypt` the
@@ -379,10 +417,13 @@
   as well, which runs against libsignal's `sealed_sender_encrypt` and
   `sealed_sender_decrypt` with a trust root and certificates of its own.
   Between the steps an application archives a session, forgets the identity
-  it stored for a peer, or trusts a peer's new identity after the peer
-  reinstalled. Those steps change the state both runs start from, so they
-  need no libsignal counterpart. Seven scripted conversations and forty
-  seeded random ones reach all of it: across the seeds about 508
+  it stored for a peer, trusts a peer's new identity after the peer
+  reinstalled, or runs out of one-time pre-keys. Those steps change the
+  state both runs start from, so they need no libsignal counterpart. Each
+  step's reference store also knows the Kyber agreements the party's Dart
+  store has seen, so libsignal's last-resort replay check is compared too.
+  Eight scripted conversations and forty seeded random ones reach all of
+  it: across the seeds about 508
   decryptions, 100 of them sealed, 48 that leave no current session, 17
   identities stored again on encrypt and 20 refused identities.
   libsignal's behaviour is the expectation, so an upstream change moves it;
@@ -390,8 +431,8 @@
   (`84b3691`) three of the first five tests fail, naming the step:
   `sessionNotFound` where libsignal decrypted, and an identity saved where
   libsignal saved none. The identity encryption writes (see Changed
-  (Breaking)) is compared too: dropping it again fails seven of the eight
-  tests on the plain path and four on the sealed one. The random scripts
+  (Breaking)) is compared too: dropping it again fails eight of the nine
+  tests on the plain path and five on the sealed one. The random scripts
   assert that they still reach the states they exist for. Runs in `make
   rust-test`, in about seven seconds.
 - **The update pull request says whether it could be merged unread**
@@ -463,6 +504,13 @@
 
 #### Changed
 
+- **The store skills describe the refusing `markKyberPreKeyUsed`**
+  (`.claude/skills/stores-implementation/SKILL.md`,
+  `.claude/skills/frb-patterns/SKILL.md`) — the store skill's interface
+  sketch returns `Future<bool>` and says when to answer `false`, and
+  `frb-patterns`, which says a write-back callback cannot stop work already
+  done, adds that one asked before every other write-back and before the
+  result is returned can still stop the operation's effects.
 - **copier template adopted: v4.18.0 → v4.19.0** (`.copier-answers.yml` and
   the files named here and in the For Users entry above) — beyond the Apple
   install-name room above, it brings:

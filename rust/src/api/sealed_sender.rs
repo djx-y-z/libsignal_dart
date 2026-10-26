@@ -397,14 +397,17 @@ struct SealedSenderDecryptOutcome {
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load Kyber pre-key
 /// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
-///   Kyber pre-key as used. Same three arguments as on the `SessionCipher`
-///   path, mirroring libsignal's `KyberPreKeyStore::mark_kyber_pre_key_used`.
+///   Kyber pre-key as used, and answer whether this agreement is new. Same
+///   three arguments as on the `SessionCipher` path, mirroring libsignal's
+///   `KyberPreKeyStore::mark_kyber_pre_key_used`; `false` fails the call with
+///   `InvalidMessage` before anything is written.
 ///
 /// # Write ordering
-/// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
-/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, each
-/// only if libsignal made that write, so a crash cannot persist the session
-/// while leaving the consumed pre-keys usable.
+/// Identical to `message_decrypt_prekey_with_callbacks`:
+/// `mark_kyber_pre_key_used`, the check that refuses a replayed agreement,
+/// then `save_identity`, `remove_pre_key`, and `store_session` last, each only
+/// if libsignal made that write, so a crash cannot persist the session while
+/// leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -431,7 +434,7 @@ pub async fn sealed_sender_decrypt_with_callbacks(
     load_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
     remove_pre_key: impl Fn(u32) -> DartFnFuture<()> + Send + Sync + 'static,
     load_kyber_pre_key: impl Fn(u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
-    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static,
+    mark_kyber_pre_key_used: impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<bool> + Send + Sync + 'static,
     get_identity: impl Fn(String, u32) -> DartFnFuture<Option<Vec<u8>>> + Send + Sync + 'static,
 ) -> Result<SealedSenderDecryptResult, LibSignalException> {
     // Step 1: Load identity data. `Zeroizing` so an unwind out of a throwing
@@ -460,23 +463,27 @@ pub async fn sealed_sender_decrypt_with_callbacks(
 
     let outcome = result?;
 
-    // Step 3: Store results, each only if libsignal made that write —
-    // `store_session` last, so a crash cannot leave a persisted session next to
-    // unconsumed pre-keys.
+    // Step 3: Store results, each only if libsignal made that write. The
+    // Kyber mark first, as libsignal's replay check: an agreement the store
+    // has seen fails the message before anything is written. `store_session`
+    // last, so a crash cannot leave a persisted session next to unconsumed
+    // pre-keys.
+    if let Some(used) = outcome.kyber_pre_key_used
+        && !mark_kyber_pre_key_used(
+            used.kyber_pre_key_id,
+            used.signed_pre_key_id,
+            used.base_key,
+        )
+        .await
+    {
+        return Err(crate::recording_stores::reused_base_key().into());
+    }
+
     if let Some(identity_key) = outcome.identity_to_save {
         save_identity(
             outcome.sender_name.clone(),
             outcome.sender_device_id,
             identity_key,
-        )
-        .await;
-    }
-
-    if let Some(used) = outcome.kyber_pre_key_used {
-        mark_kyber_pre_key_used(
-            used.kyber_pre_key_id,
-            used.signed_pre_key_id,
-            used.base_key,
         )
         .await;
     }

@@ -130,14 +130,16 @@ abstract class KyberPreKeyStore {
   /// Store Kyber pre-key
   Future<void> storeKyberPreKey(int kyberPreKeyId, KyberPreKeyRecord record);
 
-  /// Mark Kyber pre-key as used.
+  /// Mark Kyber pre-key as used, and answer whether the agreement is new.
   ///
-  /// Retire a one-time key here (loadKyberPreKey must then refuse to serve
-  /// it). A last-resort key stays in service, so record the
-  /// (kyberPreKeyId, signedPreKeyId, baseKey) triple instead and treat a
-  /// repeat as a replayed pre-key message. Must not throw — the callback is
-  /// not failable.
-  Future<void> markKyberPreKeyUsed(
+  /// Return false for a (kyberPreKeyId, signedPreKeyId, baseKey) triple
+  /// recorded before — a replayed pre-key message, which then fails with
+  /// invalidMessage before anything is written; otherwise record it durably
+  /// and return true. Also retire a one-time key here (loadKyberPreKey must
+  /// then refuse to serve it); a last-resort key stays in service, and the
+  /// recorded triples are its defence. Refuse by returning false, never by
+  /// throwing — the callback is not failable.
+  Future<bool> markKyberPreKeyUsed(
     int kyberPreKeyId,
     int signedPreKeyId,
     PublicKey baseKey,

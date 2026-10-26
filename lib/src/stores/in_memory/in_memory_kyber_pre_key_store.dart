@@ -17,9 +17,10 @@ import '../kyber_pre_key_store.dart';
 /// Note: This implementation does NOT persist data across app restarts.
 ///
 /// Like libsignal's own in-memory reference store, this one records the PQXDH
-/// agreements it has seen ([wasAgreementSeen]) but never retires a key: it
-/// cannot tell a one-time key from a last-resort one. A production store must
-/// make that distinction — see `DurableKyberPreKeyStore` in `example_cli`.
+/// agreements it has seen ([wasAgreementSeen]) and refuses one it has seen
+/// before, but never retires a key: it cannot tell a one-time key from a
+/// last-resort one. A production store must make that distinction — see
+/// `DurableKyberPreKeyStore` in `example_cli`.
 class InMemoryKyberPreKeyStore implements KyberPreKeyStore {
   final Map<int, Uint8List> _kyberPreKeys = {};
   final Set<int> _usedKyberPreKeys = {};
@@ -54,13 +55,15 @@ class InMemoryKyberPreKeyStore implements KyberPreKeyStore {
   }
 
   @override
-  Future<void> markKyberPreKeyUsed(
+  Future<bool> markKyberPreKeyUsed(
     int kyberPreKeyId,
     int signedPreKeyId,
     PublicKey baseKey,
   ) async {
     _usedKyberPreKeys.add(kyberPreKeyId);
-    _agreementsSeen.add(_agreementKey(kyberPreKeyId, signedPreKeyId, baseKey));
+    return _agreementsSeen.add(
+      _agreementKey(kyberPreKeyId, signedPreKeyId, baseKey),
+    );
   }
 
   @override

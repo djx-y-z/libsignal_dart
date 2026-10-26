@@ -185,16 +185,20 @@ class PartyState {
   }
 
   /// Records the full `(kyberId, signedPreKeyId, baseKey)` triple libsignal
-  /// passed, so tests can assert the bridge forwards all three.
+  /// passed, so tests can assert the bridge forwards all three, and answers
+  /// whether it is new, as a store that refuses a replayed agreement does.
   final markedKyberPreKeys =
       <({int kyberId, int signedPreKeyId, String baseKey})>[];
 
-  void markKyberPreKeyUsed(int id, int signedPreKeyId, Uint8List baseKey) {
-    markedKyberPreKeys.add((
+  bool markKyberPreKeyUsed(int id, int signedPreKeyId, Uint8List baseKey) {
+    final mark = (
       kyberId: id,
       signedPreKeyId: signedPreKeyId,
       baseKey: base64Encode(baseKey),
-    ));
+    );
+    final isNew = !markedKyberPreKeys.contains(mark);
+    markedKyberPreKeys.add(mark);
+    return isNew;
   }
 }
 

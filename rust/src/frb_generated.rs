@@ -5374,7 +5374,7 @@ fn wire__crate__api__session_cipher__message_decrypt_prekey_with_callbacks_impl(
                     load_kyber_pre_key.cst_decode(),
                 );
             let api_mark_kyber_pre_key_used =
-                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
                     mark_kyber_pre_key_used.cst_decode(),
                 );
             let api_get_identity =
@@ -5754,7 +5754,7 @@ fn wire__crate__api__sealed_sender__sealed_sender_decrypt_with_callbacks_impl(
                     load_kyber_pre_key.cst_decode(),
                 );
             let api_mark_kyber_pre_key_used =
-                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+                decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
                     mark_kyber_pre_key_used.cst_decode(),
                 );
             let api_get_identity =
@@ -6322,9 +6322,9 @@ fn decode_DartFn_Inputs_u_32_Output_unit_AnyhowException(
         ))
     }
 }
-fn decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+fn decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
     dart_opaque: flutter_rust_bridge::DartOpaque,
-) -> impl Fn(u32, u32, Vec<u8>) -> flutter_rust_bridge::DartFnFuture<()> {
+) -> impl Fn(u32, u32, Vec<u8>) -> flutter_rust_bridge::DartFnFuture<bool> {
     use flutter_rust_bridge::IntoDart;
 
     async fn body(
@@ -6332,7 +6332,7 @@ fn decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowExcepti
         arg0: u32,
         arg1: u32,
         arg2: Vec<u8>,
-    ) -> () {
+    ) -> bool {
         let args = vec![
             arg0.into_into_dart().into_dart(),
             arg1.into_into_dart().into_dart(),
@@ -6345,7 +6345,7 @@ fn decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowExcepti
         let mut deserializer = flutter_rust_bridge::for_generated::SseDeserializer::new(message);
         let action = deserializer.cursor.read_u8().unwrap();
         let ans = match action {
-            0 => std::result::Result::Ok(<()>::sse_decode(&mut deserializer)),
+            0 => std::result::Result::Ok(<bool>::sse_decode(&mut deserializer)),
             1 => std::result::Result::Err(
                 <flutter_rust_bridge::for_generated::anyhow::Error>::sse_decode(&mut deserializer),
             ),

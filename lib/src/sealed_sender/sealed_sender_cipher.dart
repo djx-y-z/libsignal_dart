@@ -193,6 +193,10 @@ class SealedSenderCipher {
   /// - The sender certificate is invalid or expired
   /// - The message cannot be decrypted
   /// - Required pre-keys are not found
+  /// - The message is a pre-key message whose agreement your
+  ///   [KyberPreKeyStore.markKyberPreKeyUsed] answers `false` for — one it has
+  ///   recorded before, so a replay: a `LibSignalException` with
+  ///   `LibSignalErrorCode.invalidMessage`, and nothing is written
   Future<SealedSenderDecryptionResult> decrypt({
     required Uint8List ciphertext,
     required Uint8List trustRoot,
@@ -241,13 +245,14 @@ class SealedSenderCipher {
         final preKey = await _kyberPreKeyStore.loadKyberPreKey(id);
         return preKey?.serialize();
       },
-      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
-        await _kyberPreKeyStore.markKyberPreKeyUsed(
-          id,
-          signedPreKeyId,
-          PublicKey.deserialize(bytes: baseKey),
-        );
-      },
+      // The store's answer is libsignal's replay check: `false` fails the
+      // decryption before anything is written.
+      markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) =>
+          _kyberPreKeyStore.markKyberPreKeyUsed(
+            id,
+            signedPreKeyId,
+            PublicKey.deserialize(bytes: baseKey),
+          ),
       // Enforces identity-trust for the sender: the Rust layer pre-seeds this
       // known identity so a changed sender key is rejected with UntrustedIdentity
       // (relevant for the pre-key branch of sealed-sender decryption).

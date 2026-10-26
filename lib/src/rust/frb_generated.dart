@@ -769,7 +769,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
+    required FutureOr<bool> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -853,7 +853,7 @@ abstract class RustLibApi extends BaseApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
+    required FutureOr<bool> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   });
 
@@ -6492,7 +6492,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
+    required FutureOr<bool> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -6538,7 +6538,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 loadKyberPreKey,
               );
           var arg14 =
-              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
                 markKyberPreKeyUsed,
               );
           var arg15 =
@@ -7100,7 +7100,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     required FutureOr<Uint8List?> Function(int) loadPreKey,
     required FutureOr<void> Function(int) removePreKey,
     required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-    required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
+    required FutureOr<bool> Function(int, int, Uint8List) markKyberPreKeyUsed,
     required FutureOr<Uint8List?> Function(String, int) getIdentity,
   }) {
     return handler.executeNormal(
@@ -7146,7 +7146,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
                 loadKyberPreKey,
               );
           var arg14 =
-              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+              cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
                 markKyberPreKeyUsed,
               );
           var arg15 =
@@ -7946,15 +7946,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   Future<void> Function(int, dynamic, dynamic, dynamic)
-  encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(int, int, Uint8List) raw,
+  encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(int, int, Uint8List) raw,
   ) {
     return (callId, rawArg0, rawArg1, rawArg2) async {
       final arg0 = dco_decode_u_32(rawArg0);
       final arg1 = dco_decode_u_32(rawArg1);
       final arg2 = dco_decode_list_prim_u_8_strict(rawArg2);
 
-      Box<void>? rawOutput;
+      Box<bool>? rawOutput;
       Box<AnyhowException>? rawError;
       try {
         rawOutput = Box(await raw(arg0, arg1, arg2));
@@ -7966,7 +7966,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       assert((rawOutput != null) ^ (rawError != null));
       if (rawOutput != null) {
         serializer.buffer.putUint8(0);
-        sse_encode_unit(rawOutput.value, serializer);
+        sse_encode_bool(rawOutput.value, serializer);
       } else {
         serializer.buffer.putUint8(1);
         sse_encode_AnyhowException(rawError!.value, serializer);
@@ -8624,8 +8624,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
-  FutureOr<void> Function(int, int, Uint8List)
-  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+  FutureOr<bool> Function(int, int, Uint8List)
+  dco_decode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
     dynamic raw,
   ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
@@ -10775,12 +10775,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   PlatformPointer
-  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(int, int, Uint8List) raw,
+  cst_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(int, int, Uint8List) raw,
   ) {
     // Codec=Cst (C-struct based), see doc to use other codecs
     return cst_encode_DartOpaque(
-      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
         raw,
       ),
     );
@@ -11731,13 +11731,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void
-  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
-    FutureOr<void> Function(int, int, Uint8List) self,
+  sse_encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
+    FutureOr<bool> Function(int, int, Uint8List) self,
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_DartOpaque(
-      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_unit_AnyhowException(
+      encode_DartFn_Inputs_u_32_u_32_list_prim_u_8_strict_Output_bool_AnyhowException(
         self,
       ),
       serializer,

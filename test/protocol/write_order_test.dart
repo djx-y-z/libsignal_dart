@@ -5,9 +5,10 @@
 /// release"): an application without a transaction around the call is left
 /// with whatever landed before a crash. Where libsignal both saves an identity
 /// and stores a session it saves the identity first, and the bridge follows; a
-/// pre-key message stores its session last, for the reason `SECURITY.md` gives.
-/// The differential tests against libsignal compare only what was written, so
-/// nothing else pins this.
+/// pre-key message asks `markKyberPreKeyUsed` before anything else, because its
+/// answer can refuse the message, and stores its session last, for the reason
+/// `SECURITY.md` gives. The differential tests against libsignal compare only
+/// what was written, so nothing else pins this.
 library;
 
 import 'dart:convert';
@@ -16,6 +17,7 @@ import 'dart:typed_data';
 import 'package:libsignal/libsignal.dart';
 import 'package:test/test.dart';
 
+import '../test_helpers/error_matchers.dart';
 import '../test_helpers/session_helpers.dart';
 
 /// [SessionStore] that logs every `storeSession`.
@@ -121,7 +123,7 @@ class LoggingKyberPreKeyStore implements KyberPreKeyStore {
   final _inner = InMemoryKyberPreKeyStore();
 
   @override
-  Future<void> markKyberPreKeyUsed(
+  Future<bool> markKyberPreKeyUsed(
     int kyberPreKeyId,
     int signedPreKeyId,
     PublicKey baseKey,
@@ -218,6 +220,14 @@ void main() {
   /// libsignal's order wherever it saves an identity and stores a session.
   const identityThenSession = ['saveIdentity', 'storeSession'];
 
+  /// A pre-key message: the check that can refuse it first, the session last.
+  const preKeyMessage = [
+    'markKyberPreKeyUsed',
+    'saveIdentity',
+    'removePreKey',
+    'storeSession',
+  ];
+
   late RemotePartyKeys bobKeys;
   late Party alice;
   late Party bob;
@@ -307,9 +317,13 @@ void main() {
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
 
-  /// Alice builds a session from Bob's bundle.
-  Future<void> fetch() =>
-      alice.builder.processPreKeyBundle(bob.address, bobKeys.toBundle());
+  /// Alice builds a session from Bob's bundle, which carries a one-time
+  /// pre-key unless [oneTimePreKey] is false.
+  Future<void> fetch({bool oneTimePreKey = true}) =>
+      alice.builder.processPreKeyBundle(
+        bob.address,
+        bobKeys.toBundle(oneTimePreKey: oneTimePreKey),
+      );
 
   /// A session both sides hold as current and acknowledged.
   Future<void> establish() async {
@@ -351,12 +365,27 @@ void main() {
       expect(message.isPreKeyMessage, isTrue);
       expect(
         await bob.writesOf(() => bob.cipher.decrypt(alice.address, message)),
-        equals([
-          'saveIdentity',
-          'markKyberPreKeyUsed',
-          'removePreKey',
-          'storeSession',
-        ]),
+        equals(preKeyMessage),
+      );
+    });
+
+    test('a replayed pre-key message writes nothing once refused', () async {
+      await fetch(oneTimePreKey: false);
+      final message = await alice.cipher.encrypt(
+        bob.address,
+        utf8.encode('hello'),
+      );
+      await bob.cipher.decrypt(alice.address, message);
+      // The session leaves Bob's record; the same message would build it again.
+      await bob.sessionStore.deleteSession(alice.address);
+      expect(
+        await bob.writesOf(
+          () => expectLater(
+            bob.cipher.decrypt(alice.address, message),
+            failsWith(LibSignalErrorCode.invalidMessage),
+          ),
+        ),
+        equals(['markKyberPreKeyUsed']),
       );
     });
 
@@ -389,12 +418,23 @@ void main() {
       final ciphertext = await sealedTo(bob, alice, 'sealed');
       expect(
         await bob.writesOf(() => unseal(bob, ciphertext)),
-        equals([
-          'saveIdentity',
-          'markKyberPreKeyUsed',
-          'removePreKey',
-          'storeSession',
-        ]),
+        equals(preKeyMessage),
+      );
+    });
+
+    test('a replayed pre-key message writes nothing once refused', () async {
+      await fetch(oneTimePreKey: false);
+      final ciphertext = await sealedTo(bob, alice, 'sealed');
+      await unseal(bob, ciphertext);
+      await bob.sessionStore.deleteSession(alice.address);
+      expect(
+        await bob.writesOf(
+          () => expectLater(
+            unseal(bob, ciphertext),
+            failsWith(LibSignalErrorCode.invalidMessage),
+          ),
+        ),
+        equals(['markKyberPreKeyUsed']),
       );
     });
 

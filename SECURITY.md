@@ -634,10 +634,10 @@ before the operation returns its result, on all entry points:
 | `SessionBuilder.processPreKeyBundle` | `saveIdentity`, `storeSession` |
 | `SessionCipher.encrypt` | `saveIdentity`², `storeSession` |
 | `SessionCipher.decrypt` (Whisper) | `saveIdentity`¹, `storeSession` |
-| `SessionCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
+| `SessionCipher.decrypt` (pre-key) | `markKyberPreKeyUsed`³, `saveIdentity`¹, `removePreKey`, `storeSession` |
 | `SealedSenderCipher.encrypt` | `saveIdentity`², `storeSession` |
 | `SealedSenderCipher.decrypt` (Whisper) | `saveIdentity`¹, `storeSession` |
-| `SealedSenderCipher.decrypt` (pre-key) | `saveIdentity`¹, `markKyberPreKeyUsed`, `removePreKey`, `storeSession` |
+| `SealedSenderCipher.decrypt` (pre-key) | `markKyberPreKeyUsed`³, `saveIdentity`¹, `removePreKey`, `storeSession` |
 | `GroupCipher.createDistributionMessage` / `processDistributionMessage` / `encrypt` / `decrypt` | `storeSenderKey` |
 | `sealedSenderEncryptFromUsmc` / `sealedSenderDecryptToUsmc` / `sealedSenderMultiRecipientEncrypt` | *(none — see below)* |
 
@@ -658,6 +658,12 @@ of the rule holds by construction.
 > this changes nothing; for an address whose stored identity you deleted, it
 > stores the key again — see
 > [Identity trust](#identity-trust--mitm-detection).
+>
+> **³ `markKyberPreKeyUsed` answers before anything is written:** `false` — the
+> store has recorded this `(kyberPreKeyId, signedPreKeyId, baseKey)` agreement
+> before, so the message is a replay — fails the decryption with
+> `LibSignalErrorCode.invalidMessage`, and none of the writes after it happen.
+> See [Deletes and consumption are writes too](#deletes-and-consumption-are-writes-too).
 
 > **Why `saveIdentity` comes before `storeSession`.** It is libsignal's order
 > wherever it does both, and on decrypt it is the safer one to be interrupted
@@ -690,11 +696,11 @@ session at the same time.
 > died before `removePreKey`, the redelivered message would match the persisted
 > session, consume nothing, and leave a one-time pre-key usable forever.
 >
-> The order is the bridge's own. libsignal's has differed since v0.106.0: it
-> marks the Kyber pre-key first, as the check that rejects a replayed
-> agreement, and stores the session before it removes the one-time pre-key.
-> A Dart callback cannot reject anything (Known Limitations, item 5), so the
-> bridge keeps the session last for the reason above.
+> `markKyberPreKeyUsed` comes first, as in libsignal: its answer is the check
+> that refuses a replayed agreement, so nothing may be written before it.
+> After it the order is the bridge's own — since v0.106.0 libsignal stores the
+> session before it removes the one-time pre-key — and the bridge keeps the
+> session last for the reason above.
 >
 > Writing the session last does **not** make every crash recoverable — it picks
 > the safer failure. Crash after a durable `markKyberPreKeyUsed` but before
@@ -773,8 +779,9 @@ queue; `unawaited(...)` inside a store method; SQLite with
   key. A durable mark that nothing consults buys nothing. For a last-resort key,
   which by design stays in service, the defence is instead the
   `(kyberPreKeyId, signedPreKeyId, baseKey)` triple the callback carries: record
-  it durably, and treat a repeat as a replayed pre-key message (limitation 5
-  below covers what you can and cannot do about it).
+  it durably and return `true`, and return `false` when it repeats. That answer
+  refuses the replayed pre-key message before anything is written (limitation 5
+  below says what it depends on).
 - On failure, **never roll state backwards**. If an operation throws after some
   writes already landed, the safe recovery is to keep the persisted state and
   drop the message — losing a message is recoverable, rewinding a ratchet is
@@ -1138,7 +1145,7 @@ provided in-memory store does). A store that always returns `null` from
 
 4. **Durability and rollback are delegated:** the library cannot verify that your store writes reached stable storage, cannot serialize your calls for you, and cannot detect that the store it was handed is a restored copy. `fsync` is not a full barrier on Apple platforms and IndexedDB gives no power-loss guarantee on the web. See [Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback) for the contract and the achievable mitigations.
 
-5. **Last-resort Kyber replay is detected after the fact, and the callback cannot fail:** `markKyberPreKeyUsed` receives the full `(kyberPreKeyId, signedPreKeyId, baseKey)` triple libsignal's own store trait receives, so a store can detect a repeated PQXDH agreement against a *last-resort* key. Upstream libsignal fails the decryption when its store rejects such a repeat; this library cannot, because the callback runs after libsignal has produced the plaintext. The callback is also not failable — throwing from it panics the Rust worker instead of surfacing a clean error. Record the repeat and let your application drop the message; do not treat the callback as a decryption barrier. One-time keys are unaffected: retiring them in `loadKyberPreKey` blocks the replay before decryption, on both entry points.
+5. **Last-resort Kyber replay protection is your store's answer:** `markKyberPreKeyUsed` receives the full `(kyberPreKeyId, signedPreKeyId, baseKey)` triple libsignal's own store trait receives, and its answer is libsignal's replay check: `false` fails the decryption with `invalidMessage` before anything is written. A store that does not record the triples and always answers `true` leaves a *last-resort* key open to replay: a pre-key message that used no one-time EC pre-key builds its session again once that session has left the record — since libsignal v0.106.0 that takes three newer archived sessions, not forty — and whether a bundle carries a one-time pre-key is the server's choice. The record is only as good as its durability: a store restored from a backup has forgotten the agreements made since (see [Store Durability, Write Ordering and Rollback](#store-durability-write-ordering-and-rollback)). Refuse by answering, never by throwing — a store callback that throws panics the Rust worker instead of surfacing a clean error. One-time keys are unaffected: retiring them in `loadKyberPreKey` blocks the replay before decryption, on both entry points.
 
 ### Plaintext Handling After Decryption
 

@@ -285,13 +285,12 @@ void main() {
             final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
             return preKey?.serialize();
           },
-          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
-            await bobKyberPreKeyStore.markKyberPreKeyUsed(
-              id,
-              signedPreKeyId,
-              PublicKey.deserialize(bytes: baseKey),
-            );
-          },
+          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) =>
+              bobKyberPreKeyStore.markKyberPreKeyUsed(
+                id,
+                signedPreKeyId,
+                PublicKey.deserialize(bytes: baseKey),
+              ),
         );
 
         // Verify decrypted content
@@ -381,13 +380,12 @@ void main() {
             final preKey = await bobKyberPreKeyStore.loadKyberPreKey(id);
             return preKey?.serialize();
           },
-          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) async {
-            await bobKyberPreKeyStore.markKyberPreKeyUsed(
-              id,
-              signedPreKeyId,
-              PublicKey.deserialize(bytes: baseKey),
-            );
-          },
+          markKyberPreKeyUsed: (id, signedPreKeyId, baseKey) =>
+              bobKyberPreKeyStore.markKyberPreKeyUsed(
+                id,
+                signedPreKeyId,
+                PublicKey.deserialize(bytes: baseKey),
+              ),
         );
 
         // Verify sender information is revealed after decryption

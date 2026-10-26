@@ -30,23 +30,25 @@
 //! and its ciphertexts — carries on to the next step.
 //!
 //! Covered: session establishment from a bundle, encryption and decryption of
-//! plain and sealed-sender messages, and three things an application does
+//! plain and sealed-sender messages, and four things an application does
 //! between them — archiving a session, forgetting the identity it stored for
-//! a peer, and trusting a peer's new identity after that peer reinstalled.
-//! The application's steps change the state both runs start from, so they
-//! need no libsignal counterpart: libsignal is judged on what it does with
-//! the state they leave.
+//! a peer, trusting a peer's new identity after that peer reinstalled, and
+//! running out of one-time pre-keys. The application's steps change the
+//! state both runs start from, so they need no libsignal counterpart:
+//! libsignal is judged on what it does with the state they leave.
+//!
+//! That includes libsignal's last-resort Kyber replay check. The reference
+//! store refuses a (Kyber pre-key, signed pre-key, base key) agreement it has
+//! seen, and the Dart stores here remember theirs the same way and answer the
+//! bridge's `mark_kyber_pre_key_used` with it; each step's reference store is
+//! seeded with what the party's Dart store has seen.
 //!
 //! Deliberately not compared:
 //! - The bytes of session records and ciphertexts, which depend on fresh
 //!   randomness. Their observable properties are compared instead.
 //! - Write order. The bridge stores the session last on purpose (see
 //!   `message_decrypt_prekey_with_callbacks`); only the end state counts.
-//! - libsignal's last-resort Kyber replay check. The reference store refuses a
-//!   repeated (Kyber pre-key, signed pre-key, base key) agreement, which a
-//!   Dart callback cannot do (SECURITY.md, Known Limitations, item 5). Every
-//!   bundle here carries a one-time pre-key, so a replayed agreement fails on
-//!   the consumed pre-key first, on both sides, and never reaches that check.
+//!   `test/protocol/write_order_test.dart` pins the order instead.
 //!
 //! Run with `make rust-test`. Deliberately outside `api/`, which FRB codegen
 //! scans.
@@ -71,7 +73,7 @@ use libsignal_protocol::{
 };
 use rand::rngs::{OsRng, StdRng};
 use rand::{Rng as _, SeedableRng as _, TryRngCore as _};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::future::Future;
 use std::pin::pin;
 use std::sync::{Arc, Mutex};
@@ -134,6 +136,9 @@ struct DartStores {
     pre_keys: BTreeMap<u32, Vec<u8>>,
     signed_pre_keys: BTreeMap<u32, Vec<u8>>,
     kyber_pre_keys: BTreeMap<u32, Vec<u8>>,
+    /// Every (Kyber pre-key, signed pre-key, base key) agreement marked used,
+    /// which a store needs to refuse a replayed one.
+    kyber_agreements_seen: BTreeSet<(u32, u32, Vec<u8>)>,
     /// What the current operation wrote; cleared before each one.
     writes: Writes,
 }
@@ -196,12 +201,14 @@ fn load_kyber_pre_key(s: &Shared) -> impl Fn(u32) -> DartFnFuture<Option<Vec<u8>
 }
 
 /// Records the call and keeps the key, as libsignal's reference store does: it
-/// treats every Kyber pre-key as a last-resort one.
-fn mark_kyber_pre_key_used(s: &Shared) -> impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<()> + Send + Sync + 'static {
+/// treats every Kyber pre-key as a last-resort one, and refuses an agreement
+/// it has seen.
+fn mark_kyber_pre_key_used(s: &Shared) -> impl Fn(u32, u32, Vec<u8>) -> DartFnFuture<bool> + Send + Sync + 'static {
     let s = s.clone();
     move |kyber, signed, base_key| {
-        s.lock().unwrap().writes.kyber_marked.push((kyber, signed, base_key));
-        ready(())
+        let mut s = s.lock().unwrap();
+        s.writes.kyber_marked.push((kyber, signed, base_key.clone()));
+        ready(s.kyber_agreements_seen.insert((kyber, signed, base_key)))
     }
 }
 
@@ -345,6 +352,15 @@ impl Reference {
                 let record = up::KyberPreKeyRecord::deserialize(bytes).unwrap();
                 reference.kyber_pre_keys.inner.save_kyber_pre_key((*id).into(), &record).await.unwrap();
             }
+            for (kyber, signed, base_key) in &stores.kyber_agreements_seen {
+                let base_key = up::PublicKey::deserialize(base_key).unwrap();
+                reference
+                    .kyber_pre_keys
+                    .inner
+                    .mark_kyber_pre_key_used((*kyber).into(), (*signed).into(), &base_key)
+                    .await
+                    .unwrap();
+            }
         });
         reference
     }
@@ -370,6 +386,9 @@ struct Party {
     signed_pre_key_signature: Vec<u8>,
     stores: Shared,
     next_pre_key_id: u32,
+    /// Whether its bundles still carry a one-time pre-key; see
+    /// [Op::RunOutOfOneTimePreKeys].
+    one_time_pre_keys_left: bool,
 }
 
 impl Party {
@@ -398,6 +417,7 @@ impl Party {
             signed_pre_key_signature,
             stores: Arc::new(Mutex::new(stores)),
             next_pre_key_id: 100,
+            one_time_pre_keys_left: true,
         }
     }
 
@@ -407,12 +427,13 @@ impl Party {
 
     /// Publishes a bundle with a fresh one-time pre-key and a fresh Kyber
     /// pre-key, both stored before it is handed out, as a client that
-    /// replenishes the server does.
+    /// replenishes the server does. Once the party has run out of one-time
+    /// pre-keys the bundle carries none.
     fn publish_bundle(&mut self) -> (BridgeBundle, up::PreKeyBundle) {
         let mut rng = OsRng.unwrap_err();
         let id = self.next_pre_key_id;
         self.next_pre_key_id += 1;
-        let one_time = up::KeyPair::generate(&mut rng);
+        let one_time = self.one_time_pre_keys_left.then(|| up::KeyPair::generate(&mut rng));
         let kyber = up::kem::KeyPair::generate(up::kem::KeyType::Kyber1024, &mut rng);
         let kyber_signature = self
             .identity
@@ -422,8 +443,10 @@ impl Party {
             .to_vec();
         {
             let mut s = self.stores.lock().unwrap();
-            s.pre_keys
-                .insert(id, up::PreKeyRecord::new(id.into(), &one_time).serialize().unwrap());
+            if let Some(one_time) = &one_time {
+                s.pre_keys
+                    .insert(id, up::PreKeyRecord::new(id.into(), one_time).serialize().unwrap());
+            }
             let kyber_record = up::KyberPreKeyRecord::new(
                 id.into(),
                 up::Timestamp::from_epoch_millis(0),
@@ -435,8 +458,8 @@ impl Party {
         let bridge = BridgeBundle::new(
             self.registration_id,
             DEVICE,
-            Some(id),
-            Some(one_time.public_key.serialize().to_vec()),
+            one_time.is_some().then_some(id),
+            one_time.as_ref().map(|key| key.public_key.serialize().to_vec()),
             SIGNED_PRE_KEY_ID,
             self.signed_pre_key.public_key.serialize().to_vec(),
             self.signed_pre_key_signature.clone(),
@@ -449,7 +472,7 @@ impl Party {
         let reference = up::PreKeyBundle::new(
             self.registration_id,
             up::DeviceId::new(DEVICE as u8).unwrap(),
-            Some((id.into(), one_time.public_key)),
+            one_time.map(|key| (id.into(), key.public_key)),
             SIGNED_PRE_KEY_ID.into(),
             self.signed_pre_key.public_key,
             self.signed_pre_key_signature.clone(),
@@ -582,6 +605,10 @@ enum Op {
     /// `.0`'s application trusts `.1`'s current identity in place of the one
     /// it stored — the user accepted a changed safety number.
     Retrust(usize, usize),
+    /// `.0` has no one-time pre-keys left, so its bundles from now on carry
+    /// only the signed pre-key and a Kyber pre-key — which is also what a
+    /// server can choose to hand out.
+    RunOutOfOneTimePreKeys(usize),
 }
 
 #[derive(Clone)]
@@ -910,6 +937,7 @@ impl Conversation {
                 let (name, key) = (self.parties[peer].name.clone(), self.parties[peer].identity_key());
                 self.parties[who].stores.lock().unwrap().identities.insert(name, key);
             }
+            Op::RunOutOfOneTimePreKeys(who) => self.parties[who].one_time_pre_keys_left = false,
         }
     }
 
@@ -1168,6 +1196,34 @@ fn sealed_sender_messages() {
     c.deliver_last(ALICE, BOB);
     c.apply(Op::SealedSend(BOB, ALICE));
     assert!(c.reached.sealed_decrypted >= 4, "too few sealed messages decrypted");
+}
+
+/// The replay a last-resort Kyber key is exposed to. Bob has no one-time
+/// pre-keys left, so Alice's first messages carry none, and once their session
+/// has left Bob's record — three newer archived sessions push it out since
+/// v0.106.0 — each would build that session all over again. libsignal's
+/// reference store refuses the repeated agreement before anything is written,
+/// and the bridge has to as well, plain and sealed.
+#[test]
+fn a_replayed_pre_key_message_without_a_one_time_pre_key() {
+    let mut c = Conversation::new("replayed last-resort agreement");
+    c.apply(Op::RunOutOfOneTimePreKeys(BOB));
+    c.apply(Op::Fetch(ALICE, BOB));
+    // Two pre-key messages on Alice's new session, one of them sealed.
+    c.apply(Op::Send(ALICE, BOB));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    c.apply(Op::Deliver(ALICE, BOB, 1));
+    for _ in 0..4 {
+        c.apply(Op::Fetch(BOB, ALICE));
+    }
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    c.apply(Op::Deliver(ALICE, BOB, 1));
+    assert_eq!(
+        c.reached.failures.get("InvalidMessage").copied(),
+        Some(2),
+        "the replayed agreements were not both refused"
+    );
 }
 
 /// Random scripts: messages plain and sealed, delivered in order, out of order,

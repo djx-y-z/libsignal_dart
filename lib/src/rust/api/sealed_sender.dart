@@ -167,14 +167,17 @@ Future<SealedSenderEncryptResult> sealedSenderEncryptWithCallbacks({
 /// - `remove_pre_key(id)` - Remove a used one-time pre-key
 /// - `load_kyber_pre_key(id)` - Load Kyber pre-key
 /// - `mark_kyber_pre_key_used(kyber_id, signed_pre_key_id, base_key)` - Mark a
-///   Kyber pre-key as used. Same three arguments as on the `SessionCipher`
-///   path, mirroring libsignal's `KyberPreKeyStore::mark_kyber_pre_key_used`.
+///   Kyber pre-key as used, and answer whether this agreement is new. Same
+///   three arguments as on the `SessionCipher` path, mirroring libsignal's
+///   `KyberPreKeyStore::mark_kyber_pre_key_used`; `false` fails the call with
+///   `InvalidMessage` before anything is written.
 ///
 /// # Write ordering
-/// Identical to `message_decrypt_prekey_with_callbacks`: `save_identity`,
-/// `mark_kyber_pre_key_used`, `remove_pre_key`, then `store_session` last, each
-/// only if libsignal made that write, so a crash cannot persist the session
-/// while leaving the consumed pre-keys usable.
+/// Identical to `message_decrypt_prekey_with_callbacks`:
+/// `mark_kyber_pre_key_used`, the check that refuses a replayed agreement,
+/// then `save_identity`, `remove_pre_key`, and `store_session` last, each only
+/// if libsignal made that write, so a crash cannot persist the session while
+/// leaving the consumed pre-keys usable.
 ///
 /// # Parameters
 /// - `ciphertext` - The sealed sender ciphertext
@@ -197,7 +200,7 @@ Future<SealedSenderDecryptResult> sealedSenderDecryptWithCallbacks({
   required FutureOr<Uint8List?> Function(int) loadPreKey,
   required FutureOr<void> Function(int) removePreKey,
   required FutureOr<Uint8List?> Function(int) loadKyberPreKey,
-  required FutureOr<void> Function(int, int, Uint8List) markKyberPreKeyUsed,
+  required FutureOr<bool> Function(int, int, Uint8List) markKyberPreKeyUsed,
   required FutureOr<Uint8List?> Function(String, int) getIdentity,
 }) => RustLib.instance.api.crateApiSealedSenderSealedSenderDecryptWithCallbacks(
   ciphertext: ciphertext,

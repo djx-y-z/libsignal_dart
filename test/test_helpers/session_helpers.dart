@@ -44,12 +44,15 @@ class RemotePartyKeys {
   });
 
   /// Creates a PreKeyBundle from these keys.
-  PreKeyBundle toBundle() {
+  /// The bundle a server hands out for this party. Without [oneTimePreKey] it
+  /// carries only the signed pre-key and the Kyber pre-key, as a server does
+  /// once the one-time pre-keys have run out.
+  PreKeyBundle toBundle({bool oneTimePreKey = true}) {
     return PreKeyBundle(
       registrationId: registrationId,
       deviceId: deviceId,
-      preKeyId: preKeyId,
-      preKeyPublic: preKeyPublic.serialize(),
+      preKeyId: oneTimePreKey ? preKeyId : null,
+      preKeyPublic: oneTimePreKey ? preKeyPublic.serialize() : null,
       signedPreKeyId: signedPreKeyId,
       signedPreKeyPublic: signedPreKeyPublic.serialize().toList(),
       signedPreKeySignature: signedPreKeySignature.toList(),

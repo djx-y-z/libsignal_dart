@@ -198,6 +198,30 @@ void main() {
 
         expect(store.wasAgreementSeen(1, signedPreKeyId, baseKey), isFalse);
       });
+
+      test('answers true for a new agreement and false for a repeat', () async {
+        await store.storeKyberPreKey(1, record1);
+
+        // The answer is the library's replay check: `false` fails the
+        // decryption before anything is written.
+        expect(
+          await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey),
+          isTrue,
+        );
+        expect(
+          await store.markKyberPreKeyUsed(1, signedPreKeyId, baseKey),
+          isFalse,
+        );
+        // Only the exact triple repeating is a replay.
+        expect(
+          await store.markKyberPreKeyUsed(1, signedPreKeyId, otherBaseKey),
+          isTrue,
+        );
+        expect(
+          await store.markKyberPreKeyUsed(1, signedPreKeyId + 1, baseKey),
+          isTrue,
+        );
+      });
     });
 
     group('removeKyberPreKey()', () {
