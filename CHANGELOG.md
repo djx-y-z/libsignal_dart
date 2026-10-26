@@ -461,9 +461,6 @@
     (`test/scripts/ai_client_test.dart`).
   - `CONTRIBUTING.md` names the branches the signing ruleset leaves out.
 
-  Nothing conflicted and nothing was merged in twice: the scan's first clean
-  live run.
-
 - **copier template adopted: v4.17.0 → v4.18.0** (`.copier-answers.yml` and
   the files named here and in the For Users entries above) — beyond the
   isolate count, the web check and the `hooks` range above, it brings:
@@ -490,16 +487,7 @@
   The rest of the range was here already — the merge-eligibility report, the
   minimum Rust version check, the evidence artifact, the Highlights fix and
   the scan for text merged in twice, each with its own entry — and the
-  adoption leaves those files as they were. Eight files conflicted where both
-  sides had changed the same lines. The template's
-  `scripts/src/update_changelog.dart` and its test differ from this
-  repository's only in line breaks, which `dart format` decides here, so ours
-  stay; `CONTRIBUTING.md` keeps its own text, which never carried the
-  template's list of what the update automation does; the other five take the
-  template's side, which contains ours. The scan for text merged in twice, on
-  its first live run, found one block: `scripts/src/update_template.dart`
-  printed its summary of duplicates twice. It is kept once, in the template's
-  order, and the file equals the template's render.
+  adoption leaves those files as they were.
 - **A local build made from another `rust/Cargo.lock` is refused, and
   `make build` drops the build hook's cache** (`hook/build.dart`, `Makefile`,
   `CLAUDE.md`, `test/hook/build_hook_test.dart`) — the hook took a local
