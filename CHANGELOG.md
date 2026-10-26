@@ -28,6 +28,7 @@
 - **libsignal v0.106.0** — session management moves from Sesame to Tahini:
   an archived session is never made current again, and a record keeps at
   most 3 of them instead of 40
+- **libsignal_frb v8.0.0** — Rust FFI bindings
 
 #### Changed (Breaking)
 
