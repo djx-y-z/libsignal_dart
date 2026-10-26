@@ -5,11 +5,15 @@
 // other suite, which is how the flake this guards against looked in the first
 // place.
 //
-//   dart run test/platform/isolate_count_scenarios.dart <second-library|init-race>
+//   dart --disable-dart-dev test/platform/isolate_count_scenarios.dart \
+//       <second-library|init-race>
+//
+// The bare VM, not `dart run`, which would copy the hooked library over the
+// one the test runner has loaded (the test says more). The library is the one
+// a `dart test` or `dart run` of this package left in .dart_tool/lib/.
 //
 // It prints one line `verdict: OK ...`, `verdict: HANG ...` or
-// `verdict: SKIP ...`, which the test reads; `dart run` writes its own progress
-// in front of it, on the same line.
+// `verdict: SKIP ...`, which the test reads.
 import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';

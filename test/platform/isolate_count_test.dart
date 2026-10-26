@@ -15,9 +15,18 @@ import 'dart:io';
 import 'package:test/test.dart';
 
 /// Runs [scenario] in a child process and returns the verdict it printed.
+///
+/// The child is the bare VM (`--disable-dart-dev`), not `dart run`: `dart run`
+/// runs the build hooks and copies the hooked library into .dart_tool/lib/
+/// again, over the file this test runner has loaded. On Linux the copy
+/// truncates a library mapped into the runner, which dies of SIGBUS in
+/// whichever suite touches it next; on Windows the loaded DLL cannot be
+/// replaced and the child fails. The bare VM runs no hooks, and the child
+/// loads the copy the runner's own hook run left in .dart_tool/lib/, by the
+/// search `LibSignal.init` makes.
 Future<String> verdictOf(String scenario) async {
   final run = await Process.run(Platform.resolvedExecutable, [
-    'run',
+    '--disable-dart-dev',
     'test/platform/isolate_count_scenarios.dart',
     scenario,
   ], workingDirectory: Directory.current.path);
