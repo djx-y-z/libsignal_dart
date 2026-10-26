@@ -124,6 +124,26 @@
   restored check asks for. No released version of this package carried
   0.2.3, and no RustSec advisory covers it. Its floor stays at Rust 1.85,
   below this crate's 1.93.1.
+- **`tokio` 1.53.3 → 1.54.1** (`rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`)
+  — Dependabot's bump (#129). flutter_rust_bridge builds on it in every
+  binary: the lock behind each opaque Rust object is a `tokio::sync::RwLock`,
+  the web module included, and on native platforms its async functions run on
+  tokio's multi-threaded runtime. In the features compiled here (`rt`,
+  `rt-multi-thread`, `sync`, `time`), 1.54.0 reworks the runtime's injection
+  queue, makes `Notify` use acquire/release orderings, keeps locks in FIFO
+  order when a task's cooperative budget runs out, fixes a `spawn_blocking`
+  hang when only scheduler workers exist, and handles two timer edge cases;
+  1.54.1 reverts one timer change of 1.54.0
+  ([tokio's notes](https://github.com/tokio-rs/tokio/blob/tokio-1.54.1/tokio/CHANGELOG.md)).
+  tokio's minimum Rust version rises to 1.85, below this crate's 1.93.1.
+  `cc` 1.8.0 → 1.10.0 and `find-msvc-tools` 0.1.14 → 0.1.15 move with it and
+  run only at build time.
+- **`uuid` 1.28.0 → 1.29.0** (`rust/Cargo.lock`, `THIRD_PARTY_NOTICES.txt`) —
+  in the same bump. It reaches every binary through `libsignal-core`,
+  `libsignal-protocol` and this crate. 1.29.0 adds versioned constructors to
+  `NonNilUuid`, which nothing here calls; the rest of the range changes tests
+  and version strings in the documentation
+  ([release](https://github.com/uuid-rs/uuid/releases/tag/v1.29.0)).
 - **The Linux libraries are built on Ubuntu 26.04 and still need only glibc
   2.34** — the release build moves from Ubuntu 24.04 along with every other
   Ubuntu job (see For Contributors). A Linux library records the glibc symbol
