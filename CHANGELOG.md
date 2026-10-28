@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.106.1** — internal/dependency update, no public-API impact
+
+#### Changed
+
+- **The native update leaves the Dart protocol surface unchanged** — the [v0.106.0...v0.106.1 compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.1) includes a move to Swift Package Manager in Swift distribution files; Swift bindings are not exposed by this package. Changes in Node and Java bridge files are outside the Dart surface, workspace and build tooling files are not protocol APIs, and Rust changes in crates other than the four this package builds are in crates absent from its dependency graph.
+
+  In the bound crates, the complete range changes `rust/core/Cargo.toml`, `rust/core/src/version.rs`, `rust/crypto/Cargo.toml`, `rust/crypto/src/aes_cbc.rs`, `rust/debug/Cargo.toml`, `rust/protocol/Cargo.toml`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs`, `rust/protocol/src/state/session.rs`, `rust/protocol/test-support/Cargo.toml`, and `rust/protocol/tests/session.rs`. The manifests use workspace edition and Rust-version settings; the core version constant changes to 0.106.1. The AES-CBC check uses `is_multiple_of`, fingerprint encoding uses fixed-size chunks, and the incremental-MAC assertion uses `is_multiple_of`. The two session-state hunks flatten existing conditions without changing their checks, and the session test similarly flattens a condition. These source changes do not alter the named exposed operations: identity/pre/signed-pre/Kyber keys, X3DH, Double Ratchet, sealed sender, SenderKey, or their serialization. Binding regeneration produced no change to `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users
