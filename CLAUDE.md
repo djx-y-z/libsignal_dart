@@ -43,6 +43,8 @@ make build ARGS="--target <target>"     # Build for specific Rust target
 make build-android                      # Build for Android (all ABIs)
 make build-android ARGS="--target arm64-v8a"  # Build for specific Android ABI
 make verify-android-alignment           # Check the built .so files are 16 KB-aligned
+make build-ios                          # Build for iOS (device + both simulators)
+make build-ios ARGS="--target aarch64-apple-ios-sim"  # Build for one iOS target
 make build-web                          # Build WASM for web (stamps .crate-version)
 ```
 
@@ -92,16 +94,24 @@ the first web build after adopting this looks like: run `make build-web`, or
 delete the directory to use the released module instead.
 
 ⚠ **`make build` stamps the host library the same way, in
-`rust/target/release/.crate-version`, and the hook refuses a local host
-library whose stamp is missing or disagrees** — the same `HookException`, for
-the same reason: a library left over from an earlier crate loads silently, and
-once the way values cross the bridge has moved, its calls fail in ways nothing
-names. Only `rust/target/release/` is read; a `--target` build lands in
-`rust/target/<triple>/`, is never read and gets no stamp. A library built
-before the stamp existed, or by a bare `cargo build`, is refused: run
-`make build`, or delete `rust/target/release/` to use the released library.
+`rust/target/release/.crate-version`, and the hook refuses a local library
+whose stamp is missing or disagrees** — the same `HookException`, for the same
+reason: a library left over from an earlier crate loads silently, and once the
+way values cross the bridge has moved, its calls fail in ways nothing names. A
+library built before the stamp existed, or by a bare `cargo build`, is refused:
+run `make build`, or delete `rust/target/release/` to use the released library.
 So after `make release-frb` bumps the crate, `make test` needs a `make build`
 first.
+
+⚠ **A cross build is read too, under the same rules:** a target other than the
+host reads `rust/target/<triple>/release/`, and `make build-android`,
+`make build-ios` and `make build ARGS="--target <triple>"` stamp that directory.
+It is what lets a pull request run its own Rust on an emulator or a simulator:
+without it those targets could only load the last release, so a test there would
+pass over code the pull request had replaced. The flip side is the same refusal:
+a cross build from a `cargo` line, or one left over from before the stamp, stops
+the app's build until you rebuild it or delete it. A consumer never reaches any
+of this, `rust/target/` not being in the published package.
 
 ⚠ **Each stamp comes with `.cargo-lock`, a copy of the `rust/Cargo.lock` the
 build was made from, and the hook refuses a local build whose copy differs from
@@ -179,6 +189,66 @@ nothing it declares is read. This is Flutter 3.38 to 3.41 only: from 3.44
 Consumers of the published package on those versions hit the same thing; the
 README's *Known Limitations* names the escapes.
 
+
+### The example app (the package in a real Flutter app)
+
+```bash
+make test-example ARGS="-d macos"            # Integration tests on a device
+make test-example-web                        # ...in a real browser (debug, DDC)
+make test-example-web ARGS="--release"       # ...what a consumer ships (dart2js)
+make drive-example ARGS="--profile -d macos" # ...in AOT, under flutter drive
+make coverage-example ARGS="-d macos"        # ...then fail on a bridged function none calls
+make verify-example-coverage                 # That check alone, over the last run
+make verify-example-library ARGS="--built"   # Check the run loaded the library it meant to
+make create-consumer VERSION=9.0.0           # A new app that uses the package from pub.dev
+make test-example EXAMPLE_DIR=build/consumer ARGS="-d macos"  # ...and any target on it
+make package-example-android                 # Release APK: all ABIs bundled, 16 KB aligned
+make package-example-ios                     # Release app for a real iPhone: library in it
+```
+
+`make test` runs the library on the Dart VM. This runs it inside an app, so it goes
+through what a consumer's build goes through: the build hook, the platform's way of
+bundling a native library, the loader, the wasm module with the Dart half compiled
+for the web, and the library actually executing on that platform's architecture.
+The tests are `example/integration_test/`, one entry point (each test file is its
+own build, install and launch on a device) with the families under `capabilities/`.
+
+**Which library it loads is the hook's choice, so build first:** `make build` for
+the host, `make build-android` / `make build-ios` for a device, `make build-web` for
+the browser. With none of those it downloads the release of the crate version in
+`rust/Cargo.toml`, which is how CI tests a release.
+
+⚠ **A new bridged function needs a test here, or `make coverage-example` fails.**
+That is what keeps "every capability of the library" true as the library grows: it
+is measured, from the coverage of the running app, over every `crateApi*` function
+in `lib/src/rust/frb_generated.dart`. The ones not called on purpose are listed
+with a reason in `scripts/src/example_coverage.dart`, and it also holds the
+hand-written lines to a floor, because a new class over already-covered bridged
+functions moves nothing else it can see.
+
+⚠ **Declare a test with `capability(...)`, not `test(...)`, and do not initialize in
+`setUpAll`.** Under `flutter drive`, the only way to run this on the web, the host
+reads `testWidgets` outcomes only: a plain `test` can fail with the run green, and a
+`setUpAll` that throws leaves no tests and no failure, which reads as success.
+`capability` counts what it declares, and the suite's last test hands the count to
+`test_driver/integration_test.dart`, whose absence fails the run.
+
+⚠ **`pump` and `pumpAndSettle` can hang the app test forever.** A live test draws
+only when pumped, `pump` waits for a frame, and an app told it is hidden draws none:
+a desktop window covered by another one is enough. It waits with
+`scheduleForcedFrame` in a loop with a deadline instead, under
+`LiveTestWidgetsFlutterBindingFramePolicy.fullyLive`.
+
+⚠ **Opaque arguments can be taken by value.** `IdentityKeyPair.fromKeys` and the
+like dispose the Dart objects they are given, and the next use throws
+`DroppableDisposedException`. Pass a clone or use them last.
+
+**CI:** `integration.yml` runs `integration-reusable.yml` on every pull request and
+push to main (from the tree), after the native build of a release tag (on the
+released binaries), and weekly (from pub.dev, on the newest Flutter). `publish.yml`
+runs it as a gate before its upload and twice more after it. What no hosted runner
+can execute — Android on ARM, an iOS device — is only checked to bundle, and macOS on
+Intel only ships in the universal app. None of these are required checks yet.
 
 ### Rust Quality
 ```bash
@@ -350,9 +420,9 @@ do not exist). Native libraries are delivered via Dart **build hooks**
    hook then picks up the host-matching `rust/target/release/` build
    automatically, provided `make build` stamped it with the current crate
    version (no marker needed). Cross-target builds (`make build-android`,
-   `make build --target <triple>`, iOS) land in `rust/target/<triple>/` and
-   are **not** picked up — those targets always download the released binary.
-   `.skip_libsignal_hook` is only an
+   `make build-ios`, `make build ARGS="--target <triple>"`) land in
+   `rust/target/<triple>/release/` and are picked up the same way, for that
+   target only. `.skip_libsignal_hook` is only an
    internal escape the Makefile uses while wrapping pub-get/codegen/doc — when
    present the hook returns immediately and registers **no** asset
 3. **CI**: `build-libsignal.yml` builds and uploads binaries when a
@@ -542,6 +612,15 @@ make build ARGS="--target aarch64-apple-darwin"
 make test
 ```
 
+### 5. Check it in a real app
+
+```bash
+make test-example ARGS="-d macos"   # needs `make build` first
+```
+
+A new function in `rust/src/api/` also needs a test in
+`example/integration_test/capabilities/`; `make coverage-example` fails without it.
+
 ## Release Flow (two stages)
 
 Releasing is **two independent stages**, each with its own command and tag. The
@@ -622,14 +701,22 @@ pub.dev refuses an oversized file only at upload, after the tag), then signs a
 commit + tag `vX.Y.Z` and pushes — `publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
 API** (independent of the crate version).
 
-**Between the stages, run the suite against the released binary.**
-Nothing else does: `publish.yml` and `test.yml` — its `workflow_run` after the
-native build included — build the library from source with `make build`. Once
-the stage-1 release exists, check `HEAD` out in a fresh sibling worktree, which
-has no `rust/target/`, and run the suite there without `make build`: the build
-hook then downloads `libsignal_frb-<crate>` from the release, checks it against
-the release's checksums, and every test runs against that release's library
-for this host, the one platform the check covers.
+**Between the stages, wait for `Integration Tests` on the released binary.**
+`integration.yml` starts by itself when the native build of a `libsignal_frb-*`
+tag succeeds, and runs the package in a real app on every platform, through the
+hook's download path, checksums included. Read its result before stage 2:
+`publish.yml` runs the same again before it uploads, and a failure there leaves a
+tag pushed with no version on pub.dev. After the upload it makes a new app that
+depends on what went up, on the pinned Flutter and on the newest, so a problem a
+consumer would hit shows up as that run going red. That last part cannot stop the
+release; retracting is a decision.
+
+The whole unit suite against the released binary, on this host, is still worth
+running by hand for a major. `test.yml`, its `workflow_run` after the native build
+included, builds from source with `make build`, so nothing else does it. Check
+`HEAD` out in a fresh sibling worktree, which has no `rust/target/`, and run the
+suite there without `make build`: the build hook then downloads
+`libsignal_frb-<crate>` from the release and every test runs against it.
 
 ```bash
 git worktree add --detach ../stage2-check HEAD

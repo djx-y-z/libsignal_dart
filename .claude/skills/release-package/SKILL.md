@@ -121,14 +121,25 @@ first:
 make release-frb ARGS="--version <crate X.Y.Z>"   # then let the build finish
 ```
 
-**Then run the suite against that binary.** No workflow does: `publish.yml`
-and `test.yml` — its `workflow_run` after the native build included — build the
-library from source with `make build`. Check `HEAD` out in a fresh sibling
-worktree, which has no `rust/target/`, and run the suite there without
+**Then wait for `Integration Tests` on that binary.** It starts by itself when
+the native build succeeds, and runs the package in a real app on every platform
+through the hook's download path, checksums included:
+
+```bash
+gh run list --workflow=integration.yml --event=workflow_run --limit=1
+```
+
+Do not start stage 2 on a red run: `publish.yml` runs the same again before it
+uploads, and a failure there leaves a tag pushed with no version on pub.dev. After
+the upload it makes a new app that depends on what went up, on the pinned Flutter
+and on the newest; a red run there means a published version has a problem, and
+whether to retract it is the user's decision.
+
+For a major, also run the whole unit suite against the binary, which nothing else
+does: `test.yml` builds from source with `make build`. Check `HEAD` out in a fresh
+sibling worktree, which has no `rust/target/`, and run the suite there without
 `make build`: the build hook then downloads `libsignal_frb-<crate>` from the
-release, checks it against the release's checksums, and every test runs
-against that release's library for this host, the one platform the check
-covers.
+release, and every test runs against that release's library for this host.
 
 ```bash
 git worktree add --detach ../stage2-check HEAD

@@ -1,0 +1,133 @@
+# When to run the package in a real app, and against what.
+# `integration-reusable.yml` holds the jobs and explains the three sources.
+#
+# - Pull requests and main: `tree`. The library is built from the commit, so the
+#   update bot's pull request runs its new upstream code on every platform before
+#   it merges. Unfiltered on pull requests for the reason `test.yml` gives: these
+#   jobs are to become required checks once they have proved stable, and a
+#   workflow filtered out by path reports nothing.
+# - After the native build of a release tag: `release`. That is stage 1 finishing,
+#   and this run is the automatic form of "run the suite against the released
+#   binary" before stage 2, on every platform instead of one. `publish.yml` runs
+#   the same again as a gate before its upload.
+# - Weekly: `pub`, the current version on pub.dev in a new app on the newest
+#   Flutter. No commit of ours moves anything this looks at. A Flutter release that
+#   breaks consumers of the published package shows up here, not in their issues.
+# - By hand, any of them.
+
+name: Integration Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - 'lib/**'
+      - 'example/**'
+      - 'rust/**'
+      - 'hook/**'
+      - 'scripts/**'
+      - 'Makefile'
+      - 'pubspec.yaml'
+      - '.fvmrc'
+      - '.github/**'
+  workflow_run:
+    workflows: ["Build libsignal FRB Libraries"]
+    types:
+      - completed
+  schedule:
+    # Mondays, after the Flutter releases of the week before have landed.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      library:
+        description: 'Where the library comes from'
+        type: choice
+        options: [tree, release, pub]
+        default: tree
+      package-version:
+        description: 'The version on pub.dev, for pub. Empty means the latest.'
+        required: false
+        default: ''
+      flutter-version:
+        description: 'For pub: a Flutter version, or stable. Empty means the pinned one.'
+        required: false
+        default: ''
+
+# Least-privilege default: nothing here writes to the repository.
+permissions:
+  contents: read
+
+# A new push makes a pull request's run pointless; nothing else is superseded by a
+# later run of itself.
+concurrency:
+  group: integration-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # Turns the event into the reusable workflow's inputs, in one place. The native
+  # build runs on `workflow_dispatch` too, as a retry path on any ref, so only a
+  # successful run on a release tag means there is a release to test. It has the
+  # tag's name in `head_branch`, and `head_sha` is the commit that produced the
+  # binaries: this workflow's own checkout would otherwise be main, which may have
+  # moved on.
+  resolve:
+    runs-on: ubuntu-26.04
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'libsignal_frb-'))
+    outputs:
+      library: ${{ steps.resolve.outputs.library }}
+      ref: ${{ steps.resolve.outputs.ref }}
+      package-version: ${{ steps.resolve.outputs.package-version }}
+      flutter-version: ${{ steps.resolve.outputs.flutter-version }}
+    steps:
+      - name: Decide what this run tests
+        id: resolve
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_LIBRARY: ${{ inputs.library }}
+          INPUT_VERSION: ${{ inputs.package-version }}
+          INPUT_FLUTTER: ${{ inputs.flutter-version }}
+          RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
+          RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          library=tree ref='' version='' flutter=''
+          case "$EVENT" in
+            workflow_run)
+              library=release
+              ref="$RELEASE_SHA"
+              echo "Testing $RELEASE_TAG at $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            schedule)
+              library=pub
+              flutter=stable
+              ;;
+            workflow_dispatch)
+              library="$INPUT_LIBRARY"
+              version="$INPUT_VERSION"
+              flutter="$INPUT_FLUTTER"
+              ;;
+          esac
+          if [ "$library" = pub ] && [ -z "$version" ]; then
+            version=$(curl -fsSL --retry 3 https://pub.dev/api/packages/libsignal |
+              python3 -c "import json, sys; print(json.load(sys.stdin)['latest']['version'])")
+          fi
+          echo "library=$library ref=$ref version=$version flutter=$flutter"
+          {
+            echo "library=$library"
+            echo "ref=$ref"
+            echo "package-version=$version"
+            echo "flutter-version=$flutter"
+          } >> "$GITHUB_OUTPUT"
+
+  integration:
+    needs: resolve
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      library: ${{ needs.resolve.outputs.library }}
+      ref: ${{ needs.resolve.outputs.ref }}
+      package-version: ${{ needs.resolve.outputs.package-version }}
+      flutter-version: ${{ needs.resolve.outputs.flutter-version }}

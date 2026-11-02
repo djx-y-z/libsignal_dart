@@ -174,6 +174,31 @@ make test ARGS="test/keys/private_key_test.dart"
 make test ARGS="--reporter=expanded"
 ```
 
+### Testing in a real app
+
+`make test` runs the library on the Dart VM. The integration tests under
+`example/integration_test/` run it inside a Flutter app, on each platform the
+package claims, so they also go through the build hook, the platform's way of
+bundling a native library, and the loader. Build the library for what you are
+running on first, or the hook downloads the last release:
+
+```bash
+make build && make test-example ARGS="-d macos"
+
+make build-ios ARGS="--target aarch64-apple-ios-sim"
+make test-example ARGS="-d <simulator id>"
+
+make build-android ARGS="--target arm64-v8a"    # needs ANDROID_HOME and an NDK
+make test-example ARGS="-d <emulator id>"
+
+make build-web && make test-example-web CHROMEDRIVER=/path/to/chromedriver
+```
+
+**A new function in `rust/src/api/` needs a test there too.** Add it under
+`capabilities/`, with `capability(...)` rather than `test(...)`.
+`make coverage-example ARGS="-d <device>"` measures every bridged function from the
+running app and fails on one nothing called, and CI runs it on every pull request.
+
 ### Writing Tests
 
 - Place tests in the `test/` directory
@@ -257,6 +282,8 @@ Before submitting:
 - [ ] If a `cfg(target_arch = "wasm32")` branch changed, `make test-web` passes
       (it is the only check that executes web code, and it needs a chromedriver:
       `make test-web CHROMEDRIVER=/path/to/chromedriver`)
+- [ ] A new function in `rust/src/api/` has a test in
+      `example/integration_test/capabilities/` (`make coverage-example`)
 - [ ] Generated bindings are regenerated and committed, never hand-edited
 - [ ] New constraints, pins and caps carry a comment saying why
 - [ ] Documentation is updated if needed
@@ -347,6 +374,12 @@ All development tasks should be done via Makefile:
 | `make doc` | Dartdoc gate — fails on an unresolved doc reference |
 | `make rust-doc` | Rustdoc gate — intra-doc links under `-D warnings` |
 | `make test-web` | Run the crate's browser tests (headless Chrome) |
+| `make test-example` | Run the integration tests in the example app, on a device — see [Testing in a real app](#testing-in-a-real-app) |
+| `make test-example-web` | The same in a real browser (headless Chrome) |
+| `make drive-example` | The same under `flutter drive`, for profile mode (AOT) |
+| `make coverage-example` | Run them, then fail on a bridged function none of them calls |
+| `make create-consumer` | Make a new app that depends on a published version |
+| `make package-example-android` / `-ios` | Build the release app for what CI cannot run, and check the library is in it |
 | `make rust-audit` | Check Rust dependencies for vulnerabilities |
 | `make rust-check` | Quick Rust type check (updates Cargo.lock) |
 | `make rust-test` | Run the crate's own Rust unit tests |
@@ -410,14 +443,18 @@ make test
 
 Native libraries are downloaded automatically by the build hook (`hook/build.dart`) during `flutter build` / `dart run`. You don't need to build them manually for most development work.
 
-For development, build the native library from source and the hook picks up the
-host-matching `rust/target/release/` build automatically — no marker needed.
-Build it with `make build`, which stamps it with the crate version: the hook
-refuses a host library that carries no stamp, or another version's.
+For development, build the native library from source and the hook picks it up
+automatically — no marker needed. Build it with the make targets below, which stamp
+it with the crate version and lock file: the hook refuses a local library that
+carries no stamp, or another version's.
 
 ```bash
-# Native platforms
+# This machine
 make build
+
+# A device, a simulator or an emulator
+make build-android ARGS="--target arm64-v8a"
+make build-ios ARGS="--target aarch64-apple-ios-sim"
 
 # Web/WASM
 make build-web

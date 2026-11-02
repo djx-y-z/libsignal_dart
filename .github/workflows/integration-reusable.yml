@@ -1,0 +1,466 @@
+# The package inside a real Flutter app, on every platform it claims.
+#
+# Called by:
+# - integration.yml (pull requests, main, a stage 1 release, once a week)
+# - publish.yml (before the upload, and after it)
+#
+# `test-reusable.yml` runs the library on the Dart VM, with a library the VM found
+# for itself. What that cannot see is everything between `flutter pub add` and a
+# working app: the build hook, each platform's way of bundling a native library,
+# the loader, AOT on a release build, the wasm module with the Dart half compiled
+# for the web, and a library actually executing on a phone. Before this, nothing
+# outside a person's desk ran any of it, and nothing at all ran the Android or the
+# iOS library before a release had spent the crate version.
+#
+# THE ONE INPUT THAT MATTERS is where the library comes from:
+#
+#   tree     Built from this checkout, on every leg. Pull requests and main. It is
+#            what lets the update bot's pull request run its new upstream code on
+#            an emulator BEFORE it merges: the build hook prefers a stamped local
+#            build, and so never needs the release to exist.
+#   release  The GitHub Release of the crate version in rust/Cargo.toml, through
+#            the hook's download path, checksums included. The example app, at the
+#            commit under test. Nothing here builds Rust: a local build would be
+#            preferred over the release, and test nothing but itself.
+#   pub      Same binaries, and now the package archive too: a new app made with
+#            `flutter create`, which depends on the version on pub.dev.
+#
+# `make verify-example-library` then checks the app really loaded what the run
+# says. The hook chooses, and a wrong choice is otherwise a green run over the
+# wrong code.
+#
+# ⚠ WHAT THIS CANNOT EXECUTE, since no hosted runner has the hardware: Android on
+# ARM (arm64-v8a, armeabi-v7a: runners cannot nest an ARM emulator), an iOS device,
+# macOS on Intel. Of the twelve release binaries, seven run here. The `package` job
+# checks the other five get into a real app, and that is all it can check.
+#
+# Not required checks yet, like `test / Type-check (iOS)`: an emulator job has to
+# prove itself stable first. See `.github/rulesets/README.md`.
+
+name: Integration Tests (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      library:
+        description: 'Where the library comes from: tree, release or pub'
+        type: string
+        default: tree
+      ref:
+        description: 'The commit to test. Empty means the one that triggered this.'
+        type: string
+        default: ''
+      package-version:
+        description: 'The version on pub.dev, for library=pub'
+        type: string
+        default: ''
+      flutter-version:
+        description: 'A Flutter other than the pinned one, or stable, for library=pub'
+        type: string
+        default: ''
+
+# Least-privilege default: nothing here writes to the repository.
+permissions:
+  contents: read
+
+jobs:
+  # `stable` becomes a number once, here, so that every leg of a run tests the same
+  # Flutter. On this runner because python3 is not on Windows' PATH.
+  flutter:
+    name: Choose Flutter
+    runs-on: ubuntu-26.04
+    outputs:
+      version: ${{ steps.choose.outputs.version }}
+    steps:
+      - name: Resolve the version
+        id: choose
+        env:
+          FLUTTER_VERSION: ${{ inputs.flutter-version }}
+        run: |
+          set -euo pipefail
+          version="$FLUTTER_VERSION"
+          if [ "$version" = stable ]; then
+            version=$(curl -fsSL --retry 3 https://storage.googleapis.com/flutter_infra_release/releases/releases_linux.json |
+              python3 -c "
+          import json, sys
+          releases = json.load(sys.stdin)
+          stable = releases['current_release']['stable']
+          print(next(r['version'] for r in releases['releases'] if r['hash'] == stable))
+          ")
+          fi
+          echo "Flutter: ${version:-the pinned one}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # ============================================
+  # Desktop
+  # ============================================
+  desktop:
+    needs: flutter
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Named by version, as every job here is: `-latest` changes image
+          # without a commit.
+          - os: ubuntu-26.04
+            name: Linux x86_64
+            device: linux
+            # The window needs an X server, and a runner has no display.
+            prefix: xvfb-run -a
+          - os: ubuntu-26.04-arm
+            name: Linux ARM64
+            device: linux
+            prefix: xvfb-run -a
+          - os: macos-26
+            name: macOS ARM64
+            device: macos
+            prefix: ''
+          - os: windows-2025-vs2026
+            name: Windows x86_64
+            device: windows
+            prefix: ''
+
+    name: Integration (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install the Linux desktop toolchain
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev xvfb
+
+      - name: Setup the app under test
+        uses: ./.github/actions/setup-example
+        with:
+          library: ${{ inputs.library }}
+          package-version: ${{ inputs.package-version }}
+          flutter-version: ${{ needs.flutter.outputs.version }}
+
+      - name: Setup Rust
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-rust
+
+      - name: Setup Protoc
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-protoc
+
+      - name: Build the library from this tree
+        if: inputs.library == 'tree'
+        run: make build
+        shell: bash
+
+      - name: Show the toolchain
+        run: make doctor
+        shell: bash
+
+      # Nothing else analyzes the example: `make analyze` excludes it, so a bug in
+      # its own code or in these tests shows up, if at all, as a failing build.
+      - name: Analyze the example
+        if: matrix.name == 'Linux x86_64' && inputs.library == 'tree'
+        run: make analyze ARGS="example --fatal-infos"
+        shell: bash
+
+      # One platform measures it, and this is the one to measure on, since it is
+      # the fastest: the bridged functions are the same on all of them.
+      - name: Run the tests, and fail on a bridged function none of them calls
+        if: matrix.name == 'Linux x86_64' && inputs.library == 'tree'
+        run: ${{ matrix.prefix }} make coverage-example ARGS="-d ${{ matrix.device }}"
+        shell: bash
+
+      - name: Run the tests
+        if: matrix.name != 'Linux x86_64' || inputs.library != 'tree'
+        run: ${{ matrix.prefix }} make test-example ARGS="-d ${{ matrix.device }}"
+        shell: bash
+
+      - name: Check which library that was
+        run: make verify-example-library ARGS="$VERIFY_LIBRARY"
+        shell: bash
+
+      # AOT: what a consumer's release build is compiled to, and `flutter test`
+      # cannot do it. Not on macOS in the tree: its profile build is universal, so
+      # the hook would look for an Intel library this leg did not build, and
+      # download the release's instead.
+      - name: Run the tests in profile mode
+        if: matrix.device != 'macos' || inputs.library != 'tree'
+        run: ${{ matrix.prefix }} make drive-example ARGS="--profile -d ${{ matrix.device }}"
+        shell: bash
+
+  # ============================================
+  # Web
+  # ============================================
+  # The only job that runs the Dart half of the web build against the wasm module,
+  # with every store callback crossing the JavaScript bridge. `make test-web` is
+  # the crate's own Rust tests.
+  web:
+    needs: flutter
+    name: Integration (Web)
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup the app under test
+        uses: ./.github/actions/setup-example
+        with:
+          library: ${{ inputs.library }}
+          package-version: ${{ inputs.package-version }}
+          flutter-version: ${{ needs.flutter.outputs.version }}
+
+      - name: Setup Rust
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-rust
+
+      - name: Setup Protoc
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-protoc
+
+      - name: Setup web build tools
+        if: inputs.library == 'tree'
+        run: make setup-web
+
+      - name: Build the module from this tree
+        if: inputs.library == 'tree'
+        run: make build-web
+
+      # From the runner image and never downloaded, for the reason `Rust unit
+      # tests (browser)` gives. On this image it matches the image's Chrome.
+      - name: Find chromedriver
+        run: |
+          set -euo pipefail
+          if [ -n "${CHROMEWEBDRIVER:-}" ] && [ -x "${CHROMEWEBDRIVER}/chromedriver" ]; then
+            driver="${CHROMEWEBDRIVER}/chromedriver"
+          elif command -v chromedriver >/dev/null 2>&1; then
+            driver="$(command -v chromedriver)"
+          else
+            echo "::error::no preinstalled chromedriver on this runner; refusing to fetch an unpinned one"
+            exit 1
+          fi
+          echo "using $driver ($("$driver" --version))"
+          echo "CHROMEDRIVER=$driver" >> "$GITHUB_ENV"
+
+      - name: Run the tests (debug, compiled by DDC)
+        run: make test-example-web CHROMEDRIVER="$CHROMEDRIVER"
+
+      - name: Check which module that was
+        run: make verify-example-library ARGS="$VERIFY_LIBRARY --web"
+
+      # A different compiler from the one above, and the one a consumer ships.
+      - name: Run the tests (release, compiled by dart2js)
+        run: make test-example-web CHROMEDRIVER="$CHROMEDRIVER" ARGS="--release"
+
+  # ============================================
+  # iOS simulator
+  # ============================================
+  # Debug only: a simulator has no other mode.
+  ios:
+    needs: flutter
+    name: Integration (iOS simulator)
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Setup the app under test
+        uses: ./.github/actions/setup-example
+        with:
+          library: ${{ inputs.library }}
+          package-version: ${{ inputs.package-version }}
+          flutter-version: ${{ needs.flutter.outputs.version }}
+
+      - name: Setup Rust
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-rust
+        with:
+          targets: aarch64-apple-ios-sim
+
+      - name: Setup Protoc
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-protoc
+
+      - name: Build the library from this tree
+        if: inputs.library == 'tree'
+        run: make build-ios ARGS="--target aarch64-apple-ios-sim"
+
+      # The newest runtime's first iPhone rather than a name written down here:
+      # the image's list changes with its Xcode, and which iPhone does not matter.
+      - name: Boot a simulator
+        run: |
+          set -euo pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c "
+          import json, sys
+          devices = json.load(sys.stdin)['devices']
+          runtimes = sorted(
+              (r for r in devices if 'iOS' in r),
+              key=lambda r: [int(n) for n in r.rsplit('iOS-', 1)[1].split('-')],
+          )
+          print(next(d['udid'] for d in devices[runtimes[-1]] if d['name'].startswith('iPhone')))
+          ")
+          echo "Booting $udid"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid"
+          echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+
+      - name: Run the tests
+        run: make test-example ARGS="-d $SIMULATOR"
+
+      - name: Check which library that was
+        run: make verify-example-library ARGS="$VERIFY_LIBRARY"
+
+  # ============================================
+  # Android emulator
+  # ============================================
+  # x86_64, the one ABI a hosted runner can run: it has KVM, and no way to nest an
+  # ARM emulator at a usable speed. Two ends of what the package claims:
+  #
+  # - API 24, the minSdk, on the oldest bionic the library is linked against. A
+  #   call into a newer libc gets past the linker there and fails at load.
+  # - API 36 with 16 KB pages. `make verify-android-alignment` measures the ELF
+  #   headers; this is the library actually loading on such a kernel, which is
+  #   the claim Google Play's requirement is about.
+  android:
+    needs: flutter
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: API 24
+            api: 24
+            target: default
+            # Whichever: this leg is about the API level, not the page size.
+            check: adb shell getprop ro.build.version.sdk
+          - name: API 36, 16 KB pages
+            api: 36
+            target: google_apis_ps16k
+            # This leg means nothing on a 4 KB kernel, so it says so if it is one.
+            check: test "$(adb shell getconf PAGE_SIZE | tr -d '\r')" = 16384
+
+    name: Integration (Android ${{ matrix.name }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      # The image's default JDK is newer than this Gradle runs on.
+      - name: Use the JDK the example builds with
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      - name: Setup the app under test
+        uses: ./.github/actions/setup-example
+        with:
+          library: ${{ inputs.library }}
+          package-version: ${{ inputs.package-version }}
+          flutter-version: ${{ needs.flutter.outputs.version }}
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          packages: platform-tools
+
+      - name: Setup Rust
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-rust
+        with:
+          targets: x86_64-linux-android
+
+      # The NDK and cargo-ndk the release builds with, as in `Cross-compile
+      # (Android)`: a test of a library built differently is a test of that one.
+      - name: Install NDK
+        if: inputs.library == 'tree'
+        run: sdkmanager --install "ndk;26.3.11579264"
+
+      - name: Setup cargo-ndk
+        if: inputs.library == 'tree'
+        run: cargo install cargo-ndk --locked --version 4.1.2
+
+      - name: Setup Protoc
+        if: inputs.library == 'tree'
+        uses: ./.github/actions/setup-protoc
+
+      # On this step alone: Gradle goes on to build the app with the NDK Flutter
+      # asks for, and this is the one the library has to be built with.
+      - name: Build the library from this tree
+        if: inputs.library == 'tree'
+        run: |
+          export ANDROID_NDK_HOME="$ANDROID_SDK_ROOT/ndk/26.3.11579264"
+          make build-android ARGS="--target x86_64"
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      # The action runs each line of `script` on its own, and stops at the first
+      # that fails. VERIFY_LIBRARY and EXAMPLE_DIR come through the environment.
+      - name: Run the tests on an emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disable-animations: true
+          disk-size: 4096M
+          script: |
+            ${{ matrix.check }}
+            make test-example ARGS="-d emulator-5554"
+            make verify-example-library ARGS="$VERIFY_LIBRARY"
+            make drive-example ARGS="--profile -d emulator-5554"
+
+  # ============================================
+  # What cannot be executed here
+  # ============================================
+  # Android on ARM and an iOS device: no hosted runner can run them. This gets
+  # their release binaries into a real app, through the hook's download path, and
+  # checks they are there. It says nothing about whether they work.
+  package:
+    needs: flutter
+    if: inputs.library != 'tree'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-26.04
+            name: Android, all ABIs
+            platform: android
+          - os: macos-26
+            name: iOS device
+            platform: ios
+
+    name: Package (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Use the JDK the example builds with
+        if: matrix.platform == 'android'
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      - name: Setup the app under test
+        uses: ./.github/actions/setup-example
+        with:
+          library: ${{ inputs.library }}
+          package-version: ${{ inputs.package-version }}
+          flutter-version: ${{ needs.flutter.outputs.version }}
+
+      - name: Setup Android SDK
+        if: matrix.platform == 'android'
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          packages: platform-tools
+
+      - name: Build the release app, and check the library is in it
+        run: make package-example-${{ matrix.platform }}

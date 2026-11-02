@@ -94,6 +94,114 @@ void main() {
     });
   });
 
+  group('localBuildDirectory', () {
+    String? directoryFor(
+      OS targetOS,
+      Architecture targetArchitecture, {
+      IOSSdk? iosSdk,
+    }) => build_hook.localBuildDirectory(
+      targetOS: targetOS,
+      targetArchitecture: targetArchitecture,
+      iosSdk: iosSdk,
+      hostOS: OS.macOS,
+      hostArchitecture: Architecture.arm64,
+    );
+
+    test('the host reads the directory make build writes', () {
+      expect(
+        directoryFor(OS.macOS, Architecture.arm64),
+        'rust/target/release/',
+      );
+    });
+
+    test('another architecture of the host OS is a cross build', () {
+      // `flutter build macos` builds both architectures. The host's library in
+      // the other slice is an architecture error, so it must not read it.
+      expect(
+        directoryFor(OS.macOS, Architecture.x64),
+        'rust/target/x86_64-apple-darwin/release/',
+      );
+    });
+
+    test('a device or a simulator never reads the host build', () {
+      for (final directory in [
+        directoryFor(OS.iOS, Architecture.arm64, iosSdk: IOSSdk.iPhoneOS),
+        directoryFor(
+          OS.iOS,
+          Architecture.arm64,
+          iosSdk: IOSSdk.iPhoneSimulator,
+        ),
+        directoryFor(OS.android, Architecture.arm64),
+      ]) {
+        expect(directory, isNot('rust/target/release/'));
+      }
+    });
+
+    test('iOS device and simulator do not share a directory', () {
+      // They share the OS and, on Apple silicon, the architecture. A device
+      // library in a simulator is rejected by dyld at launch.
+      expect(
+        directoryFor(OS.iOS, Architecture.arm64, iosSdk: IOSSdk.iPhoneOS),
+        'rust/target/aarch64-apple-ios/release/',
+      );
+      expect(
+        directoryFor(
+          OS.iOS,
+          Architecture.arm64,
+          iosSdk: IOSSdk.iPhoneSimulator,
+        ),
+        'rust/target/aarch64-apple-ios-sim/release/',
+      );
+      expect(
+        directoryFor(OS.iOS, Architecture.x64, iosSdk: IOSSdk.iPhoneSimulator),
+        'rust/target/x86_64-apple-ios/release/',
+      );
+    });
+
+    test('every Android ABI has the directory cargo-ndk writes', () {
+      expect(
+        directoryFor(OS.android, Architecture.arm64),
+        'rust/target/aarch64-linux-android/release/',
+      );
+      expect(
+        directoryFor(OS.android, Architecture.arm),
+        'rust/target/armv7-linux-androideabi/release/',
+      );
+      expect(
+        directoryFor(OS.android, Architecture.x64),
+        'rust/target/x86_64-linux-android/release/',
+      );
+    });
+
+    test('names the triples build-libsignal.yml builds', () {
+      // A name here the release does not use is a directory no make target
+      // ever writes, and the hook would quietly download instead.
+      final workflow = File(
+        '.github/workflows/build-libsignal.yml',
+      ).readAsStringSync();
+      for (final (os, arch, sdk) in [
+        (OS.android, Architecture.arm64, null),
+        (OS.android, Architecture.arm, null),
+        (OS.android, Architecture.x64, null),
+        (OS.iOS, Architecture.arm64, IOSSdk.iPhoneOS),
+        (OS.iOS, Architecture.arm64, IOSSdk.iPhoneSimulator),
+        (OS.iOS, Architecture.x64, IOSSdk.iPhoneSimulator),
+        (OS.macOS, Architecture.x64, null),
+        (OS.linux, Architecture.arm64, null),
+        (OS.linux, Architecture.x64, null),
+        (OS.windows, Architecture.x64, null),
+      ]) {
+        final triple = directoryFor(os, arch, iosSdk: sdk)!.split('/')[2];
+        expect(workflow, contains(triple), reason: '$os $arch $sdk');
+      }
+    });
+
+    test('a target with no release has no directory', () {
+      expect(directoryFor(OS.windows, Architecture.arm64), isNull);
+      expect(directoryFor(OS.android, Architecture.riscv64), isNull);
+    });
+  });
+
   group('local build crate stamp', () {
     // The hook prefers a local build over the released one, so the stamp is
     // the only thing standing between a developer and a silently stale

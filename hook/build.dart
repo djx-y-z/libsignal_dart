@@ -21,10 +21,15 @@
 /// ## For development
 ///
 /// A locally built library is picked up automatically — no marker needed. The
-/// hook prefers a host-matching `rust/target/` build over downloading:
+/// hook prefers a `rust/target/` build over downloading, as long as the build
+/// is stamped with the current crate version and lock file:
 /// ```bash
-/// # Native platforms → rust/target/release/lib<crate>.<ext>
+/// # This machine → rust/target/release/lib<crate>.<ext>
 /// make build
+///
+/// # A device, a simulator or an emulator → rust/target/<triple>/release/
+/// make build-android ARGS="--target arm64-v8a"
+/// make build-ios ARGS="--target aarch64-apple-ios-sim"
 ///
 /// # Web/WASM → rust/target/wasm32/
 /// make build-web
@@ -182,7 +187,19 @@ void main(List<String> args) async {
 
     // Check for local build first (development mode)
     // This allows developers to use locally built libraries without downloading
-    final localLib = _findLocalBuild(packageRoot, targetOS, targetArch);
+    final localDir = localBuildDirectory(
+      targetOS: targetOS,
+      targetArchitecture: targetArch,
+      iosSdk: iosSdk,
+      hostOS: OS.current,
+      hostArchitecture: Architecture.current,
+    );
+    final localFile = localDir == null
+        ? null
+        : packageRoot.resolve('$localDir${_getLibraryFileName(targetOS)}');
+    final localLib = localFile != null && File.fromUri(localFile).existsSync()
+        ? localFile
+        : null;
     if (localLib != null) {
       // A local build wins over the released one, so it must be shown to
       // belong to THIS crate version, exactly as the local WASM build must.
@@ -197,8 +214,8 @@ void main(List<String> args) async {
           '${stamped == null ? 'an unknown crate version' : 'crate $stamped'}, '
           'but rust/Cargo.toml is at $version. It takes priority over the '
           'released library, so loading it would run the wrong code. '
-          'Run `make build` to rebuild it, or delete ${buildDir.path} to use '
-          'the released library instead.',
+          'Run ${_rebuildCommand(localDir!, targetOS)} to rebuild it, or '
+          'delete ${buildDir.path} to use the released library instead.',
         );
       }
       // The crate version does not move with the dependencies, so the same
@@ -216,8 +233,9 @@ void main(List<String> args) async {
           '${builtLock == null ? 'an unrecorded rust/Cargo.lock' : 'another rust/Cargo.lock than the tree has now'}: '
           'its dependencies may have moved while the crate version stayed at '
           '$version. It takes priority over the released library, so loading '
-          'it could run the wrong code. Run `make build` to rebuild it, or '
-          'delete ${buildDir.path} to use the released library instead.',
+          'it could run the wrong code. Run '
+          '${_rebuildCommand(localDir!, targetOS)} to rebuild it, or delete '
+          '${buildDir.path} to use the released library instead.',
         );
       }
       // ignore: avoid_print
@@ -635,33 +653,80 @@ Future<void> _copyWasmFilesToAppRoot(Uri cacheDir, Directory webPkgDir) async {
 // Native Build Support
 // =============================================================================
 
-/// Looks for a locally built library in `rust/target/<profile>/`.
+/// The directory under the package root that holds a local build for this
+/// target, or null when this target can have none.
 ///
-/// This enables development mode where developers use a locally built library
-/// instead of downloading from GitHub Releases. Only `rust/target/release/` is
-/// read, and the caller refuses it unless `make build` stamped it with the
-/// current crate version.
+/// `make build` puts the host's library in `rust/target/release/`, and only a
+/// target that matches the host OS AND architecture may use it — anything else
+/// would bundle e.g. a macOS dylib into an iOS app, which dyld rejects at
+/// launch, or a library of the wrong architecture.
 ///
-/// A plain `rust/target/release/` build is always a HOST build, so it is only
-/// valid when the target OS AND architecture match the host — otherwise we would
-/// bundle e.g. a macOS dylib into an iOS app (dyld rejects it at launch) or a
-/// wrong-arch `.so`. For any cross-target build this returns null and the hook
-/// downloads the correct released binary instead (cross-compiled outputs land in
-/// `rust/target/<triple>/release/`, which this intentionally does not read).
+/// Every other target has a directory of its own, `rust/target/<triple>/release/`,
+/// where a cross build lands. Reading it is what lets a pull request run its
+/// own Rust on a device: without it those targets could only ever load the last
+/// released library, so a test on an emulator would pass over code the pull
+/// request had replaced, or fail on bindings newer than the release.
 ///
-/// Returns the Uri to the local library if a host-matching build is found, null
-/// otherwise.
-Uri? _findLocalBuild(Uri packageRoot, OS targetOS, Architecture targetArch) {
-  if (targetOS != OS.current || targetArch != Architecture.current) {
-    return null;
+/// The caller refuses whatever it finds here unless `make` stamped it with the
+/// current crate version and lock file, and none of this reaches a consumer:
+/// `rust/target/` is not in the published package.
+///
+/// Pure, and takes the host as arguments, so it is testable on any machine.
+String? localBuildDirectory({
+  required OS targetOS,
+  required Architecture targetArchitecture,
+  required IOSSdk? iosSdk,
+  required OS hostOS,
+  required Architecture hostArchitecture,
+}) {
+  if (targetOS == hostOS && targetArchitecture == hostArchitecture) {
+    return 'rust/target/release/';
   }
+  final triple = _rustTriple(targetOS, targetArchitecture, iosSdk);
+  return triple == null ? null : 'rust/target/$triple/release/';
+}
 
-  final fileName = _getLibraryFileName(targetOS);
+/// The Rust target this package's release builds for this target, or null when
+/// it builds none. The same names as in `build-libsignal.yml`.
+String? _rustTriple(OS targetOS, Architecture targetArch, IOSSdk? iosSdk) {
+  switch (targetOS) {
+    case OS.android:
+      if (targetArch == Architecture.arm64) return 'aarch64-linux-android';
+      if (targetArch == Architecture.arm) return 'armv7-linux-androideabi';
+      if (targetArch == Architecture.x64) return 'x86_64-linux-android';
+      return null;
+    case OS.iOS:
+      if (iosSdk != IOSSdk.iPhoneSimulator) {
+        return targetArch == Architecture.arm64 ? 'aarch64-apple-ios' : null;
+      }
+      if (targetArch == Architecture.arm64) return 'aarch64-apple-ios-sim';
+      if (targetArch == Architecture.x64) return 'x86_64-apple-ios';
+      return null;
+    case OS.macOS:
+      if (targetArch == Architecture.arm64) return 'aarch64-apple-darwin';
+      if (targetArch == Architecture.x64) return 'x86_64-apple-darwin';
+      return null;
+    case OS.linux:
+      if (targetArch == Architecture.arm64) return 'aarch64-unknown-linux-gnu';
+      if (targetArch == Architecture.x64) return 'x86_64-unknown-linux-gnu';
+      return null;
+    case OS.windows:
+      return targetArch == Architecture.x64 ? 'x86_64-pc-windows-msvc' : null;
+    default:
+      return null;
+  }
+}
 
-  // The release profile only: `make build` is what writes the crate stamp the
-  // caller requires, and it builds release. A debug build would carry none.
-  final path = packageRoot.resolve('rust/target/release/$fileName');
-  return File.fromUri(path).existsSync() ? path : null;
+/// The make command that rebuilds what is in [directory], one of
+/// [localBuildDirectory]'s answers.
+String _rebuildCommand(String directory, OS targetOS) {
+  if (directory == 'rust/target/release/') return '`make build`';
+  final triple = directory.split('/')[2];
+  return switch (targetOS) {
+    OS.android => '`make build-android ARGS="--target $triple"`',
+    OS.iOS => '`make build-ios ARGS="--target $triple"`',
+    _ => '`make build ARGS="--target $triple"`',
+  };
 }
 
 /// Gets the library filename for the target OS.
