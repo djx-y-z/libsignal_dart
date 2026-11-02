@@ -379,7 +379,7 @@ All development tasks should be done via Makefile:
 | `make drive-example` | The same under `flutter drive`, for profile mode (AOT) |
 | `make coverage-example` | Run them, then fail on a bridged function none of them calls |
 | `make create-consumer` | Make a new app that depends on a published version |
-| `make package-example-android` / `-ios` | Build the release app for what CI cannot run, and check the library is in it |
+| `make package-example-android` / `-ios` / `-macos` | Build the release app for what CI cannot run, and check the library is in it |
 | `make rust-audit` | Check Rust dependencies for vulnerabilities |
 | `make rust-check` | Quick Rust type check (updates Cargo.lock) |
 | `make rust-test` | Run the crate's own Rust unit tests |

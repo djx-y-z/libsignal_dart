@@ -123,7 +123,9 @@ copy existed is refused the same way. `make build` also drops the hook's cached
 result for this package, `.dart_tool/hooks_runner/libsignal/`: when the
 hook last ran without a host build here, it downloaded the released library and
 declared only `rust/Cargo.toml`, so `dart test` kept loading that download after
-the build.
+the build. It drops the example's too, and Flutter's stamps above it, `dart_build`
+and `install_code_assets`, which on 3.38 can put the last device build's library
+into a simulator app.
 
 ### Web
 
@@ -203,7 +205,8 @@ make verify-example-library ARGS="--built"   # Check the run loaded the library 
 make create-consumer VERSION=9.0.0           # A new app that uses the package from pub.dev
 make test-example EXAMPLE_DIR=build/consumer ARGS="-d macos"  # ...and any target on it
 make package-example-android                 # Release APK: all ABIs bundled, 16 KB aligned
-make package-example-ios                     # Release app for a real iPhone: library in it
+make package-example-ios                     # iPhone and simulators: each library in its app
+make package-example-macos                   # Universal app: both architectures in it
 ```
 
 `make test` runs the library on the Dart VM. This runs it inside an app, so it goes
@@ -247,8 +250,8 @@ like dispose the Dart objects they are given, and the next use throws
 push to main (from the tree), after the native build of a release tag (on the
 released binaries), and weekly (from pub.dev, on the newest Flutter). `publish.yml`
 runs it as a gate before its upload and twice more after it. What no hosted runner
-can execute — Android on ARM, an iOS device — is only checked to bundle, and macOS on
-Intel only ships in the universal app. None of these are required checks yet.
+can execute — Android on ARM, an iOS device, x86_64 on anything Apple — is only
+checked to bundle. None of these are required checks yet.
 
 ### Rust Quality
 ```bash

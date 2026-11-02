@@ -18,10 +18,10 @@
 - **`make verify-example-library`** — fails a run that loaded another library than it
   says it tests, a build from the tree or a released one. The hook chooses, and can
   choose quietly.
-- **`make build-ios`, `make create-consumer`, `make package-example-android` and
-  `-ios`** — an iOS build at the deployment target the release uses; a new app on the
-  published package; and release builds for what no hosted runner can execute, checked
-  for the library inside them.
+- **`make build-ios`, `make create-consumer` and `make package-example-android`,
+  `-ios` and `-macos`** — an iOS build at the deployment target the release uses; a new
+  app on the published package; and release builds for what no hosted runner can
+  execute, checked for the library inside them.
 
 #### Changed
 

@@ -1,0 +1,28 @@
+# TEMPORARY: the release and pub modes, on this branch, before they first run for
+# real at a release, where a failure would stop the upload. Removed before merging.
+name: Integration Rehearsal
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      library: release
+
+  pub:
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      library: pub
+      package-version: '9.0.0'
+
+  pub-on-stable:
+    uses: ./.github/workflows/integration-reusable.yml
+    with:
+      library: pub
+      package-version: '9.0.0'
+      flutter-version: stable

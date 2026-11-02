@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test-example test-example-web doctor drive-example coverage-example create-consumer package-example-android package-example-ios verify-example-coverage verify-example-library test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test-example test-example-web doctor drive-example coverage-example create-consumer package-example-android package-example-ios package-example-macos verify-example-coverage verify-example-library test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -70,7 +70,8 @@ help:
 	@echo "                                        Example: make create-consumer VERSION=9.0.0"
 	@echo "                                        Then:    make test-example EXAMPLE_DIR=build/consumer ARGS=\"-d macos\""
 	@echo "    make package-example-android      - Build the release APK, every ABI, and check its libraries"
-	@echo "    make package-example-ios          - Build the release app for a real iPhone, and check its library"
+	@echo "    make package-example-ios          - Build for a real iPhone and for both simulators, and check the library"
+	@echo "    make package-example-macos        - Build the universal app, and check both architectures are in it"
 	@echo "    make verify-example-coverage      - That check alone, over the last coverage run"
 	@echo "    make verify-example-library       - Check the tests ran on the library they meant to"
 	@echo "                                        Example: make verify-example-library ARGS=\"--built\""
@@ -367,8 +368,16 @@ EXAMPLE_DIR ?= example
 # test`, `dart run` and an app's next build keep loading the download. The shared
 # download cache stays. The example has a cache of its own, and Flutter a stamp
 # above it that skips the hook altogether; `run-example-web` says more on that.
+#
+# ⚠ `install_code_assets.stamp` as well, and that one is not about a local build.
+# Each build mode has its own stamps, and all of them install into one directory,
+# build/native_assets/<os>/. Measured on 3.38.4 (3.47.4 no longer does it): a
+# simulator build, then a device build, then the simulator build again skips the
+# install and copies the DEVICE's library into the simulator app. Native builds keep
+# their stamps under .dart_tool/flutter_build/, `flutter run -d chrome` under build/.
 forget_hook_results = rm -rf .dart_tool/hooks_runner/libsignal $(EXAMPLE_DIR)/.dart_tool/hooks_runner/libsignal; \
-	rm -f $(EXAMPLE_DIR)/build/*/dart_build.stamp
+	rm -f $(foreach dir,$(EXAMPLE_DIR)/build $(EXAMPLE_DIR)/.dart_tool/flutter_build, \
+		$(dir)/*/dart_build.stamp $(dir)/*/install_code_assets.stamp)
 
 # ⚠ Deliberately NOT `--locked`, unlike the release workflow. A project
 # generated from this template has no rust/Cargo.lock until something builds it
@@ -645,9 +654,14 @@ create-consumer:
 # bundle; it cannot prove they work.
 #
 # Android: an APK with every ABI, each library 16 KB aligned as it ended up in the
-# APK. iOS: an app for a real device, with the library's platform read from its
-# header — a device and a simulator library share the architecture, so that is
-# the only thing that tells them apart.
+# APK. Apple: each build with its architectures, and the platform read from the
+# library's header, since a device and a simulator library share an architecture.
+check_apple_library = library=$(1); \
+	lipo "$$library" -verify_arch $(2) || { echo "$$library lacks one of: $(2)"; lipo -archs "$$library"; exit 1; }; \
+	platforms=$$(vtool -show-build "$$library" | awk '/platform/ {print $$2}' | sort -u); \
+	if [ "$$platforms" != "$(3)" ]; then echo "$$library is for $$platforms, not $(3)"; exit 1; fi; \
+	echo "$$library: $(2), $(3)"
+
 package-example-android:
 	@$(forget_hook_results)
 	cd $(EXAMPLE_DIR) && $(FVM) flutter build apk --release
@@ -660,12 +674,15 @@ package-example-android:
 package-example-ios:
 	@$(forget_hook_results)
 	cd $(EXAMPLE_DIR) && $(FVM) flutter build ios --release --no-codesign
-	@library=$(EXAMPLE_DIR)/build/ios/iphoneos/Runner.app/Frameworks/libsignal_frb.framework/libsignal_frb; \
-	if vtool -show-build "$$library" | grep -q 'platform IOS$$'; then \
-		echo "$$library is a device library."; \
-	else \
-		echo "$$library is not a device library:"; vtool -show-build "$$library"; exit 1; \
-	fi
+	@$(call check_apple_library,$(EXAMPLE_DIR)/build/ios/iphoneos/Runner.app/Frameworks/libsignal_frb.framework/libsignal_frb,arm64,IOS)
+	@$(forget_hook_results)
+	cd $(EXAMPLE_DIR) && $(FVM) flutter build ios --simulator --debug
+	@$(call check_apple_library,$(EXAMPLE_DIR)/build/ios/iphonesimulator/Runner.app/Frameworks/libsignal_frb.framework/libsignal_frb,arm64 x86_64,IOSSIMULATOR)
+
+package-example-macos:
+	@$(forget_hook_results)
+	cd $(EXAMPLE_DIR) && $(FVM) flutter build macos --release
+	@$(call check_apple_library,$$(ls -d $(EXAMPLE_DIR)/build/macos/Build/Products/Release/*.app)/Contents/Frameworks/libsignal_frb.framework/libsignal_frb,arm64 x86_64,MACOS)
 
 # Check that the app the tests ran in loaded the library the run says it tests.
 # The hook chooses, and it can choose quietly: a run meant to test this tree that

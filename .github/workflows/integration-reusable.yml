@@ -31,8 +31,9 @@
 #
 # ⚠ WHAT THIS CANNOT EXECUTE, since no hosted runner has the hardware: Android on
 # ARM (arm64-v8a, armeabi-v7a: runners cannot nest an ARM emulator), an iOS device,
-# macOS on Intel. Of the twelve release binaries, seven run here. The `package` job
-# checks the other five get into a real app, and that is all it can check.
+# and x86_64 on anything Apple (macOS and the simulator: the runners are ARM). Of
+# the twelve release binaries, seven run here. The `package` job checks the other
+# five get into a real app, and that is all it can check.
 #
 # Not required checks yet, like `test / Type-check (iOS)`: an emulator job has to
 # prove itself stable first. See `.github/rulesets/README.md`.
@@ -420,9 +421,10 @@ jobs:
   # ============================================
   # What cannot be executed here
   # ============================================
-  # Android on ARM and an iOS device: no hosted runner can run them. This gets
-  # their release binaries into a real app, through the hook's download path, and
-  # checks they are there. It says nothing about whether they work.
+  # Android on ARM, an iOS device, x86_64 on anything Apple: no hosted runner can
+  # run them. This gets their release binaries into a real app, through the hook's
+  # download path, and checks they are there. It says nothing about whether they
+  # work.
   package:
     needs: flutter
     if: inputs.library != 'tree'
@@ -434,8 +436,11 @@ jobs:
             name: Android, all ABIs
             platform: android
           - os: macos-26
-            name: iOS device
+            name: iOS device and simulators
             platform: ios
+          - os: macos-26
+            name: macOS, both architectures
+            platform: macos
 
     name: Package (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
