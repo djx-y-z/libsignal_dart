@@ -28,7 +28,7 @@ Canonical licence texts supplied: 4
 CRATES
 ==============================================================================
 
-addr2line 0.25.1
+addr2line 0.27.1
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T54]
 
@@ -84,7 +84,7 @@ autocfg 1.5.1
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T64]
 
-backtrace 0.3.76
+backtrace 0.3.77
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T32]
 
@@ -214,7 +214,7 @@ ctr 0.10.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T69]
 
-ctutils 0.4.5
+ctutils 0.4.7
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T91]
 
@@ -374,7 +374,7 @@ ghash 0.6.0
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T81]
 
-gimli 0.32.3
+gimli 0.34.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T40]
 
@@ -569,7 +569,7 @@ minimal-lexical 0.2.1
   License: MIT/Apache-2.0
   Texts:   LICENSE-APACHE [T16], LICENSE-MIT [T116], LICENSE.md [T115]
 
-miniz_oxide 0.8.9
+miniz_oxide 0.9.1
   License: MIT OR Zlib OR Apache-2.0
   Texts:   LICENSE [T112], LICENSE-APACHE.md [T2], LICENSE-MIT.md [T113], LICENSE-ZLIB.md [T95]
 
@@ -605,7 +605,7 @@ num_enum_derive 0.7.6
   License: BSD-3-Clause OR MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-BSD [T67], LICENSE-MIT [T116]
 
-object 0.37.3
+object 0.40.0
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T39]
 
@@ -759,7 +759,7 @@ rustc_version 0.4.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T47]
 
-rustix 1.1.5
+rustix 1.1.6
   License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-Apache-2.0_WITH_LLVM-exception [T7], LICENSE-MIT [T116]
 
@@ -815,7 +815,7 @@ slab 0.4.12
   License: MIT
   Texts:   LICENSE [T76]
 
-smallvec 1.16.3
+smallvec 1.16.4
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T66]
 
@@ -1003,7 +1003,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  miniz_oxide@0.8.9
+  miniz_oxide@0.9.1
   pin-project-lite@0.2.17
   portable-atomic@1.15.0
 
@@ -1821,7 +1821,7 @@ Crates:
   allo-isolate@0.1.27
   clang-sys@1.9.1
   cmov@0.5.4
-  ctutils@0.4.5
+  ctutils@0.4.7
   derive-where@1.7.0
   zeroize@1.9.1
   zeroize_derive@1.5.0
@@ -2034,7 +2034,7 @@ Apache License
 
 Crates:
   linux-raw-sys@0.12.1
-  rustix@1.1.5
+  rustix@1.1.6
   wasip2@1.0.4+wasi-0.2.12
   wit-bindgen@0.57.1
 
@@ -3733,11 +3733,11 @@ limitations under the License.
 ------------------------------------------------------------------------------
 
 Crates:
-  addr2line@0.25.1
+  addr2line@0.27.1
   assert_matches@1.5.0
   atomic@0.5.3
   autocfg@1.5.1
-  backtrace@0.3.76
+  backtrace@0.3.77
   bitflags@2.13.2
   bumpalo@3.20.3
   cc@1.10.0
@@ -3754,7 +3754,7 @@ Crates:
   fastrand@2.5.0
   find-msvc-tools@0.1.15
   fixedbitset@0.5.7
-  gimli@0.32.3
+  gimli@0.34.0
   glob@0.3.4
   hashbrown@0.14.5
   hashbrown@0.15.5
@@ -3775,7 +3775,7 @@ Crates:
   num-integer@0.1.47
   num-traits@0.2.19
   num_cpus@1.17.0
-  object@0.37.3
+  object@0.40.0
   once_cell@1.21.4
   parking_lot@0.12.5
   parking_lot_core@0.9.12
@@ -3792,9 +3792,9 @@ Crates:
   regex@1.13.1
   rustc-demangle@0.1.28
   rustc_version@0.4.1
-  rustix@1.1.5
+  rustix@1.1.6
   scopeguard@1.2.0
-  smallvec@1.16.3
+  smallvec@1.16.4
   tempfile@3.27.0
   threadpool@1.8.1
   uuid@1.29.0
@@ -6320,7 +6320,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  backtrace@0.3.76
+  backtrace@0.3.77
   cc@1.10.0
   cfg-if@1.0.5
   find-msvc-tools@0.1.15
@@ -6572,7 +6572,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  object@0.37.3
+  object@0.40.0
 
 Copyright (c) 2015 The Gimli Developers
 
@@ -6605,7 +6605,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  gimli@0.32.3
+  gimli@0.34.0
   heck@0.5.0
 
 Copyright (c) 2015 The Rust Project Developers
@@ -7070,7 +7070,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  addr2line@0.25.1
+  addr2line@0.27.1
 
 Copyright (c) 2016-2018 The gimli Developers
 
@@ -7477,7 +7477,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  smallvec@1.16.3
+  smallvec@1.16.4
 
 Copyright (c) 2018 The Servo Project Developers
 
@@ -8299,7 +8299,7 @@ the following restrictions:
 ------------------------------------------------------------------------------
 
 Crates:
-  ctutils@0.4.5
+  ctutils@0.4.7
 
 Copyright (c) 2025-2026 The RustCrypto Project Developers
 
@@ -8429,7 +8429,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
 
 Crates:
-  miniz_oxide@0.8.9
+  miniz_oxide@0.9.1
 
 Copyright 2013-2014 RAD Game Tools and Valve Software
 Copyright 2010-2014 Rich Geldreich and Tenacious Software LLC
@@ -9524,7 +9524,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  miniz_oxide@0.8.9
+  miniz_oxide@0.9.1
 
 MIT License
 
@@ -9557,7 +9557,7 @@ SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  miniz_oxide@0.8.9
+  miniz_oxide@0.9.1
 
 MIT License
 
@@ -9665,7 +9665,7 @@ Crates:
   proc-macro2@1.0.107
   quote@1.0.47
   rustc-hash@2.1.3
-  rustix@1.1.5
+  rustix@1.1.6
   rustversion@1.0.23
   semver@1.0.28
   serde@1.0.229
