@@ -59,10 +59,11 @@ with r26 and r28 measure `p_align=0x4000` alike. Google Play has required it of
 an app's bundled native libraries, for apps targeting Android 15 or later, since
 1 November 2025 — so a cargo-ndk that stopped passing the flag would not break
 anything here, it would make **consumers'** apps unpublishable. The version is
-therefore pinned by hand in both Android jobs (`build-libsignal.yml`
-and `test-reusable.yml`, together — a gate on a different tool than the release
-is not a gate), and `make verify-android-alignment` measures the result rather
-than trusting the pin. Both jobs run it.
+therefore pinned by hand in every job that runs it (`build-libsignal.yml`,
+`test-reusable.yml` and `integration-reusable.yml`, together — a gate on a
+different tool than the release is not a gate, and a test of a library built
+differently is a test of that one), and `make verify-android-alignment` measures
+the result rather than trusting the pin. The first two run it.
 
 ⚠ **The Apple libraries are linked with `-headerpad_max_install_names`, by
 `rust/build.rs`.** `dart run`, `dart test` and `flutter test` copy the dylib into
@@ -110,8 +111,10 @@ It is what lets a pull request run its own Rust on an emulator or a simulator:
 without it those targets could only load the last release, so a test there would
 pass over code the pull request had replaced. The flip side is the same refusal:
 a cross build from a `cargo` line, or one left over from before the stamp, stops
-the app's build until you rebuild it or delete it. A consumer never reaches any
-of this, `rust/target/` not being in the published package.
+the app's build until you rebuild it or delete it. The host's own triple is the
+exception: the host reads `rust/target/release/` alone, so a `--target` build for
+it is stamped and never read — build the host with a plain `make build`. A consumer
+never reaches any of this, `rust/target/` not being in the published package.
 
 ⚠ **Each stamp comes with `.cargo-lock`, a copy of the `rust/Cargo.lock` the
 build was made from, and the hook refuses a local build whose copy differs from
@@ -123,9 +126,10 @@ copy existed is refused the same way. `make build` also drops the hook's cached
 result for this package, `.dart_tool/hooks_runner/libsignal/`: when the
 hook last ran without a host build here, it downloaded the released library and
 declared only `rust/Cargo.toml`, so `dart test` kept loading that download after
-the build. It drops the example's too, and Flutter's stamps above it, `dart_build`
-and `install_code_assets`, which on 3.38 can put the last device build's library
-into a simulator app.
+the build. It drops the example's too, and Flutter's stamps above it — the hook's
+target, `dart_build` to Flutter 3.44 and `build_hooks` with `link_hooks` from
+3.47, and `install_code_assets`, which on 3.38 can put the last device build's
+library into a simulator app.
 
 ### Web
 
@@ -204,7 +208,7 @@ make verify-example-coverage                 # That check alone, over the last r
 make verify-example-library ARGS="--built"   # Check the run loaded the library it meant to
 make create-consumer VERSION=9.0.0           # A new app that uses the package from pub.dev
 make test-example EXAMPLE_DIR=build/consumer ARGS="-d macos"  # ...and any target on it
-make package-example-android                 # Release APK: all ABIs bundled, 16 KB aligned
+make package-example-android                 # Release APK: all ABIs bundled, ELF 16 KB aligned
 make package-example-ios                     # iPhone and simulators: each library in its app
 make package-example-macos                   # Universal app: both architectures in it
 ```
@@ -248,17 +252,20 @@ like dispose the Dart objects they are given, and the next use throws
 
 **CI:** `integration.yml` runs `integration-reusable.yml` on every pull request and
 push to main (from the tree), after the native build of a release tag (on the
-released binaries), and weekly (from pub.dev, on the newest Flutter). `publish.yml`
-runs it as a gate before its upload and twice more after it. What no hosted runner
-can execute — Android on ARM, an iOS device, x86_64 on anything Apple — is only
-checked to bundle. None of these are required checks yet.
+released binaries), and weekly (from pub.dev, on the newest Flutter, with the
+tests of that version's tag when it has them). `publish.yml` runs it as a gate
+before its upload and twice more after it. What no hosted runner can execute —
+Android on ARM, an iOS device, x86_64 on anything Apple — is only checked to
+bundle. None of these are required checks yet.
 
 ⚠ **The emulator and simulator steps are the flaky part, never the package.**
 Measured on the branch that added them: an iOS simulator's first boot can leave the
 app unconnected (retried once, on exactly that error), and the API 36 image with
-16 KB pages failed 4 runs in 13, four different ways, where API 24 never did (the
-emulator step runs once more on any failure, with a warning). A test that fails,
-fails both times. Read the first attempt's log before calling a red run flaky.
+16 KB pages failed 4 runs in 14, four different ways, where API 24 never did (the
+emulator step runs once more on any failure, with a warning). A test that always
+fails, fails both times; one that fails now and then can pass the second try, and
+its warning is all that is left of it. Read the first attempt's log before calling
+a red run flaky, and before calling a warned green one clean.
 
 ### Rust Quality
 ```bash
@@ -432,7 +439,8 @@ do not exist). Native libraries are delivered via Dart **build hooks**
    version (no marker needed). Cross-target builds (`make build-android`,
    `make build-ios`, `make build ARGS="--target <triple>"`) land in
    `rust/target/<triple>/release/` and are picked up the same way, for that
-   target only. `.skip_libsignal_hook` is only an
+   target only — the host's own triple excepted, which reads
+   `rust/target/release/` alone. `.skip_libsignal_hook` is only an
    internal escape the Makefile uses while wrapping pub-get/codegen/doc — when
    present the hook returns immediately and registers **no** asset
 3. **CI**: `build-libsignal.yml` builds and uploads binaries when a

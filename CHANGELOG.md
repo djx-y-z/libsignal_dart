@@ -10,8 +10,8 @@
   API 36 with 16 KB pages) and in a real browser, in debug and in AOT or dart2js. CI
   runs them from the tree on every pull request (`integration.yml`), on the released
   binaries after stage 1 and before the upload (`publish.yml`), and in a new app that
-  depends on the version on pub.dev after the upload and weekly on the newest Flutter.
-  Not required checks yet.
+  depends on the version on pub.dev after the upload and weekly on the newest Flutter,
+  with that version's own tests. Not required checks yet.
 - **`make coverage-example` fails on a bridged function nothing calls** — measured from
   the running app over every `crateApi*` function, so a new binding without an
   integration test turns CI red.
@@ -33,7 +33,8 @@
   `cargo` line, or from before this, now stops the app's build until it is rebuilt or
   deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs.
 - **`example/ios` is integrated with CocoaPods** — `integration_test` is a plugin.
-- **`make clean` also clears the example's build output.**
+- **`make clean` also clears the example's build output** — `example/.dart_tool`,
+  `example/build`, `example/coverage` and `example/web/pkg`.
 
 ## [9.0.0] - 2026-10-26
 

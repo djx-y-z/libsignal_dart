@@ -23,11 +23,13 @@
 #            commit under test. Nothing here builds Rust: a local build would be
 #            preferred over the release, and test nothing but itself.
 #   pub      Same binaries, and now the package archive too: a new app made with
-#            `flutter create`, which depends on the version on pub.dev.
+#            `flutter create`, which depends on the version on pub.dev. The tests
+#            are the commit's under test, so `ref` has to be that version's tag
+#            when it has them: integration.yml says why and does it.
 #
-# `make verify-example-library` then checks the app really loaded what the run
-# says. The hook chooses, and a wrong choice is otherwise a green run over the
-# wrong code.
+# `make verify-example-library` then checks, after every run, that the app really
+# loaded what the run says. The hook chooses, and a wrong choice is otherwise a
+# green run over the wrong code.
 #
 # ⚠ WHAT THIS CANNOT EXECUTE, since no hosted runner has the hardware: Android on
 # ARM (arm64-v8a, armeabi-v7a: runners cannot nest an ARM emulator), an iOS device,
@@ -38,9 +40,10 @@
 # Not required checks yet, like `test / Type-check (iOS)`: an emulator job has to
 # prove itself stable first. See `.github/rulesets/README.md`.
 #
-# Every step that runs the tests has a `timeout-minutes` of its own, under the
-# job's. A job that runs out of time is cancelled and GitHub keeps no log of it;
-# a step that does fails, with its log, saying where it hung.
+# Every step that can hang has a `timeout-minutes` of its own, and each job's is
+# longer than its setup and those added up. A job that runs out of time is
+# cancelled, and its log can go with it (one did, on the branch that added this
+# file); a step that runs out fails, with its log, saying where it hung.
 
 name: Integration Tests (Reusable)
 
@@ -127,7 +130,8 @@ jobs:
 
     name: Integration (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    # Setup, a cold Rust build on Windows included, then two test steps of 30.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -198,6 +202,12 @@ jobs:
         run: ${{ matrix.prefix }} make drive-example ARGS="--profile -d ${{ matrix.device }}"
         shell: bash
 
+      # A build of its own, so a choice of its own for the hook.
+      - name: Check which library that was, in profile mode
+        if: matrix.device != 'macos' || inputs.library != 'tree'
+        run: make verify-example-library ARGS="$VERIFY_LIBRARY"
+        shell: bash
+
   # ============================================
   # Web
   # ============================================
@@ -208,7 +218,8 @@ jobs:
     needs: flutter
     name: Integration (Web)
     runs-on: ubuntu-26.04
-    timeout-minutes: 45
+    # Setup, a cold wasm build included, then two test steps of 15.
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -265,23 +276,32 @@ jobs:
         timeout-minutes: 15
         run: make test-example-web CHROMEDRIVER="$CHROMEDRIVER" ARGS="--release"
 
+      # The target provisions web/pkg/ again for each run.
+      - name: Check which module that was, in release
+        run: make verify-example-library ARGS="$VERIFY_LIBRARY --web"
+
   # ============================================
   # iOS simulator
   # ============================================
   # Debug only: a simulator has no other mode.
   #
   # ⚠ The runner's simulators have never been booted, so the first boot starts with
-  # a data migration, minutes long, and then the app can launch with nothing reading
-  # its log yet. `flutter test` finds the app's VM service in that log, so it waits
-  # out its 12 minutes and fails with "Error waiting for a debug connection", with
-  # no test run. Measured: one run in three on macos-26, and never locally. Hence a
-  # boot step that waits for the log as well, and one retry of exactly that.
+  # a data migration, minutes long. Then, now and again, the app launches and
+  # `flutter test` never finds its VM service in the simulator's log: it waits out
+  # its 12-minute load timeout and fails with "Error waiting for a debug
+  # connection", with no test run. Measured on macos-26: 3 runs in the 15 whose
+  # logs survive, on the branch that added this job (a 16th hung until its job was
+  # cancelled, with no log), and never locally. Waiting for the simulator's log to
+  # answer before the launch did not prevent it: the log answered at once every
+  # time, the failing runs included. What does help is one more try of exactly that.
   ios:
     needs: flutter
     name: Integration (iOS simulator)
     runs-on: macos-26
-    # A first boot's migration has taken 13 minutes, and the test step has 55 for
-    # its two tries: the job has to outlast them all.
+    # Booting, the migration included, has taken up to 6 minutes, and its step has
+    # 15. A try that never connects takes about 14 (an Xcode build, then the
+    # 12-minute timeout) and one that passes 4 to 9, so the test step has 55 for
+    # its two tries, and the job has to outlast it all.
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
@@ -312,6 +332,7 @@ jobs:
       # The newest runtime's first iPhone rather than a name written down here:
       # the image's list changes with its Xcode, and which iPhone does not matter.
       - name: Boot a simulator
+        timeout-minutes: 15
         run: |
           set -euo pipefail
           udid=$(xcrun simctl list devices available -j | python3 -c "
@@ -326,14 +347,6 @@ jobs:
           echo "Booting $udid"
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid"
-          for _ in $(seq 1 30); do
-            if xcrun simctl spawn "$udid" log show --last 1m --style compact >/dev/null 2>&1; then
-              echo "The simulator's log answers."
-              break
-            fi
-            echo "The simulator's log does not answer yet."
-            sleep 10
-          done
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
 
       # Once more only when the app never connected, which is the simulator and not
@@ -367,17 +380,20 @@ jobs:
   # - API 36 with 16 KB pages. `make verify-android-alignment` measures the ELF
   #   headers; this is the library actually loading on such a kernel, which is
   #   the claim Google Play's requirement is about. Debug only, and more memory:
-  #   this image is the heavier of the two, and in 4 runs of 13 it failed in a way
-  #   of its own each time — gone in the middle of a Gradle build, "No space left
-  #   on device" unpacking it with 88 GB free on / (and /tmp is on that disk too:
-  #   measured, so that one is unexplained), offline under the profile run, "Failed
-  #   to start Dart Development Service" — while API 24 never failed. The profile
-  #   run is the API 24 leg's; the library is the same.
+  #   this image is the heavier of the two, and in 4 of its 14 runs before the
+  #   retry below it failed, in a way of its own each time — gone in the middle
+  #   of a Gradle build, "No space left on device" unpacking it with 88 GB free
+  #   on / (and /tmp is on that disk too: measured, so that one is unexplained),
+  #   offline under the profile run, "Failed to start Dart Development Service" —
+  #   while API 24 never failed. The profile run is the API 24 leg's; the library
+  #   is the same.
   #
-  # ⚠ So each emulator step runs once more on failure, with a warning that stays
-  # on the run. A failing test fails both times; the failures above never came
-  # twice in a row. The second try prints what the first could not: the device's
-  # log on a failure, and the memory and both file systems before it starts.
+  # ⚠ So the emulator step runs once more on any failure, with a warning that
+  # stays on the run. A test that always fails, fails both times, and none of the
+  # failures above happened twice; but a test that fails only now and then can
+  # pass the second time, and the warning is then all that is left of it — read
+  # it. Between the two tries the memory and both file systems are printed, and
+  # an emulator the first left behind is stopped.
   android:
     needs: flutter
     strategy:
@@ -404,10 +420,10 @@ jobs:
 
     name: Integration (Android ${{ matrix.name }})
     runs-on: ubuntu-26.04
-    # Setup takes up to 20 minutes from the tree, and each attempt below has 30:
-    # the job has to outlast both, or a slow first attempt takes the second's log
-    # with it.
-    timeout-minutes: 90
+    # Setup takes up to 20 minutes from the tree, the app's build 20 and each
+    # attempt below 30: the job has to outlast them all, or a slow first attempt
+    # takes the second's log with it.
+    timeout-minutes: 110
     steps:
       - uses: actions/checkout@v7
         with:
@@ -474,6 +490,7 @@ jobs:
       # memory in the runner's own gradle.properties, which outranks the app's. That
       # leaves the app's files as `flutter create` made them.
       - name: Build the app before the emulator starts
+        timeout-minutes: 20
         run: |
           mkdir -p ~/.gradle
           {
@@ -512,12 +529,21 @@ jobs:
             ${{ matrix.check }}
             make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
             make verify-example-library ARGS="$VERIFY_LIBRARY"
-            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
+            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554" && make verify-example-library ARGS="$VERIFY_LIBRARY"' || 'echo "Profile mode runs on the API 24 leg."' }}
 
+      # A first try that ran out of time never reached the action's own cleanup,
+      # so its emulator may still hold the port and the AVD the second one needs.
       - name: Say that the emulator failed once
         if: steps.emulator.outcome == 'failure'
         run: |
           echo "::warning::The emulator step failed; running it once more. Its log above says why."
+          adb devices || true
+          adb -s emulator-5554 emu kill 2>/dev/null || true
+          for _ in $(seq 1 30); do
+            pgrep -f qemu-system >/dev/null || break
+            sleep 2
+          done
+          pkill -9 -f qemu-system || true
           df -h / /tmp
           free -h
 
@@ -536,7 +562,7 @@ jobs:
             ${{ matrix.check }}
             make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
             make verify-example-library ARGS="$VERIFY_LIBRARY"
-            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
+            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554" && make verify-example-library ARGS="$VERIFY_LIBRARY"' || 'echo "Profile mode runs on the API 24 leg."' }}
 
   # ============================================
   # What cannot be executed here
