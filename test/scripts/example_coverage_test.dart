@@ -94,6 +94,21 @@ abstract class RustLibApi {
     });
   });
 
+  group('declaredBridgedFunctions', () {
+    test('reads the abstract class, each name once', () {
+      expect(declaredBridgedFunctions(_generated), {'FooOne', 'FooTwo'});
+    });
+
+    test('the real generated file declares exactly the bodies found', () {
+      // Every function whose body the walk misses would go unmeasured.
+      final generated = File(generatedBindings).readAsStringSync();
+      expect(
+        declaredBridgedFunctions(generated),
+        bridgedFunctions(generated).keys.toSet(),
+      );
+    });
+  });
+
   group('verifyExampleCoverage', () {
     const handWritten = {
       'lib/src/hand.dart': {1: 1, 2: 1},
@@ -177,6 +192,24 @@ abstract class RustLibApi {
         generated: 'class Other {}',
       );
       expect(coverage.problems.join(), contains('read nothing'));
+    });
+
+    test('a declared function whose body it cannot find is a problem', () {
+      // The generator writing one function in a shape the walk does not know:
+      // without the declarations to hold it to, that one would go unmeasured.
+      final coverage = verifyExampleCoverage(
+        lcov: _lcov({
+          generatedBindings: {9: 1},
+          ...handWritten,
+        }),
+        generated: _generated.replaceFirst(
+          'get kCrateApiFooTwoConstMeta',
+          'get kFooTwoMeta',
+        ),
+      );
+      expect(coverage.bridged, 1);
+      expect(coverage.unmeasured, ['FooTwo']);
+      expect(coverage.problems.join(), contains('crateApiFooTwo is declared'));
     });
   });
 

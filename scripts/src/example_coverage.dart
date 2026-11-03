@@ -84,11 +84,33 @@ Map<String, (int, int)> bridgedFunctions(String generated) {
   return functions;
 }
 
+/// Every bridged function [generated] declares, named as [bridgedFunctions]
+/// names them: what follows `crateApi` in `abstract class RustLibApi`, which
+/// lists each one once.
+///
+/// The check against [bridgedFunctions]: a body that walk did not find is a
+/// function nobody would have measured, and a layout the generator changed for
+/// some functions only would otherwise pass over them in silence.
+Set<String> declaredBridgedFunctions(String generated) {
+  final lines = generated.split('\n');
+  final start = lines.indexWhere(
+    (line) => line.startsWith('abstract class RustLibApi '),
+  );
+  if (start < 0) return const {};
+  final end = lines.indexWhere((line) => line.startsWith('}'), start + 1);
+  final name = RegExp(r'\bcrateApi(\w+)\(');
+  return {
+    for (final line in lines.sublist(start, end < 0 ? lines.length : end))
+      for (final match in name.allMatches(line)) match.group(1)!,
+  };
+}
+
 /// The verdict on one coverage run.
 class ExampleCoverage {
   const ExampleCoverage({
     required this.bridged,
     required this.uncalled,
+    required this.unmeasured,
     required this.staleExcuses,
     required this.handWrittenLines,
     required this.handWrittenHit,
@@ -99,6 +121,10 @@ class ExampleCoverage {
 
   /// Bridged functions that ran no line and have no excuse.
   final List<String> uncalled;
+
+  /// Bridged functions the generated file declares but whose body this check
+  /// did not find, so could not measure.
+  final List<String> unmeasured;
 
   /// Names in [uncalledOnPurpose] the generated file no longer has.
   final List<String> staleExcuses;
@@ -114,6 +140,9 @@ class ExampleCoverage {
     if (bridged == 0)
       'Found no bridged functions in $generatedBindings, so this check read '
           'nothing. Did the generator change how it writes them?',
+    for (final name in unmeasured)
+      'crateApi$name is declared in $generatedBindings, but this check found no '
+          'body to measure it by. Did the generator change how it writes them?',
     for (final name in uncalled)
       'crateApi$name: no integration test calls it. Add one under '
           'example/integration_test/capabilities/, or a line in '
@@ -167,6 +196,10 @@ ExampleCoverage verifyExampleCoverage({
   return ExampleCoverage(
     bridged: functions.length,
     uncalled: uncalled,
+    unmeasured: [
+      for (final name in declaredBridgedFunctions(generated))
+        if (!functions.containsKey(name)) name,
+    ]..sort(),
     staleExcuses: [
       for (final name in uncalledOnPurpose.keys)
         if (!functions.containsKey(name)) name,
