@@ -333,16 +333,25 @@ READ_CRATE_VERSION = grep -m1 -E '^version[[:space:]]*=' rust/Cargo.toml \
 # Each `--target` in ARGS built one directory; with none, `$(1)` lists them. An
 # Android ABI name is what cargo-ndk takes, and the directory is the triple. Only
 # what this run built is stamped: an older build of another target has to go on
-# being refused.
+# being refused. So nothing is stamped when the build may have gone elsewhere —
+# `--target-dir`, or cargo's own variables for the directory and the target —
+# since a stale build where the hook looks would then pass for this one.
 stamp_build = stamp() { \
 		[ -d "rust/target/$$1" ] || return 0; \
 		$(READ_CRATE_VERSION) > "rust/target/$$1/.crate-version"; \
 		cp rust/Cargo.lock "rust/target/$$1/.cargo-lock"; \
 	}; \
+	if [ -n "$${CARGO_TARGET_DIR:-}$${CARGO_BUILD_TARGET:-}$${CARGO_NDK_TARGET:-}" ]; then \
+		echo "Not stamped: CARGO_TARGET_DIR, CARGO_BUILD_TARGET or CARGO_NDK_TARGET is set, so the hook would not know this build."; \
+		exit 0; \
+	fi; \
 	stamped=; set -- $(ARGS); \
 	while [ $$\# -gt 0 ]; do \
 		target=; \
 		case "$$1" in \
+			--target-dir|--target-dir=*) \
+				echo "Not stamped: --target-dir puts the build where the hook does not look."; \
+				exit 0 ;; \
 			--target|-t) target="$$2"; shift ;; \
 			--target=*) target="$${1\#--target=}" ;; \
 		esac; \
@@ -377,9 +386,13 @@ EXAMPLE_DIR ?= example
 # simulator build, then a device build, then the simulator build again skips the
 # install and copies the DEVICE's library into the simulator app. Native builds keep
 # their stamps under .dart_tool/flutter_build/, `flutter run -d chrome` under build/.
+#
+# The hook's target is `dart_build` up to Flutter 3.44, and `build_hooks` followed
+# by `link_hooks` from 3.47 (flutter_tools' native_assets.dart): a name missed
+# here is a stamp that survives, and then a hook that does not run again.
 forget_hook_results = rm -rf .dart_tool/hooks_runner/libsignal $(EXAMPLE_DIR)/.dart_tool/hooks_runner/libsignal; \
 	rm -f $(foreach dir,$(EXAMPLE_DIR)/build $(EXAMPLE_DIR)/.dart_tool/flutter_build, \
-		$(dir)/*/dart_build.stamp $(dir)/*/install_code_assets.stamp)
+		$(foreach stamp,dart_build build_hooks link_hooks install_code_assets,$(dir)/*/$(stamp).stamp))
 
 # ⚠ Deliberately NOT `--locked`, unlike the release workflow. A project
 # generated from this template has no rust/Cargo.lock until something builds it
@@ -420,7 +433,7 @@ build-android:
 build-ios:
 	@echo "Building Rust library for iOS..."
 	@DEPLOYMENT_TARGET=$$(sed -n "s/^ios_min_version: *'*\([0-9.]*\)'*/\1/p" .copier-answers.yml); \
-		TARGETS="$(if $(findstring --target,$(ARGS)),,$(foreach t,$(IOS_TARGETS),--target $(t)))"; \
+		TARGETS="$(if $(filter --target --target=%,$(ARGS)),,$(foreach t,$(IOS_TARGETS),--target $(t)))"; \
 		IPHONEOS_DEPLOYMENT_TARGET=$$DEPLOYMENT_TARGET cargo build --release --manifest-path rust/Cargo.toml $$TARGETS $(ARGS)
 	@$(call stamp_build,$(foreach t,$(IOS_TARGETS),$(t)/release))
 	@$(forget_hook_results)
@@ -557,9 +570,11 @@ test-web:
 #   iOS               `make build-ios`         rust/target/<triple>/release/
 #   the web           `make build-web`         rust/target/wasm32/
 # With none of those it downloads the release of the crate version in
-# rust/Cargo.toml, which is how CI tests a release. A local build older than the
-# tree stops the hook (HookException) rather than being loaded, so the failure
-# you get is the instruction to rebuild.
+# rust/Cargo.toml, which is how CI tests a release. A local build from another
+# crate version or lock file stops the hook (HookException) rather than being
+# loaded, so the failure you get is the instruction to rebuild. One from older
+# Rust sources under the same version and lock file is loaded as it is: rebuild
+# after changing rust/.
 #
 # `flutter test` forces debug mode. `drive-example` below is for the other modes.
 test-example:
@@ -620,7 +635,7 @@ coverage-example:
 	@$(forget_hook_results)
 	cd $(EXAMPLE_DIR) && $(FVM) flutter test integration_test --coverage \
 		--coverage-package='^libsignal$$' $(ARGS)
-	@$(FVM) dart scripts/verify_example_coverage.dart
+	@$(FVM) dart scripts/verify_example_coverage.dart $(EXAMPLE_DIR)/coverage/lcov.info
 
 verify-example-coverage:
 	@$(FVM) dart scripts/verify_example_coverage.dart $(ARGS)
@@ -633,6 +648,10 @@ verify-example-coverage:
 #   make create-consumer VERSION=9.0.0
 #   make test-example EXAMPLE_DIR=build/consumer ARGS="-d macos"
 #
+# The tests are this checkout's, so they must not be newer than the version: a test
+# can call what was released after it. For an older version, check its tag out
+# first, as the weekly CI run does.
+#
 # The project is named as the example is, because the tests import it by that name.
 # Under build/, which git and the published package both ignore. FVM finds .fvmrc
 # from there, so it runs on the pinned Flutter; FLUTTER_VERSION gives the new app a
@@ -640,8 +659,10 @@ verify-example-coverage:
 # create` included, while this repository's tooling stays on the pin:
 #   make create-consumer VERSION=9.0.0 FLUTTER_VERSION=3.47.9
 #
-# `--sdk` rather than the `dev:name:{"sdk":"flutter"}` form: on Windows the command
-# goes through cmd, which takes the JSON apart.
+# `--sdk` rather than a descriptor: on Windows the command goes through cmd, which
+# takes the JSON apart, and the descriptor's form changed between Flutter 3.38
+# (`name:{...}`) and 3.47 (`name@{...}`). `--sdk` is hidden from `pub add --help`
+# on both, and works on both.
 CONSUMER_DIR ?= build/consumer
 
 create-consumer:
@@ -662,9 +683,10 @@ create-consumer:
 # library is in there. It proves those release binaries download, verify and
 # bundle; it cannot prove they work.
 #
-# Android: an APK with every ABI, each library 16 KB aligned as it ended up in the
-# APK. Apple: each build with its architectures, and the platform read from the
-# library's header, since a device and a simulator library share an architecture.
+# Android: an APK with every ABI, and each library's ELF segments 16 KB aligned,
+# read from the copy inside the APK (not the APK's own zip alignment). Apple: each
+# build with its architectures, and the platform read from the library's header,
+# since a device and a simulator library share an architecture.
 check_apple_library = library=$(1); \
 	lipo "$$library" -verify_arch $(2) || { echo "$$library lacks one of: $(2)"; lipo -archs "$$library"; exit 1; }; \
 	platforms=$$(vtool -show-build "$$library" | awk '/platform/ {print $$2}' | sort -u); \

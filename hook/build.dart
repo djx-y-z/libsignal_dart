@@ -73,8 +73,11 @@ const _wasmVersionMarkerName = '.wasm-version';
 const _localWasmMarker = 'local-dev';
 
 /// Name of the stamp `make build` writes beside the host library in
-/// `rust/target/release/`, and `make build-web` beside the module in
-/// `rust/target/wasm32/`, recording the crate version each was built from.
+/// `rust/target/release/`, `make build-web` beside the module in
+/// `rust/target/wasm32/`, and `make build-android`, `make build-ios` and
+/// `make build ARGS="--target <triple>"` beside a cross build in
+/// `rust/target/<triple>/release/`, recording the crate version each was built
+/// from.
 ///
 /// It exists because nothing else can answer the question. A local build
 /// directory is a build artefact of this repository: its files change whenever
@@ -110,8 +113,8 @@ String? readLocalBuildStamp(Directory buildDir) {
   return file.readAsStringSync().trim();
 }
 
-/// Name of the copy of `rust/Cargo.lock` that `make build` and `make build-web`
-/// leave beside their stamps: the dependency graph the build was made from.
+/// Name of the copy of `rust/Cargo.lock` that the make targets above leave
+/// beside their stamps: the dependency graph the build was made from.
 ///
 /// The version stamp cannot tell two builds of one crate version apart, and an
 /// upstream update moves the dependencies without moving the crate version,
@@ -250,8 +253,8 @@ void main(List<String> args) async {
           file: localLib,
         ),
       );
-      // Declare the library itself, not only the manifest. `_findLocalBuild`
-      // returned it because it exists right now, so this follows the same
+      // Declare the library itself, not only the manifest. It was taken
+      // above because it exists right now, so this follows the same
       // declare-only-while-it-exists rule as the skip marker above. Without it
       // the build system keeps a cached result pointing at this path:
       // rebuilding the crate without touching Cargo.toml keeps serving the
