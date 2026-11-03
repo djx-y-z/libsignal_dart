@@ -37,6 +37,10 @@
 #
 # Not required checks yet, like `test / Type-check (iOS)`: an emulator job has to
 # prove itself stable first. See `.github/rulesets/README.md`.
+#
+# Every step that runs the tests has a `timeout-minutes` of its own, under the
+# job's. A job that runs out of time is cancelled and GitHub keeps no log of it;
+# a step that does fails, with its log, saying where it hung.
 
 name: Integration Tests (Reusable)
 
@@ -170,11 +174,13 @@ jobs:
       # the fastest: the bridged functions are the same on all of them.
       - name: Run the tests, and fail on a bridged function none of them calls
         if: matrix.name == 'Linux x86_64' && inputs.library == 'tree'
+        timeout-minutes: 30
         run: ${{ matrix.prefix }} make coverage-example ARGS="-d ${{ matrix.device }}"
         shell: bash
 
       - name: Run the tests
         if: matrix.name != 'Linux x86_64' || inputs.library != 'tree'
+        timeout-minutes: 30
         run: ${{ matrix.prefix }} make test-example ARGS="-d ${{ matrix.device }}"
         shell: bash
 
@@ -188,6 +194,7 @@ jobs:
       # download the release's instead.
       - name: Run the tests in profile mode
         if: matrix.device != 'macos' || inputs.library != 'tree'
+        timeout-minutes: 30
         run: ${{ matrix.prefix }} make drive-example ARGS="--profile -d ${{ matrix.device }}"
         shell: bash
 
@@ -247,6 +254,7 @@ jobs:
           echo "CHROMEDRIVER=$driver" >> "$GITHUB_ENV"
 
       - name: Run the tests (debug, compiled by DDC)
+        timeout-minutes: 15
         run: make test-example-web CHROMEDRIVER="$CHROMEDRIVER"
 
       - name: Check which module that was
@@ -254,17 +262,25 @@ jobs:
 
       # A different compiler from the one above, and the one a consumer ships.
       - name: Run the tests (release, compiled by dart2js)
+        timeout-minutes: 15
         run: make test-example-web CHROMEDRIVER="$CHROMEDRIVER" ARGS="--release"
 
   # ============================================
   # iOS simulator
   # ============================================
   # Debug only: a simulator has no other mode.
+  #
+  # ⚠ The runner's simulators have never been booted, so the first boot starts with
+  # a data migration, minutes long, and then the app can launch with nothing reading
+  # its log yet. `flutter test` finds the app's VM service in that log, so it waits
+  # out its 12 minutes and fails with "Error waiting for a debug connection", with
+  # no test run. Measured: one run in three on macos-26, and never locally. Hence a
+  # boot step that waits for the log as well, and one retry of exactly that.
   ios:
     needs: flutter
     name: Integration (iOS simulator)
     runs-on: macos-26
-    timeout-minutes: 60
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v7
         with:
@@ -308,10 +324,32 @@ jobs:
           echo "Booting $udid"
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid"
+          for _ in $(seq 1 30); do
+            if xcrun simctl spawn "$udid" log show --last 1m --style compact >/dev/null 2>&1; then
+              echo "The simulator's log answers."
+              break
+            fi
+            echo "The simulator's log does not answer yet."
+            sleep 10
+          done
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
 
+      # Once more only when the app never connected, which is the simulator and not
+      # a test: a test that fails, fails both times, and fails the step.
       - name: Run the tests
-        run: make test-example ARGS="-d $SIMULATOR"
+        timeout-minutes: 55
+        run: |
+          set -o pipefail
+          output="$RUNNER_TEMP/ios-tests.log"
+          if make test-example ARGS="-d $SIMULATOR" 2>&1 | tee "$output"; then
+            exit 0
+          fi
+          if grep -q 'Error waiting for a debug connection' "$output"; then
+            echo "::warning::The app never connected to flutter test. That is the simulator's log reader, not a test; running them once more."
+            make test-example ARGS="-d $SIMULATOR"
+          else
+            exit 1
+          fi
 
       - name: Check which library that was
         run: make verify-example-library ARGS="$VERIFY_LIBRARY"
@@ -405,6 +443,7 @@ jobs:
       # The action runs each line of `script` on its own, and stops at the first
       # that fails. VERIFY_LIBRARY and EXAMPLE_DIR come through the environment.
       - name: Run the tests on an emulator
+        timeout-minutes: 50
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: ${{ matrix.api }}
@@ -468,4 +507,5 @@ jobs:
           packages: platform-tools
 
       - name: Build the release app, and check the library is in it
+        timeout-minutes: 40
         run: make package-example-${{ matrix.platform }}
