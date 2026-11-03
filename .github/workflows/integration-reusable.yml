@@ -280,7 +280,9 @@ jobs:
     needs: flutter
     name: Integration (iOS simulator)
     runs-on: macos-26
-    timeout-minutes: 80
+    # A first boot's migration has taken 13 minutes, and the test step has 55 for
+    # its two tries: the job has to outlast them all.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -367,9 +369,10 @@ jobs:
   #   the claim Google Play's requirement is about. Debug only, and more memory:
   #   this image is the heavier of the two, and in 4 runs of 13 it failed in a way
   #   of its own each time — gone in the middle of a Gradle build, "No space left
-  #   on device" with 88 GB free on /, offline under the profile run, "Failed to
-  #   start Dart Development Service" — while API 24 never failed. The profile run
-  #   is the API 24 leg's; the library is the same.
+  #   on device" unpacking it with 88 GB free on / (and /tmp is on that disk too:
+  #   measured, so that one is unexplained), offline under the profile run, "Failed
+  #   to start Dart Development Service" — while API 24 never failed. The profile
+  #   run is the API 24 leg's; the library is the same.
   #
   # ⚠ So each emulator step runs once more on failure, with a warning that stays
   # on the run. A failing test fails both times; the failures above never came
@@ -401,7 +404,10 @@ jobs:
 
     name: Integration (Android ${{ matrix.name }})
     runs-on: ubuntu-26.04
-    timeout-minutes: 75
+    # Setup takes up to 20 minutes from the tree, and each attempt below has 30:
+    # the job has to outlast both, or a slow first attempt takes the second's log
+    # with it.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
         with:
@@ -414,22 +420,12 @@ jobs:
           df -h /
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
             "$AGENT_TOOLSDIRECTORY/CodeQL" /usr/share/swift /usr/local/share/powershell /opt/az
-          df -h /
+          df -h / /tmp
+          free -h
 
       # The image's default JDK is newer than this Gradle runs on.
       - name: Use the JDK the example builds with
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
-
-      # Temporary files on the disk rather than in /tmp, which a new Ubuntu keeps
-      # in memory: "No space left on device" came with 88 GB free on /, unpacking
-      # the API 36 image, and memory is what the emulator runs out of. Java does
-      # not read TMPDIR, hence the second line.
-      - name: Keep temporary files on the disk
-        run: |
-          echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
-          echo "JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$RUNNER_TEMP" >> "$GITHUB_ENV"
-          df -h / /tmp
-          free -h
 
       - name: Setup the app under test
         uses: ./.github/actions/setup-example
@@ -503,7 +499,7 @@ jobs:
       - name: Run the tests on an emulator
         id: emulator
         continue-on-error: true
-        timeout-minutes: 50
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: ${{ matrix.api }}
@@ -527,7 +523,7 @@ jobs:
 
       - name: Run the tests on an emulator, once more
         if: steps.emulator.outcome == 'failure'
-        timeout-minutes: 50
+        timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: ${{ matrix.api }}
