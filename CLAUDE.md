@@ -254,7 +254,8 @@ like dispose the Dart objects they are given, and the next use throws
 **CI:** `integration.yml` runs `integration-reusable.yml` on every pull request and
 push to main (from the tree), after the native build of a release tag (on the
 released binaries), and weekly (from pub.dev, on the newest Flutter, with the
-tests of that version's tag when it has them). `publish.yml` runs it as a gate
+tests of that version's tag when it has them). `make release` will not tag before
+the run on the released binaries has passed, and `publish.yml` runs it as a gate
 before its upload and twice more after it. What no hosted runner can execute —
 Android on ARM, an iOS device, x86_64 on anything Apple — is only checked to
 bundle. None of these are required checks yet.
@@ -279,11 +280,14 @@ can turn one red, and that is the side to err on.
 
 ⚠ **For Android, check the runner image before anything else.** GitHub served two
 ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50`
-(72 GB, `/tmp` in a 7.7 GB tmpfs). The two Android jobs that landed on the older
-one both failed on storage — "No space left on device" unpacking the API 36
-image, and an API 24 install that hung in both tries — while API 24 passed 18 of
-18 on the newer. The job prints its image first; temporary files go to the disk.
-A cause bound to the runner fails every try on it: re-run the job instead.
+(72 GB, `/tmp` in a 7.7 GB tmpfs). Both Android jobs that landed on the older one
+failed. API 36 failed with "No space left on device" while unpacking its system
+image, which went through that `/tmp`. API 24 failed with an install that hung in
+both tries. That job had 14 GB free on the disk and an empty `/tmp`, so it was not
+short of space, and no cause was found. On the newer images, one Android job in 32
+failed: API 36, with the emulator gone offline. The job prints its image first,
+and temporary files go to the disk. A cause bound to the runner fails every try on
+it, so re-run the job instead.
 
 ### Rust Quality
 ```bash
@@ -672,8 +676,9 @@ libsignal dep-update PRs  ──►  merge to main  ──►  (accumulate, no b
      publishes the native binaries (GitHub Release `libsignal_frb-X.Y.Z`)
                                                         │
    Stage 2: Dart package ── make release ARGS="--version X.Y.Z"
-     verifies the stage-1 binary exists, dry-runs, bumps pubspec, finalizes
-     CHANGELOG, signs commit + tag `vX.Y.Z`, pushes  ──►  publish.yml → pub.dev
+     verifies the stage-1 binary exists and passed the integration tests,
+     dry-runs, bumps pubspec, finalizes CHANGELOG, signs commit + tag
+     `vX.Y.Z`, pushes  ──►  publish.yml → pub.dev
      (the build hook downloads the stage-1 binary, which already exists)
 ```
 
@@ -727,8 +732,24 @@ pushed.
 So **any** commit touching them after stage 1 needs a new crate, a test-only
 change under `rust/src` and a docstring-only regeneration included: the check
 cannot tell those apart and refuses them all. `--skip-frb-check` skips both
-checks; pass it only if you verified the binary by hand. It runs
-`make publish-dry-run` (on the clean, pre-bump tree), bumps `pubspec.yaml`, then
+checks; pass it only if you verified the binary by hand.
+
+Then it refuses until the integration tests have passed on that binary. It
+accepts two kinds of run:
+
+- **The run `integration.yml` starts after the native build.** It is found by its
+  title, `Released binaries of libsignal_frb-<crate>`, because GitHub records
+  `main`'s head as the commit of a `workflow_run`, not the tag's.
+- **A run started by hand on the released binaries at `HEAD`**
+  (`gh workflow run integration.yml -f library=release`). This is the way through
+  for a crate built before the workflow existed.
+
+A newer run decides over an older one, and a run still going makes it wait. A run
+that tested nothing does not count. `--skip-integration-check` skips this check
+(`scripts/src/release_integration.dart`).
+
+After the checks it runs `make publish-dry-run` (on the clean, pre-bump tree),
+bumps `pubspec.yaml`, then
 finalizes the CHANGELOG (renames `[Unreleased]` → `[X.Y.Z] - <today>` in place —
 no empty `[Unreleased]` is left behind — and rewrites the bottom `[Unreleased]:`
 compare link to `vX.Y.Z...HEAD`), then measures the result against pub.dev's
@@ -737,12 +758,15 @@ pub.dev refuses an oversized file only at upload, after the tag), then signs a
 commit + tag `vX.Y.Z` and pushes — `publish.yml` publishes to pub.dev. Choose `X.Y.Z` by SemVer of the **public Dart
 API** (independent of the crate version).
 
-**Between the stages, wait for `Integration Tests` on the released binary.**
-`integration.yml` starts by itself when the native build of a `libsignal_frb-*`
-tag succeeds, and runs the package in a real app on every platform, through the
-hook's download path, checksums included. Read its result before stage 2:
-`publish.yml` runs the same again before it uploads, and a failure there leaves a
-tag pushed with no version on pub.dev. After the upload it makes a new app that
+**Between the stages, `Integration Tests` runs on the released binary, and
+`make release` waits for it.** `integration.yml` starts by itself when the native
+build of a `libsignal_frb-*` tag succeeds. It runs the package in a real app on
+every platform, through the hook's download path, checksums included.
+`make release` refuses to tag until that run has passed. `publish.yml` runs the
+same tests again before it uploads, but only after the tag, and a failure there
+leaves a tag pushed with no version on pub.dev. The two can still disagree, because
+commits after stage 1 can change the Dart side and the tests, and only `publish.yml`
+runs those against the binary. After the upload it makes a new app that
 depends on what went up, on the pinned Flutter and on the newest, so a problem a
 consumer would hit shows up as that run going red. That last part cannot stop the
 release; retracting is a decision.
@@ -1021,8 +1045,9 @@ formality; it was not always so, and that is how crates 6.1.0 and 6.1.2 burned.
 make release-frb ARGS="--version X.Y.Z"
 # …wait for build-libsignal.yml to publish the native binaries…
 
-# Stage 2 — Dart package (verifies the stage-1 binary, dry-runs, bumps pubspec,
-# finalizes CHANGELOG, tags vX.Y.Z → publish.yml publishes to pub.dev):
+# Stage 2 — Dart package (verifies the stage-1 binary and its integration tests,
+# dry-runs, bumps pubspec, finalizes CHANGELOG, tags vX.Y.Z → publish.yml
+# publishes to pub.dev):
 make release ARGS="--version X.Y.Z"
 ```
 

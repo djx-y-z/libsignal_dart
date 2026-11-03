@@ -42,6 +42,16 @@
 - **`example/ios` is integrated with CocoaPods** — `integration_test` is a plugin.
 - **`make clean` also clears the example's build output** — `example/.dart_tool`,
   `example/build`, `example/coverage` and `example/web/pkg`.
+- **`make release` refuses to tag before the integration tests have passed on the
+  stage-1 binary** — `publish.yml` runs the same tests before its upload, but only
+  after the tag, and a failure there left a tag with no version on pub.dev. It reads
+  one of two runs. The first is the run `integration.yml` starts after the native
+  build, found by its title. The second is a run started by hand on the released
+  binaries at the commit being released
+  (`gh workflow run integration.yml -f library=release`), which is the way through
+  for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,
+  and a run that tested nothing does not count. `--skip-integration-check` skips
+  this check.
 
 ## [9.0.0] - 2026-10-26
 

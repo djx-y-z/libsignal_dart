@@ -8,9 +8,10 @@
 #   workflow filtered out by path reports nothing.
 # - After the native build of a release tag: `release`. That is stage 1 finishing,
 #   and this run is the automatic form of "run the suite against the released
-#   binary" before stage 2, on every platform instead of one. `publish.yml` runs
-#   the same again as a gate before its upload. A release cut from a line older
-#   than these tests (`release/8.0.x`) has none, and the run says so and stops.
+#   binary" before stage 2, on every platform instead of one. `make release`
+#   refuses to tag until it has passed, and `publish.yml` runs the same again as a
+#   gate before its upload. A release cut from a line older than these tests
+#   (`release/8.0.x`) has none, and the run says so and stops.
 # - Weekly: `pub`, the current version on pub.dev in a new app on the newest
 #   Flutter. No commit of ours moves anything this looks at. A Flutter release that
 #   breaks consumers of the published package shows up here, not in their issues.
@@ -26,6 +27,20 @@
 # tests, or a `pub` run of an older version stops at it.
 
 name: Integration Tests
+
+# `make release` finds the run on the released binaries by this title
+# (`scripts/src/release_integration.dart`): GitHub records main's head as the
+# commit of a `workflow_run`, not the commit the build ran on. A run started by
+# hand says where its library came from. The rest keep GitHub's own title, which
+# an empty name gives them.
+run-name: >-
+  ${{ github.event_name == 'workflow_run'
+      && github.event.workflow_run.conclusion == 'success'
+      && startsWith(github.event.workflow_run.head_branch, 'libsignal_frb-')
+      && format('Released binaries of {0}', github.event.workflow_run.head_branch)
+    || github.event_name == 'workflow_dispatch'
+      && format('By hand: {0}, on {1}', inputs.library, github.ref_name)
+    || '' }}
 
 on:
   pull_request:
