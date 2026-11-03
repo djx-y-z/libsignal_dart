@@ -253,6 +253,13 @@ runs it as a gate before its upload and twice more after it. What no hosted runn
 can execute — Android on ARM, an iOS device, x86_64 on anything Apple — is only
 checked to bundle. None of these are required checks yet.
 
+⚠ **The emulator and simulator steps are the flaky part, never the package.**
+Measured on the branch that added them: an iOS simulator's first boot can leave the
+app unconnected (retried once, on exactly that error), and the API 36 image with
+16 KB pages failed 4 runs in 13, four different ways, where API 24 never did (the
+emulator step runs once more on any failure, with a warning). A test that fails,
+fails both times. Read the first attempt's log before calling a red run flaky.
+
 ### Rust Quality
 ```bash
 make rust-check                   # Check Rust code compiles

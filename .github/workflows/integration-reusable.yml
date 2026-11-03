@@ -364,9 +364,17 @@ jobs:
   #   call into a newer libc gets past the linker there and fails at load.
   # - API 36 with 16 KB pages. `make verify-android-alignment` measures the ELF
   #   headers; this is the library actually loading on such a kernel, which is
-  #   the claim Google Play's requirement is about. Debug only: this image is the
-  #   heavier of the two, and twice in a dozen runs it went offline under a second
-  #   build. The profile run is the API 24 leg's; the library is the same.
+  #   the claim Google Play's requirement is about. Debug only, and more memory:
+  #   this image is the heavier of the two, and in 4 runs of 13 it failed in a way
+  #   of its own each time — gone in the middle of a Gradle build, "No space left
+  #   on device" with 88 GB free on /, offline under the profile run, "Failed to
+  #   start Dart Development Service" — while API 24 never failed. The profile run
+  #   is the API 24 leg's; the library is the same.
+  #
+  # ⚠ So each emulator step runs once more on failure, with a warning that stays
+  # on the run. A failing test fails both times; the failures above never came
+  # twice in a row. The second try prints what the first could not: the device's
+  # log on a failure, and the memory and both file systems before it starts.
   android:
     needs: flutter
     strategy:
@@ -379,12 +387,17 @@ jobs:
             # Whichever: this leg is about the API level, not the page size.
             check: adb shell getprop ro.build.version.sdk
             profile: true
+            # The AVD's own default, which this image runs on.
+            ram: ''
           - name: API 36, 16 KB pages
             api: 36
             target: google_apis_ps16k
             # This leg means nothing on a 4 KB kernel, so it says so if it is one.
             check: test "$(adb shell getconf PAGE_SIZE | tr -d '\r')" = 16384
             profile: false
+            # The default left the guest about 2 GB, and Android kills a debug app
+            # first when memory runs short.
+            ram: 4096M
 
     name: Integration (Android ${{ matrix.name }})
     runs-on: ubuntu-26.04
@@ -406,6 +419,17 @@ jobs:
       # The image's default JDK is newer than this Gradle runs on.
       - name: Use the JDK the example builds with
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      # Temporary files on the disk rather than in /tmp, which a new Ubuntu keeps
+      # in memory: "No space left on device" came with 88 GB free on /, unpacking
+      # the API 36 image, and memory is what the emulator runs out of. Java does
+      # not read TMPDIR, hence the second line.
+      - name: Keep temporary files on the disk
+        run: |
+          echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          df -h / /tmp
+          free -h
 
       - name: Setup the app under test
         uses: ./.github/actions/setup-example
@@ -465,7 +489,8 @@ jobs:
             make build-example ARGS="apk --profile --target-platform android-x64"
           fi
           (cd "${EXAMPLE_DIR:-example}/android" && ./gradlew --stop)
-          df -h /
+          df -h / /tmp
+          free -h
 
       - name: Enable KVM
         run: |
@@ -476,6 +501,8 @@ jobs:
       # The action runs each line of `script` on its own, and stops at the first
       # that fails. VERIFY_LIBRARY and EXAMPLE_DIR come through the environment.
       - name: Run the tests on an emulator
+        id: emulator
+        continue-on-error: true
         timeout-minutes: 50
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -484,9 +511,34 @@ jobs:
           arch: x86_64
           disable-animations: true
           disk-size: 4096M
+          ram-size: ${{ matrix.ram }}
           script: |
             ${{ matrix.check }}
-            make test-example ARGS="-d emulator-5554"
+            make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
+            make verify-example-library ARGS="$VERIFY_LIBRARY"
+            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
+
+      - name: Say that the emulator failed once
+        if: steps.emulator.outcome == 'failure'
+        run: |
+          echo "::warning::The emulator step failed; running it once more. Its log above says why."
+          df -h / /tmp
+          free -h
+
+      - name: Run the tests on an emulator, once more
+        if: steps.emulator.outcome == 'failure'
+        timeout-minutes: 50
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disable-animations: true
+          disk-size: 4096M
+          ram-size: ${{ matrix.ram }}
+          script: |
+            ${{ matrix.check }}
+            make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
             make verify-example-library ARGS="$VERIFY_LIBRARY"
             ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
 
