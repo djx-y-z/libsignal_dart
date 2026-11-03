@@ -289,9 +289,10 @@ jobs:
   # a data migration, minutes long. Then, now and again, the app launches and
   # `flutter test` never finds its VM service in the simulator's log: it waits out
   # its 12-minute load timeout and fails with "Error waiting for a debug
-  # connection", with no test run. Measured on macos-26: 3 runs in the 15 whose
-  # logs survive, on the branch that added this job (a 16th hung until its job was
-  # cancelled, with no log), and never locally. Waiting for the simulator's log to
+  # connection", with no test run. Measured on macos-26: 4 runs in the 17 whose
+  # logs survive, on the branch that added this job (another hung until its job
+  # was cancelled, with no log), all on the image the passing runs had too, and
+  # never locally. Waiting for the simulator's log to
   # answer before the launch did not prevent it: the log answered at once every
   # time, the failing runs included. What does help is one more try of exactly that.
   ios:
@@ -382,18 +383,28 @@ jobs:
   #   the claim Google Play's requirement is about. Debug only, and more memory:
   #   this image is the heavier of the two, and in 4 of its 14 runs before the
   #   retry below it failed, in a way of its own each time — gone in the middle
-  #   of a Gradle build, "No space left on device" unpacking it with 88 GB free
-  #   on / (and /tmp is on that disk too: measured, so that one is unexplained),
-  #   offline under the profile run, "Failed to start Dart Development Service" —
-  #   while API 24 never failed. The profile run is the API 24 leg's; the library
-  #   is the same.
+  #   of a Gradle build, "No space left on device" unpacking the image, offline
+  #   under the profile run, "Failed to start Dart Development Service". The
+  #   profile run is the API 24 leg's; the library is the same.
+  #
+  # ⚠ THE RUNNER IMAGE MATTERS. GitHub served these jobs two ubuntu-26.04 images
+  # that differ where an emulator feels it: 20261025.179 has a 145 GB disk with
+  # /tmp on it, 20261018.50 a 72 GB one and /tmp in a 7.7 GB tmpfs. Of the 37
+  # Android jobs on the branch that added this, two landed on the older image and
+  # both failed, each in a way that touches storage: the "No space left on
+  # device" above, and an API 24 install that hung in both tries. On the newer
+  # one API 24 passed 18 of 18, and no install hung. GitHub picks the image, so
+  # neither can be re-run at will: the job prints its image first, and temporary
+  # files go to the runner's disk, which a system image unpacked in that tmpfs
+  # would need. The hung install stays unexplained.
   #
   # ⚠ So the emulator step runs once more on any failure, with a warning that
-  # stays on the run. A test that always fails, fails both times, and none of the
-  # failures above happened twice; but a test that fails only now and then can
-  # pass the second time, and the warning is then all that is left of it — read
-  # it. Between the two tries the memory and both file systems are printed, and
-  # an emulator the first left behind is stopped.
+  # stays on the run. A test that always fails, fails both times; one that fails
+  # only now and then can pass the second time, and the warning is then all that
+  # is left of it — read it. A cause bound to the runner fails both times as
+  # well, the second try being on the same machine: re-run the job for that.
+  # Between the two tries the memory and both file systems are printed, and the
+  # emulator and the adb server the first left behind are stopped.
   android:
     needs: flutter
     strategy:
@@ -433,6 +444,7 @@ jobs:
       # Rust build, two NDKs and the app. What goes is what nothing here uses.
       - name: Free disk space
         run: |
+          echo "Runner image: ${ImageOS:-unknown} ${ImageVersion:-unknown}"
           df -h /
           sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
             "$AGENT_TOOLSDIRECTORY/CodeQL" /usr/share/swift /usr/local/share/powershell /opt/az
@@ -442,6 +454,15 @@ jobs:
       # The image's default JDK is newer than this Gradle runs on.
       - name: Use the JDK the example builds with
         run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+
+      # On the older image /tmp is a 7.7 GB tmpfs (see above), and the SDK manager
+      # unpacks a system image of several GB through a temporary directory. Java
+      # does not read TMPDIR, hence the second line. Nothing changes on the newer
+      # image, whose /tmp is on the disk anyway.
+      - name: Keep temporary files on the disk
+        run: |
+          echo "TMPDIR=$RUNNER_TEMP" >> "$GITHUB_ENV"
+          echo "JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=$RUNNER_TEMP" >> "$GITHUB_ENV"
 
       - name: Setup the app under test
         uses: ./.github/actions/setup-example
@@ -533,12 +554,15 @@ jobs:
 
       # A first try that ran out of time never reached the action's own cleanup,
       # so its emulator may still hold the port and the AVD the second one needs.
+      # The adb server goes too: a second try that hung on the first one's server
+      # exactly where the first had hung would test nothing new.
       - name: Say that the emulator failed once
         if: steps.emulator.outcome == 'failure'
         run: |
           echo "::warning::The emulator step failed; running it once more. Its log above says why."
           adb devices || true
           adb -s emulator-5554 emu kill 2>/dev/null || true
+          adb kill-server || true
           for _ in $(seq 1 30); do
             pgrep -f qemu-system >/dev/null || break
             sleep 2

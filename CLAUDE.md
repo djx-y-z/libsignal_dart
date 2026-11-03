@@ -261,11 +261,19 @@ bundle. None of these are required checks yet.
 ⚠ **The emulator and simulator steps are the flaky part, never the package.**
 Measured on the branch that added them: an iOS simulator's first boot can leave the
 app unconnected (retried once, on exactly that error), and the API 36 image with
-16 KB pages failed 4 runs in 14, four different ways, where API 24 never did (the
-emulator step runs once more on any failure, with a warning). A test that always
-fails, fails both times; one that fails now and then can pass the second try, and
-its warning is all that is left of it. Read the first attempt's log before calling
-a red run flaky, and before calling a warned green one clean.
+16 KB pages failed 4 runs in 14, four different ways (the emulator step runs once
+more on any failure, with a warning). A test that always fails, fails both times;
+one that fails now and then can pass the second try, and its warning is all that
+is left of it. Read the first attempt's log before calling a red run flaky, and
+before calling a warned green one clean.
+
+⚠ **For Android, check the runner image before anything else.** GitHub served two
+ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50`
+(72 GB, `/tmp` in a 7.7 GB tmpfs). The two Android jobs that landed on the older
+one both failed on storage — "No space left on device" unpacking the API 36
+image, and an API 24 install that hung in both tries — while API 24 passed 18 of
+18 on the newer. The job prints its image first; temporary files go to the disk.
+A cause bound to the runner fails the retry too: re-run the job instead.
 
 ### Rust Quality
 ```bash
