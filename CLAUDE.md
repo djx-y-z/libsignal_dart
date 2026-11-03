@@ -203,6 +203,7 @@ make test-example ARGS="-d macos"            # Integration tests on a device
 make test-example-web                        # ...in a real browser (debug, DDC)
 make test-example-web ARGS="--release"       # ...what a consumer ships (dart2js)
 make drive-example ARGS="--profile -d macos" # ...in AOT, under flutter drive
+make test-example-ci ARGS="--attempts 3 -- -d <device>"  # As CI runs them: see below
 make coverage-example ARGS="-d macos"        # ...then fail on a bridged function none calls
 make verify-example-coverage                 # That check alone, over the last run
 make verify-example-library ARGS="--built"   # Check the run loaded the library it meant to
@@ -258,14 +259,23 @@ before its upload and twice more after it. What no hosted runner can execute —
 Android on ARM, an iOS device, x86_64 on anything Apple — is only checked to
 bundle. None of these are required checks yet.
 
-⚠ **The emulator and simulator steps are the flaky part, never the package.**
-Measured on the branch that added them: an iOS simulator's first boot can leave the
-app unconnected (retried once, on exactly that error), and the API 36 image with
-16 KB pages failed 4 runs in 14, four different ways (the emulator step runs once
-more on any failure, with a warning). A test that always fails, fails both times;
-one that fails now and then can pass the second try, and its warning is all that
-is left of it. Read the first attempt's log before calling a red run flaky, and
-before calling a warned green one clean.
+⚠ **The emulator and simulator steps are the flaky part, never the package, so CI
+judges each run on what the app reported** (`make test-example-ci`, in
+`scripts/src/example_run.dart`). Measured on the branch that added them: an iOS
+simulator's first boot can leave the app unconnected (4 runs in 18), and the API 36
+image with 16 KB pages failed 4 runs in 14, four different ways. A test that failed
+fails the job at once and is never run again, and so does an app that crashed, read
+from Android's crash log or from the report macOS writes for a simulator's app: a
+test that fails now and then turns the run red instead of passing on a retry. Only
+a run that never got that far runs again — the app never connected or never
+started the tests, the device or the connection went away — three times in all,
+the third on a rebooted simulator, or each on a new emulator; each leaves a
+warning on the run. `flutter test --file-reporter json:` is what tells them apart:
+a test that failed in the app has an error event of its own, one the app never
+finished has none. Under `flutter drive` the driver prints a line when the app
+answers, so keep `writeResponseOnFailure` in `test_driver/integration_test.dart`.
+The 3-minute limit inside each capability is a test's failure too: a slow emulator
+can turn one red, and that is the side to err on.
 
 ⚠ **For Android, check the runner image before anything else.** GitHub served two
 ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50`
@@ -273,7 +283,7 @@ ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50
 one both failed on storage — "No space left on device" unpacking the API 36
 image, and an API 24 install that hung in both tries — while API 24 passed 18 of
 18 on the newer. The job prints its image first; temporary files go to the disk.
-A cause bound to the runner fails the retry too: re-run the job instead.
+A cause bound to the runner fails every try on it: re-run the job instead.
 
 ### Rust Quality
 ```bash

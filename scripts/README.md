@@ -14,6 +14,7 @@ Development scripts for managing the libsignal Dart package.
 | `check_template_updates.dart` | Check for new copier template version | `make check-template-updates` |
 | `verify_example_coverage.dart` | Fail on a bridged function the example's integration tests never call | `make verify-example-coverage` |
 | `verify_example_library.dart` | Check the integration tests ran on the library they meant to | `make verify-example-library` |
+| `test_example_ci.dart` | Run the integration tests as CI does: a failed test fails at once, a run that never got that far runs again | `make test-example-ci` |
 
 ## Checking for Upstream Updates
 

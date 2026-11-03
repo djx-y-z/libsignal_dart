@@ -18,6 +18,13 @@
 - **`make verify-example-library`** — fails a run that loaded another library than it
   says it tests, a build from the tree or a released one. The hook chooses, and can
   choose quietly.
+- **`make test-example-ci`** — runs them as CI does, judging each run on what the app
+  reported. A test that failed fails at once and is never run again, and so does an
+  app that crashed; only a run that never got that far, because the app never
+  connected or the device or the connection went away, runs again. CI gives an iOS
+  simulator three runs and an Android emulator three tries, each on a new emulator,
+  so a test that fails only now and then turns the run red instead of passing on a
+  retry.
 - **`make build-ios`, `make create-consumer` and `make package-example-android`,
   `-ios` and `-macos`** — an iOS build at the deployment target the release uses; a new
   app on the published package; and release builds for what no hosted runner can

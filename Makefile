@@ -8,7 +8,7 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
-.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test-example test-example-web doctor drive-example build-example coverage-example create-consumer package-example-android package-example-ios package-example-macos verify-example-coverage verify-example-library test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test-example test-example-ci test-example-web doctor drive-example build-example coverage-example create-consumer package-example-android package-example-ios package-example-macos verify-example-coverage verify-example-library test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -64,7 +64,10 @@ help:
 	@echo "                                        Example: make test-example-web ARGS=\"--release\""
 	@echo "    make drive-example                - Run them under flutter drive, for profile mode"
 	@echo "                                        Example: make drive-example ARGS=\"--profile -d macos\""
-	@echo "    make build-example                - Build the app with the tests in it, without running it"
+	@echo "    make test-example-ci              - Either, as CI runs them: a failed test fails at once,"
+	@echo "                                        a run that never got that far runs again"
+	@echo "                                        Example: make test-example-ci ARGS=\"--attempts 3 -- -d <device>\""
+	@echo "    make build-example               - Build the app with the tests in it, without running it"
 	@echo "                                        Example: make build-example ARGS=\"apk --debug\""
 	@echo "    make coverage-example             - Run them, then fail on a bridged function none of them calls"
 	@echo "                                        Example: make coverage-example ARGS=\"-d macos\""
@@ -591,6 +594,16 @@ example_drive = flutter drive --driver=test_driver/integration_test.dart \
 drive-example:
 	@$(forget_hook_results)
 	cd $(EXAMPLE_DIR) && $(FVM) $(example_drive) $(ARGS)
+
+# Either of the two above, the way CI runs them on an emulator or a simulator:
+# each run is judged on what the app reported. A test that failed fails this at
+# once and is never run again; a run that never got that far (the app did not
+# connect, the device or the connection went away) runs again, up to --attempts.
+# scripts/test_example_ci.dart lists the options.
+#   make test-example-ci ARGS="--attempts 3 -- -d <device>"
+#   make test-example-ci ARGS="--drive -- --profile -d <device>"
+test-example-ci:
+	@$(FVM) dart scripts/test_example_ci.dart --dir $(EXAMPLE_DIR) $(ARGS)
 
 # Build the app with the tests as its entry point, without running it. CI uses it
 # to build for an emulator before the emulator starts: the first Gradle build of an

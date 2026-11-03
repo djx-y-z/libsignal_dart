@@ -289,21 +289,22 @@ jobs:
   # a data migration, minutes long. Then, now and again, the app launches and
   # `flutter test` never finds its VM service in the simulator's log: it waits out
   # its 12-minute load timeout and fails with "Error waiting for a debug
-  # connection", with no test run. Measured on macos-26: 4 runs in the 17 whose
+  # connection", with no test run. Measured on macos-26: 4 runs in the 18 whose
   # logs survive, on the branch that added this job (another hung until its job
   # was cancelled, with no log), all on the image the passing runs had too, and
-  # never locally. Waiting for the simulator's log to
-  # answer before the launch did not prevent it: the log answered at once every
-  # time, the failing runs included. What does help is one more try of exactly that.
+  # never locally. Waiting for the simulator's log to answer before the launch did
+  # not prevent it: the log answered at once every time, the failing runs
+  # included. Running the tests again did, every time.
   ios:
     needs: flutter
     name: Integration (iOS simulator)
     runs-on: macos-26
     # Booting, the migration included, has taken up to 6 minutes, and its step has
-    # 15. A try that never connects takes about 14 (an Xcode build, then the
-    # 12-minute timeout) and one that passes 4 to 9, so the test step has 55 for
-    # its two tries, and the job has to outlast it all.
-    timeout-minutes: 90
+    # 15. A run that never connects takes about 14 (an Xcode build, then the
+    # 12-minute timeout) and one that passes 4 to 9, so the test step has 60 for
+    # its three, the reboot before the third included, and the job has to outlast
+    # it all.
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@v7
         with:
@@ -350,22 +351,15 @@ jobs:
           xcrun simctl bootstatus "$udid"
           echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
 
-      # Once more only when the app never connected, which is the simulator and not
-      # a test: a test that fails, fails both times, and fails the step.
+      # Each run is judged on what the app reported (`make test-example-ci`). A test
+      # that failed fails the step at once, and is never run again; so does an app
+      # that crashed, which macOS writes a report of. A run that never got that
+      # far — the app never connected, the simulator or the connection went away —
+      # runs again, the third time on a rebooted simulator, and leaves a warning on
+      # the run.
       - name: Run the tests
-        timeout-minutes: 55
-        run: |
-          set -o pipefail
-          output="$RUNNER_TEMP/ios-tests.log"
-          if make test-example ARGS="-d $SIMULATOR" 2>&1 | tee "$output"; then
-            exit 0
-          fi
-          if grep -q 'Error waiting for a debug connection' "$output"; then
-            echo "::warning::The app never connected to flutter test. That is the simulator's log reader, not a test; running them once more."
-            make test-example ARGS="-d $SIMULATOR"
-          else
-            exit 1
-          fi
+        timeout-minutes: 60
+        run: make test-example-ci ARGS="--attempts 3 --simulator $SIMULATOR -- -d $SIMULATOR"
 
       - name: Check which library that was
         run: make verify-example-library ARGS="$VERIFY_LIBRARY"
@@ -398,13 +392,15 @@ jobs:
   # files go to the runner's disk, which a system image unpacked in that tmpfs
   # would need. The hung install stays unexplained.
   #
-  # ⚠ So the emulator step runs once more on any failure, with a warning that
-  # stays on the run. A test that always fails, fails both times; one that fails
-  # only now and then can pass the second time, and the warning is then all that
-  # is left of it — read it. A cause bound to the runner fails both times as
-  # well, the second try being on the same machine: re-run the job for that.
-  # Between the two tries the memory and both file systems are printed, and the
-  # emulator and the adb server the first left behind are stopped.
+  # ⚠ So each run is judged on what the app reported (`make test-example-ci`), and
+  # only a run that never got that far is tried again, on a new emulator, up to
+  # three tries in all: the device went away, the app never connected or never
+  # started the tests, the install did not finish. A test that failed fails the
+  # job at once and is never run again, and so does an app that crashed: Android's
+  # crash log names it. A cause bound to the runner fails every try, the machine
+  # being the same: re-run the job for that. Between the tries the memory and both
+  # file systems are printed, and the emulator and the adb server the last try
+  # left behind are stopped.
   android:
     needs: flutter
     strategy:
@@ -431,10 +427,10 @@ jobs:
 
     name: Integration (Android ${{ matrix.name }})
     runs-on: ubuntu-26.04
-    # Setup takes up to 20 minutes from the tree, the app's build 20 and each
-    # attempt below 30: the job has to outlast them all, or a slow first attempt
-    # takes the second's log with it.
-    timeout-minutes: 110
+    # Setup takes up to 20 minutes from the tree, the app's build 20 and each of
+    # the three tries below 30: the job has to outlast them all, or a slow try
+    # takes the next one's log with it.
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
         with:
@@ -532,10 +528,14 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # The action runs each line of `script` on its own, and stops at the first
-      # that fails. VERIFY_LIBRARY and EXAMPLE_DIR come through the environment.
+      # Three tries of the same step, each on an emulator of its own, and after each
+      # failed one a step that reads its verdict. The action runs each line of
+      # `script` on its own, and stops at the first that fails; each `make
+      # test-example-ci` writes "unfinished" first, and its verdict last, so a try
+      # killed in the middle leaves "unfinished". VERIFY_LIBRARY and EXAMPLE_DIR
+      # come through the environment.
       - name: Run the tests on an emulator
-        id: emulator
+        id: try1
         continue-on-error: true
         timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
@@ -548,18 +548,25 @@ jobs:
           ram-size: ${{ matrix.ram }}
           script: |
             ${{ matrix.check }}
-            make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
-            make verify-example-library ARGS="$VERIFY_LIBRARY"
-            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554" && make verify-example-library ARGS="$VERIFY_LIBRARY"' || 'echo "Profile mode runs on the API 24 leg."' }}
+            make test-example-ci ARGS="--android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-1 -- -d emulator-5554"
+            ${{ matrix.profile && 'make test-example-ci ARGS="--drive --android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-1 -- --profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
 
-      # A first try that ran out of time never reached the action's own cleanup,
-      # so its emulator may still hold the port and the AVD the second one needs.
-      # The adb server goes too: a second try that hung on the first one's server
-      # exactly where the first had hung would test nothing new.
-      - name: Say that the emulator failed once
-        if: steps.emulator.outcome == 'failure'
+      # A test that failed ends the job here. Anything else is tried again: a try
+      # that ran out of time never reached the action's own cleanup, so its
+      # emulator may still hold the port and the AVD the next one needs, and the
+      # adb server goes too, since a try that hung on the last one's server where
+      # the last one had hung would test nothing new.
+      - name: Read what the first try came to
+        id: after1
+        if: steps.try1.outcome == 'failure'
         run: |
-          echo "::warning::The emulator step failed; running it once more. Its log above says why."
+          verdict=$(cat "$RUNNER_TEMP/verdict-1" 2>/dev/null || echo none)
+          case "$verdict" in
+            failed) exit 1 ;;
+            unfinished) ;;
+            *) echo "::warning::The emulator step failed outside the runs it judges (verdict: $verdict), before the first or after the last. Trying again on a new emulator." ;;
+          esac
+          echo "again=true" >> "$GITHUB_OUTPUT"
           adb devices || true
           adb -s emulator-5554 emu kill 2>/dev/null || true
           adb kill-server || true
@@ -571,8 +578,10 @@ jobs:
           df -h / /tmp
           free -h
 
-      - name: Run the tests on an emulator, once more
-        if: steps.emulator.outcome == 'failure'
+      - name: Run the tests on an emulator, second try
+        id: try2
+        if: steps.after1.outputs.again == 'true'
+        continue-on-error: true
         timeout-minutes: 30
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -584,9 +593,57 @@ jobs:
           ram-size: ${{ matrix.ram }}
           script: |
             ${{ matrix.check }}
-            make test-example ARGS="-d emulator-5554" || { adb logcat -d -t 500 '*:W'; exit 1; }
-            make verify-example-library ARGS="$VERIFY_LIBRARY"
-            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554" && make verify-example-library ARGS="$VERIFY_LIBRARY"' || 'echo "Profile mode runs on the API 24 leg."' }}
+            make test-example-ci ARGS="--android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-2 -- -d emulator-5554"
+            ${{ matrix.profile && 'make test-example-ci ARGS="--drive --android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-2 -- --profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
+
+      - name: Read what the second try came to
+        id: after2
+        if: steps.try2.outcome == 'failure'
+        run: |
+          verdict=$(cat "$RUNNER_TEMP/verdict-2" 2>/dev/null || echo none)
+          case "$verdict" in
+            failed) exit 1 ;;
+            unfinished) ;;
+            *) echo "::warning::The emulator step failed outside the runs it judges (verdict: $verdict), before the first or after the last. Trying again on a new emulator." ;;
+          esac
+          echo "again=true" >> "$GITHUB_OUTPUT"
+          adb devices || true
+          adb -s emulator-5554 emu kill 2>/dev/null || true
+          adb kill-server || true
+          for _ in $(seq 1 30); do
+            pgrep -f qemu-system >/dev/null || break
+            sleep 2
+          done
+          pkill -9 -f qemu-system || true
+          df -h / /tmp
+          free -h
+
+      - name: Run the tests on an emulator, third try
+        id: try3
+        if: steps.after2.outputs.again == 'true'
+        continue-on-error: true
+        timeout-minutes: 30
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: ${{ matrix.api }}
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disable-animations: true
+          disk-size: 4096M
+          ram-size: ${{ matrix.ram }}
+          script: |
+            ${{ matrix.check }}
+            make test-example-ci ARGS="--android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-3 -- -d emulator-5554"
+            ${{ matrix.profile && 'make test-example-ci ARGS="--drive --android emulator-5554 --verify=$VERIFY_LIBRARY --verdict $RUNNER_TEMP/verdict-3 -- --profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
+
+      - name: Read what the third try came to
+        if: steps.try3.outcome == 'failure'
+        run: |
+          if [ "$(cat "$RUNNER_TEMP/verdict-3" 2>/dev/null)" = failed ]; then
+            exit 1
+          fi
+          echo "::error::None of the three tries finished, each on a new emulator, and no test failed in any of them: the emulator or the runner. A cause bound to the runner fails every try on it: re-run the job."
+          exit 1
 
   # ============================================
   # What cannot be executed here
@@ -614,7 +671,8 @@ jobs:
 
     name: Package (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    # Setup, then the build step's 60, which has room for its three tries.
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v7
         with:
@@ -637,6 +695,21 @@ jobs:
         with:
           packages: platform-tools
 
+      # The build hook downloads the release, and tries three times in a few
+      # seconds; a runner's DNS has failed for longer than that. Its message then
+      # starts "Failed to download", and only that builds again, a minute later.
       - name: Build the release app, and check the library is in it
-        timeout-minutes: 40
-        run: make package-example-${{ matrix.platform }}
+        timeout-minutes: 60
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/package.log"
+          for try in 1 2 3; do
+            if make package-example-${{ matrix.platform }} 2>&1 | tee "$log"; then
+              exit 0
+            fi
+            grep -q 'Failed to download' "$log" || exit 1
+            [ "$try" = 3 ] && break
+            echo "::warning::The build hook could not download the library, try $try of 3: the network, not the package. Building again in a minute."
+            sleep 60
+          done
+          exit 1
