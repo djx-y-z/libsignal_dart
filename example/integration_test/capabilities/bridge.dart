@@ -160,7 +160,9 @@ void bridgeCapabilities() {
 
       // And this isolate keeps working after that one has gone: every async
       // answer goes through one function pointer per library, which is torn
-      // down when the last isolate it knows about shuts down.
+      // down when the last isolate it knows about shuts down. (What makes the
+      // package count this isolate itself is a SECOND bridged library in the
+      // process, which this app does not have; test/platform/ covers that.)
       final alice = Party('alice', 1111);
       final bob = Party('bob', 2222);
       await establish(alice, bob);

@@ -123,18 +123,20 @@ void errorCapabilities() {
     });
 
     capability('an exception prints and compares by value', () async {
-      const failure = LibSignalException(
+      // Built at run time, not `const`: two equal constants are one object,
+      // and would compare equal with no `==` at all.
+      LibSignalException exception(String message) => LibSignalException(
         code: LibSignalErrorCode.invalidKey,
-        message: 'bad',
+        message: message,
       );
+      final failure = exception('bad');
+      final same = exception('bad');
+
       expect(failure.toString(), 'LibSignalException(invalidKey): bad');
-      expect(
-        failure,
-        const LibSignalException(
-          code: LibSignalErrorCode.invalidKey,
-          message: 'bad',
-        ),
-      );
+      expect(identical(failure, same), isFalse);
+      expect(failure, same);
+      expect(failure.hashCode, same.hashCode);
+      expect(failure, isNot(exception('other')));
     });
   });
 }

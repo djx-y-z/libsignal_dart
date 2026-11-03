@@ -6,6 +6,11 @@ import 'package:libsignal/libsignal.dart';
 import '../support/harness.dart';
 import '../support/party.dart';
 
+/// The base key [opening], a pre-key message, sets up its session with.
+PublicKey _baseKeyOf(CiphertextMessage opening) => PublicKey.deserialize(
+  bytes: PreKeySignalMessage.deserialize(data: opening.ciphertext).baseKey(),
+);
+
 void sessionCapabilities() {
   group('sessions', () {
     capability('PQXDH and the Double Ratchet, in both directions', () async {
@@ -88,6 +93,17 @@ void sessionCapabilities() {
       expect(await bob.preKeys.containsPreKey(42), isFalse);
       expect(await bob.sessions.containsSession(alice.address), isTrue);
       expect(await alice.sessions.containsSession(bob.address), isTrue);
+      // The Kyber key stays, since a last-resort key is used again; what is kept
+      // is the agreement this message made, which a replay would repeat.
+      expect(await bob.kyberPreKeys.containsKyberPreKey(3), isTrue);
+      expect(
+        bob.kyberPreKeys.wasAgreementSeen(3, 7, _baseKeyOf(opening)),
+        isTrue,
+      );
+      expect(
+        (await bob.identities.getIdentity(alice.address))?.serialize(),
+        alice.identity.publicKey,
+      );
 
       // Until Bob answers, Alice's messages stay pre-key messages. This one
       // lands on the session the first one made, from an identity now known.
@@ -96,6 +112,56 @@ void sessionCapabilities() {
       expect(
         utf8.decode(await bob.cipher.decrypt(alice.address, again)),
         'again',
+      );
+    });
+
+    capability('a replayed pre-key message is refused', () async {
+      // Without a one-time pre-key: with one, the second delivery would fail on
+      // the key the first one used up. Here only the Kyber agreement tells them
+      // apart, and the store's "seen it" has to cross the bridge to stop it.
+      final alice = Party('alice', 1111);
+      final bob = Party('bob', 2222);
+      await alice.builder.processPreKeyBundle(
+        bob.address,
+        await bob.publishBundle(oneTimePreKey: false),
+      );
+      final opening = await alice.cipher.encrypt(bob.address, bytesOf('once'));
+      expect(
+        utf8.decode(await bob.cipher.decrypt(alice.address, opening)),
+        'once',
+      );
+
+      // With the session gone, the same message would set up a new one.
+      await bob.sessions.deleteSession(alice.address);
+      await expectLater(
+        bob.cipher.decrypt(alice.address, opening),
+        throwsA(
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.invalidMessage,
+          ),
+        ),
+      );
+      expect(await bob.sessions.containsSession(alice.address), isFalse);
+    });
+
+    capability('a session nobody answers goes stale in 30 days', () async {
+      // The session is stamped with the library's own clock, which on the web
+      // is a different implementation: a wrong one shows here.
+      final alice = Party('alice', 1111);
+      final bob = Party('bob', 2222);
+      await establish(alice, bob);
+      await alice.cipher.encrypt(bob.address, bytesOf('unanswered'));
+
+      final record = (await alice.sessions.loadSession(bob.address))!;
+      final now = nowMillis();
+      expect(record.hasUsableSenderChain(nowMillis: now), isTrue);
+      expect(
+        record.hasUsableSenderChain(
+          nowMillis: now + BigInt.from(const Duration(days: 31).inMilliseconds),
+        ),
+        isFalse,
       );
     });
 

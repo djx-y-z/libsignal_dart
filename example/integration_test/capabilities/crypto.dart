@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal/libsignal.dart';
 
@@ -42,7 +44,13 @@ void cryptoCapabilities() {
           nonce: nonce,
           associatedData: bytesOf('other associated data'),
         ),
-        throwsA(isA<LibSignalException>()),
+        throwsA(
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.invalidMessage,
+          ),
+        ),
       );
     });
 
@@ -113,25 +121,49 @@ void cryptoCapabilities() {
     });
 
     capability('Fingerprint comparison notices a different key', () async {
-      Fingerprint fingerprintWith(List<int> remoteKey) => Fingerprint(
+      // Each side's own view, so that only the keys can make them differ: two
+      // fingerprints made from the same side never compare equal, whatever
+      // keys they hold, since each half hashes its identifier too.
+      final alice = IdentityKeyPair.generate().publicKey;
+      final bob = IdentityKeyPair.generate().publicKey;
+      final mallory = IdentityKeyPair.generate().publicKey;
+      Uint8List viewOf(
+        String local,
+        List<int> localKey,
+        String remote,
+        List<int> remoteKey,
+      ) => Fingerprint(
         iterations: 5200,
         version: 2,
-        localIdentifier: bytesOf('local'),
-        localPublicKey: IdentityKeyPair.generate().publicKey,
-        remoteIdentifier: bytesOf('remote'),
+        localIdentifier: bytesOf(local),
+        localPublicKey: localKey,
+        remoteIdentifier: bytesOf(remote),
         remotePublicKey: remoteKey,
-      );
+      ).scannableEncoding();
 
+      final alicesView = viewOf('alice', alice, 'bob', bob);
       expect(
         fingerprintCompare(
-          fingerprint1: fingerprintWith(
-            IdentityKeyPair.generate().publicKey,
-          ).scannableEncoding(),
-          fingerprint2: fingerprintWith(
-            IdentityKeyPair.generate().publicKey,
-          ).scannableEncoding(),
+          fingerprint1: alicesView,
+          fingerprint2: viewOf('bob', bob, 'alice', alice),
+        ),
+        isTrue,
+      );
+      expect(
+        fingerprintCompare(
+          fingerprint1: alicesView,
+          fingerprint2: viewOf('bob', bob, 'alice', mallory),
         ),
         isFalse,
+        reason: 'Bob was shown another key for Alice',
+      );
+      expect(
+        fingerprintCompare(
+          fingerprint1: alicesView,
+          fingerprint2: viewOf('bob', mallory, 'alice', alice),
+        ),
+        isFalse,
+        reason: 'Alice was shown another key for Bob',
       );
     });
   });

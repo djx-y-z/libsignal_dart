@@ -58,9 +58,16 @@ void groupCapabilities() {
         bytesOf('private'),
       );
 
+      // Mallory never got Alice's distribution message, so has no sender key.
       await expectLater(
         mallory.group.decrypt(alice.address, _distributionId, sent),
-        throwsA(isA<LibSignalException>()),
+        throwsA(
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.sessionNotFound,
+          ),
+        ),
       );
     });
 
@@ -136,7 +143,10 @@ void groupCapabilities() {
         ),
         getIdentityKeyPair: () async => alice.identity.serialize(),
       );
-      expect(created.senderKeyRecord, isNotEmpty);
+      expect(
+        created.senderKeyRecord,
+        await load(alice.senderKeys, name, device, _distributionId),
+      );
 
       final processed = await processSenderKeyDistributionMessageWithCallbacks(
         senderName: name,
@@ -149,7 +159,10 @@ void groupCapabilities() {
           r,
         ),
       );
-      expect(processed, isNotEmpty);
+      expect(
+        processed,
+        await load(bob.senderKeys, name, device, _distributionId),
+      );
 
       final encrypted = await groupEncryptWithCallbacks(
         senderName: name,
@@ -163,7 +176,10 @@ void groupCapabilities() {
         ),
         getIdentityKeyPair: () async => alice.identity.serialize(),
       );
-      expect(encrypted.senderKeyRecord, isNotEmpty);
+      expect(
+        encrypted.senderKeyRecord,
+        await load(alice.senderKeys, name, device, _distributionId),
+      );
 
       final decrypted = await groupDecryptWithCallbacks(
         senderName: name,
@@ -177,7 +193,10 @@ void groupCapabilities() {
         ),
       );
       expect(utf8.decode(decrypted.plaintext), 'callbacks');
-      expect(decrypted.senderKeyRecord, isNotEmpty);
+      expect(
+        decrypted.senderKeyRecord,
+        await load(bob.senderKeys, name, device, _distributionId),
+      );
     });
   });
 }

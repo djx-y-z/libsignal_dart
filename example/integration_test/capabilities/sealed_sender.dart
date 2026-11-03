@@ -45,6 +45,18 @@ class _Authority {
   );
 }
 
+/// Whether [needle] occurs anywhere in [haystack].
+bool _contains(List<int> haystack, List<int> needle) {
+  for (var i = 0; i + needle.length <= haystack.length; i++) {
+    var j = 0;
+    while (j < needle.length && haystack[i + j] == needle[j]) {
+      j++;
+    }
+    if (j == needle.length) return true;
+  }
+  return false;
+}
+
 /// [party]'s identity callbacks, for the entry points that take them directly.
 Future<Uint8List?> _identityOf(Party party, String name, int deviceId) async =>
     (await party.identities.getIdentity(
@@ -142,6 +154,15 @@ void sealedSenderCapabilities() {
           plaintext: bytesOf('from nobody'),
           senderCertificate: authority.certify(alice),
         );
+        // Neither who sent it nor their key is in the envelope in the clear,
+        // and no one else can open it to find out.
+        expect(_contains(sealed, bytesOf(_aliceUuid)), isFalse);
+        expect(_contains(sealed, alice.identity.publicKey), isFalse);
+        await expectLater(
+          _unseal(sealed, Party(_carolUuid, 3333), authority),
+          throwsA(isA<LibSignalException>()),
+        );
+
         final opened = await bob.sealed.decrypt(
           ciphertext: sealed,
           trustRoot: authority.trustRoot,
@@ -344,7 +365,10 @@ void sealedSenderCapabilities() {
             saveIdentity(alice, name, device, key),
         getIdentity: (name, device) => _identityOf(alice, name, device),
       );
-      expect(sealed.sessionRecord, isNotEmpty);
+      expect(
+        sealed.sessionRecord,
+        await loadSession(alice, bob.name, bob.deviceId),
+      );
 
       final opened = await sealedSenderDecryptWithCallbacks(
         ciphertext: sealed.ciphertext,
@@ -378,7 +402,45 @@ void sealedSenderCapabilities() {
       expect(opened.senderName, _aliceUuid);
       expect(opened.senderDeviceId, 1);
       expect(opened.senderIdentityKey, alice.identity.publicKey);
-      expect(opened.sessionRecord, isNotEmpty);
+      expect(
+        opened.sessionRecord,
+        await loadSession(bob, alice.name, alice.deviceId),
+      );
+    });
+
+    capability('a replayed sealed pre-key message is refused', () async {
+      // As in `sessions`, without a one-time pre-key, so that the Kyber
+      // agreement alone tells the second delivery from the first.
+      final authority = _Authority();
+      final alice = Party(_aliceUuid, 1111);
+      final bob = Party(_bobUuid, 2222);
+      await alice.builder.processPreKeyBundle(
+        bob.address,
+        await bob.publishBundle(oneTimePreKey: false),
+      );
+      final sealed = await alice.sealed.encrypt(
+        recipientAddress: bob.address,
+        plaintext: bytesOf('once'),
+        senderCertificate: authority.certify(alice),
+      );
+      Future<SealedSenderDecryptionResult> open() => bob.sealed.decrypt(
+        ciphertext: sealed,
+        trustRoot: authority.trustRoot,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
+      expect(utf8.decode((await open()).plaintext), 'once');
+
+      await bob.sessions.deleteSession(alice.address);
+      await expectLater(
+        open(),
+        throwsA(
+          isA<LibSignalException>().having(
+            (e) => e.code,
+            'code',
+            LibSignalErrorCode.invalidMessage,
+          ),
+        ),
+      );
     });
 
     capability('a forged certificate is refused', () async {

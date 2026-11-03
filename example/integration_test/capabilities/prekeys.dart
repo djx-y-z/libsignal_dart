@@ -52,18 +52,25 @@ void preKeyCapabilities() {
     capability('PreKeyBundle gives back what it was built from', () async {
       final party = Party('bundle-owner', 1234, deviceId: 3);
       final bundle = await party.publishBundle();
+      // The keys the bundle was made from are the ones the owner stored.
+      final preKey = (await party.preKeys.loadPreKey(42))!;
+      final signedPreKey = (await party.signedPreKeys.loadSignedPreKey(7))!;
+      final kyberPreKey = (await party.kyberPreKeys.loadKyberPreKey(3))!;
 
       expect(bundle.registrationId(), 1234);
       expect(bundle.deviceId(), 3);
       expect(bundle.preKeyId(), 42);
-      expect(bundle.preKeyPublic(), hasLength(33));
+      expect(bundle.preKeyPublic(), preKey.publicKey());
       expect(bundle.signedPreKeyId(), 7);
-      expect(bundle.signedPreKeyPublic(), hasLength(33));
-      expect(bundle.signedPreKeySignature(), hasLength(64));
+      expect(bundle.signedPreKeyPublic(), signedPreKey.publicKey());
+      expect(bundle.signedPreKeySignature(), signedPreKey.signature());
       expect(bundle.identityKey(), party.identity.publicKey);
       expect(bundle.kyberPreKeyId(), 3);
-      expect(bundle.kyberPreKeyPublic(), isNotEmpty);
-      expect(bundle.kyberPreKeySignature(), hasLength(64));
+      expect(
+        bundle.kyberPreKeyPublic(),
+        kyberPreKey.getPublicKey().serialize(),
+      );
+      expect(bundle.kyberPreKeySignature(), kyberPreKey.signature());
 
       final withoutOneTimeKey = await party.publishBundle(oneTimePreKey: false);
       expect(withoutOneTimeKey.preKeyId(), isNull);

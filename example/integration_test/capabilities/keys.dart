@@ -4,6 +4,23 @@ import 'package:libsignal/libsignal.dart';
 import '../support/harness.dart';
 import '../support/party.dart';
 
+/// -1, 0 or 1 as [a] sorts before, with or after [b], byte by byte.
+int _byteOrder(List<int> a, List<int> b) {
+  for (var i = 0; i < a.length && i < b.length; i++) {
+    if (a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
+  }
+  return a.length.compareTo(b.length).sign;
+}
+
+/// What an alternate-identity signature covers, as upstream's
+/// `IdentityKeyPair::sign_alternate_identity` builds it: domain separation,
+/// then the other identity.
+List<int> _alternateIdentityMessage(PublicKey other) => [
+  ...List.filled(32, 0xFF),
+  ...bytesOf('Signal_PNI_Signature'),
+  ...other.serialize(),
+];
+
 void keyCapabilities() {
   group('keys', () {
     // Fixed answers from the specification: a generate-and-round-trip test
@@ -77,6 +94,8 @@ void keyCapabilities() {
       expect(a.cloneKey().equals(other: a), isTrue);
       expect(a.equals(other: b), isFalse);
       expect(a.compare(other: a), 0);
+      // The order of the serialized bytes, as the bridge documents it.
+      expect(a.compare(other: b), _byteOrder(a.serialize(), b.serialize()));
       expect(a.compare(other: b), -b.compare(other: a));
     });
 
@@ -117,20 +136,36 @@ void keyCapabilities() {
 
     capability('IdentityKeyPair signs an alternate identity', () async {
       final identity = IdentityKeyPair.generate();
+      final publicKey = PublicKey.deserialize(bytes: identity.publicKey);
       final other = PrivateKey.generate().getPublicKey();
+      final stranger = PrivateKey.generate().getPublicKey();
 
-      expect(
+      // A signature over the parts is one over their concatenation, so the
+      // public key checks it as a plain message: by this identity, of that one.
+      for (final signature in [
         identity.signAlternateIdentity(otherIdentity: other),
-        hasLength(64),
-      );
-      expect(
         identityKeypairSignAlternateIdentityRaw(
-          publicKey: PublicKey.deserialize(bytes: identity.publicKey),
+          publicKey: publicKey,
           privateKey: PrivateKey.deserialize(bytes: identity.privateKey),
           otherIdentity: other,
         ),
-        hasLength(64),
-      );
+      ]) {
+        expect(signature, hasLength(64));
+        expect(
+          publicKey.verify(
+            message: _alternateIdentityMessage(other),
+            signature: signature,
+          ),
+          isTrue,
+        );
+        expect(
+          publicKey.verify(
+            message: _alternateIdentityMessage(stranger),
+            signature: signature,
+          ),
+          isFalse,
+        );
+      }
     });
   });
 }

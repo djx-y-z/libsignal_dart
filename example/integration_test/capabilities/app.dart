@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:libsignal_example/main.dart';
 
+import '../support/harness.dart';
+
 /// Waits until [finder] matches.
 ///
 /// Not `pumpAndSettle`, and not `pump` either. A demo's spinner animates for as
@@ -46,21 +48,26 @@ Future<String> _runDemo(WidgetTester tester, String tab, String id) async {
 void appCapabilities() {
   group('the example app', () {
     // Not `capability`: this one drives the widget tree, and it is the app's
-    // own `initState` that calls `LibSignal.init()` here. Last among them,
-    // because the app's `dispose` calls `LibSignal.cleanup()`.
+    // own `initState` that calls `LibSignal.init()` here — by now a call that
+    // returns at once, the capabilities above having initialized the library
+    // first. Last among them, because the app's `dispose` calls
+    // `LibSignal.cleanup()`.
     testWidgets(
       'initializes and runs every demo',
-      (tester) async {
+      (tester) => withinLimit(const Duration(minutes: 5), () async {
         // By default a live test only draws when it pumps. This one waits on
         // native calls instead, so the app has to draw on its own.
-        IntegrationTestWidgetsFlutterBinding.instance.framePolicy =
+        final binding = IntegrationTestWidgetsFlutterBinding.instance;
+        final framePolicy = binding.framePolicy;
+        addTearDown(() => binding.framePolicy = framePolicy);
+        binding.framePolicy =
             LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
 
         await tester.pumpWidget(const MyApp());
 
         // `init()` failing puts its error on the screen instead of the tabs. On
         // the web that is also what a missing `web/pkg/` looks like. Either way
-        // the wait ends, and the message is in the failure.
+        // the wait ends, and the error is the failure's reason.
         final failed = find.textContaining('failed to initialize');
         await _waitFor(
           tester,
@@ -70,7 +77,16 @@ void appCapabilities() {
                 (widget is Text && (widget.data ?? '').contains('failed to')),
           ),
         );
-        expect(failed, findsNothing);
+        expect(
+          failed,
+          findsNothing,
+          reason: [
+            for (final text in tester.widgetList<SelectableText>(
+              find.byType(SelectableText),
+            ))
+              text.data,
+          ].join('\n'),
+        );
 
         const demos = {
           ('Keys', 'keys'): ['Valid: true', 'Valid: false (expected: false)'],
@@ -97,8 +113,9 @@ void appCapabilities() {
             expect(printed, contains(line), reason: tab);
           }
         }
-      },
-      timeout: const Timeout(Duration(minutes: 5)),
+      }),
+      // A backstop only: the limit above fires first, as in `capability`.
+      timeout: const Timeout(Duration(minutes: 10)),
     );
   });
 }
