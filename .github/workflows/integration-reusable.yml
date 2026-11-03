@@ -364,7 +364,9 @@ jobs:
   #   call into a newer libc gets past the linker there and fails at load.
   # - API 36 with 16 KB pages. `make verify-android-alignment` measures the ELF
   #   headers; this is the library actually loading on such a kernel, which is
-  #   the claim Google Play's requirement is about.
+  #   the claim Google Play's requirement is about. Debug only: this image is the
+  #   heavier of the two, and twice in a dozen runs it went offline under a second
+  #   build. The profile run is the API 24 leg's; the library is the same.
   android:
     needs: flutter
     strategy:
@@ -376,11 +378,13 @@ jobs:
             target: default
             # Whichever: this leg is about the API level, not the page size.
             check: adb shell getprop ro.build.version.sdk
+            profile: true
           - name: API 36, 16 KB pages
             api: 36
             target: google_apis_ps16k
             # This leg means nothing on a 4 KB kernel, so it says so if it is one.
             check: test "$(adb shell getconf PAGE_SIZE | tr -d '\r')" = 16384
+            profile: false
 
     name: Integration (Android ${{ matrix.name }})
     runs-on: ubuntu-26.04
@@ -389,6 +393,15 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
+
+      # Measured: "No space left on device" installing the API 36 image, after the
+      # Rust build, two NDKs and the app. What goes is what nothing here uses.
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost \
+            "$AGENT_TOOLSDIRECTORY/CodeQL" /usr/share/swift /usr/local/share/powershell /opt/az
+          df -h /
 
       # The image's default JDK is newer than this Gradle runs on.
       - name: Use the JDK the example builds with
@@ -448,8 +461,11 @@ jobs:
             echo 'kotlin.daemon.jvmargs=-Xmx1g'
           } >> ~/.gradle/gradle.properties
           make build-example ARGS="apk --debug --target-platform android-x64"
-          make build-example ARGS="apk --profile --target-platform android-x64"
+          if [ "${{ matrix.profile }}" = true ]; then
+            make build-example ARGS="apk --profile --target-platform android-x64"
+          fi
           (cd "${EXAMPLE_DIR:-example}/android" && ./gradlew --stop)
+          df -h /
 
       - name: Enable KVM
         run: |
@@ -472,7 +488,7 @@ jobs:
             ${{ matrix.check }}
             make test-example ARGS="-d emulator-5554"
             make verify-example-library ARGS="$VERIFY_LIBRARY"
-            make drive-example ARGS="--profile -d emulator-5554"
+            ${{ matrix.profile && 'make drive-example ARGS="--profile -d emulator-5554"' || 'echo "Profile mode runs on the API 24 leg."' }}
 
   # ============================================
   # What cannot be executed here
