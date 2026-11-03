@@ -176,6 +176,20 @@ RunOutcome judgeDriveRun({
   );
 }
 
+/// The arguments to `make` that run one of the example's [target]s on the app
+/// in [app], with [args] for flutter.
+///
+/// `FVM=`, because the script runs under `fvm dart`, and fvm has put the pinned
+/// Flutter and its Dart first on PATH: the target finds them there. Through fvm
+/// once more it failed in CI, every time — "fvm as globally activated doesn't
+/// support Dart 3.10.3" — since the global fvm is a snapshot of a newer Dart
+/// than the one now first on PATH.
+List<String> makeArguments(
+  String target, {
+  required String app,
+  required List<String> args,
+}) => ['FVM=', target, 'EXAMPLE_DIR=$app', 'ARGS=${args.join(' ')}'];
+
 /// The application id an Android app's `android/app/build.gradle.kts`, or
 /// `build.gradle`, gives it.
 String? androidApplicationId(String gradle) => RegExp(

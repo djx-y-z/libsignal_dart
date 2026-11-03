@@ -176,11 +176,10 @@ class _Run {
   }
 
   Future<(int, RunOutcome Function(bool crashed))> _drive() async {
-    final process = await Process.start('make', [
-      'drive-example',
-      'EXAMPLE_DIR=$app',
-      'ARGS=${flutterArgs.join(' ')}',
-    ]);
+    final process = await Process.start(
+      'make',
+      makeArguments('drive-example', app: app, args: flutterArgs),
+    );
     final output = StringBuffer();
     const decoder = Utf8Decoder(allowMalformed: true);
     final copied = [
@@ -204,11 +203,11 @@ class _Run {
   }
 
   Future<int> _make(String target, List<String> args) async {
-    final process = await Process.start('make', [
-      target,
-      'EXAMPLE_DIR=$app',
-      'ARGS=${args.join(' ')}',
-    ], mode: ProcessStartMode.inheritStdio);
+    final process = await Process.start(
+      'make',
+      makeArguments(target, app: app, args: args),
+      mode: ProcessStartMode.inheritStdio,
+    );
     return process.exitCode;
   }
 

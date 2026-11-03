@@ -177,6 +177,24 @@ void main() {
     });
   });
 
+  group('makeArguments', () {
+    test('runs the target on the Flutter already first on PATH, not fvm', () {
+      expect(
+        makeArguments(
+          'test-example',
+          app: 'build/consumer',
+          args: ['-d', 'emulator-5554', '--file-reporter', 'json:/t/r.json'],
+        ),
+        [
+          'FVM=',
+          'test-example',
+          'EXAMPLE_DIR=build/consumer',
+          'ARGS=-d emulator-5554 --file-reporter json:/t/r.json',
+        ],
+      );
+    });
+  });
+
   group('Android', () {
     test('reads the application id of the example', () {
       final gradle = File(
