@@ -1,3 +1,16 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **The `session_decrypt` fuzz target builds again** — since
+  `mark_kyber_pre_key_used` began answering whether an agreement is new (9.0.0),
+  the target still answered it with nothing, and the Fuzz workflow failed to
+  compile it on every pull request that touches `rust/`, and on its weekly run.
+  It answers that the agreement is new, so decryption goes on past libsignal's
+  replay check.
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users
