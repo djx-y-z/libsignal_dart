@@ -1,3 +1,67 @@
+## [Unreleased]
+
+### For Users
+
+#### Changed
+
+- **The build hook waits longer for GitHub** — the native library and its
+  checksums file are each tried six times, with a minute of pauses in all, where
+  three tries used to span six seconds of pauses. A runner's DNS has been seen
+  failing for longer than that. An attempt now waits at most 20 seconds to
+  connect, rather than the operating system's minute or two. A missing release
+  (404) still fails at once, and so does a file the hook cannot write, which
+  another try cannot fix. A page that is not a checksums file, such as a proxy's,
+  is reported as that rather than as an incomplete release.
+
+#### Security
+
+- **The checksum check of the downloaded library has no override** —
+  `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD` is gone from the build hook, its error
+  messages and SECURITY.md. It never took effect: Dart's and Flutter's hook
+  runners give a hook only a fixed list of environment variables, so the hook
+  never saw it, on any SDK this package supports. The case it was for, a release
+  with no checksums file, is not one the hook downloads.
+
+#### Fixed
+
+- **A pre-key message of an existing session decrypts after its signed pre-key
+  was deleted** — `SessionCipher.decryptPreKeyMessage` and
+  `SealedSenderCipher.decrypt` refused a pre-key message with
+  `invalidKeyIdentifier` whenever the store no longer had the signed pre-key it
+  names, before libsignal ever saw it. libsignal needs that key only to start a
+  new session. A sender keeps sending pre-key messages until it hears back, and
+  once the recipient had rotated its signed pre-key away and deleted it, every
+  one of them after the first failed. So did a redelivered first one, which
+  libsignal reports as `duplicatedMessage`. A message that starts a new session
+  without its key still fails with `invalidKeyIdentifier` and "Signed pre-key N
+  not found", unless libsignal refuses it first for another reason. Its checks
+  now come first, so an untrusted sender is `untrustedIdentity` and an X3DH
+  message from before Kyber is `invalidMessage`, as they would be with the key
+  in place. The fix is in the native library.
+
+### For Contributors
+
+#### Added
+
+- **A job that never got a runner runs again by itself** — GitHub cancels a job
+  it could not give a runner after about a quarter of an hour, and macOS arm64
+  ran short often enough to hold pull requests on the required
+  `test / Test (macOS ARM64)` until someone re-ran it. `rerun-unstarted.yml` runs
+  the failed jobs of a `Tests` or `Integration Tests` run again when every one of
+  them never started for that reason, twice at most. A run with a job that failed
+  after starting is left for a person to read, and so is a run a newer one of its
+  branch has replaced: in a pull request's concurrency group its re-run would
+  cancel the newer run.
+
+#### Changed
+
+- **The `session_decrypt` fuzz target builds again** — since
+  `mark_kyber_pre_key_used` began answering whether an agreement is new (9.0.0),
+  the target still answered it with nothing, and the Fuzz workflow failed to
+  compile it on every pull request that touches `rust/`, and on its weekly run.
+  It answers that the agreement is new, so decryption goes on past libsignal's
+  replay check.
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users

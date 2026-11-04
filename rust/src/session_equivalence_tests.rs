@@ -609,6 +609,10 @@ enum Op {
     /// only the signed pre-key and a Kyber pre-key — which is also what a
     /// server can choose to hand out.
     RunOutOfOneTimePreKeys(usize),
+    /// `.0`'s application deletes the signed pre-key its bundles carry, as one
+    /// does some time after rotating it. Messages built on it may still be on
+    /// their way.
+    DeleteSignedPreKey(usize),
 }
 
 #[derive(Clone)]
@@ -938,6 +942,9 @@ impl Conversation {
                 self.parties[who].stores.lock().unwrap().identities.insert(name, key);
             }
             Op::RunOutOfOneTimePreKeys(who) => self.parties[who].one_time_pre_keys_left = false,
+            Op::DeleteSignedPreKey(who) => {
+                self.parties[who].stores.lock().unwrap().signed_pre_keys.remove(&SIGNED_PRE_KEY_ID);
+            }
         }
     }
 
@@ -1223,6 +1230,42 @@ fn a_replayed_pre_key_message_without_a_one_time_pre_key() {
         c.reached.failures.get("InvalidMessage").copied(),
         Some(2),
         "the replayed agreements were not both refused"
+    );
+}
+
+/// Bob deletes his signed pre-key while Alice's first messages are still on
+/// their way, as a client does some time after rotating it. The ones that
+/// belong to the session Bob built from the first decrypt on that session,
+/// plain and sealed: libsignal reads no pre-key for them. The bridge used to
+/// refuse them before calling libsignal, with `InvalidKeyIdentifier`. A new
+/// session does need the key, and fails without it on both sides.
+#[test]
+fn pre_key_messages_after_the_signed_pre_key_was_deleted() {
+    let mut c = Conversation::new("signed pre-key deleted");
+    c.apply(Op::Fetch(ALICE, BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.apply(Op::SealedSend(ALICE, BOB));
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    c.apply(Op::DeleteSignedPreKey(BOB));
+    c.apply(Op::Deliver(ALICE, BOB, 1));
+    c.apply(Op::Deliver(ALICE, BOB, 2));
+    c.apply(Op::Deliver(ALICE, BOB, 0));
+    // A second fetch gives Alice a session Bob does not have, so her next
+    // message starts one.
+    c.apply(Op::Fetch(ALICE, BOB));
+    c.apply(Op::Send(ALICE, BOB));
+    c.deliver_last(ALICE, BOB);
+    assert_eq!(c.reached.decrypted, 3, "the messages of Bob's session did not all decrypt");
+    assert_eq!(
+        c.reached.failures.get("DuplicatedMessage").copied(),
+        Some(1),
+        "the redelivered message was not refused as a duplicate"
+    );
+    assert_eq!(
+        c.reached.failures.get("InvalidKeyIdentifier").copied(),
+        Some(1),
+        "the new session did not fail on the deleted key"
     );
 }
 

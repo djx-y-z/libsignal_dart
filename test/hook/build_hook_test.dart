@@ -322,4 +322,155 @@ void main() {
       },
     );
   });
+
+  group('downloads', () {
+    test('pause a minute in all before the build gives up', () {
+      const delays = build_hook.downloadRetryDelays;
+      expect(delays, hasLength(5));
+      for (var i = 1; i < delays.length; i++) {
+        expect(delays[i], greaterThanOrEqualTo(delays[i - 1]));
+      }
+      expect(
+        delays.fold(Duration.zero, (a, b) => a + b),
+        equals(const Duration(minutes: 1)),
+      );
+    });
+
+    test('cannot skip the checksum', () {
+      // Hook runners give a hook only a fixed list of environment variables,
+      // so the LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD this hook used to read never
+      // reached it, on any SDK. Nothing that reads one is to come back.
+      final source = File('hook/build.dart').readAsStringSync();
+      expect(source, isNot(contains('ALLOW_UNVERIFIED')));
+      expect(source, isNot(contains('Platform.environment')));
+    });
+
+    // Against a server on this machine that answers with [statuses] in turn,
+    // the last of them from then on, and with [body] when the status is 200.
+    final noPauses = List.filled(5, Duration.zero);
+    HttpServer? server;
+    late String base;
+    late int requests;
+    late Directory dir;
+
+    Future<void> serve(List<int> statuses, [String body = '']) async {
+      requests = 0;
+      final s = server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      base = 'http://${s.address.address}:${s.port}';
+      s.listen((request) async {
+        final status =
+            statuses[requests < statuses.length
+                ? requests
+                : statuses.length - 1];
+        requests++;
+        request.response
+          ..statusCode = status
+          ..write(status == 200 ? body : '');
+        await request.response.close();
+      });
+    }
+
+    setUp(() => dir = Directory.systemTemp.createTempSync('hook_download'));
+    tearDown(() async {
+      await server?.close(force: true);
+      server = null;
+      dir.deleteSync(recursive: true);
+    });
+
+    Matcher failsWith(String text) => throwsA(
+      isA<build_hook.HookException>().having(
+        (e) => e.message,
+        'message',
+        contains(text),
+      ),
+    );
+
+    test('are tried again after a 5xx, and succeed', () async {
+      await serve([503, 502, 200], 'library');
+      final file = File('${dir.path}/archive');
+      await build_hook.downloadWithRetry(
+        '$base/archive',
+        file,
+        delays: noPauses,
+      );
+      expect(file.readAsStringSync(), equals('library'));
+      expect(requests, equals(3));
+    });
+
+    test('stop at a 404', () async {
+      await serve([404]);
+      await expectLater(
+        build_hook.downloadWithRetry(
+          '$base/archive',
+          File('${dir.path}/archive'),
+          delays: noPauses,
+        ),
+        failsWith('HTTP 404'),
+      );
+      expect(requests, equals(1));
+    });
+
+    test('give up after the last try, and say how many', () async {
+      await serve([503]);
+      await expectLater(
+        build_hook.downloadWithRetry(
+          '$base/archive',
+          File('${dir.path}/archive'),
+          delays: noPauses,
+        ),
+        failsWith('after 6 attempts'),
+      );
+      expect(requests, equals(6));
+    });
+
+    test('do not try again a file they cannot write', () async {
+      await serve([200], 'library');
+      await expectLater(
+        build_hook.downloadWithRetry(
+          '$base/archive',
+          File('${dir.path}/missing/archive'),
+          delays: noPauses,
+        ),
+        failsWith('Could not write'),
+      );
+      expect(requests, equals(1));
+    });
+
+    group('checksum', () {
+      const hash =
+          '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+
+      Future<String> resolve() => build_hook.resolveExpectedChecksum(
+        base,
+        '8.0.0',
+        'libsignal_frb-8.0.0-macos-arm64.tar.gz',
+        delays: noPauses,
+      );
+
+      test('is the one the file gives the archive', () async {
+        await serve([200], '$hash  libsignal_frb-8.0.0-macos-arm64.tar.gz\n');
+        expect(await resolve(), equals(hash));
+      });
+
+      test('refuses an archive the file has no entry for', () async {
+        await serve([200], '$hash  libsignal_frb-8.0.0-linux-x64.tar.gz\n');
+        await expectLater(resolve(), failsWith('has no entry'));
+      });
+
+      test('refuses a page that is not a checksums file', () async {
+        await serve([200], '<html><body>Sign in to continue</body></html>');
+        await expectLater(resolve(), failsWith('not a checksums file'));
+        expect(requests, equals(1));
+      });
+
+      test('refuses to go on when the file cannot be had', () async {
+        await serve([503]);
+        await expectLater(
+          resolve(),
+          failsWith('Refusing to use an unverified native library'),
+        );
+        expect(requests, equals(6));
+      });
+    });
+  });
 }
