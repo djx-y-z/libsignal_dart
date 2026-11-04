@@ -275,6 +275,67 @@ void main() {
         },
       );
 
+      test(
+        'decrypts a later pre-key message of an existing session without the '
+        'signed pre-key',
+        () async {
+          final alice = TestParty.create(name: 'alice', registrationId: 111);
+          final bob = TestParty.create(name: 'bob', registrationId: 222);
+          bob.generatePreKeys(
+            preKeyId: 1,
+            signedPreKeyId: 99,
+            kyberPreKeyId: 1,
+          );
+          await alice.sessionBuilder.processPreKeyBundle(
+            bob.address,
+            bob.getBundle(),
+          );
+
+          // Bob has not answered, so both are pre-key messages, of one
+          // session.
+          final first = await alice.sessionCipher.encrypt(
+            bob.address,
+            utf8.encode('First'),
+          );
+          final second = await alice.sessionCipher.encrypt(
+            bob.address,
+            utf8.encode('Second'),
+          );
+          expect(second.isPreKeyMessage, isTrue);
+
+          final aliceAddress = ProtocolAddress(name: 'alice', deviceId: 1);
+          await bob.sessionCipher.decryptPreKeyMessage(
+            aliceAddress,
+            first.ciphertext,
+          );
+
+          // Rotated away and deleted, as a client does after a while. The
+          // second message belongs to the session the first one built, and
+          // libsignal needs no pre-key for it.
+          await bob.signedPreKeyStore.removeSignedPreKey(99);
+          final decrypted = await bob.sessionCipher.decryptPreKeyMessage(
+            aliceAddress,
+            second.ciphertext,
+          );
+          expect(utf8.decode(decrypted), equals('Second'));
+
+          // The first again is a duplicate, not a missing key.
+          await expectLater(
+            bob.sessionCipher.decryptPreKeyMessage(
+              aliceAddress,
+              first.ciphertext,
+            ),
+            throwsA(
+              isA<LibSignalException>().having(
+                (e) => e.code,
+                'code',
+                LibSignalErrorCode.duplicatedMessage,
+              ),
+            ),
+          );
+        },
+      );
+
       test('handles missing regular pre-key gracefully', () async {
         // This test verifies that missing regular pre-keys don't cause crashes
         // (they're optional in some protocol versions)

@@ -523,6 +523,95 @@ void main() {
           failsWith(LibSignalErrorCode.protobufError),
         );
       });
+
+      group('without the signed pre-key', () {
+        late Uint8List certificate;
+        late SealedSenderCipher aliceCipher;
+        late SealedSenderCipher bobCipher;
+
+        setUp(() {
+          certificate = createSenderCertificate(
+            senderUuid: aliceAddress.name(),
+            senderDeviceId: aliceAddress.deviceId(),
+            senderIdentityKey: aliceIdentity.publicKey,
+            expiration: BigInt.from(
+              DateTime.now()
+                  .add(const Duration(hours: 1))
+                  .millisecondsSinceEpoch,
+            ),
+            serverCertificate: serverCertificate,
+            serverPrivateKey: serverPrivateKey.serialize(),
+          );
+          aliceCipher = SealedSenderCipher(
+            localAddress: aliceAddress,
+            sessionStore: aliceSessionStore,
+            identityKeyStore: aliceIdentityStore,
+            preKeyStore: alicePreKeyStore,
+            signedPreKeyStore: aliceSignedPreKeyStore,
+            kyberPreKeyStore: aliceKyberPreKeyStore,
+          );
+          bobCipher = SealedSenderCipher(
+            localAddress: bobAddress,
+            sessionStore: bobSessionStore,
+            identityKeyStore: bobIdentityStore,
+            preKeyStore: bobPreKeyStore,
+            signedPreKeyStore: bobSignedPreKeyStore,
+            kyberPreKeyStore: bobKyberPreKeyStore,
+          );
+        });
+
+        Future<Uint8List> seal(String text) => aliceCipher.encrypt(
+          recipientAddress: bobAddress,
+          plaintext: Uint8List.fromList(utf8.encode(text)),
+          senderCertificate: certificate,
+        );
+
+        Future<SealedSenderDecryptionResult> open(Uint8List ciphertext) =>
+            bobCipher.decrypt(
+              ciphertext: ciphertext,
+              trustRoot: trustRootPublicKey.serialize(),
+              timestamp: DateTime.now().millisecondsSinceEpoch,
+            );
+
+        test(
+          'decrypts a later pre-key message of an existing session',
+          () async {
+            // Bob has not answered, so both carry a pre-key message.
+            final first = await seal('First');
+            final second = await seal('Second');
+            await open(first);
+
+            // Rotated away and deleted, as a client does after a while. The
+            // second message belongs to the session the first one built.
+            await bobSignedPreKeyStore.removeSignedPreKey(signedPreKeyId);
+            final result = await open(second);
+            expect(utf8.decode(result.plaintext), equals('Second'));
+          },
+        );
+
+        test('fails a message that starts a new session', () async {
+          final first = await seal('First');
+          await bobSignedPreKeyStore.removeSignedPreKey(signedPreKeyId);
+          await expectLater(
+            open(first),
+            throwsA(
+              isA<LibSignalException>()
+                  .having(
+                    (e) => e.code,
+                    'code',
+                    LibSignalErrorCode.invalidKeyIdentifier,
+                  )
+                  .having(
+                    (e) => e.message,
+                    'message',
+                    contains('Signed pre-key $signedPreKeyId not found'),
+                  ),
+            ),
+          );
+          // Nothing was consumed: the one-time pre-key is still there.
+          expect(await bobPreKeyStore.loadPreKey(preKeyId), isNotNull);
+        });
+      });
     });
 
     group('Certificate functions', () {
