@@ -146,7 +146,9 @@ fuzz_target!(|input: SessionInput| {
             let bytes = kyber_prekey.clone();
             Box::pin(async move { Some(bytes) })
         },
-        |_id, _signed_id, _base_key| Box::pin(async {}),
+        // A new agreement, as far as this store knows, so decryption goes on
+        // past libsignal's replay check.
+        |_id, _signed_id, _base_key| Box::pin(async { true }),
         move |_name, _dev| {
             let known = known_identity.clone();
             Box::pin(async move { known })
