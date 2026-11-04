@@ -1,3 +1,27 @@
+## [Unreleased]
+
+### For Users
+
+#### Changed
+
+- **The build hook waits longer for GitHub** — the native library and its
+  checksums file are each tried six times, with a minute of pauses in all, where
+  three tries used to span six seconds of pauses. A runner's DNS has been seen
+  failing for longer than that. An attempt now waits at most 20 seconds to
+  connect, rather than the operating system's minute or two. A missing release
+  (404) still fails at once, and so does a file the hook cannot write, which
+  another try cannot fix. A page that is not a checksums file, such as a proxy's,
+  is reported as that rather than as an incomplete release.
+
+#### Security
+
+- **The checksum check of the downloaded library has no override** —
+  `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD` is gone from the build hook, its error
+  messages and SECURITY.md. It never took effect: Dart's and Flutter's hook
+  runners give a hook only a fixed list of environment variables, so the hook
+  never saw it, on any SDK this package supports. The case it was for, a release
+  with no checksums file, is not one the hook downloads.
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users

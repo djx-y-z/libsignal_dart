@@ -408,9 +408,14 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
 - **Integrity (implemented):** every downloaded archive is verified against a
   SHA256 checksum published in the same release. Verification is **fail-closed** —
   if the checksums file cannot be fetched or lacks an entry for the archive, the
-  build **aborts** rather than loading an unverified binary. The escape hatch
-  `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD=1` exists only for building against older
-  releases with no checksums file and should not be used in production.
+  build **aborts** rather than loading an unverified binary. Each download is
+  tried six times first, with a minute of pauses in all. There is **no
+  override**: the hook
+  downloads only the release of its own crate version, and every such release
+  publishes the file. The `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD` the hook used to
+  read never took effect: Dart's and Flutter's hook runners give a hook only a
+  fixed list of environment variables. An override would have to be a pubspec
+  user-define, and none is offered.
 - **Authenticity (build provenance attestation):** the checksums file is served
   from the same release as the archive, so SHA256 alone does not defend against
   a release or maintainer-token compromise (an attacker who replaces the archive
