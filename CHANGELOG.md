@@ -1,3 +1,19 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Added
+
+- **A job that never got a runner runs again by itself** — GitHub cancels a job
+  it could not give a runner after about a quarter of an hour, and macOS arm64
+  ran short often enough to hold pull requests on the required
+  `test / Test (macOS ARM64)` until someone re-ran it. `rerun-unstarted.yml` runs
+  the failed jobs of a `Tests` or `Integration Tests` run again when every one of
+  them never started for that reason, twice at most. A run with a job that failed
+  after starting is left for a person to read, and so is a run a newer one of its
+  branch has replaced: in a pull request's concurrency group its re-run would
+  cancel the newer run.
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users
