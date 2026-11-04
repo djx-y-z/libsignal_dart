@@ -745,6 +745,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   // ============================================
 
   Widget _buildDemoCard({
+    required String id,
     required String title,
     required String description,
     required VoidCallback onRun,
@@ -768,6 +769,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
+              key: ValueKey('run-$id'),
               onPressed: isLoading ? null : onRun,
               icon: isLoading
                   ? const SizedBox(
@@ -815,6 +817,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 ),
                 child: SelectableText(
                   result,
+                  key: ValueKey('result-$id'),
                   style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                 ),
               ),
@@ -828,6 +831,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget _buildKeysTab() {
     return SingleChildScrollView(
       child: _buildDemoCard(
+        id: 'keys',
         title: 'Key Generation & Signatures',
         description:
             'Generate Curve25519 key pairs, sign messages with Ed25519, '
@@ -843,6 +847,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget _buildCryptoTab() {
     return SingleChildScrollView(
       child: _buildDemoCard(
+        id: 'crypto',
         title: 'AES-256-GCM-SIV Encryption',
         description:
             'Symmetric encryption using AES-256-GCM-SIV (nonce-misuse resistant). '
@@ -857,6 +862,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget _buildGroupsTab() {
     return SingleChildScrollView(
       child: _buildDemoCard(
+        id: 'groups',
         title: 'Group Messaging (SenderKey)',
         description:
             'Efficient group encryption using Sender Keys. Alice creates a '
@@ -872,6 +878,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget _buildSessionTab() {
     return SingleChildScrollView(
       child: _buildDemoCard(
+        id: 'session',
         title: '1-to-1 Session (Double Ratchet)',
         description:
             'Full Signal Protocol session establishment and messaging. '
@@ -887,6 +894,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   Widget _buildFingerprintTab() {
     return SingleChildScrollView(
       child: _buildDemoCard(
+        id: 'verify',
         title: 'Safety Number Verification',
         description:
             'Create fingerprints for identity verification. Both parties '

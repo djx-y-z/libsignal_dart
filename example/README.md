@@ -53,6 +53,17 @@ flutter run -d macos
 flutter run -d chrome
 ```
 
+## Tests
+
+`integration_test/` runs every capability of the package inside this app, and then
+every demo above through its UI. From the repository root, after building the
+library for what you run it on (without a build, the hook downloads the release):
+
+```bash
+make build && make test-example ARGS="-d macos"
+make build-web && make test-example-web CHROMEDRIVER=/path/to/chromedriver
+```
+
 ## Requirements
 
 - Flutter 3.38.4 or later
