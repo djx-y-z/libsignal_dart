@@ -10,7 +10,10 @@ import '../rust/api/signed_prekey.dart';
 /// be reused until rotated.
 ///
 /// The store should retain old signed pre-keys for a period of time to
-/// allow decryption of messages that were encrypted before rotation.
+/// allow decryption of messages that were encrypted before rotation. Only a
+/// message that starts a new session needs its signed pre-key: the later
+/// pre-key messages of a session the recipient already has, which a sender
+/// keeps sending until it hears back, decrypt without it.
 ///
 /// Example implementation:
 /// ```dart
@@ -32,7 +35,7 @@ import '../rust/api/signed_prekey.dart';
 /// completes** (see [SessionStore] for the full contract). Signed pre-keys are
 /// reusable, so losing a write here does not cause key reuse; it costs
 /// availability — a signed pre-key that was published but not persisted makes
-/// every pre-key message referring to it undecryptable, and a lost
+/// every message that would start a session from it undecryptable, and a lost
 /// [removeSignedPreKey] merely delays cleanup.
 abstract interface class SignedPreKeyStore {
   /// Loads a signed pre-key by its ID.

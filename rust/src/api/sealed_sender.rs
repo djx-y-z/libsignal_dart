@@ -640,23 +640,23 @@ where
         // Load pre-keys. SECURITY: each record carries a private key, so each
         // is held in `Zeroizing` — a trailing `zeroize()` would be skipped by
         // the `?` on its own deserialize/store, and by an unwind.
-        let signed_pre_key_bytes = Zeroizing::new(
-            load_signed_pre_key(signed_pre_key_id)
-                .await
-                .ok_or_else(|| {
-                    LibSignalException::new(
-                        LibSignalErrorCode::InvalidKeyIdentifier,
-                        format!("Signed pre-key {} not found", signed_pre_key_id),
-                    )
-                })?,
-        );
-        let signed_prekey_record = SignedPreKeyRecord::deserialize(&signed_pre_key_bytes)
-            .map_err(|e: SignalProtocolError| LibSignalException::from(e))?;
-        block_on(async {
-            signed_prekey_store.save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record).await
-        }).map_err(LibSignalException::from)?;
-        // Clear now rather than across the pre-key loads below.
-        drop(signed_pre_key_bytes);
+        //
+        // Each one is optional, the signed pre-key too, as in
+        // `message_decrypt_prekey_with_callbacks`: libsignal reads them only
+        // to start a new session, and a later message of a session it already
+        // has may arrive after its signed pre-key was rotated away and deleted.
+        let signed_pre_key_missing = match load_signed_pre_key(signed_pre_key_id).await {
+            Some(bytes) => {
+                let bytes = Zeroizing::new(bytes);
+                let signed_prekey_record = SignedPreKeyRecord::deserialize(&bytes)
+                    .map_err(|e: SignalProtocolError| LibSignalException::from(e))?;
+                block_on(async {
+                    signed_prekey_store.save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record).await
+                }).map_err(LibSignalException::from)?;
+                false
+            }
+            None => true,
+        };
 
         if let Some(id) = pre_key_id
             && let Some(bytes) = load_pre_key(id).await
@@ -695,7 +695,13 @@ where
                 &mut kyber_prekey_store,
                 &mut OsRng.unwrap_err(),
             ).await
-        }).map_err(LibSignalException::from)?.plaintext
+        }).map_err(|e| match e {
+            // Only a new session reads the signed pre-key, so only it can miss one.
+            SignalProtocolError::InvalidSignedPreKeyId if signed_pre_key_missing => {
+                LibSignalException::missing_signed_pre_key(signed_pre_key_id)
+            }
+            e => LibSignalException::from(e),
+        })?.plaintext
     } else if msg_type == CiphertextMessageType::Whisper {
         // Regular signal message
         let signal_message = libsignal_protocol::SignalMessage::try_from(message_bytes)

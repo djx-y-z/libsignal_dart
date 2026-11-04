@@ -180,6 +180,16 @@ impl LibSignalException {
         Self::new(LibSignalErrorCode::InternalError, message)
     }
 
+    /// A pre-key message needed signed pre-key `id` to start a session, and
+    /// the store has none by that id. libsignal reports it as
+    /// `InvalidSignedPreKeyId`, which names no key; this names it.
+    pub(crate) fn missing_signed_pre_key(id: u32) -> Self {
+        Self::new(
+            LibSignalErrorCode::InvalidKeyIdentifier,
+            format!("Signed pre-key {id} not found"),
+        )
+    }
+
     /// Put `prefix` in front of the message, as `"<prefix>: <message>"`,
     /// leaving the code alone.
     pub(crate) fn context(self, prefix: &str) -> Self {

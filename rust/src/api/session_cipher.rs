@@ -501,17 +501,13 @@ pub async fn message_decrypt_prekey_with_callbacks(
     // Previously-trusted identity for this sender (None on first contact).
     let known_remote_identity = get_identity(remote_name.clone(), remote_device_id).await;
 
-    // Load pre-keys
-    let signed_pre_key_bytes = Zeroizing::new(
-        load_signed_pre_key(signed_pre_key_id)
-            .await
-            .ok_or_else(|| {
-                LibSignalException::new(
-                    LibSignalErrorCode::InvalidKeyIdentifier,
-                    format!("Signed pre-key {} not found", signed_pre_key_id),
-                )
-            })?,
-    );
+    // Load pre-keys. Each one is optional, the signed pre-key too: libsignal
+    // reads them only to start a new session. A later message of a session it
+    // already has decrypts on that session, and its signed pre-key may have
+    // been rotated away and deleted by then. When a new session does need a
+    // key that is gone, libsignal says so, as `message_decrypt_prekey_inner`
+    // reports.
+    let signed_pre_key_bytes = Zeroizing::new(load_signed_pre_key(signed_pre_key_id).await);
 
     let pre_key_bytes = Zeroizing::new(if let Some(pk_id) = pre_key_id {
         load_pre_key(pk_id.into()).await
@@ -596,7 +592,7 @@ fn message_decrypt_prekey_inner(
     identity_key_pair_bytes: &[u8],
     local_registration_id: u32,
     signed_pre_key_id: u32,
-    signed_pre_key_bytes: &[u8],
+    signed_pre_key_bytes: &Option<Vec<u8>>,
     pre_key_id: Option<u32>,
     pre_key_bytes: &Option<Vec<u8>>,
     kyber_pre_key_id: Option<u32>,
@@ -650,15 +646,17 @@ fn message_decrypt_prekey_inner(
             .map_err(LibSignalException::from)?;
     }
 
-    // Populate pre-key stores
-    let signed_prekey_record =
-        SignedPreKeyRecord::deserialize(signed_pre_key_bytes).map_err(LibSignalException::from)?;
-    block_on(async {
-        signed_prekey_store
-            .save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record)
-            .await
-    })
-    .map_err(LibSignalException::from)?;
+    // Populate pre-key stores with the keys the application still has.
+    if let Some(bytes) = signed_pre_key_bytes {
+        let signed_prekey_record =
+            SignedPreKeyRecord::deserialize(bytes).map_err(LibSignalException::from)?;
+        block_on(async {
+            signed_prekey_store
+                .save_signed_pre_key(SignedPreKeyId::from(signed_pre_key_id), &signed_prekey_record)
+                .await
+        })
+        .map_err(LibSignalException::from)?;
+    }
 
     if let (Some(id), Some(bytes)) = (pre_key_id, pre_key_bytes.as_ref()) {
         let prekey_record = PreKeyRecord::deserialize(bytes).map_err(LibSignalException::from)?;
@@ -692,7 +690,13 @@ fn message_decrypt_prekey_inner(
         )
         .await
     })
-    .map_err(LibSignalException::from)?
+    .map_err(|e| match e {
+        // Only a new session reads the signed pre-key, so only it can miss one.
+        SignalProtocolError::InvalidSignedPreKeyId if signed_pre_key_bytes.is_none() => {
+            LibSignalException::missing_signed_pre_key(signed_pre_key_id)
+        }
+        e => LibSignalException::from(e),
+    })?
     // The result's other two fields name the sender: with plain PQXDH its
     // address is the one passed in, and its identity reaches the Dart store
     // through the recorded `save_identity` below, when libsignal saved it.
