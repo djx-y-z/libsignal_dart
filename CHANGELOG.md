@@ -52,6 +52,31 @@
   after starting is left for a person to read, and so is a run a newer one of its
   branch has replaced: in a pull request's concurrency group its re-run would
   cancel the newer run.
+- **Integration tests in a real Flutter app, on every platform** — `make test-example`
+  runs every capability of the package inside `example/`, and then every demo through
+  its UI: on Linux, macOS, Windows, an iOS simulator, an Android emulator (API 24, and
+  API 36 with 16 KB pages) and in a real browser, in debug and in AOT or dart2js. CI
+  runs them from the tree on every pull request (`integration.yml`), on the released
+  binaries after stage 1 and before the upload (`publish.yml`), and in a new app that
+  depends on the version on pub.dev after the upload and weekly on the newest Flutter,
+  with that version's own tests. Not required checks yet.
+- **`make coverage-example` fails on a bridged function nothing calls** — measured from
+  the running app over every `crateApi*` function, so a new binding without an
+  integration test turns CI red.
+- **`make verify-example-library`** — fails a run that loaded another library than it
+  says it tests, a build from the tree or a released one. The hook chooses, and can
+  choose quietly.
+- **`make test-example-ci`** — runs them as CI does, judging each run on what the app
+  reported. A test that failed fails at once and is never run again, and so does an
+  app that crashed; only a run that never got that far, because the app never
+  connected or the device or the connection went away, runs again. CI gives an iOS
+  simulator three runs and an Android emulator three tries, each on a new emulator,
+  so a test that fails only now and then turns the run red instead of passing on a
+  retry.
+- **`make build-ios`, `make create-consumer` and `make package-example-android`,
+  `-ios` and `-macos`** — an iOS build at the deployment target the release uses; a new
+  app on the published package; and release builds for what no hosted runner can
+  execute, checked for the library inside them.
 
 #### Changed
 
@@ -61,6 +86,26 @@
   compile it on every pull request that touches `rust/`, and on its weekly run.
   It answers that the agreement is new, so decryption goes on past libsignal's
   replay check.
+- **The build hook reads a stamped cross build** — a target other than the host now
+  uses `rust/target/<triple>/release/`, under the same crate version and lock file
+  checks as the host build, so a pull request can run its own Rust on a device. Until
+  now those targets could only load the last release. Only a source checkout has that
+  directory: `rust/target/` is not in the published package. A cross build from a bare
+  `cargo` line, or from before this, now stops the app's build until it is rebuilt or
+  deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs.
+- **`example/ios` is integrated with CocoaPods** — `integration_test` is a plugin.
+- **`make clean` also clears the example's build output** — `example/.dart_tool`,
+  `example/build`, `example/coverage` and `example/web/pkg`.
+- **`make release` refuses to tag before the integration tests have passed on the
+  stage-1 binary** — `publish.yml` runs the same tests before its upload, but only
+  after the tag, and a failure there left a tag with no version on pub.dev. It reads
+  one of two runs. The first is the run `integration.yml` starts after the native
+  build, found by its title. The second is a run started by hand on the released
+  binaries at the commit being released
+  (`gh workflow run integration.yml -f library=release`), which is the way through
+  for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,
+  and a run that tested nothing does not count. `--skip-integration-check` skips
+  this check.
 
 ## [9.0.0] - 2026-10-26
 
