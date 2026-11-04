@@ -1,3 +1,24 @@
+## [Unreleased]
+
+### For Users
+
+#### Fixed
+
+- **A pre-key message of an existing session decrypts after its signed pre-key
+  was deleted** — `SessionCipher.decryptPreKeyMessage` and
+  `SealedSenderCipher.decrypt` refused a pre-key message with
+  `invalidKeyIdentifier` whenever the store no longer had the signed pre-key it
+  names, before libsignal ever saw it. libsignal needs that key only to start a
+  new session. A sender keeps sending pre-key messages until it hears back, and
+  once the recipient had rotated its signed pre-key away and deleted it, every
+  one of them after the first failed. So did a redelivered first one, which
+  libsignal reports as `duplicatedMessage`. A message that starts a new session
+  without its key still fails with `invalidKeyIdentifier` and "Signed pre-key N
+  not found", unless libsignal refuses it first for another reason. Its checks
+  now come first, so an untrusted sender is `untrustedIdentity` and an X3DH
+  message from before Kyber is `invalidMessage`, as they would be with the key
+  in place. The fix is in the native library.
+
 ## [9.0.0] - 2026-10-26
 
 ### For Users
