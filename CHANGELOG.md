@@ -72,7 +72,9 @@
   connected or the device or the connection went away, runs again. CI gives an iOS
   simulator three runs and an Android emulator three tries, each on a new emulator,
   so a test that fails only now and then turns the run red instead of passing on a
-  retry.
+  retry. A failure is written down the moment the results show it, while the run
+  still goes, so a try that CI stops at its time limit after a test has failed
+  counts as failed too, instead of as one that did not finish.
 - **`make build-ios`, `make create-consumer` and `make package-example-android`,
   `-ios` and `-macos`** — an iOS build at the deployment target the release uses; a new
   app on the published package; and release builds for what no hosted runner can
@@ -104,8 +106,8 @@
   binaries at the commit being released
   (`gh workflow run integration.yml -f library=release`), which is the way through
   for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,
-  and a run that tested nothing does not count. `--skip-integration-check` skips
-  this check.
+  and a run in which no test job ran does not count, whatever else in it did.
+  `--skip-integration-check` skips this check.
 
 ## [9.0.0] - 2026-10-26
 

@@ -103,6 +103,11 @@ Future<IntegrationCheck> _judge(
   jobsOf: (run) async => jobs[run.id] ?? _jobsOfRelease(),
 );
 
+/// A workflow's text with LF line ends. On Windows git checks the workflows out
+/// with CRLF, and a pattern across lines would match nothing there.
+String _readLf(String path) =>
+    File(path).readAsStringSync().replaceAll('\r\n', '\n');
+
 void main() {
   group('judgeIntegration', () {
     test('the run after the native build passed', () async {
@@ -185,6 +190,32 @@ void main() {
         },
       );
       expect(allSkipped.verdict, IntegrationVerdict.none);
+
+      // Only the jobs around the tests ran: choosing Flutter tests nothing,
+      // and neither does packaging.
+      final onlyAroundThem = await _judge(
+        [_run(id: 3, created: '2026-11-04T10:00:00Z')],
+        jobs: {
+          3: [
+            _job('resolve', 'success'),
+            _job('integration / Choose Flutter', 'success'),
+            _job('integration / Integration (Linux x86_64)', 'skipped'),
+            _job('integration / Integration (Android API 24)', 'skipped'),
+            _job('integration / Package (Android, all ABIs)', 'success'),
+          ],
+        },
+      );
+      expect(onlyAroundThem.verdict, IntegrationVerdict.none);
+    });
+
+    test('a run with the title that the native build did not start never '
+        'counts', () async {
+      // A push takes its commit's message as its title, and anyone's pull
+      // request can end up as one.
+      final check = await _judge([
+        _run(id: 1, created: '2026-11-04T10:00:00Z', event: 'push', sha: _head),
+      ]);
+      expect(check.verdict, IntegrationVerdict.none);
     });
 
     test('a skipped run is passed over for an older one that ran', () async {
@@ -347,9 +378,7 @@ void main() {
     // The titles are how the check finds its runs, so the workflow has to give
     // exactly these. Read as text: a renamed title, or a condition that no
     // longer names the build, is what this is here to catch.
-    final workflow = File(
-      '.github/workflows/integration.yml',
-    ).readAsStringSync();
+    final workflow = _readLf('.github/workflows/integration.yml');
 
     test('names the run after the native build by the tag', () {
       expect(
@@ -376,6 +405,42 @@ void main() {
         ),
       );
       expect(byHandReleaseTitle, 'By hand: release, on ');
+    });
+
+    test('names it so only after a build that succeeded', () {
+      final runName = workflow.substring(
+        workflow.indexOf('run-name:'),
+        workflow.indexOf('\non:'),
+      );
+      expect(
+        runName,
+        contains("github.event.workflow_run.conclusion == 'success'"),
+      );
+    });
+
+    test('tests the tree the native build ran on', () {
+      // Not main's head, which GitHub records as the run's commit: the title
+      // says whose binaries, and this is the tree they are tested with.
+      expect(workflow, contains(r'ref="$RELEASE_SHA"'));
+    });
+
+    test('calls its test jobs what the check counts', () {
+      // `gh` names a job of the reusable workflow after the job here that
+      // calls it, then its own name there.
+      expect(
+        workflow,
+        matches(
+          RegExp(r'^  integration:\n    needs: resolve$', multiLine: true),
+        ),
+      );
+      final reusable = _readLf('.github/workflows/integration-reusable.yml');
+      final testJobs = RegExp(
+        r'^    name: Integration \(',
+        multiLine: true,
+      ).allMatches(reusable);
+      // Desktop, web, iOS and Android.
+      expect(testJobs, hasLength(4));
+      expect(testJobPrefix, 'integration / Integration (');
     });
   });
 }

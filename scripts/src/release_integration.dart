@@ -126,15 +126,20 @@ List<IntegrationRun> integrationCandidates({
   ]..sort((a, b) => b.created.compareTo(a.created));
 }
 
-/// Whether a finished run ran the tests at all: a job of the reusable workflow
-/// (`integration / …`) that was not skipped. A run whose `resolve` found no
-/// tests in its tree runs none, and ends green all the same.
+/// Whether a finished run ran the tests at all: a test job of the reusable
+/// workflow, [testJobPrefix], that was not skipped. A run whose `resolve` found
+/// no tests in its tree runs none, and ends green all the same. Its other jobs
+/// test nothing: `Choose Flutter` picks a version, `Package (…)` only builds.
 bool ranTheTests(Iterable<Map<String, Object?>> jobs) => jobs.any((job) {
   final name = job['name'];
   return name is String &&
-      name.startsWith('integration / ') &&
+      name.startsWith(testJobPrefix) &&
       job['conclusion'] != 'skipped';
 });
+
+/// How `gh` names a test job of the run: the job in `integration.yml` that
+/// calls the reusable workflow, then the test job's own name there.
+const testJobPrefix = 'integration / Integration (';
 
 /// Judges [runs] for the binaries of [tag] at the commit [head]. The newest
 /// run that tested anything decides, and so does one still running: it is

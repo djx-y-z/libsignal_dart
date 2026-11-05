@@ -273,10 +273,15 @@ started the tests, the device or the connection went away — three times in all
 the third on a rebooted simulator, or each on a new emulator; each leaves a
 warning on the run. `flutter test --file-reporter json:` is what tells them apart:
 a test that failed in the app has an error event of its own, one the app never
-finished has none. Under `flutter drive` the driver prints a line when the app
-answers, so keep `writeResponseOnFailure` in `test_driver/integration_test.dart`.
-The 3-minute limit inside each capability is a test's failure too: a slow emulator
-can turn one red, and that is the side to err on.
+finished has none. The script reads that file while the run goes and writes the
+failure down at once, because CI stops a try at its time limit without asking it:
+read only at the end, a try stopped after a test had failed would count as one
+that never finished, and run again. Under `flutter drive` the driver prints a line
+when the app answers, so keep `writeResponseOnFailure` in
+`test_driver/integration_test.dart`. The 3-minute limit inside each capability is
+a test's failure too: a slow emulator can turn one red, and that is the side to
+err on. ⚠ It cannot fire while a call blocks the app's isolate, and nothing on
+the host times a test out: such a run reads as one that never finished.
 
 ⚠ **For Android, check the runner image before anything else.** GitHub served two
 ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50`
