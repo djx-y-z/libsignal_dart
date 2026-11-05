@@ -49,6 +49,31 @@ void capability(String description, Future<void> Function() body) {
   );
 }
 
+/// Whether this build carries [capabilityThatHangs]: only one asked for by
+/// `gh workflow run integration.yml -f hang=true`.
+const hangOnPurpose = bool.fromEnvironment('LIBSIGNAL_EXAMPLE_HANG');
+
+/// How long [capabilityThatHangs] blocks the app: past the 8 minutes the
+/// watchdog of `make test-example-ci` waits (`stallLimit` in
+/// `scripts/src/example_run.dart`), so that it is the watchdog that ends it.
+const hangFor = Duration(minutes: 12);
+
+/// Declares a capability that blocks the app's isolate for [hangFor], as a call
+/// that never returns would: the self-test of the watchdog. The jobs it runs in
+/// fail, and should say that the app sent nothing for 8 minutes.
+void capabilityThatHangs() {
+  capability('blocks the app on purpose, for the watchdog to stop', () async {
+    final clock = Stopwatch()..start();
+    // Meanwhile nothing else runs on the isolate: no timer, no frame, and no
+    // word to the host.
+    while (clock.elapsed < hangFor) {}
+    fail(
+      'Blocked the app for $hangFor, and nothing stopped it: the watchdog of '
+      'make test-example-ci did not.',
+    );
+  });
+}
+
 /// Declares the check that every [capability] above it really ran, and hands
 /// the count to `test_driver/integration_test.dart`. Declare it last.
 void capabilitiesAllRan(IntegrationTestWidgetsFlutterBinding binding) {

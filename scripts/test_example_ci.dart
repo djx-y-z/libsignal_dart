@@ -23,6 +23,12 @@
 ///                       `unfinished` goes in first, so a run that was killed
 ///                       leaves that; `failed` goes in as soon as a test has
 ///                       failed, so a run killed after that leaves `failed`.
+///   --stall-after <s>   Stop a run whose app has sent nothing for this many
+///                       seconds once its tests have started: 480 by default
+///                       (`stallLimit`). An app still running on a device that
+///                       answers has failed the run, and its threads go to the
+///                       log; with the app or the device gone, the run did not
+///                       finish.
 library;
 
 import 'dart:async';
@@ -42,6 +48,7 @@ Future<void> main(List<String> args) async {
     '--android',
     '--verdict',
     '--dir',
+    '--stall-after',
   };
   final values = <String, String>{};
   var drive = false;
@@ -62,6 +69,12 @@ Future<void> main(List<String> args) async {
   if (attempts == null || attempts < 1) {
     _usage('--attempts takes a whole number from 1.');
   }
+  final stallSeconds = int.tryParse(
+    values['--stall-after'] ?? '${stallLimit.inSeconds}',
+  );
+  if (stallSeconds == null || stallSeconds < 1) {
+    _usage('--stall-after takes a whole number of seconds from 1.');
+  }
 
   final verdict = values['--verdict'];
   final simulator = values['--simulator'];
@@ -76,6 +89,7 @@ Future<void> main(List<String> args) async {
     verify: verify,
     results: Directory.systemTemp.createTempSync('example-run-'),
     record: record,
+    stallLimit: Duration(seconds: stallSeconds),
   );
 
   final outcome = await runAttempts(
@@ -141,6 +155,7 @@ class _Run {
     required this.verify,
     required this.results,
     required this.record,
+    required this.stallLimit,
   });
 
   final String app;
@@ -153,6 +168,9 @@ class _Run {
 
   /// Writes the verdict down for a caller that runs the tests again itself.
   final void Function(Verdict verdict) record;
+
+  /// How long the app may send nothing, once its tests have started.
+  final Duration stallLimit;
 
   /// Whether a run has already said, while it went, that a test failed.
   bool failureAnnounced = false;
@@ -177,36 +195,32 @@ class _Run {
   Future<(int, RunOutcome Function(bool crashed))> _test(int attempt) async {
     final file = File('${results.absolute.path}/run-$attempt.json');
     if (file.existsSync()) file.deleteSync();
+    final process = await Process.start(
+      'make',
+      makeArguments(
+        'test-example',
+        app: app,
+        args: [...flutterArgs, '--file-reporter', 'json:${file.path}'],
+      ),
+      mode: ProcessStartMode.inheritStdio,
+    );
     // CI stops a try that runs out of time without asking it, and one stopped
     // after a test had failed must not read as one that did not finish. So the
     // results are read while the run goes, and a failure recorded at once.
-    final watch = Timer.periodic(const Duration(seconds: 2), (_) {
-      if (failureAnnounced) return;
-      final failed = failedSoFar(_read(file) ?? '');
-      if (failed.isEmpty) return;
-      record(Verdict.failed);
-      failureAnnounced = true;
-      _annotate(
-        'error',
-        'Failed in the app: ${failed.join('; ')}. A test that fails is not run '
-            'again; this run goes on to its end.',
-      );
+    final watched = _watch(process, () {
+      final text = _read(file) ?? '';
+      _announce(failedSoFar(text));
+      return testRunPosition(text);
     });
-    final int code;
-    try {
-      code = await _make('test-example', [
-        ...flutterArgs,
-        '--file-reporter',
-        'json:${file.path}',
-      ]);
-    } finally {
-      watch.cancel();
-    }
+    final code = await process.exitCode;
+    final stall = await watched();
     final text = _read(file);
     return (
       code,
-      (bool crashed) =>
-          judgeTestRun(exitCode: code, results: text, crashed: crashed),
+      (bool crashed) => withStall(
+        judgeTestRun(exitCode: code, results: text, crashed: crashed),
+        stall,
+      ),
     );
   }
 
@@ -227,14 +241,223 @@ class _Run {
         output.write(text);
       }),
     ];
+    // The app prints a line as each test starts and as one fails, and the
+    // driver passes them on as they come.
+    final watched = _watch(process, () {
+      final text = output.toString();
+      _announce(driveFailedSoFar(text));
+      return driveRunPosition(text);
+    });
     final code = await process.exitCode;
-    await Future.wait(copied);
+    final stall = await watched();
+    // A process flutter left behind can hold the output open.
+    await Future.wait(
+      copied,
+    ).timeout(const Duration(minutes: 1), onTimeout: () => const <void>[]);
     final text = output.toString();
     return (
       code,
-      (bool crashed) =>
-          judgeDriveRun(exitCode: code, output: text, crashed: crashed),
+      (bool crashed) => withStall(
+        judgeDriveRun(exitCode: code, output: text, crashed: crashed),
+        stall,
+      ),
     );
+  }
+
+  /// Writes down and says, once, that tests have failed in a run that is
+  /// going: [failed], when there are any.
+  void _announce(List<String> failed) {
+    if (failureAnnounced || failed.isEmpty) return;
+    record(Verdict.failed);
+    failureAnnounced = true;
+    _annotate(
+      'error',
+      'Failed in the app: ${failed.join('; ')}. A test that fails is not run '
+          'again; this run goes on to its end.',
+    );
+  }
+
+  /// Reads the run through [look] every 2 seconds while [process] goes, and
+  /// stops it once it has stood still for [stallLimit]. The function it gives
+  /// stops the reading, and gives what stopping the run came to, if it was
+  /// stopped.
+  Future<RunOutcome?> Function() _watch(
+    Process process,
+    RunPosition? Function() look,
+  ) {
+    final stalls = StallWatch(stallLimit);
+    Future<RunOutcome>? stopping;
+    final timer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (stopping != null) return;
+      final test = stalls.check(look(), DateTime.now());
+      if (test != null) stopping = _stop(process, test);
+    });
+    return () async {
+      timer.cancel();
+      return stopping;
+    };
+  }
+
+  /// Stops a run that has stood still, [test] the last one it started. The
+  /// device is asked what became of the app, and the verdict written down at
+  /// once, ahead of anything a time limit could cut short. Then the app's
+  /// threads go to the log, the app is ended, and flutter too if it does not
+  /// end with it.
+  Future<RunOutcome> _stop(Process process, String test) async {
+    final probe = await _probe();
+    final outcome = stalledRun(test, probe.state, limit: stallLimit);
+    final failed = outcome.verdict == Verdict.failed;
+    if (failed) {
+      record(Verdict.failed);
+      failureAnnounced = true;
+    }
+    final threads = switch (probe.pid) {
+      final pid? => await _printThreads(pid),
+      null => false,
+    };
+    if (failed) {
+      _annotate(
+        'error',
+        '${outcome.describe()} A test that hangs is not run again'
+            '${threads ? "; the app's threads are in the log" : ''}.',
+      );
+    } else {
+      stdout.writeln('${outcome.describe()} Ending the run.');
+    }
+    if (await _endApp(probe)) {
+      final ended = await process.exitCode
+          .then((_) => true)
+          .timeout(const Duration(minutes: 1), onTimeout: () => false);
+      if (ended) return outcome;
+      stdout.writeln('flutter was still going a minute after the app ended.');
+    }
+    stdout.writeln('Ending flutter, and every process it started.');
+    await _endTree(process.pid);
+    return outcome;
+  }
+
+  /// What the device shows of the app, and where its process is.
+  Future<_Probe> _probe() async {
+    if (android case final serial?) {
+      final id = _androidId();
+      if (id == null) return const _Probe(AppState.unchecked);
+      // `pidof` where the device has one, and `ps` where it does not: every
+      // process with -A from Android 8, and without it before.
+      final result = await _capture('adb', [
+        '-s',
+        serial,
+        'shell',
+        'echo alive; pidof $id || { ps -A; ps; } 2>/dev/null',
+      ]);
+      if (result == null ||
+          !const LineSplitter()
+              .convert(result.stdout)
+              .any((line) => line.trim() == 'alive')) {
+        return const _Probe(AppState.unreachable);
+      }
+      final pid = androidPid(result.stdout, id);
+      return pid == null
+          ? const _Probe(AppState.gone)
+          : _Probe(AppState.running, pid: pid, app: id);
+    }
+    if (simulator case final udid?) {
+      final result = await _capture('xcrun', [
+        'simctl',
+        'spawn',
+        udid,
+        'launchctl',
+        'list',
+      ]);
+      if (result == null || result.exitCode != 0) {
+        return const _Probe(AppState.unreachable);
+      }
+      final found = simulatorApp(result.stdout, _iosIds());
+      return found == null
+          ? const _Probe(AppState.gone)
+          : _Probe(AppState.running, pid: found.$1, app: found.$2);
+    }
+    return const _Probe(AppState.unchecked);
+  }
+
+  /// Leaves the threads of the app's process [pid] in the log, and with them
+  /// the call that blocks it. False when the platform would not give them: an
+  /// Android image may refuse `debuggerd` to the shell.
+  Future<bool> _printThreads(int pid) async {
+    if (android case final serial?) {
+      final result = await _capture('adb', [
+        '-s',
+        serial,
+        'shell',
+        'debuggerd',
+        '-b',
+        '$pid',
+      ], timeout: const Duration(minutes: 1));
+      _printGroup(
+        "The app's threads (debuggerd -b $pid)",
+        result == null
+            ? 'debuggerd gave nothing.'
+            : '${result.stdout}${result.stderr}',
+      );
+      return result != null &&
+          result.exitCode == 0 &&
+          result.stdout.trim().isNotEmpty;
+    }
+    // A simulator's app is a process of this machine.
+    final file = File('${results.absolute.path}/threads-$pid.txt');
+    final result = await _capture('sample', [
+      '$pid',
+      '3',
+      '-file',
+      file.path,
+    ], timeout: const Duration(minutes: 1));
+    final threads = _read(file);
+    _printGroup(
+      "The app's threads (sample $pid)",
+      threads ?? result?.stderr ?? 'sample gave nothing.',
+    );
+    return threads != null && threads.trim().isNotEmpty;
+  }
+
+  /// Ends the app on its device, which ends flutter's run. False when there is
+  /// none to end: the device does not answer, or nothing here knows the app.
+  Future<bool> _endApp(_Probe probe) async {
+    switch (probe.state) {
+      case AppState.gone:
+        return true;
+      case AppState.unreachable || AppState.unchecked:
+        return false;
+      case AppState.running:
+        break;
+    }
+    final app = probe.app!;
+    final result = android != null
+        ? await _capture('adb', [
+            '-s',
+            android!,
+            'shell',
+            'am',
+            'force-stop',
+            app,
+          ])
+        : await _capture('xcrun', ['simctl', 'terminate', simulator!, app]);
+    return result != null && result.exitCode == 0;
+  }
+
+  /// Ends the process [pid] and every process under it.
+  Future<void> _endTree(int pid) async {
+    if (Platform.isWindows) {
+      await _capture('taskkill', ['/PID', '$pid', '/T', '/F']);
+      return;
+    }
+    final listing = await _capture('ps', ['-A', '-o', 'pid=,ppid=']);
+    final tree = [...descendants(listing?.stdout ?? '', pid), pid];
+    for (final each in tree) {
+      Process.killPid(each);
+    }
+    await Future<void>.delayed(const Duration(seconds: 5));
+    for (final each in tree) {
+      Process.killPid(each, ProcessSignal.sigkill);
+    }
   }
 
   Future<int> _make(String target, List<String> args) async {
@@ -244,6 +467,24 @@ class _Run {
       mode: ProcessStartMode.inheritStdio,
     );
     return process.exitCode;
+  }
+
+  /// The application id of the Android app, from its Gradle build file.
+  String? _androidId() {
+    final gradle = ['build.gradle.kts', 'build.gradle']
+        .map((name) => File('$app/android/app/$name'))
+        .where((f) => f.existsSync());
+    return gradle.isEmpty
+        ? null
+        : androidApplicationId(gradle.first.readAsStringSync());
+  }
+
+  /// The bundle ids of the iOS app and of its tests, from its Xcode project.
+  Set<String> _iosIds() {
+    final pbxproj = File('$app/ios/Runner.xcodeproj/project.pbxproj');
+    return pbxproj.existsSync()
+        ? iosBundleIds(pbxproj.readAsStringSync())
+        : const <String>{};
   }
 
   /// Whether the platform recorded a crash of the app since [since].
@@ -256,12 +497,7 @@ class _Run {
   /// Android's crash log starts empty with each emulator, so whatever it holds
   /// of the app is this try's.
   Future<bool> _crashedOnAndroid(String serial) async {
-    final gradle = ['build.gradle.kts', 'build.gradle']
-        .map((name) => File('$app/android/app/$name'))
-        .where((f) => f.existsSync());
-    final id = gradle.isEmpty
-        ? null
-        : androidApplicationId(gradle.first.readAsStringSync());
+    final id = _androidId();
     if (id == null) {
       stderr.writeln(
         'No application id in $app/android/app/: no crash log read.',
@@ -294,10 +530,7 @@ class _Run {
   /// app. So this waits up to a minute and a half for one, which only a run that
   /// did not finish pays.
   Future<bool> _crashedOnSimulator(DateTime since) async {
-    final pbxproj = File('$app/ios/Runner.xcodeproj/project.pbxproj');
-    final ids = pbxproj.existsSync()
-        ? iosBundleIds(pbxproj.readAsStringSync())
-        : const <String>{};
+    final ids = _iosIds();
     final home = Platform.environment['HOME'];
     if (ids.isEmpty || home == null) {
       stderr.writeln('No bundle id in $app/ios/: no crash report looked for.');
@@ -333,6 +566,55 @@ class _Run {
       await Future<void>.delayed(const Duration(seconds: 5));
     }
   }
+}
+
+/// What the device showed of the app, and the app's process when it was there.
+class _Probe {
+  const _Probe(this.state, {this.pid, this.app});
+
+  final AppState state;
+
+  /// The app's process id: the device's, or this machine's for a simulator.
+  final int? pid;
+
+  /// The app's application id, or its bundle id.
+  final String? app;
+}
+
+/// Runs [executable], and gives how it ended and what it printed: null when it
+/// could not start, or did not end within [timeout] and was ended.
+Future<({int exitCode, String stdout, String stderr})?> _capture(
+  String executable,
+  List<String> arguments, {
+  Duration timeout = const Duration(seconds: 30),
+}) async {
+  final Process process;
+  try {
+    process = await Process.start(executable, arguments);
+  } on ProcessException catch (e) {
+    stderr.writeln('Could not run $executable: ${e.message}');
+    return null;
+  }
+  const decoder = Utf8Decoder(allowMalformed: true);
+  final out = process.stdout.transform(decoder).join();
+  final err = process.stderr.transform(decoder).join();
+  final code = await process.exitCode
+      .then<int?>((code) => code)
+      .timeout(
+        timeout,
+        onTimeout: () {
+          process.kill(ProcessSignal.sigkill);
+          return null;
+        },
+      );
+  if (code == null) {
+    stderr.writeln(
+      '$executable ${arguments.join(' ')} did not end in '
+      '${timeout.inSeconds} seconds.',
+    );
+    return null;
+  }
+  return (exitCode: code, stdout: await out, stderr: await err);
 }
 
 /// The end of the device's log, for whoever reads why the run failed.
@@ -398,12 +680,20 @@ void _annotate(String level, String message) {
   }
 }
 
+/// [text] under [title]: folded away on a GitHub run, which is long already.
+void _printGroup(String title, String text) {
+  final github = Platform.environment['GITHUB_ACTIONS'] == 'true';
+  stdout.writeln(github ? '::group::$title' : '--- $title');
+  stdout.write(text.endsWith('\n') ? text : '$text\n');
+  if (github) stdout.writeln('::endgroup::');
+}
+
 Never _usage(String problem) {
   stderr.writeln(problem);
   stderr.writeln(
     'Usage: make test-example-ci ARGS="[--drive] [--attempts <n>] '
     '[--simulator <udid>] [--android <serial>] [--verify=<args>] '
-    '[--verdict <file>] -- <arguments for flutter>"',
+    '[--verdict <file>] [--stall-after <seconds>] -- <arguments for flutter>"',
   );
   exit(2);
 }

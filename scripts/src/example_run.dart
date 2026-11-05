@@ -25,6 +25,13 @@
 // - A test that failed is the verdict from the moment it is written down,
 //   however the run ends. CI stops a try that runs out of time without asking
 //   it, so the script records the failure while the run is still going.
+// - A run whose app has sent nothing for [stallLimit] once its tests have
+//   started has stopped, and nothing on the host would end it before CI's own
+//   limit: a test's limits are timers of the app's isolate, and a call that
+//   blocks the isolate keeps them from firing. The device is asked what became
+//   of the app ([stalledRun]): still running on a device that answers, the app
+//   stopped itself, and the run has failed; with either gone, it did not
+//   finish.
 //
 // Measured with Flutter 3.38.4 on macOS: a run that passed, a capability that
 // failed, and an app that exited in the middle of the suite; and in CI, an iOS
@@ -239,6 +246,12 @@ RunOutcome judgeDriveRun({
           'failures above',
     );
   }
+  // The app said so as the test failed, and never got as far as handing the
+  // results over.
+  final failed = driveFailedSoFar(output);
+  if (failed.isNotEmpty) {
+    return RunOutcome(Verdict.failed, failedTests: failed);
+  }
   if (crashed) {
     return const RunOutcome(Verdict.failed, reason: 'the app crashed');
   }
@@ -246,6 +259,226 @@ RunOutcome judgeDriveRun({
     Verdict.unfinished,
     reason: 'the app never handed its results over',
   );
+}
+
+/// The tests a `flutter drive` run that may still be going has seen fail, by
+/// what it has printed, [output].
+///
+/// The app's own test runner prints a line as each test starts, `00:04 +59:
+/// <test>`, and the driver passes the app's log on as it comes. A test that
+/// fails prints its line again at once, with ` [E]` after the name. A run with
+/// one has failed however it ends, as under `flutter test` ([failedSoFar]).
+List<String> driveFailedSoFar(String output) => [
+  ...{
+    for (final line in const LineSplitter().convert(output))
+      if (_progress.firstMatch(line)?.group(1) case final text?
+          when text.endsWith(_failedMark))
+        text.substring(0, text.length - _failedMark.length),
+  },
+];
+
+/// How long a run may go without a word from the app, once its tests have
+/// started, before it is taken to have stopped.
+///
+/// Past both of a test's own limits, by two minutes: `capabilityTimeout`,
+/// 3 minutes, inside its body (`example/integration_test/support/harness.dart`),
+/// and twice that around it. Both are timers of the app's isolate, and a call
+/// that blocks the isolate keeps either from firing. Nothing on the host times
+/// a test out: under `flutter drive` the driver's own limit is the app's too.
+const stallLimit = Duration(minutes: 8);
+
+/// How far a run that may still be going has got.
+class RunPosition {
+  const RunPosition(this.step, this.test);
+
+  /// Grows with everything the app reports. A run that keeps one has stopped.
+  final int step;
+
+  /// The last test the run started, finished or not.
+  final String test;
+}
+
+/// Where a `flutter test` run that may still be going stands, by what it has
+/// written, [results]: null until a test of the suite has started, and again
+/// once the suite is done. Loading it, which builds, installs and connects to
+/// the app, has a limit of its own.
+RunPosition? testRunPosition(String results) {
+  var step = 0;
+  String? last;
+  for (final line in const LineSplitter().convert(results)) {
+    final Object? event;
+    try {
+      event = jsonDecode(line);
+    } on FormatException {
+      continue;
+    }
+    step++;
+    switch (event) {
+      case {'type': 'testStart', 'test': {'name': final String name}}
+          when !_isLoading(name):
+        last = name;
+      case {'type': 'done'}:
+        return null;
+    }
+  }
+  return last == null ? null : RunPosition(step, last);
+}
+
+/// The same for a `flutter drive` run, by what it has printed, [output]: null
+/// until the app's test runner has started a test, and again once it has
+/// printed its last line.
+RunPosition? driveRunPosition(String output) {
+  var step = 0;
+  String? last;
+  for (final line in const LineSplitter().convert(output)) {
+    final text = _progress.firstMatch(line)?.group(1);
+    if (text == null) continue;
+    step++;
+    if (_finalLines.contains(text)) return null;
+    last = text.endsWith(_failedMark)
+        ? text.substring(0, text.length - _failedMark.length)
+        : text;
+  }
+  return last == null ? null : RunPosition(step, last);
+}
+
+/// Tells a run that has stopped from one that is going: one whose position has
+/// not moved for [limit].
+class StallWatch {
+  StallWatch([this.limit = stallLimit]);
+
+  final Duration limit;
+  int? _step;
+  DateTime? _since;
+
+  /// The last test the run started, once it has stood at [position] for
+  /// [limit] by [now]: null while it moves, and while it has no position.
+  String? check(RunPosition? position, DateTime now) {
+    if (position == null) {
+      _step = null;
+      _since = null;
+      return null;
+    }
+    if (position.step != _step) {
+      _step = position.step;
+      _since = now;
+      return null;
+    }
+    return now.difference(_since!) >= limit ? position.test : null;
+  }
+}
+
+/// What the device showed of the app once its run had stopped.
+enum AppState {
+  /// The device answered, and the app's process was there.
+  running,
+
+  /// The device answered, and the app's process was gone.
+  gone,
+
+  /// The device did not answer.
+  unreachable,
+
+  /// Nothing was asked: the app runs on this machine, as a process of its own
+  /// that nothing here knows.
+  unchecked,
+}
+
+/// What a run that has stopped comes to, [test] being the last one it started
+/// and [app] what the device showed after [limit] without a word.
+///
+/// An app still running on a device that answers has stopped itself: its test
+/// went past both of its own limits, and only a call that blocks the app's
+/// isolate keeps those from firing. That is the package's doing or the tests',
+/// and fails the run, which then never runs again. With the app gone, or the
+/// device, it is a run that did not finish, like any other they went away in.
+RunOutcome stalledRun(
+  String test,
+  AppState app, {
+  Duration limit = stallLimit,
+}) {
+  final silence =
+      'the app sent nothing for ${_span(limit)}, the last test it started '
+      'being "$test"';
+  return switch (app) {
+    AppState.running => RunOutcome(
+      Verdict.failed,
+      reason: '$silence, and it was still running on a device that answered',
+    ),
+    AppState.unchecked => RunOutcome(Verdict.failed, reason: silence),
+    AppState.gone => RunOutcome(
+      Verdict.unfinished,
+      reason: '$silence, and then it was gone',
+    ),
+    AppState.unreachable => RunOutcome(
+      Verdict.unfinished,
+      reason: '$silence, and then the device did not answer',
+    ),
+  };
+}
+
+/// A run's own verdict, [own], and what stopping it found, [stall]. A test that
+/// failed, or an app that crashed, says more than the stop does; otherwise the
+/// stop decides, having seen what the run could not.
+RunOutcome withStall(RunOutcome own, RunOutcome? stall) =>
+    own.verdict == Verdict.failed || stall == null ? own : stall;
+
+/// The process id of the app [applicationId] on an Android device, in what was
+/// printed there: the pid `pidof` gives, or the line of `ps` that names the app,
+/// `USER PID PPID … NAME`. Null when neither has it.
+int? androidPid(String output, String applicationId) {
+  for (final line in const LineSplitter().convert(output)) {
+    final fields = line.trim().split(RegExp(r'\s+'));
+    if (fields.every(_isNumber)) return int.parse(fields.first);
+    if (fields.length > 2 && fields.last == applicationId) {
+      return int.tryParse(fields[1]);
+    }
+  }
+  return null;
+}
+
+/// The process id and the bundle id of the app in a simulator, by what
+/// `launchctl list` printed in it, [launchctl]: lines of `PID\tStatus\tLabel`,
+/// an app's label being `UIKitApplication:<bundle id>[…]` and its PID the
+/// host's. Null when none of [bundleIds] is running.
+(int, String)? simulatorApp(String launchctl, Set<String> bundleIds) {
+  const prefix = 'UIKitApplication:';
+  for (final line in const LineSplitter().convert(launchctl)) {
+    final fields = line.split('\t');
+    if (fields.length < 3) continue;
+    final pid = int.tryParse(fields[0].trim());
+    final label = fields[2].trim();
+    if (pid == null || !label.startsWith(prefix)) continue;
+    final id = label.substring(prefix.length).split('[').first;
+    if (bundleIds.contains(id)) return (pid, id);
+  }
+  return null;
+}
+
+/// The processes under [root], deepest first, by what `ps -A -o pid=,ppid=`
+/// printed, [ps]: the order to end them in, so that none is left to start
+/// another.
+List<int> descendants(String ps, int root) {
+  final children = <int, List<int>>{};
+  for (final line in const LineSplitter().convert(ps)) {
+    final fields = line.trim().split(RegExp(r'\s+'));
+    if (fields.length != 2) continue;
+    final pid = int.tryParse(fields[0]);
+    final parent = int.tryParse(fields[1]);
+    if (pid == null || parent == null) continue;
+    (children[parent] ??= []).add(pid);
+  }
+  final found = <int>[];
+  void visit(int pid) {
+    for (final child in children[pid] ?? const <int>[]) {
+      if (child == root || found.contains(child)) continue;
+      visit(child);
+      found.add(child);
+    }
+  }
+
+  visit(root);
+  return found;
 }
 
 /// The arguments to `make` that run one of the example's [target]s on the app
@@ -308,3 +541,29 @@ bool _isLoading(String name) => name.startsWith('loading ');
 
 String? _firstLine(Object? text) =>
     text is String ? const LineSplitter().convert(text).firstOrNull : null;
+
+/// A line of the app's own test runner, `MM:SS +passed ~skipped -failed:
+/// <what>`, the last two only when there are any, after whatever the log puts
+/// in front of it: `flutter: `, or Android's `I/flutter ( 2955): `. Flutter
+/// 3.38.4, `_Reporter` in `package:flutter_test/src/test_compat.dart`.
+final _progress = RegExp(r'(?:^|\s)\d+:\d\d \+\d+(?: ~\d+)?(?: -\d+)?: (.*)$');
+
+/// What that runner puts after a test that has just failed.
+const _failedMark = ' [E]';
+
+/// Its last line, once every test has run.
+const _finalLines = {
+  'All tests passed!',
+  'Some tests failed.',
+  'All tests skipped.',
+};
+
+bool _isNumber(String text) => RegExp(r'^\d+$').hasMatch(text);
+
+/// [duration] in words, in whole minutes when it has them.
+String _span(Duration duration) {
+  final minutes = duration.inMinutes;
+  final seconds = duration.inSeconds;
+  if (seconds % 60 == 0) return minutes == 1 ? '1 minute' : '$minutes minutes';
+  return seconds == 1 ? '1 second' : '$seconds seconds';
+}

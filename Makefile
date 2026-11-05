@@ -599,6 +599,8 @@ drive-example:
 # each run is judged on what the app reported. A test that failed fails this at
 # once and is never run again; a run that never got that far (the app did not
 # connect, the device or the connection went away) runs again, up to --attempts.
+# An app that sends nothing for 8 minutes into its tests is stopped, and fails the
+# run if it was still running on a device that answered.
 # scripts/test_example_ci.dart lists the options.
 #   make test-example-ci ARGS="--attempts 3 -- -d <device>"
 #   make test-example-ci ARGS="--drive -- --profile -d <device>"
