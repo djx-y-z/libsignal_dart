@@ -291,14 +291,18 @@ test-example-ci` reads the run as it goes — the JSON under `flutter test`, the
 line the app prints as each test starts under `flutter drive` — and a run that has
 not moved for `stallLimit`, 8 minutes, once its tests have started, has stopped.
 It asks the device: the app still running on a device that answers is `failed`,
-written down before anything else, with the app's threads in the log
-(`debuggerd -b` on Android, `sample` for a simulator) and never run again; with the
-app or the device gone, the run did not finish. Then it ends the app, and flutter
-with it. Without this, an Android hang was retried as an emulator's fault, and one
-that came now and then ended green. A connection to the app that died without a
-word, the device and the app still up, would read as a hang too: none was seen in
-226 tries, and the threads in the log tell the two apart (a heartbeat from the app
-is the next step if one ever is). To see it work, `gh workflow run
+written down before anything else and never run again; with the app or the
+device gone, the run did not finish. Then the app's threads go to the log —
+`sample` for a simulator, `debuggerd -b` through `su` on an emulator, since
+neither image CI uses gives `debuggerd` to the shell — and it ends the app, and
+flutter with it. Without this, an Android hang was retried as an emulator's
+fault, and one that came now and then ended green. A connection to the app that
+died without a word, the device and the app still up, would read as a hang too:
+none was seen in 226 tries, and the threads in the log tell the two apart (a
+heartbeat from the app is the next step if one ever is). ⚠ Once the app is
+stopped, `flutter test`'s own reporter ticks ✅ every test left, the ones that
+never ran included, then says "No tests were found" (exit 79): read the
+annotation, which is the verdict. To see it work, `gh workflow run
 integration.yml --ref <branch> -f hang=true` adds a test that blocks the app: the
 Android and iOS jobs are to fail on it, saying the app sent nothing for 8 minutes
 (API 24 under `flutter drive`, the others under `flutter test`). The run is titled

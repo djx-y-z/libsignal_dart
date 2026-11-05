@@ -407,10 +407,11 @@ jobs:
   # job at once and is never run again, and so does an app that crashed: Android's
   # crash log names it. So does an app that has sent nothing for 8 minutes into
   # its tests while the emulator answers and the app still runs, its threads
-  # printed: no limit of a test's own fires in an app that a call blocks. A cause
-  # bound to the runner fails every try, the machine being the same: re-run the
-  # job for that. Between the tries the memory and both file systems are printed,
-  # and the emulator and the adb server the last try left behind are stopped.
+  # printed through `su`: no limit of a test's own fires in an app that a call
+  # blocks. A cause bound to the runner fails every try, the machine being the
+  # same: re-run the job for that. Between the tries the memory and both file
+  # systems are printed, and the emulator and the adb server the last try left
+  # behind are stopped.
   android:
     needs: flutter
     strategy:

@@ -76,9 +76,10 @@
   still goes, so a try that CI stops at its time limit after a test has failed
   counts as failed too, instead of as one that did not finish. A run whose app has
   sent nothing for 8 minutes into its tests, under `flutter test` or `flutter
-  drive`, is stopped: failed, with the app's threads in the log, while the app still
-  runs on a device that answers, since no limit of the app's own fires in an app a
-  call blocks; not finished when the app or the device is gone.
+  drive`, is stopped: failed while the app still runs on a device that answers,
+  since no limit of the app's own fires in an app a call blocks, and its threads go
+  to the log when the device gives them; not finished when the app or the device is
+  gone.
   `gh workflow run integration.yml -f hang=true` runs a test that blocks the app, to
   see the Android and iOS jobs fail on it.
 - **`make build-ios`, `make create-consumer` and `make package-example-android`,

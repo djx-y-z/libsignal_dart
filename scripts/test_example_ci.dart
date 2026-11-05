@@ -27,8 +27,8 @@
 ///                       seconds once its tests have started: 480 by default
 ///                       (`stallLimit`). An app still running on a device that
 ///                       answers has failed the run, and its threads go to the
-///                       log; with the app or the device gone, the run did not
-///                       finish.
+///                       log when the device gives them; with the app or the
+///                       device gone, the run did not finish.
 library;
 
 import 'dart:async';
@@ -380,17 +380,18 @@ class _Run {
   }
 
   /// Leaves the threads of the app's process [pid] in the log, and with them
-  /// the call that blocks it. False when the platform would not give them: an
-  /// Android image may refuse `debuggerd` to the shell.
+  /// the call that blocks it. False when the device would not give them.
   Future<bool> _printThreads(int pid) async {
     if (android case final serial?) {
+      // Neither emulator image CI uses gives debuggerd to the shell, measured:
+      // API 24's SELinux hides it ("not found"), API 36 wants root. Their `su`
+      // gives root without restarting adbd, which `adb root` would do, and
+      // flutter's connection to the app with it.
       final result = await _capture('adb', [
         '-s',
         serial,
         'shell',
-        'debuggerd',
-        '-b',
-        '$pid',
+        'su 0 debuggerd -b $pid 2>/dev/null || debuggerd -b $pid',
       ], timeout: const Duration(minutes: 1));
       _printGroup(
         "The app's threads (debuggerd -b $pid)",
