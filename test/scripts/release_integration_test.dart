@@ -103,6 +103,11 @@ Future<IntegrationCheck> _judge(
   jobsOf: (run) async => jobs[run.id] ?? _jobsOfRelease(),
 );
 
+/// A workflow's text with LF line ends. On Windows git checks the workflows out
+/// with CRLF, and a pattern across lines would match nothing there.
+String _readLf(String path) =>
+    File(path).readAsStringSync().replaceAll('\r\n', '\n');
+
 void main() {
   group('judgeIntegration', () {
     test('the run after the native build passed', () async {
@@ -373,9 +378,7 @@ void main() {
     // The titles are how the check finds its runs, so the workflow has to give
     // exactly these. Read as text: a renamed title, or a condition that no
     // longer names the build, is what this is here to catch.
-    final workflow = File(
-      '.github/workflows/integration.yml',
-    ).readAsStringSync();
+    final workflow = _readLf('.github/workflows/integration.yml');
 
     test('names the run after the native build by the tag', () {
       expect(
@@ -430,9 +433,7 @@ void main() {
           RegExp(r'^  integration:\n    needs: resolve$', multiLine: true),
         ),
       );
-      final reusable = File(
-        '.github/workflows/integration-reusable.yml',
-      ).readAsStringSync();
+      final reusable = _readLf('.github/workflows/integration-reusable.yml');
       final testJobs = RegExp(
         r'^    name: Integration \(',
         multiLine: true,
