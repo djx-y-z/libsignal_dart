@@ -407,6 +407,37 @@ void main() {
       expect(byHandReleaseTitle, 'By hand: release, on ');
     });
 
+    test("names the watchdog's self-test so that it never counts", () {
+      // It is meant to fail. Titled as a run by hand on the released binaries,
+      // it would hold a release back, or pass for its tests by accident.
+      const format = 'Watchdog self-test: {0}, on {1}';
+      expect(
+        workflow,
+        contains(
+          "github.event_name == 'workflow_dispatch' && inputs.hang\n"
+          "      && format('$format', inputs.library, github.ref_name)",
+        ),
+      );
+      // Ahead of the title of a run by hand, which would otherwise be its.
+      expect(
+        workflow.indexOf(format),
+        lessThan(workflow.indexOf(byHandTitleFormat)),
+      );
+      final selfTest = _run(
+        id: 1,
+        created: '2026-11-04T10:00:00Z',
+        title: format
+            .replaceFirst('{0}', 'release')
+            .replaceFirst('{1}', 'main'),
+        event: 'workflow_dispatch',
+        sha: _head,
+      );
+      expect(
+        integrationCandidates(tag: _tag, head: _head, runs: [selfTest]),
+        isEmpty,
+      );
+    });
+
     test('names it so only after a build that succeeded', () {
       final runName = workflow.substring(
         workflow.indexOf('run-name:'),

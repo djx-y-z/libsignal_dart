@@ -31,13 +31,17 @@ name: Integration Tests
 # `make release` finds the run on the released binaries by this title
 # (`scripts/src/release_integration.dart`): GitHub records main's head as the
 # commit of a `workflow_run`, not the commit the build ran on. A run started by
-# hand says where its library came from. The rest keep GitHub's own title, which
-# an empty name gives them.
+# hand says where its library came from. The watchdog's self-test says that
+# first: it is meant to fail, and a title of its own keeps it from counting as a
+# test of the released binaries, either way. The rest keep GitHub's own title,
+# which an empty name gives them.
 run-name: >-
   ${{ github.event_name == 'workflow_run'
       && github.event.workflow_run.conclusion == 'success'
       && startsWith(github.event.workflow_run.head_branch, 'libsignal_frb-')
       && format('Released binaries of {0}', github.event.workflow_run.head_branch)
+    || github.event_name == 'workflow_dispatch' && inputs.hang
+      && format('Watchdog self-test: {0}, on {1}', inputs.library, github.ref_name)
     || github.event_name == 'workflow_dispatch'
       && format('By hand: {0}, on {1}', inputs.library, github.ref_name)
     || '' }}
@@ -78,6 +82,10 @@ on:
         description: 'For pub: a Flutter version, or stable. Empty means the pinned one.'
         required: false
         default: ''
+      hang:
+        description: "The watchdog's self-test: add a test that blocks the app. The Android and iOS jobs are to fail, saying the app sent nothing for 8 minutes."
+        type: boolean
+        default: false
 
 # Least-privilege default: nothing here writes to the repository.
 permissions:
@@ -121,6 +129,7 @@ jobs:
           INPUT_LIBRARY: ${{ inputs.library }}
           INPUT_VERSION: ${{ inputs.package-version }}
           INPUT_FLUTTER: ${{ inputs.flutter-version }}
+          INPUT_HANG: ${{ inputs.hang }}
           RELEASE_TAG: ${{ github.event.workflow_run.head_branch }}
           RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
           GH_TOKEN: ${{ github.token }}
@@ -167,6 +176,11 @@ jobs:
               library="$INPUT_LIBRARY"
               version="$INPUT_VERSION"
               flutter="$INPUT_FLUTTER"
+              # The test that hangs is in this ref's tests, and pub may run a tag's.
+              if [ "$INPUT_HANG" = true ] && [ "$library" = pub ]; then
+                echo "::error::The watchdog's self-test runs this ref's tests, which library=pub need not: take tree or release."
+                exit 1
+              fi
               ;;
           esac
 
@@ -213,3 +227,4 @@ jobs:
       ref: ${{ needs.resolve.outputs.ref }}
       package-version: ${{ needs.resolve.outputs.package-version }}
       flutter-version: ${{ needs.resolve.outputs.flutter-version }}
+      hang: ${{ inputs.hang == true }}

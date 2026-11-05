@@ -450,4 +450,439 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
       expect(crashedOnSimulator('not json\n', ids), isFalse);
     });
   });
+
+  group('testRunPosition', () {
+    test('none while the suite loads: the build, the install, the launch', () {
+      expect(testRunPosition(''), isNull);
+      expect(testRunPosition(_start), isNull);
+      expect(testRunPosition(_neverConnected), isNull);
+    });
+
+    test('the last test that started, and every event so far', () {
+      final position = testRunPosition('$_start$_loaded')!;
+      expect(
+        position.test,
+        'LibSignal init is idempotent and survives cleanup',
+      );
+      expect(position.step, 7);
+    });
+
+    test('the test the run is in, once it has started one more', () {
+      final cut = _failedInApp.substring(
+        0,
+        _failedInApp.indexOf('{"testID":6,'),
+      );
+      final position = testRunPosition(cut)!;
+      expect(position.test, 'the app exits');
+      expect(position.step, 11);
+    });
+
+    test('half a line is no step: it is the same line when it ends', () {
+      final whole = testRunPosition('$_start$_loaded')!.step;
+      expect(
+        testRunPosition('$_start$_loaded{"testID":4,"result":"succ')!.step,
+        whole,
+      );
+    });
+
+    test('none once the suite is done, however it went', () {
+      expect(testRunPosition(_passed), isNull);
+      expect(testRunPosition(_failedInApp), isNull);
+      expect(testRunPosition(_appWentAway), isNull);
+    });
+  });
+
+  group('the app under flutter drive', () {
+    // What `flutter drive --profile` printed on the API 24 emulator in CI, run
+    // 42031248805, cut down: the app's own runner prints a line as each test
+    // starts, after Android's log prefix.
+    const going =
+        "Running Gradle task 'assembleProfile'...                           29.3s\n"
+        '✓ Built build/app/outputs/flutter-apk/app-profile.apk (31.5MB)\n'
+        'I/flutter ( 2955): 00:00 +0: LibSignal init is idempotent and survives cleanup\n'
+        'I/flutter ( 2955): 00:00 +1: keys X25519 agreement matches RFC 7748 section 6.1\n';
+    const done =
+        'I/flutter ( 2955): 00:04 +59: every capability above ran\n'
+        'I/flutter ( 2955): 00:04 +60: (tearDownAll)\n'
+        'I/flutter ( 2955): 00:04 +61: All tests passed!\n'
+        'All tests passed.\n'
+        '$reportedLine\n';
+    // A test that fails, as `_Reporter` in flutter_test 3.38.4 prints it
+    // (test_compat.dart): written from the code, not measured.
+    const failing =
+        'I/flutter ( 2955): 00:01 +3: a capability that fails\n'
+        'I/flutter ( 2955): 00:01 +3 -1: a capability that fails [E]\n'
+        'I/flutter ( 2955):   Test failed. See exception logs above.\n'
+        'I/flutter ( 2955): 00:01 +3 -1: the next one\n';
+
+    test('none until a test has started', () {
+      expect(driveRunPosition(''), isNull);
+      expect(driveRunPosition(going.split('I/flutter').first), isNull);
+    });
+
+    test('the last test that started, and its line', () {
+      final position = driveRunPosition(going)!;
+      expect(
+        position.test,
+        'keys X25519 agreement matches RFC 7748 section 6.1',
+      );
+      expect(position.step, 2);
+    });
+
+    test('the log of a simulator or a desktop puts flutter: in front', () {
+      final position = driveRunPosition(
+        'flutter: 00:00 +0: LibSignal init is idempotent and survives cleanup\n',
+      )!;
+      expect(
+        position.test,
+        'LibSignal init is idempotent and survives cleanup',
+      );
+    });
+
+    test('a print of the app moves nothing', () {
+      expect(
+        driveRunPosition(
+          '${going}I/flutter ( 2955): a line of its own\n',
+        )!.step,
+        2,
+      );
+    });
+
+    test('none after the last line', () {
+      expect(driveRunPosition('$going$done'), isNull);
+      expect(
+        driveRunPosition('I/flutter ( 1): 00:09 +2 -1: Some tests failed.\n'),
+        isNull,
+      );
+    });
+
+    test('a failure is a step, and names the test without the mark', () {
+      final position = driveRunPosition(
+        failing.substring(0, failing.indexOf('I/flutter ( 2955):   ')),
+      )!;
+      expect(position.test, 'a capability that fails');
+      expect(position.step, 2);
+    });
+
+    test('the tests that failed, each once, as soon as it says so', () {
+      expect(driveFailedSoFar(going), isEmpty);
+      expect(driveFailedSoFar('$going$done'), isEmpty);
+      expect(driveFailedSoFar('$failing$failing'), ['a capability that fails']);
+    });
+
+    test('a run that said a test failed has failed, however it ended', () {
+      final outcome = judgeDriveRun(exitCode: 1, output: failing);
+      expect(outcome.verdict, Verdict.failed);
+      expect(outcome.failedTests, ['a capability that fails']);
+      expect(
+        judgeDriveRun(exitCode: 1, output: going).verdict,
+        Verdict.unfinished,
+      );
+    });
+  });
+
+  group('StallWatch', () {
+    final start = DateTime.utc(2026, 11, 5, 12);
+    DateTime at(int seconds) => start.add(Duration(seconds: seconds));
+    const one = RunPosition(5, 'a test');
+
+    test('a run that stands still for the limit has stopped', () {
+      final watch = StallWatch(const Duration(seconds: 60));
+      expect(watch.check(one, at(0)), isNull);
+      expect(watch.check(one, at(59)), isNull);
+      expect(watch.check(one, at(60)), 'a test');
+      expect(watch.check(one, at(61)), 'a test');
+    });
+
+    test('every step starts the count again', () {
+      final watch = StallWatch(const Duration(seconds: 60));
+      expect(watch.check(one, at(0)), isNull);
+      expect(watch.check(const RunPosition(6, 'a test'), at(50)), isNull);
+      expect(watch.check(const RunPosition(6, 'a test'), at(100)), isNull);
+      expect(watch.check(const RunPosition(6, 'a test'), at(110)), 'a test');
+    });
+
+    test('no position, no count: loading, and after the suite', () {
+      final watch = StallWatch(const Duration(seconds: 60));
+      expect(watch.check(null, at(0)), isNull);
+      expect(watch.check(null, at(600)), isNull);
+      expect(watch.check(one, at(601)), isNull);
+      expect(watch.check(null, at(700)), isNull);
+      expect(watch.check(one, at(701)), isNull);
+      expect(watch.check(one, at(761)), 'a test');
+    });
+
+    test('waits 8 minutes unless told otherwise', () {
+      expect(StallWatch().limit, stallLimit);
+      expect(stallLimit, const Duration(minutes: 8));
+    });
+  });
+
+  group('stalledRun', () {
+    test('an app still running on a device that answers: failed', () {
+      final outcome = stalledRun('a test', AppState.running);
+      expect(outcome.verdict, Verdict.failed);
+      expect(
+        outcome.describe(),
+        'Failed: the app sent nothing for 8 minutes, the last test it started '
+        'being "a test", and it was still running on a device that answered.',
+      );
+    });
+
+    test("nothing asked, the app being this machine's: failed", () {
+      final outcome = stalledRun(
+        'a test',
+        AppState.unchecked,
+        limit: const Duration(seconds: 90),
+      );
+      expect(outcome.verdict, Verdict.failed);
+      expect(
+        outcome.reason,
+        'the app sent nothing for 90 seconds, the last test it started being '
+        '"a test"',
+      );
+    });
+
+    test('the app or the device gone: unfinished, and run again', () {
+      final gone = stalledRun('a test', AppState.gone);
+      expect(gone.verdict, Verdict.unfinished);
+      expect(gone.reason, endsWith(', and then it was gone'));
+      final silent = stalledRun('a test', AppState.unreachable);
+      expect(silent.verdict, Verdict.unfinished);
+      expect(silent.reason, endsWith(', and then the device did not answer'));
+    });
+
+    test('counts in minutes, and in seconds when it must', () {
+      String said(Duration limit) =>
+          stalledRun('t', AppState.unchecked, limit: limit).reason!;
+      expect(said(const Duration(minutes: 1)), contains(' 1 minute,'));
+      expect(said(const Duration(seconds: 1)), contains(' 1 second,'));
+      expect(said(const Duration(seconds: 61)), contains(' 61 seconds,'));
+    });
+  });
+
+  group('withStall', () {
+    const stalled = RunOutcome(Verdict.failed, reason: 'stopped');
+    const gone = RunOutcome(Verdict.unfinished, reason: 'gone');
+
+    test('a test that failed says more than the stop', () {
+      const own = RunOutcome(Verdict.failed, failedTests: ['a test']);
+      expect(withStall(own, stalled), same(own));
+      expect(withStall(own, gone), same(own));
+    });
+
+    test('otherwise the stop decides, whatever the run said', () {
+      expect(
+        withStall(const RunOutcome(Verdict.unfinished), stalled),
+        same(stalled),
+      );
+      expect(
+        withStall(const RunOutcome(Verdict.passed), stalled),
+        same(stalled),
+      );
+      expect(withStall(const RunOutcome(Verdict.unfinished), gone), same(gone));
+    });
+
+    test('and a run never stopped is its own', () {
+      const own = RunOutcome(Verdict.unfinished);
+      expect(withStall(own, null), same(own));
+    });
+
+    test('a crash the stop did not see is the crash', () async {
+      // settleRun asks for a crash after a run that did not finish: with the
+      // app gone, a crash record makes it a failure.
+      final outcome = await settleRun(
+        (crashed) => withStall(
+          judgeTestRun(exitCode: 1, results: _appWentAway, crashed: crashed),
+          gone,
+        ),
+        crashed: () async => true,
+      );
+      expect(outcome.verdict, Verdict.failed);
+      expect(outcome.reason, 'the app crashed');
+    });
+  });
+
+  group('the app on its device', () {
+    test('pidof gives the pid', () {
+      expect(androidPid('alive\n4321\n', 'com.libsignal.example'), 4321);
+      expect(androidPid('alive\n4321 4322\n', 'com.libsignal.example'), 4321);
+    });
+
+    test('ps gives it on the line that names the app', () {
+      // API 24's toolbox ps, which lists every process.
+      const toolbox =
+          'alive\n'
+          'USER      PID   PPID  VSIZE  RSS   WCHAN              PC  NAME\n'
+          'root      1     0     9888   1268  SyS_epoll_ 00000000 S /init\n'
+          'u0_a59    2955  1360  1286180 80156 SyS_epoll_ 00000000 S com.libsignal.example\n';
+      expect(androidPid(toolbox, 'com.libsignal.example'), 2955);
+      // Toybox's, from Android 8, with -A.
+      const toybox =
+          'alive\n'
+          'USER           PID  PPID     VSZ    RSS WCHAN            ADDR S NAME\n'
+          'u0_a123       4321   345 1234567  89012 do_epoll_wait      0 S com.libsignal.example\n';
+      expect(androidPid(toybox, 'com.libsignal.example'), 4321);
+    });
+
+    test('nothing for an app that is not there, a longer id included', () {
+      expect(androidPid('alive\n', 'com.libsignal.example'), isNull);
+      expect(
+        androidPid(
+          'alive\nu0_a1  77  1  1 1 x 0 S com.libsignal.example2\n',
+          'com.libsignal.example',
+        ),
+        isNull,
+      );
+    });
+
+    // `xcrun simctl spawn <udid> launchctl list` on an iOS 18.0 simulator, the
+    // app's id put in place of Settings'.
+    const launchctl =
+        'PID\tStatus\tLabel\n'
+        '-\t0\tcom.apple.progressd\n'
+        '12658\t0\tUIKitApplication:com.apple.Spotlight[582b][rb-legacy]\n'
+        '12850\t0\tUIKitApplication:com.libsignal.example[5f35][rb-legacy]\n';
+
+    test("a simulator's launchctl gives the app's pid and bundle id", () {
+      expect(
+        simulatorApp(launchctl, {
+          'com.libsignal.example',
+          'com.libsignal.example.RunnerTests',
+        }),
+        (12850, 'com.libsignal.example'),
+      );
+    });
+
+    test('nothing when the app is not running', () {
+      expect(simulatorApp(launchctl, {'com.libsignal.other'}), isNull);
+      expect(
+        simulatorApp('PID\tStatus\tLabel\n-\t0\tcom.apple.progressd\n', {
+          'com.apple.progressd',
+        }),
+        isNull,
+      );
+    });
+
+    test('the processes under one, deepest first, and no other', () {
+      const ps =
+          '    1     0\n'
+          '  100     1\n'
+          '  200   100\n'
+          '  201   100\n'
+          '  300   200\n'
+          '  400     1\n';
+      expect(descendants(ps, 100), [300, 200, 201]);
+      expect(descendants(ps, 300), isEmpty);
+      expect(descendants('', 100), isEmpty);
+    });
+  });
+
+  group('the watchdog and what it is held to', () {
+    final harness = File(
+      'example/integration_test/support/harness.dart',
+    ).readAsStringSync();
+
+    Duration minutes(String pattern) => Duration(
+      minutes: int.parse(RegExp(pattern).firstMatch(harness)!.group(1)!),
+    );
+
+    test("waits past both of a test's own limits", () {
+      final limit = minutes(r'capabilityTimeout = Duration\(minutes: (\d+)\)');
+      final backstop =
+          limit *
+          int.parse(
+            RegExp(
+              r'Timeout\(capabilityTimeout \* (\d+)\)',
+            ).firstMatch(harness)!.group(1)!,
+          );
+      expect(
+        stallLimit - backstop,
+        greaterThanOrEqualTo(const Duration(minutes: 1)),
+      );
+    });
+
+    test('the self-test blocks the app for longer than the watchdog waits', () {
+      final hang = minutes(r'hangFor = Duration\(minutes: (\d+)\)');
+      expect(
+        hang - stallLimit,
+        greaterThanOrEqualTo(const Duration(minutes: 2)),
+      );
+    });
+
+    test('the self-test comes first, and only when the build asks for it', () {
+      final entry = File(
+        'example/integration_test/libsignal_test.dart',
+      ).readAsStringSync();
+      const declared = 'if (hangOnPurpose) capabilityThatHangs();';
+      expect(entry, contains(declared));
+      expect(
+        entry.indexOf(declared),
+        lessThan(entry.indexOf('initCapabilities();')),
+      );
+      expect(
+        harness,
+        contains("bool.fromEnvironment('LIBSIGNAL_EXAMPLE_HANG')"),
+      );
+    });
+
+    test('CI builds and runs the app with it only in the self-test', () {
+      final reusable = _readLf('.github/workflows/integration-reusable.yml');
+      const define = '--dart-define=LIBSIGNAL_EXAMPLE_HANG=true';
+      expect(
+        reusable,
+        contains("HANG_TEST: \${{ inputs.hang && '$define' || '' }}"),
+      );
+      expect(
+        reusable,
+        contains(
+          "HANG_TEST: \${{ inputs.hang && !matrix.profile && '$define' || '' }}",
+        ),
+      );
+      expect(
+        reusable,
+        contains(
+          "HANG_DRIVE: \${{ inputs.hang && matrix.profile && '$define' || '' }}",
+        ),
+      );
+      final runs = [
+        for (final line in reusable.split('\n'))
+          if (line.contains('make test-example-ci ARGS=')) line,
+      ];
+      // iOS, and three tries of two runs each on Android.
+      expect(runs, hasLength(7));
+      for (final line in runs) {
+        expect(
+          line,
+          contains(line.contains('--drive') ? r'$HANG_DRIVE"' : r'$HANG_TEST"'),
+        );
+      }
+      expect(
+        reusable,
+        contains(
+          r'make build-example ARGS="apk --debug --target-platform android-x64 $HANG_TEST"',
+        ),
+      );
+      expect(
+        reusable,
+        contains(
+          r'make build-example ARGS="apk --profile --target-platform android-x64 $HANG_DRIVE"',
+        ),
+      );
+    });
+
+    test('only a run started by hand can ask for it', () {
+      final workflow = _readLf('.github/workflows/integration.yml');
+      expect(workflow, contains(r'hang: ${{ inputs.hang == true }}'));
+      expect(
+        workflow,
+        contains(r'if [ "$INPUT_HANG" = true ] && [ "$library" = pub ]; then'),
+      );
+    });
+  });
 }
+
+/// A workflow's text with LF line ends. On Windows git checks the workflows out
+/// with CRLF, and a pattern across lines would match nothing there.
+String _readLf(String path) =>
+    File(path).readAsStringSync().replaceAll('\r\n', '\n');

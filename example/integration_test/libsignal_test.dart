@@ -36,6 +36,8 @@ import 'support/harness.dart';
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  // The watchdog's self-test, first, so that the run stops at once.
+  if (hangOnPurpose) capabilityThatHangs();
   initCapabilities();
   keyCapabilities();
   kyberCapabilities();
