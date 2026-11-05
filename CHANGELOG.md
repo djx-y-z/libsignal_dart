@@ -68,8 +68,10 @@
   choose quietly.
 - **`make test-example-ci`** — runs them as CI does, judging each run on what the app
   reported. A test that failed fails at once and is never run again, and so does an
-  app that crashed; only a run that never got that far, because the app never
-  connected or the device or the connection went away, runs again. CI gives an iOS
+  app that crashed, its crash report looked for again after the last run, since
+  macOS can write one after its run was judged; only a run that never got that far,
+  because the app never connected or the device or the connection went away, runs
+  again. CI gives an iOS
   simulator three runs and an Android emulator three tries, each on a new emulator,
   so a test that fails only now and then turns the run red instead of passing on a
   retry. A failure is written down the moment the results show it, while the run
@@ -109,7 +111,9 @@
   stage-1 binary** — `publish.yml` runs the same tests before its upload, but only
   after the tag, and a failure there left a tag with no version on pub.dev. It reads
   one of two runs. The first is the run `integration.yml` starts after the native
-  build, found by its title. The second is a run started by hand on the released
+  build, found by its title, which tests only when a tag of that name is at the
+  commit the build ran on: a build run by hand on a branch named like the tag tests
+  nothing, and so counts for nothing. The second is a run started by hand on the released
   binaries at the commit being released
   (`gh workflow run integration.yml -f library=release`), which is the way through
   for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,

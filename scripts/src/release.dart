@@ -220,9 +220,7 @@ Future<void> releasePackage({
     );
     await verifyIntegrationPassed(
       tag: frbTag,
-      // The commit the release is cut from. A resumed release has its own
-      // commit on top, which changes only pubspec.yaml and the CHANGELOG.
-      head: await git(['rev-parse', if (resuming) 'HEAD~1' else 'HEAD']),
+      head: await git(['rev-parse', releaseBaseRev(resuming: resuming)]),
     );
   }
 

@@ -11,7 +11,8 @@
 ///   --simulator <udid>  The tests run on this iOS simulator: after a run that
 ///                       did not finish, look for a crash report of the app,
 ///                       and reboot the simulator before the third run and each
-///                       one after it.
+///                       one after it. After the last run, look once more, for
+///                       a report of any run that came after its run's look.
 ///   --android <serial>  The tests run on this Android device: after a run that
 ///                       did not finish, read its crash log. An app that
 ///                       crashed has failed, whatever else the run says.
@@ -116,6 +117,7 @@ Future<void> main(List<String> args) async {
         '${attempt < attempts ? ' Running the tests again.' : ''}',
       );
     },
+    crashedEarlier: run.crashedSinceFirstRun,
   );
   switch (outcome.verdict) {
     case Verdict.passed:
@@ -175,8 +177,12 @@ class _Run {
   /// Whether a run has already said, while it went, that a test failed.
   bool failureAnnounced = false;
 
+  /// When the first run started.
+  DateTime? firstStarted;
+
   Future<RunOutcome> once(int attempt) async {
     final started = DateTime.now();
+    firstStarted ??= started;
     final (code, judge) = drive ? await _drive() : await _test(attempt);
     // Before anything slow, which a time limit could cut short: a test that
     // failed is the verdict, whatever comes after.
@@ -495,6 +501,23 @@ class _Run {
     return false;
   }
 
+  /// Whether the platform has recorded a crash of the app since the first run
+  /// started, for `runAttempts` to ask at the end. It does not wait for a
+  /// report: the last run has had its wait, and the others the time since.
+  Future<bool> crashedSinceFirstRun() async {
+    final since = firstStarted;
+    if (since == null) return false;
+    stdout.writeln(
+      '\nLooking back for a crash of the app in any run: a report can come '
+      'after its run was judged.',
+    );
+    if (android case final serial?) return _crashedOnAndroid(serial);
+    if (simulator != null) {
+      return _crashedOnSimulator(since, wait: Duration.zero);
+    }
+    return false;
+  }
+
   /// Android's crash log starts empty with each emulator, so whatever it holds
   /// of the app is this try's.
   Future<bool> _crashedOnAndroid(String serial) async {
@@ -528,9 +551,12 @@ class _Run {
 
   /// macOS writes a simulator app's crash report on the host, and takes its
   /// time: measured, half a minute after `flutter test` had given up on the
-  /// app. So this waits up to a minute and a half for one, which only a run that
-  /// did not finish pays.
-  Future<bool> _crashedOnSimulator(DateTime since) async {
+  /// app. So this waits up to [wait] for one, a minute and a half unless told
+  /// otherwise, which only a run that did not finish pays.
+  Future<bool> _crashedOnSimulator(
+    DateTime since, {
+    Duration wait = const Duration(seconds: 90),
+  }) async {
     final ids = _iosIds();
     final home = Platform.environment['HOME'];
     if (ids.isEmpty || home == null) {
@@ -539,7 +565,7 @@ class _Run {
     }
     final reports = Directory('$home/Library/Logs/DiagnosticReports');
     stdout.writeln('Looking for a crash report of ${ids.join(' or ')}.');
-    final deadline = DateTime.now().add(const Duration(seconds: 90));
+    final deadline = DateTime.now().add(wait);
     while (true) {
       if (reports.existsSync()) {
         for (final entry in reports.listSync()) {

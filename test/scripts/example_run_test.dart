@@ -238,10 +238,12 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
 
   group('runAttempts', () {
     /// Runs [outcomes] in turn, with [attempts] allowed, and returns what
-    /// happened, in order.
+    /// happened, in order. With [crashedEarlier], the look back at the end
+    /// finds that crash, or none.
     Future<(RunOutcome, List<String>)> attempt(
       List<Verdict> outcomes, {
       int attempts = 3,
+      bool? crashedEarlier,
     }) async {
       final events = <String>[];
       final last = await runAttempts(
@@ -253,6 +255,12 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
           return RunOutcome(outcomes[n - 1]);
         },
         onUnfinished: (n, _) => events.add('unfinished $n'),
+        crashedEarlier: crashedEarlier == null
+            ? null
+            : () async {
+                events.add('look back');
+                return crashedEarlier;
+              },
       );
       return (last, events);
     }
@@ -306,6 +314,55 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
       expect(events.where((e) => e.startsWith('run ')), ['run 1', 'run 2']);
       expect(events.last, 'unfinished 2');
       await expectLater(attempt([], attempts: 0), throwsArgumentError);
+    });
+
+    test('a crash reported late fails the run that passed after it', () async {
+      final (last, events) = await attempt([
+        Verdict.unfinished,
+        Verdict.passed,
+      ], crashedEarlier: true);
+      expect(last.verdict, Verdict.failed);
+      expect(last.reason, crashedEarlierReason);
+      expect(events.sublist(events.length - 3), [
+        'record passed',
+        'look back',
+        'record failed',
+      ]);
+    });
+
+    test('with no crash found, the pass stands', () async {
+      final (last, events) = await attempt([
+        Verdict.unfinished,
+        Verdict.passed,
+      ], crashedEarlier: false);
+      expect(last.verdict, Verdict.passed);
+      expect(events.last, 'look back');
+    });
+
+    test('runs that all did not finish, and a crash reported late', () async {
+      final (last, _) = await attempt([
+        Verdict.unfinished,
+        Verdict.unfinished,
+        Verdict.unfinished,
+      ], crashedEarlier: true);
+      expect(last.verdict, Verdict.failed);
+      expect(last.reason, crashedEarlierReason);
+    });
+
+    test('no look back after one run, nor after a failure', () async {
+      for (final outcomes in [
+        [Verdict.passed],
+        [Verdict.unfinished],
+        [Verdict.unfinished, Verdict.failed],
+      ]) {
+        final (last, events) = await attempt(
+          outcomes,
+          attempts: outcomes.length,
+          crashedEarlier: true,
+        );
+        expect(last.verdict, outcomes.last, reason: '$outcomes');
+        expect(events, isNot(contains('look back')), reason: '$outcomes');
+      }
     });
   });
 
