@@ -531,9 +531,10 @@ jobs:
       # Three tries of the same step, each on an emulator of its own, and after each
       # failed one a step that reads its verdict. The action runs each line of
       # `script` on its own, and stops at the first that fails; each `make
-      # test-example-ci` writes "unfinished" first, and its verdict last, so a try
-      # killed in the middle leaves "unfinished". VERIFY_LIBRARY and EXAMPLE_DIR
-      # come through the environment.
+      # test-example-ci` writes "unfinished" first, "failed" the moment a test has
+      # failed, and its verdict last. So a try killed in the middle, by the time
+      # limit too, leaves "unfinished" only when no test had failed in it yet.
+      # VERIFY_LIBRARY and EXAMPLE_DIR come through the environment.
       - name: Run the tests on an emulator
         id: try1
         continue-on-error: true
@@ -639,10 +640,12 @@ jobs:
       - name: Read what the third try came to
         if: steps.try3.outcome == 'failure'
         run: |
-          if [ "$(cat "$RUNNER_TEMP/verdict-3" 2>/dev/null)" = failed ]; then
-            exit 1
-          fi
-          echo "::error::None of the three tries finished, each on a new emulator, and no test failed in any of them: the emulator or the runner. A cause bound to the runner fails every try on it: re-run the job."
+          verdict=$(cat "$RUNNER_TEMP/verdict-3" 2>/dev/null || echo none)
+          case "$verdict" in
+            failed) ;;
+            unfinished) echo "::error::None of the three tries finished, each on a new emulator, and no test failed in any of them: the emulator or the runner. A cause bound to the runner fails every try on it: re-run the job." ;;
+            *) echo "::error::The third try failed outside the runs it judges (verdict: $verdict): before the tests started, or after they had passed. The step's log says where; a cause in the step itself fails every try." ;;
+          esac
           exit 1
 
   # ============================================

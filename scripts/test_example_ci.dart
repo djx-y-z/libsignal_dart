@@ -21,7 +21,8 @@
 ///   --verdict <file>    Write the last run's verdict there: passed, failed or
 ///                       unfinished, for a caller that runs it again itself.
 ///                       `unfinished` goes in first, so a run that was killed
-///                       leaves that.
+///                       leaves that; `failed` goes in as soon as a test has
+///                       failed, so a run killed after that leaves `failed`.
 library;
 
 import 'dart:async';
@@ -62,61 +63,72 @@ Future<void> main(List<String> args) async {
     _usage('--attempts takes a whole number from 1.');
   }
 
+  final verdict = values['--verdict'];
+  final simulator = values['--simulator'];
+  void record(Verdict value) => _writeVerdict(verdict, value);
+
   final run = _Run(
     app: values['--dir'] ?? 'example',
     flutterArgs: flutterArgs,
     drive: drive,
     android: values['--android'],
-    simulator: values['--simulator'],
+    simulator: simulator,
     verify: verify,
     results: Directory.systemTemp.createTempSync('example-run-'),
+    record: record,
   );
-  final verdict = values['--verdict'];
-  final simulator = values['--simulator'];
 
-  for (var attempt = 1; attempt <= attempts; attempt++) {
-    _writeVerdict(verdict, Verdict.unfinished);
-    if (attempt > 1) {
+  final outcome = await runAttempts(
+    attempts: attempts,
+    record: record,
+    beforeRetry: (attempt) async {
       // What ended the run before, the network above all, is often over by now.
       await Future<void>.delayed(const Duration(seconds: 30));
       if (simulator != null && attempt >= 3) await _reboot(simulator);
-    }
-    stdout.writeln(
-      '\nRun $attempt of $attempts, under flutter ${drive ? 'drive' : 'test'}: '
-      '${flutterArgs.join(' ')}',
-    );
-
-    final outcome = await run.once(attempt);
-    _writeVerdict(verdict, outcome.verdict);
-    switch (outcome.verdict) {
-      case Verdict.passed:
+    },
+    run: (attempt) {
+      stdout.writeln(
+        '\nRun $attempt of $attempts, under flutter ${drive ? 'drive' : 'test'}: '
+        '${flutterArgs.join(' ')}',
+      );
+      return run.once(attempt);
+    },
+    onUnfinished: (attempt, outcome) {
+      // An error only for a single run: after several, the one below sums
+      // them up, and with --verdict the caller decides.
+      _annotate(
+        attempts > 1 || verdict != null ? 'warning' : 'error',
+        'Run $attempt of $attempts: ${outcome.describe()}'
+        '${attempt < attempts ? ' Running the tests again.' : ''}',
+      );
+    },
+  );
+  switch (outcome.verdict) {
+    case Verdict.passed:
+      stdout.writeln(outcome.describe());
+      exit(0);
+    case Verdict.failed:
+      // Once on the run's page: the run may have said it while it went.
+      if (run.failureAnnounced) {
         stdout.writeln(outcome.describe());
-        exit(0);
-      case Verdict.failed:
+      } else {
         _annotate(
           'error',
           '${outcome.describe()} A test that fails is not run again.',
         );
-        exit(1);
-      case Verdict.unfinished:
-        final again = attempt < attempts;
-        // An error only for a single run: after several, the one below sums
-        // them up, and with --verdict the caller decides.
+      }
+      exit(1);
+    case Verdict.unfinished:
+      if (verdict == null && attempts > 1) {
         _annotate(
-          attempts > 1 || verdict != null ? 'warning' : 'error',
-          'Run $attempt of $attempts: ${outcome.describe()}'
-          '${again ? ' Running the tests again.' : ''}',
+          'error',
+          'None of the $attempts runs finished, and no test failed in any of '
+              'them: the device, the connection or the runner. The log of each '
+              'says why.',
         );
-    }
+      }
+      exit(1);
   }
-  if (verdict == null && attempts > 1) {
-    _annotate(
-      'error',
-      'None of the $attempts runs finished, and no test failed in any of them: '
-          'the device, the connection or the runner. The log of each says why.',
-    );
-  }
-  exit(1);
 }
 
 class _Run {
@@ -128,6 +140,7 @@ class _Run {
     required this.simulator,
     required this.verify,
     required this.results,
+    required this.record,
   });
 
   final String app;
@@ -138,36 +151,58 @@ class _Run {
   final String? verify;
   final Directory results;
 
+  /// Writes the verdict down for a caller that runs the tests again itself.
+  final void Function(Verdict verdict) record;
+
+  /// Whether a run has already said, while it went, that a test failed.
+  bool failureAnnounced = false;
+
   Future<RunOutcome> once(int attempt) async {
     final started = DateTime.now();
     final (code, judge) = drive ? await _drive() : await _test(attempt);
-    var outcome = judge(false);
+    // Before anything slow, which a time limit could cut short: a test that
+    // failed is the verdict, whatever comes after.
+    if (judge(false).verdict == Verdict.failed) record(Verdict.failed);
     if (code != 0 && android != null) await _printAndroidLog(android!);
-    // Only a run no test failed in can be told apart by a crash.
-    if (outcome.verdict == Verdict.unfinished && await _crashed(started)) {
-      outcome = judge(true);
-    }
-    if (outcome.verdict == Verdict.passed && verify != null) {
-      final code = await _make('verify-example-library', [verify!]);
-      if (code != 0) {
-        outcome = const RunOutcome(
-          Verdict.failed,
-          reason: 'the app loaded another library than the run tests',
-        );
-      }
-    }
-    return outcome;
+    final library = verify;
+    return settleRun(
+      judge,
+      crashed: () => _crashed(started),
+      verify: library == null
+          ? null
+          : () async => await _make('verify-example-library', [library]) == 0,
+    );
   }
 
   Future<(int, RunOutcome Function(bool crashed))> _test(int attempt) async {
     final file = File('${results.absolute.path}/run-$attempt.json');
     if (file.existsSync()) file.deleteSync();
-    final code = await _make('test-example', [
-      ...flutterArgs,
-      '--file-reporter',
-      'json:${file.path}',
-    ]);
-    final text = file.existsSync() ? file.readAsStringSync() : null;
+    // CI stops a try that runs out of time without asking it, and one stopped
+    // after a test had failed must not read as one that did not finish. So the
+    // results are read while the run goes, and a failure recorded at once.
+    final watch = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (failureAnnounced) return;
+      final failed = failedSoFar(_read(file) ?? '');
+      if (failed.isEmpty) return;
+      record(Verdict.failed);
+      failureAnnounced = true;
+      _annotate(
+        'error',
+        'Failed in the app: ${failed.join('; ')}. A test that fails is not run '
+            'again; this run goes on to its end.',
+      );
+    });
+    final int code;
+    try {
+      code = await _make('test-example', [
+        ...flutterArgs,
+        '--file-reporter',
+        'json:${file.path}',
+      ]);
+    } finally {
+      watch.cancel();
+    }
+    final text = _read(file);
     return (
       code,
       (bool crashed) =>
@@ -275,16 +310,17 @@ class _Run {
       if (reports.existsSync()) {
         for (final entry in reports.listSync()) {
           if (entry is! File || !entry.path.endsWith('.ips')) continue;
-          // A second of slack: the file system's clock and this one may not
-          // agree to the millisecond.
-          final written = entry.lastModifiedSync();
-          if (written.isBefore(since.subtract(const Duration(seconds: 1)))) {
-            continue;
-          }
           final String report;
           try {
+            // A second of slack: the file system's clock and this one may not
+            // agree to the millisecond.
+            final written = entry.lastModifiedSync();
+            if (written.isBefore(since.subtract(const Duration(seconds: 1)))) {
+              continue;
+            }
             report = entry.readAsStringSync();
           } on FileSystemException {
+            // Gone, or moved aside, since the listing.
             continue;
           }
           if (crashedOnSimulator(report, ids)) {
@@ -336,6 +372,17 @@ Future<void> _reboot(String udid) async {
 
 void _writeVerdict(String? path, Verdict verdict) {
   if (path != null) File(path).writeAsStringSync('${verdict.name}\n');
+}
+
+/// What [file] holds, or null when it is not there. A file still being written
+/// can end in the middle of a character: decoded leniently, it ends in half a
+/// line, which the judge skips like any other.
+String? _read(File file) {
+  try {
+    return utf8.decode(file.readAsBytesSync(), allowMalformed: true);
+  } on FileSystemException {
+    return null;
+  }
 }
 
 /// A message GitHub shows on the run, or a plain line anywhere else.

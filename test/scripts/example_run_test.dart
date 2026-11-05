@@ -139,6 +139,174 @@ void main() {
       expect(outcome.verdict, Verdict.unfinished);
       expect(outcome.reason, contains('every test passed'));
     });
+
+    test('an error outside the tests, after some ran, does not say the app '
+        'never got to them', () {
+      // Not measured: test_core sends an error that reaches it after the suite
+      // has loaded to the loading test (runner/plugin/platform_helpers.dart),
+      // wrapped like this when the app threw it outside any test.
+      const results =
+          '''
+$_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_test/libsignal_test.dart\\": Bad state: outside any test","stackTrace":"","isFailure":false,"type":"error","time":21400}
+{"success":false,"type":"done","time":21500}
+''';
+      final outcome = judgeTestRun(exitCode: 1, results: results);
+      expect(outcome.verdict, Verdict.unfinished);
+      expect(
+        outcome.reason,
+        startsWith('an error outside the tests, after 1 passed tests: '),
+      );
+    });
+  });
+
+  group('failedSoFar', () {
+    test('a run cut off after a test failed has failed', () {
+      // The next test started and never ended: what a try that CI stopped at
+      // its time limit leaves.
+      final cut = _failedInApp.substring(
+        0,
+        _failedInApp.indexOf('{"testID":6,'),
+      );
+      expect(failedSoFar(cut), ['a capability that fails']);
+    });
+
+    test('a run going well, or still loading, has not', () {
+      expect(failedSoFar(''), isEmpty);
+      expect(failedSoFar(_start), isEmpty);
+      expect(failedSoFar('$_start$_loaded'), isEmpty);
+      expect(failedSoFar(_appWentAway), isEmpty);
+    });
+
+    test('nor has one the app never connected to', () {
+      expect(failedSoFar(_neverConnected), isEmpty);
+    });
+  });
+
+  group('settleRun', () {
+    // A run that came to [verdict], judged as judgeTestRun does: a crash fails
+    // only a run that did not finish.
+    RunOutcome judged(Verdict verdict, {required bool crashed}) =>
+        crashed && verdict == Verdict.unfinished
+        ? const RunOutcome(Verdict.failed, reason: 'the app crashed')
+        : RunOutcome(verdict);
+
+    test('asks about a crash only after a run that did not finish', () async {
+      for (final verdict in Verdict.values) {
+        var asked = false;
+        await settleRun(
+          (crashed) => judged(verdict, crashed: crashed),
+          crashed: () async => asked = true,
+        );
+        expect(asked, verdict == Verdict.unfinished, reason: '$verdict');
+      }
+    });
+
+    test('a crash fails a run that did not finish', () async {
+      final outcome = await settleRun(
+        (crashed) => judged(Verdict.unfinished, crashed: crashed),
+        crashed: () async => true,
+      );
+      expect(outcome.verdict, Verdict.failed);
+    });
+
+    test('checks the library only after a run that passed, and fails it when '
+        'it was another', () async {
+      for (final verdict in Verdict.values) {
+        var asked = false;
+        final outcome = await settleRun(
+          (crashed) => judged(verdict, crashed: crashed),
+          crashed: () async => false,
+          verify: () async {
+            asked = true;
+            return false;
+          },
+        );
+        expect(asked, verdict == Verdict.passed, reason: '$verdict');
+        if (verdict == Verdict.passed) {
+          expect(outcome.verdict, Verdict.failed);
+          expect(outcome.reason, contains('another library'));
+        }
+      }
+      final right = await settleRun(
+        (crashed) => judged(Verdict.passed, crashed: crashed),
+        crashed: () async => false,
+        verify: () async => true,
+      );
+      expect(right.verdict, Verdict.passed);
+    });
+  });
+
+  group('runAttempts', () {
+    /// Runs [outcomes] in turn, with [attempts] allowed, and returns what
+    /// happened, in order.
+    Future<(RunOutcome, List<String>)> attempt(
+      List<Verdict> outcomes, {
+      int attempts = 3,
+    }) async {
+      final events = <String>[];
+      final last = await runAttempts(
+        attempts: attempts,
+        record: (verdict) => events.add('record ${verdict.name}'),
+        beforeRetry: (n) async => events.add('wait $n'),
+        run: (n) async {
+          events.add('run $n');
+          return RunOutcome(outcomes[n - 1]);
+        },
+        onUnfinished: (n, _) => events.add('unfinished $n'),
+      );
+      return (last, events);
+    }
+
+    test('a test that failed is never run again', () async {
+      final (last, events) = await attempt([Verdict.failed]);
+      expect(last.verdict, Verdict.failed);
+      expect(events, ['record unfinished', 'run 1', 'record failed']);
+    });
+
+    test(
+      'a run that did not finish runs again, and the next decides',
+      () async {
+        final (last, events) = await attempt([
+          Verdict.unfinished,
+          Verdict.unfinished,
+          Verdict.passed,
+        ]);
+        expect(last.verdict, Verdict.passed);
+        expect(events, [
+          'record unfinished',
+          'run 1',
+          'record unfinished',
+          'unfinished 1',
+          'record unfinished',
+          'wait 2',
+          'run 2',
+          'record unfinished',
+          'unfinished 2',
+          'record unfinished',
+          'wait 3',
+          'run 3',
+          'record passed',
+        ]);
+
+        final (failedLater, _) = await attempt([
+          Verdict.unfinished,
+          Verdict.failed,
+          Verdict.passed,
+        ]);
+        expect(failedLater.verdict, Verdict.failed);
+      },
+    );
+
+    test('no more runs than allowed', () async {
+      final (last, events) = await attempt([
+        Verdict.unfinished,
+        Verdict.unfinished,
+      ], attempts: 2);
+      expect(last.verdict, Verdict.unfinished);
+      expect(events.where((e) => e.startsWith('run ')), ['run 1', 'run 2']);
+      expect(events.last, 'unfinished 2');
+      await expectLater(attempt([], attempts: 0), throwsArgumentError);
+    });
   });
 
   group('judgeDriveRun', () {

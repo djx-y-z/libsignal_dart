@@ -22,6 +22,9 @@
 //   ends the app like a device that went away does, and only the platform's own
 //   crash record tells the two apart. Android keeps it in the device's crash
 //   log, macOS in a report on the host, for a simulator's app too.
+// - A test that failed is the verdict from the moment it is written down,
+//   however the run ends. CI stops a try that runs out of time without asking
+//   it, so the script records the failure while the run is still going.
 //
 // Measured with Flutter 3.38.4 on macOS: a run that passed, a capability that
 // failed, and an app that exited in the middle of the suite; and in CI, an iOS
@@ -138,7 +141,12 @@ RunOutcome judgeTestRun({
   return RunOutcome(
     Verdict.unfinished,
     reason: switch ((loadingError, started)) {
-      (final String error, _) => 'the app never got to the tests: $error',
+      (final String error, 0) => 'the app never got to the tests: $error',
+      // Once the suite has loaded, the loading test is also where an error
+      // lands that belongs to no test: one the app threw outside them, or one
+      // flutter met on the device or cleaning up.
+      (final String error, _) =>
+        'an error outside the tests, after $passed passed tests: $error',
       (null, 0) =>
         'no test started (the build, the install, the launch or the '
             'connection)',
@@ -146,6 +154,70 @@ RunOutcome judgeTestRun({
       _ => 'the app stopped answering after $passed passed tests',
     },
   );
+}
+
+/// The tests that have failed in the app so far, by what a `flutter test` run
+/// that may still be going has written, [results].
+///
+/// A run with one has failed however it ends, so its verdict can be recorded
+/// before it is over. CI stops a try that runs out of time without asking how
+/// it went, and one stopped after a test had failed must not read as a try
+/// that did not finish, and run again.
+List<String> failedSoFar(String results) =>
+    judgeTestRun(exitCode: 1, results: results).failedTests;
+
+/// What a run came to, once the platform has been asked what the run itself
+/// cannot say. [judge] gives the run's own verdict, knowing whether the app
+/// crashed.
+///
+/// [crashed], the platform's record of a crash, is asked only after a run that
+/// did not finish and in which no test failed: that is the run a crash tells
+/// apart from a device that went away. [verify], whether the app loaded the
+/// library the run tests, is asked only after a run that passed.
+Future<RunOutcome> settleRun(
+  RunOutcome Function(bool crashed) judge, {
+  required Future<bool> Function() crashed,
+  Future<bool> Function()? verify,
+}) async {
+  var outcome = judge(false);
+  if (outcome.verdict == Verdict.unfinished && await crashed()) {
+    outcome = judge(true);
+  }
+  if (outcome.verdict == Verdict.passed && verify != null && !await verify()) {
+    outcome = const RunOutcome(
+      Verdict.failed,
+      reason: 'the app loaded another library than the run tests',
+    );
+  }
+  return outcome;
+}
+
+/// Runs the tests up to [attempts] times, and returns how the last run went.
+///
+/// Only a run that did not finish runs again: one that passed or failed is the
+/// last, so a test that failed is never run again. [record] hears `unfinished`
+/// before each run starts, so that a run killed in the middle leaves that, and
+/// each run's verdict when it ends; [run] may record `failed` sooner, while it
+/// goes. [beforeRetry] runs ahead of each run but the first, and
+/// [onUnfinished] after each run that did not finish.
+Future<RunOutcome> runAttempts({
+  required int attempts,
+  required Future<RunOutcome> Function(int attempt) run,
+  required void Function(Verdict verdict) record,
+  Future<void> Function(int attempt)? beforeRetry,
+  void Function(int attempt, RunOutcome outcome)? onUnfinished,
+}) async {
+  if (attempts < 1) throw ArgumentError.value(attempts, 'attempts');
+  late RunOutcome outcome;
+  for (var attempt = 1; attempt <= attempts; attempt++) {
+    record(Verdict.unfinished);
+    if (attempt > 1) await beforeRetry?.call(attempt);
+    outcome = await run(attempt);
+    record(outcome.verdict);
+    if (outcome.verdict != Verdict.unfinished) break;
+    onUnfinished?.call(attempt, outcome);
+  }
+  return outcome;
 }
 
 /// Judges a `flutter drive` run by its exit code and what it printed,
