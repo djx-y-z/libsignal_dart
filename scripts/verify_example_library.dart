@@ -10,6 +10,9 @@ import 'dart:io';
 
 import 'src/example_library.dart';
 
+/// On a line of its own, so that no other line's length depends on it.
+const _packageName = 'libsignal';
+
 void main(List<String> args) {
   final LibrarySource source;
   if (args.contains('--built')) {
@@ -32,7 +35,7 @@ void main(List<String> args) {
       source,
     );
   } else {
-    final results = Directory('$app/.dart_tool/hooks_runner/libsignal');
+    final results = Directory('$app/.dart_tool/hooks_runner/$_packageName');
     final libraries = <String>{
       if (results.existsSync())
         for (final entry in results.listSync(recursive: true))

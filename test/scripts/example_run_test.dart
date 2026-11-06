@@ -8,21 +8,21 @@ import '../../scripts/src/example_run.dart';
 // macOS with Flutter 3.38.4, cut down to a few tests, the paths shortened.
 const _start = '''
 {"protocolVersion":"0.1.1","runnerVersion":null,"pid":55455,"type":"start","time":0}
-{"suite":{"id":0,"platform":"vm","path":"/repo/example/integration_test/libsignal_test.dart"},"type":"suite","time":0}
-{"test":{"id":1,"name":"loading /repo/example/integration_test/libsignal_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
+{"suite":{"id":0,"platform":"vm","path":"/repo/example/integration_test/mypackage_test.dart"},"type":"suite","time":0}
+{"test":{"id":1,"name":"loading /repo/example/integration_test/mypackage_test.dart","suiteID":0,"groupIDs":[],"metadata":{"skip":false,"skipReason":null},"line":null,"column":null,"url":null},"type":"testStart","time":0}
 {"count":1,"time":5,"type":"allSuites"}
 ''';
 
 const _loaded = '''
 {"testID":1,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":21025}
-{"test":{"id":4,"name":"LibSignal init is idempotent and survives cleanup","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":39,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":21025}
+{"test":{"id":4,"name":"MyPackage init is idempotent and survives cleanup","suiteID":0,"groupIDs":[2,3],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":39,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":21025}
 {"testID":4,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":21329}
 ''';
 
 // Every test passed.
 const _passed =
     '''
-$_start$_loaded{"test":{"id":6,"name":"keys X25519 agreement matches RFC 7748 section 6.1","suiteID":0,"groupIDs":[2,5],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":40,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":21329}
+$_start$_loaded{"test":{"id":6,"name":"keys: agreement matches the published test vectors","suiteID":0,"groupIDs":[2,5],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":40,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":21329}
 {"testID":6,"result":"success","skipped":false,"hidden":false,"type":"testDone","time":21348}
 {"test":{"id":77,"name":"(tearDownAll)","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":50,"column":5,"url":"package:integration_test/integration_test.dart"},"type":"testStart","time":23835}
 {"testID":77,"result":"success","skipped":false,"hidden":true,"type":"testDone","time":23837}
@@ -33,10 +33,10 @@ $_start$_loaded{"test":{"id":6,"name":"keys X25519 agreement matches RFC 7748 se
 // has an error of its own, the second and the rest only "did not complete".
 const _failedInApp =
     '''
-$_start$_loaded{"test":{"id":5,"name":"a capability that fails","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":43,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":33591}
+$_start$_loaded{"test":{"id":5,"name":"a capability that fails","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":43,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":33591}
 {"testID":5,"error":"Test failed. See exception logs above.\\nThe test description was: a capability that fails","stackTrace":"","isFailure":false,"type":"error","time":33685}
 {"testID":5,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":33686}
-{"test":{"id":6,"name":"the app exits","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":46,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":33686}
+{"test":{"id":6,"name":"the app exits","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":46,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":33686}
 {"testID":6,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":33719}
 {"test":{"id":79,"name":"(tearDownAll)","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":50,"column":5,"url":"package:integration_test/integration_test.dart"},"type":"testStart","time":33740}
 {"testID":79,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":33740}
@@ -47,9 +47,9 @@ $_start$_loaded{"test":{"id":5,"name":"a capability that fails","suiteID":0,"gro
 // it are marked done, none with an error.
 const _appWentAway =
     '''
-$_start$_loaded{"test":{"id":5,"name":"the app exits","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":43,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":22510}
+$_start$_loaded{"test":{"id":5,"name":"the app exits","suiteID":0,"groupIDs":[2],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":43,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":22510}
 {"testID":5,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":22540}
-{"test":{"id":7,"name":"keys X25519 agreement matches RFC 7748 section 6.1","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":46,"root_column":3,"root_url":"file:///repo/example/integration_test/libsignal_test.dart"},"type":"testStart","time":22545}
+{"test":{"id":7,"name":"keys: agreement matches the published test vectors","suiteID":0,"groupIDs":[2,6],"metadata":{"skip":false,"skipReason":null},"line":174,"column":5,"url":"package:flutter_test/src/widget_tester.dart","root_line":46,"root_column":3,"root_url":"file:///repo/example/integration_test/mypackage_test.dart"},"type":"testStart","time":22545}
 {"testID":7,"result":"error","skipped":false,"hidden":false,"type":"testDone","time":22545}
 {"success":false,"type":"done","time":22575}
 ''';
@@ -130,7 +130,7 @@ void main() {
       final outcome = judgeTestRun(exitCode: 1, results: results);
       expect(outcome.verdict, Verdict.failed);
       expect(outcome.failedTests, [
-        'keys X25519 agreement matches RFC 7748 section 6.1',
+        'keys: agreement matches the published test vectors',
       ]);
     });
 
@@ -147,7 +147,7 @@ void main() {
       // wrapped like this when the app threw it outside any test.
       const results =
           '''
-$_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_test/libsignal_test.dart\\": Bad state: outside any test","stackTrace":"","isFailure":false,"type":"error","time":21400}
+$_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_test/mypackage_test.dart\\": Bad state: outside any test","stackTrace":"","isFailure":false,"type":"error","time":21400}
 {"success":false,"type":"done","time":21500}
 ''';
       final outcome = judgeTestRun(exitCode: 1, results: results);
@@ -421,12 +421,16 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
   });
 
   group('Android', () {
-    test('reads the application id of the example', () {
-      final gradle = File(
-        'example/android/app/build.gradle.kts',
-      ).readAsStringSync();
-      expect(androidApplicationId(gradle), 'com.libsignal.example');
-    });
+    test(
+      'reads the application id of the example',
+      () {
+        final gradle = File(_gradle).readAsStringSync();
+        final id = androidApplicationId(gradle);
+        expect(id, isNotNull);
+        expect(gradle, contains('applicationId = "$id"'));
+      },
+      skip: _untilFlutterCreate(_gradle),
+    );
 
     test('reads a Groovy build file too', () {
       expect(
@@ -439,23 +443,23 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
       const log =
           '--------- beginning of crash\n'
           'E AndroidRuntime: FATAL EXCEPTION: main\n'
-          'E AndroidRuntime: Process: com.libsignal.example, PID: 4321\n';
-      expect(crashedOnAndroid(log, 'com.libsignal.example'), isTrue);
+          'E AndroidRuntime: Process: com.mypackage.example, PID: 4321\n';
+      expect(crashedOnAndroid(log, 'com.mypackage.example'), isTrue);
     });
 
     test('finds a native crash of the app', () {
       const log =
           'F DEBUG   : pid: 4321, tid: 4350, name: 1.ui  '
-          '>>> com.libsignal.example <<<\n';
-      expect(crashedOnAndroid(log, 'com.libsignal.example'), isTrue);
+          '>>> com.mypackage.example <<<\n';
+      expect(crashedOnAndroid(log, 'com.mypackage.example'), isTrue);
     });
 
     test('ignores a crash of another app, one with a longer id included', () {
       const log =
           'E AndroidRuntime: Process: com.android.systemui, PID: 99\n'
-          'E AndroidRuntime: Process: com.libsignal.example2, PID: 98\n'
-          'F DEBUG   : pid: 97, name: x  >>> com.libsignal.example2 <<<\n';
-      expect(crashedOnAndroid(log, 'com.libsignal.example'), isFalse);
+          'E AndroidRuntime: Process: com.mypackage.example2, PID: 98\n'
+          'F DEBUG   : pid: 97, name: x  >>> com.mypackage.example2 <<<\n';
+      expect(crashedOnAndroid(log, 'com.mypackage.example'), isFalse);
     });
   });
 
@@ -463,35 +467,33 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
     // The first line of the report macOS wrote when the example aborted on an
     // iOS 26.2 simulator.
     const header =
-        '{"app_name":"Runner","timestamp":"2026-11-03 17:48:46.00 +0100","app_version":"1.0.0","sroute_id":16,"slice_uuid":"3e711a9d-7318-399a-9745-6b99c85e47bc","build_version":"1","platform":7,"bundleID":"com.libsignal.example","share_with_app_devs":0,"is_first_party":0,"bug_type":"309","os_version":"macOS 26.5 (25F71)","roots_installed":0,"name":"Runner","incident_id":"E8E1F9E4-82EC-4E6A-91BD-4024ACDF7C5B"}';
+        '{"app_name":"Runner","timestamp":"2026-11-03 17:48:46.00 +0100","app_version":"1.0.0","sroute_id":16,"slice_uuid":"3e711a9d-7318-399a-9745-6b99c85e47bc","build_version":"1","platform":7,"bundleID":"com.mypackage.example","share_with_app_devs":0,"is_first_party":0,"bug_type":"309","os_version":"macOS 26.5 (25F71)","roots_installed":0,"name":"Runner","incident_id":"E8E1F9E4-82EC-4E6A-91BD-4024ACDF7C5B"}';
 
     test('reads the bundle ids of the example', () {
-      final pbxproj = File(
-        'example/ios/Runner.xcodeproj/project.pbxproj',
-      ).readAsStringSync();
-      expect(
-        iosBundleIds(pbxproj),
-        containsAll([
-          'com.libsignal.example',
-          'com.libsignal.example.RunnerTests',
-        ]),
-      );
-    });
+      final pbxproj = File(_pbxproj).readAsStringSync();
+      final ids = iosBundleIds(pbxproj);
+      final app = ids.where((id) => !id.endsWith('.RunnerTests')).toSet();
+      expect(app, hasLength(1));
+      expect(ids, contains('${app.single}.RunnerTests'));
+      for (final id in ids) {
+        expect(pbxproj, contains('PRODUCT_BUNDLE_IDENTIFIER = $id;'));
+      }
+    }, skip: _untilFlutterCreate(_pbxproj));
 
     test('finds a crash of the app in a simulator', () {
       expect(
         crashedOnSimulator('$header\n{\n  "uptime" : 2500000,', {
-          'com.libsignal.example',
+          'com.mypackage.example',
         }),
         isTrue,
       );
     });
 
     test('ignores another app, the same app on the Mac, and noise', () {
-      const ids = {'com.libsignal.example'};
+      const ids = {'com.mypackage.example'};
       expect(
         crashedOnSimulator(
-          header.replaceFirst('com.libsignal.example', 'com.apple.Maps'),
+          header.replaceFirst('com.mypackage.example', 'com.apple.Maps'),
           ids,
         ),
         isFalse,
@@ -519,7 +521,7 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
       final position = testRunPosition('$_start$_loaded')!;
       expect(
         position.test,
-        'LibSignal init is idempotent and survives cleanup',
+        'MyPackage init is idempotent and survives cleanup',
       );
       expect(position.step, 7);
     });
@@ -556,8 +558,8 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
     const going =
         "Running Gradle task 'assembleProfile'...                           29.3s\n"
         '✓ Built build/app/outputs/flutter-apk/app-profile.apk (31.5MB)\n'
-        'I/flutter ( 2955): 00:00 +0: LibSignal init is idempotent and survives cleanup\n'
-        'I/flutter ( 2955): 00:00 +1: keys X25519 agreement matches RFC 7748 section 6.1\n';
+        'I/flutter ( 2955): 00:00 +0: MyPackage init is idempotent and survives cleanup\n'
+        'I/flutter ( 2955): 00:00 +1: keys: agreement matches the published test vectors\n';
     const done =
         'I/flutter ( 2955): 00:04 +59: every capability above ran\n'
         'I/flutter ( 2955): 00:04 +60: (tearDownAll)\n'
@@ -581,18 +583,18 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
       final position = driveRunPosition(going)!;
       expect(
         position.test,
-        'keys X25519 agreement matches RFC 7748 section 6.1',
+        'keys: agreement matches the published test vectors',
       );
       expect(position.step, 2);
     });
 
     test('the log of a simulator or a desktop puts flutter: in front', () {
       final position = driveRunPosition(
-        'flutter: 00:00 +0: LibSignal init is idempotent and survives cleanup\n',
+        'flutter: 00:00 +0: MyPackage init is idempotent and survives cleanup\n',
       )!;
       expect(
         position.test,
-        'LibSignal init is idempotent and survives cleanup',
+        'MyPackage init is idempotent and survives cleanup',
       );
     });
 
@@ -762,8 +764,8 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
 
   group('the app on its device', () {
     test('pidof gives the pid', () {
-      expect(androidPid('alive\n4321\n', 'com.libsignal.example'), 4321);
-      expect(androidPid('alive\n4321 4322\n', 'com.libsignal.example'), 4321);
+      expect(androidPid('alive\n4321\n', 'com.mypackage.example'), 4321);
+      expect(androidPid('alive\n4321 4322\n', 'com.mypackage.example'), 4321);
     });
 
     test('ps gives it on the line that names the app', () {
@@ -772,22 +774,22 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
           'alive\n'
           'USER      PID   PPID  VSIZE  RSS   WCHAN              PC  NAME\n'
           'root      1     0     9888   1268  SyS_epoll_ 00000000 S /init\n'
-          'u0_a59    2955  1360  1286180 80156 SyS_epoll_ 00000000 S com.libsignal.example\n';
-      expect(androidPid(toolbox, 'com.libsignal.example'), 2955);
+          'u0_a59    2955  1360  1286180 80156 SyS_epoll_ 00000000 S com.mypackage.example\n';
+      expect(androidPid(toolbox, 'com.mypackage.example'), 2955);
       // Toybox's, from Android 8, with -A.
       const toybox =
           'alive\n'
           'USER           PID  PPID     VSZ    RSS WCHAN            ADDR S NAME\n'
-          'u0_a123       4321   345 1234567  89012 do_epoll_wait      0 S com.libsignal.example\n';
-      expect(androidPid(toybox, 'com.libsignal.example'), 4321);
+          'u0_a123       4321   345 1234567  89012 do_epoll_wait      0 S com.mypackage.example\n';
+      expect(androidPid(toybox, 'com.mypackage.example'), 4321);
     });
 
     test('nothing for an app that is not there, a longer id included', () {
-      expect(androidPid('alive\n', 'com.libsignal.example'), isNull);
+      expect(androidPid('alive\n', 'com.mypackage.example'), isNull);
       expect(
         androidPid(
-          'alive\nu0_a1  77  1  1 1 x 0 S com.libsignal.example2\n',
-          'com.libsignal.example',
+          'alive\nu0_a1  77  1  1 1 x 0 S com.mypackage.example2\n',
+          'com.mypackage.example',
         ),
         isNull,
       );
@@ -799,20 +801,20 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
         'PID\tStatus\tLabel\n'
         '-\t0\tcom.apple.progressd\n'
         '12658\t0\tUIKitApplication:com.apple.Spotlight[582b][rb-legacy]\n'
-        '12850\t0\tUIKitApplication:com.libsignal.example[5f35][rb-legacy]\n';
+        '12850\t0\tUIKitApplication:com.mypackage.example[5f35][rb-legacy]\n';
 
     test("a simulator's launchctl gives the app's pid and bundle id", () {
       expect(
         simulatorApp(launchctl, {
-          'com.libsignal.example',
-          'com.libsignal.example.RunnerTests',
+          'com.mypackage.example',
+          'com.mypackage.example.RunnerTests',
         }),
-        (12850, 'com.libsignal.example'),
+        (12850, 'com.mypackage.example'),
       );
     });
 
     test('nothing when the app is not running', () {
-      expect(simulatorApp(launchctl, {'com.libsignal.other'}), isNull);
+      expect(simulatorApp(launchctl, {'com.mypackage.other'}), isNull);
       expect(
         simulatorApp('PID\tStatus\tLabel\n-\t0\tcom.apple.progressd\n', {
           'com.apple.progressd',
@@ -868,24 +870,28 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
     });
 
     test('the self-test comes first, and only when the build asks for it', () {
-      final entry = File(
-        'example/integration_test/libsignal_test.dart',
-      ).readAsStringSync();
-      const declared = 'if (hangOnPurpose) capabilityThatHangs();';
-      expect(entry, contains(declared));
+      // In the one function every entry point declares its suite through.
+      final declare = harness.substring(
+        harness.indexOf('void declareCapabilities('),
+      );
+      final selfTest = declare.indexOf(
+        'if (hangOnPurpose) _capabilityThatHangs();',
+      );
+      expect(selfTest, greaterThan(0));
+      expect(selfTest, lessThan(declare.indexOf('  capabilities();')));
       expect(
-        entry.indexOf(declared),
-        lessThan(entry.indexOf('initCapabilities();')),
+        declare.indexOf('  capabilities();'),
+        lessThan(declare.indexOf('_capabilitiesAllRan(')),
       );
       expect(
         harness,
-        contains("bool.fromEnvironment('LIBSIGNAL_EXAMPLE_HANG')"),
+        contains('const hangOnPurpose = bool.fromEnvironment(hangDefine);'),
       );
     });
 
     test('CI builds and runs the app with it only in the self-test', () {
       final reusable = _readLf('.github/workflows/integration-reusable.yml');
-      const define = '--dart-define=LIBSIGNAL_EXAMPLE_HANG=true';
+      final define = '--dart-define=${_hangDefine(harness)}=true';
       expect(
         reusable,
         contains("HANG_TEST: \${{ inputs.hang && '$define' || '' }}"),
@@ -943,3 +949,18 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
 /// with CRLF, and a pattern across lines would match nothing there.
 String _readLf(String path) =>
     File(path).readAsStringSync().replaceAll('\r\n', '\n');
+
+/// The build files `flutter create` made the example's ids in.
+const _gradle = 'example/android/app/build.gradle.kts';
+const _pbxproj = 'example/ios/Runner.xcodeproj/project.pbxproj';
+
+/// Why a test of [path] is skipped, or false to run it. A project has the file
+/// from the day it was generated; a render of the template with its tasks
+/// skipped, which never ran `flutter create`, has none.
+Object _untilFlutterCreate(String path) =>
+    File(path).existsSync() ? false : 'no $path: flutter create has not run';
+
+/// The name of the define that builds the watchdog's self-test into the app,
+/// as the harness gives it.
+String _hangDefine(String harness) =>
+    RegExp(r"const hangDefine = '(\w+)';").firstMatch(harness)!.group(1)!;

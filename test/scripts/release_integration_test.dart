@@ -4,7 +4,10 @@ import 'package:test/test.dart';
 
 import '../../scripts/src/release_integration.dart';
 
-const _tag = 'libsignal_frb-9.1.0';
+const _tag = 'mypackage_frb-9.1.0';
+
+/// On a line of its own, so that no other line's length depends on it.
+const _crate = 'libsignal_frb';
 const _head = 'a2d2b0735c73c3c414633338cd8a9a99e1013acb';
 const _other = 'b9a98e16d89caa7e8e37bc2cf2e562bf41fa15f3';
 
@@ -26,7 +29,7 @@ Map<String, Object?> _json({
   'event': event,
   'headSha': sha,
   'status': status,
-  'url': 'https://github.com/djx-y-z/libsignal_dart/actions/runs/$id',
+  'url': 'https://github.com/owner/mypackage_dart/actions/runs/$id',
 };
 
 IntegrationRun _run({
@@ -163,7 +166,7 @@ void main() {
         _run(
           id: 1,
           created: '2026-11-04T10:00:00Z',
-          title: releasedRunTitle('libsignal_frb-9.0.0'),
+          title: releasedRunTitle('mypackage_frb-9.0.0'),
         ),
       ]);
       expect(check.verdict, IntegrationVerdict.none);
@@ -368,7 +371,7 @@ void main() {
             'status': 'completed',
             'steps': <Object?>[],
             'url':
-                'https://github.com/djx-y-z/libsignal_dart/actions/runs/1/job/2',
+                'https://github.com/owner/mypackage_dart/actions/runs/1/job/2',
           },
           _job('integration / Integration (Web)', 'success'),
         ],
@@ -412,7 +415,7 @@ void main() {
         workflow,
         contains(
           'startsWith(github.event.workflow_run.head_branch, '
-          "'libsignal_frb-')",
+          "'$_crate-')",
         ),
       );
     });
@@ -477,7 +480,7 @@ void main() {
 
     test('tests a release only where a tag of its name is', () {
       // The build runs by hand on any ref, and checks the crate version only
-      // for a tag: a branch named libsignal_frb-* gets the title above, and
+      // for a tag: a branch named like a crate tag gets the title above, and
       // must leave no test job behind, which the check counts as no run.
       expect(
         workflow,

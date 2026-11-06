@@ -3,9 +3,10 @@
 # macOS arm64 runners run short now and then. A job GitHub cannot give one is
 # cancelled after about a quarter of an hour, with the annotation "The job was
 # not acquired by Runner of type hosted even after multiple attempts", and the
-# run fails without one step of that job having run. On 2026-11-03 that was ten
-# job runs across two pushes of one pull request, and `test / Test (macOS ARM64)`
-# is a required check: each one held the pull request until someone re-ran it.
+# run fails without one step of that job having run. In a project generated from
+# this template, on 2026-11-03, that was ten job runs across two pushes of one
+# pull request, and `test / Test (macOS ARM64)` is a required check: each one held
+# the pull request until someone re-ran it.
 #
 # Running such a job again cannot hide anything, since nothing in it ran, so
 # this does it, twice at most (`run_attempt < 3`). Possibly only once: GitHub

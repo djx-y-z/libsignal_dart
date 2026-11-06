@@ -7,7 +7,7 @@ import '../../scripts/src/example_library.dart';
 void main() {
   const local = '/repo/rust/target/x86_64-linux-android/release/lib.so';
   const downloaded =
-      '/repo/example/.dart_tool/hooks_runner/shared/libsignal/build/8.0.0-android-x86_64/lib.so';
+      '/repo/example/.dart_tool/hooks_runner/shared/mypackage/build/8.0.0-android-x86_64/lib.so';
 
   group('libraryCameFrom', () {
     test('tells a local build from a download', () {
@@ -37,7 +37,7 @@ void main() {
               {
                 'encoding': {
                   'file': local,
-                  'id': 'package:libsignal/libsignal',
+                  'id': 'package:mypackage/mypackage',
                 },
                 'type': 'code_assets/code',
               },

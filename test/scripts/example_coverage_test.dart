@@ -36,6 +36,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 }
 ''';
 
+/// Why a test of the real generated file is skipped, or false to run it. A
+/// project has the file from its first `make codegen` on; a render of the
+/// template with its tasks skipped has none.
+final Object _noBindings = File(generatedBindings).existsSync()
+    ? false
+    : 'no $generatedBindings yet: run make codegen';
+
 String _lcov(Map<String, Map<int, int>> files) => [
   for (final MapEntry(key: file, value: hits) in files.entries) ...[
     'SF:../$file',
@@ -88,10 +95,8 @@ abstract class RustLibApi {
       final functions = bridgedFunctions(
         File(generatedBindings).readAsStringSync(),
       );
-      expect(functions.length, greaterThan(100));
-      expect(functions, contains('KeysPrivateKeyGenerate'));
-      expect(functions, contains('SessionCipherMessageEncryptWithCallbacks'));
-    });
+      expect(functions, isNotEmpty);
+    }, skip: _noBindings);
   });
 
   group('declaredBridgedFunctions', () {
@@ -99,14 +104,18 @@ abstract class RustLibApi {
       expect(declaredBridgedFunctions(_generated), {'FooOne', 'FooTwo'});
     });
 
-    test('the real generated file declares exactly the bodies found', () {
-      // Every function whose body the walk misses would go unmeasured.
-      final generated = File(generatedBindings).readAsStringSync();
-      expect(
-        declaredBridgedFunctions(generated),
-        bridgedFunctions(generated).keys.toSet(),
-      );
-    });
+    test(
+      'the real generated file declares exactly the bodies found',
+      () {
+        // Every function whose body the walk misses would go unmeasured.
+        final generated = File(generatedBindings).readAsStringSync();
+        expect(
+          declaredBridgedFunctions(generated),
+          bridgedFunctions(generated).keys.toSet(),
+        );
+      },
+      skip: _noBindings,
+    );
   });
 
   group('verifyExampleCoverage', () {
@@ -114,8 +123,20 @@ abstract class RustLibApi {
       'lib/src/hand.dart': {1: 1, 2: 1},
     };
 
-    ExampleCoverage verdict(Map<String, Map<int, int>> files) =>
-        verifyExampleCoverage(lcov: _lcov(files), generated: _generated);
+    // The rules alone: no excuse, and a floor of its own, so that what this
+    // project's policy says moves none of these. Through parameters rather than
+    // as literals: the analyzer reports an argument equal to the default, and
+    // the default is the project's, which any literal here could equal.
+    ExampleCoverage verdict(
+      Map<String, Map<int, int>> files, {
+      Map<String, String> excuses = const {},
+      double floor = 0.95,
+    }) => verifyExampleCoverage(
+      lcov: _lcov(files),
+      generated: _generated,
+      excuses: excuses,
+      floor: floor,
+    );
 
     test('a function with an executed line counts as called', () {
       final coverage = verdict({
@@ -175,15 +196,44 @@ abstract class RustLibApi {
     });
 
     test('an excuse for a function that is gone is a problem', () {
-      final coverage = verifyExampleCoverage(
-        lcov: _lcov({
+      final coverage = verdict(
+        {
           generatedBindings: {9: 1, 22: 1},
           ...handWritten,
-        }),
-        generated: _generated,
+        },
+        excuses: const {'Gone': 'it was removed'},
       );
-      expect(coverage.staleExcuses, uncalledOnPurpose.keys);
+      expect(coverage.staleExcuses, ['Gone']);
       expect(coverage.problems.join(), contains('no longer has'));
+    });
+
+    test('an excused function needs no call, and is counted as excused', () {
+      final coverage = verdict(
+        {
+          generatedBindings: {9: 1, 22: 0},
+          ...handWritten,
+        },
+        excuses: const {'FooTwo': 'not exported'},
+      );
+      expect(coverage.uncalled, isEmpty);
+      expect(coverage.problems, isEmpty);
+      expect(
+        coverageSummary(coverage),
+        startsWith('1 of 2 bridged functions '),
+      );
+      expect(coverageSummary(coverage), contains('(1 excused)'));
+    });
+
+    test('the floor is the one it is given', () {
+      final files = {
+        generatedBindings: {9: 1, 22: 1},
+        'lib/src/hand.dart': {1: 1, 2: 0},
+      };
+      expect(verdict(files, floor: 0.5).problems, isEmpty);
+      expect(
+        verdict(files, floor: 0.6).problems.join(),
+        contains('under the 60.0% floor'),
+      );
     });
 
     test('nothing to read is a problem, not a pass', () {
@@ -218,5 +268,5 @@ abstract class RustLibApi {
       File(generatedBindings).readAsStringSync(),
     );
     expect(functions.keys, containsAll(uncalledOnPurpose.keys));
-  });
+  }, skip: _noBindings);
 }

@@ -460,7 +460,7 @@ Future<void> _handleWebBuild(
   }
 
   final webPkgDir = Directory.fromUri(appRoot.resolve('web/pkg/'));
-  output.dependencies.add(webPkgDir.uri.resolve('$_wasmVersionMarkerName'));
+  output.dependencies.add(webPkgDir.uri.resolve(_wasmVersionMarkerName));
 
   // Read version from rust/Cargo.toml up front — it keys both the download
   // cache and the freshness check below.

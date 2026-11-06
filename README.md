@@ -602,6 +602,7 @@ make setup-android      # Install cargo-ndk for Android builds (optional)
 make codegen            # Regenerate Flutter Rust Bridge bindings
 make build              # Build Rust library locally (native)
 make build-android      # Build for Android (requires cargo-ndk + NDK)
+make build-ios          # Build for iOS: device and both simulators (requires Xcode)
 make build-web          # Build WASM for web (requires wasm-pack)
 
 # CI / Version Management

@@ -15,7 +15,7 @@
 //
 // When the package gains a capability, it goes here too:
 // `make verify-example-coverage` fails on a bridged function nothing here calls.
-import 'package:integration_test/integration_test.dart';
+import 'package:libsignal/libsignal.dart';
 
 import 'capabilities/app.dart';
 import 'capabilities/bridge.dart';
@@ -33,25 +33,22 @@ import 'capabilities/sessions.dart';
 import 'capabilities/stores.dart';
 import 'support/harness.dart';
 
-void main() {
-  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
-  // The watchdog's self-test, first, so that the run stops at once.
-  if (hangOnPurpose) capabilityThatHangs();
-  initCapabilities();
-  keyCapabilities();
-  kyberCapabilities();
-  cryptoCapabilities();
-  preKeyCapabilities();
-  sessionCapabilities();
-  messageCapabilities();
-  groupCapabilities();
-  sealedSenderCapabilities();
-  errorCapabilities();
-  storeCapabilities();
-  securityCapabilities();
-  bridgeCapabilities();
-  appCapabilities();
-
-  capabilitiesAllRan(binding);
-}
+void main() => declareCapabilities(
+  initialize: LibSignal.init,
+  capabilities: () {
+    initCapabilities();
+    keyCapabilities();
+    kyberCapabilities();
+    cryptoCapabilities();
+    preKeyCapabilities();
+    sessionCapabilities();
+    messageCapabilities();
+    groupCapabilities();
+    sealedSenderCapabilities();
+    errorCapabilities();
+    storeCapabilities();
+    securityCapabilities();
+    bridgeCapabilities();
+    appCapabilities();
+  },
+);
