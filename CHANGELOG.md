@@ -91,6 +91,17 @@
 
 #### Changed
 
+- **copier template adopted: v4.19.0 -> v4.20.0** — the existing cross-build and unstarted-job rerun features are updated, and the build hook gains more resilient downloads.
+  `Makefile`, `README.md`, and `hook/build.dart` update local-build handling so
+  example builds do not reuse stale hook results for another target; `make clean`
+  also clears the example's build output. The cross-build support itself was
+  already present here. The existing `rerun-unstarted.yml` workflow and
+  `.github/rulesets/README.md` are also updated; the rerun feature was already
+  present. The hook now retries transient network failures and HTTP 5xx or 429
+  responses up to six times, with increasing pauses, and limits each connection
+  attempt to 20 seconds. `test/hook/build_hook_test.dart` covers those retry
+  cases, while `SECURITY.md` documents the updated download behavior.
+
 - **The `session_decrypt` fuzz target builds again** — since
   `mark_kyber_pre_key_used` began answering whether an agreement is new (9.0.0),
   the target still answered it with nothing, and the Fuzz workflow failed to

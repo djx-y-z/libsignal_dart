@@ -443,6 +443,7 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
     --custom-trusted-root trusted_root.jsonl
   ```
 
+<<<<<<< before updating
   **Known limitation:** verification is manual — the build hook itself does not
   verify attestations automatically. There is currently no Sigstore/DSSE
   implementation for Dart, so an in-hook verifier would mean hand-rolling
@@ -450,6 +451,10 @@ build hook (`hook/build.dart`) from GitHub Releases at consumer build time.
   code); no package ecosystem verifies Sigstore attestations client-side by
   default today. Automatic (opt-in) verification via an installed `gh` CLI is
   tracked as a possible future hardening step.
+=======
+- **SHA256 Checksums (fail-closed)**: pre-built native libraries are verified against a checksums file published in the same GitHub Release. Verification is **fail-closed** — if the checksums cannot be fetched or lack an entry for the archive, the build hook (`hook/build.dart`) **aborts** rather than loading an unverified binary. Each download is tried six times first, with a minute of pauses in all. There is **no override**: the hook downloads only the release of its own crate version, and every such release publishes the file. The `LIBSIGNAL_ALLOW_UNVERIFIED_DOWNLOAD` that earlier versions of the hook read never took effect: Dart's and Flutter's hook runners give a hook only a fixed list of environment variables (`HOME`, `PATH`, `TMPDIR` and a few more). An override would have to be a pubspec user-define, and none is offered.
+- **Dependency Auditing**: `cargo audit` (`make rust-audit`) and `cargo deny` (`make rust-deny`) run in CI. `cargo-deny` enforces RustSec advisories, an allowed-license list, and a source allow-list restricted to crates.io and explicitly-listed git repositories (see `rust/deny.toml`).
+>>>>>>> after updating
 
 ### Load-time resolution is not re-verified
 
