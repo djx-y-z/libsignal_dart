@@ -3,9 +3,16 @@
 # macOS arm64 runners run short now and then. A job GitHub cannot give one is
 # cancelled after about a quarter of an hour, with the annotation "The job was
 # not acquired by Runner of type hosted even after multiple attempts", and the
+<<<<<<< before updating
 # run fails without one step of that job having run. On 2026-11-03 that was ten
 # job runs across two pushes of one pull request, and `test / Test (macOS ARM64)`
 # is a required check: each one held the pull request until someone re-ran it.
+=======
+# run fails without one step of that job having run. In a project generated from
+# this template, on 2026-11-03, that was ten job runs across two pushes of one
+# pull request, and `test / Test (macOS ARM64)` is a required check: each one held
+# the pull request until someone re-ran it.
+>>>>>>> after updating
 #
 # Running such a job again cannot hide anything, since nothing in it ran, so
 # this does it, twice at most (`run_attempt < 3`). Possibly only once: GitHub
@@ -14,8 +21,12 @@
 #
 # Left as they are:
 # - a run in which any job failed after it had started, which is for a person
+<<<<<<< before updating
 #   to read; the jobs that drive a device already retried what the device or
 #   the connection broke;
+=======
+#   to read;
+>>>>>>> after updating
 # - a cancelled run, which concludes `cancelled` rather than `failure`;
 # - a run a newer one of its branch has replaced. It is not worth a runner, and
 #   in a pull request's concurrency group its re-run would cancel the newer one.
@@ -30,7 +41,11 @@ name: Re-run jobs that got no runner
 
 on:
   workflow_run:
+<<<<<<< before updating
     workflows: ["Tests", "Integration Tests"]
+=======
+    workflows: ["Tests"]
+>>>>>>> after updating
     types: [completed]
 
 # Re-running needs actions: write; the annotations that say why a job never

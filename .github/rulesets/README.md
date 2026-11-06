@@ -154,6 +154,7 @@ to macOS arm64 jobs above all, `test / Test (macOS ARM64)` included.
 only when no job of that run failed after it had started and no newer run of
 its branch has replaced it.
 
+<<<<<<< before updating
 Here that leg was `test / Test (Linux ARM64)`, left out when the matrix became
 required on 2026-09-07 and back on 2026-10-21. The flake was a 30-second
 per-test timeout that hit a different test each time: across 25 `Tests` runs,
@@ -175,6 +176,8 @@ setup step rather than in a test.
 and a failure there still stops a package release: `publish.yml` runs its tests
 through the same reusable workflow.
 
+=======
+>>>>>>> after updating
 `test / Update Coverage Badge` belongs in neither list — it is skipped on pull
 requests, so it would be satisfied without asserting anything.
 

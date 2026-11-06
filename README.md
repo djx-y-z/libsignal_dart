@@ -590,6 +590,7 @@ make test
 ### Available Commands
 
 ```bash
+<<<<<<< before updating
 # Setup
 make setup              # Install all required tools (Rust check, FVM, protoc, cargo-audit)
 make setup-fvm          # Install FVM and project Flutter version only
@@ -624,6 +625,57 @@ make doc                # Generate API documentation
 make get                # Get dependencies
 make clean              # Clean build artifacts
 make help               # Show all commands
+=======
+make codegen
+```
+
+4. Build and test:
+
+```bash
+make build
+make test
+```
+
+### Building Native Libraries
+
+Native libraries are pre-built and downloaded automatically via build hooks.
+If you need to build them locally:
+
+```bash
+# Build for current platform
+make build
+
+# Build with specific target
+make build ARGS="--target aarch64-apple-darwin"
+
+# Build for Android
+make build-android
+
+# Build for iOS (device and both simulators)
+make build-ios
+
+# Build for Web (WASM)
+make build-web
+```
+
+## CI / Version Management
+
+```bash
+# Check for new libsignal versions
+make check-new-libsignal-version
+
+# Check for new copier template versions
+make check-template-updates
+
+# Check deployment target consistency (iOS/macOS/Android)
+make check-targets
+
+# Update Cargo.lock dependencies
+make rust-update
+
+# Generate AI-powered changelog entry (needs AI_MODELS + a provider key)
+make update-changelog ARGS="--version v1.0.0"
+>>>>>>> after updating
 ```
 
 The CI automatically checks for new libsignal releases daily and creates PRs with:

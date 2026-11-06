@@ -8,7 +8,11 @@
 # On Windows CI (Git Bash), use cmd to run fvm.bat from PATH:
 # Example: make build ARGS="--target x86_64-pc-windows-msvc" FVM="cmd //c fvm"
 
+<<<<<<< before updating
 .PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test-example test-example-ci test-example-web doctor drive-example build-example coverage-example create-consumer package-example-android package-example-ios package-example-macos verify-example-coverage verify-example-library test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+=======
+.PHONY: help setup setup-fvm setup-rust-tools setup-frb-codegen setup-android setup-protoc setup-web setup-fuzz codegen regen build build-android build-ios build-web run-example-web test-web test coverage analyze format format-check get clean version get-version check-new-libsignal-version check-upstream-advisories check-exists-libsignal-frb-release check-template-updates update-template check-targets check-msrv third-party-notices verify-third-party-notices verify-frb-pins verify-pub-limits verify-android-alignment verify-release-artifacts verify-library-loads actionlint rust-audit rust-deny rust-check rust-check-ios rust-test rust-clippy rust-clippy-web rust-doc rust-geiger fuzz fuzz-list fuzz-seed doc publish publish-dry-run rust-update update-changelog update-evidence release-frb release setup-repo-protections
+>>>>>>> after updating
 
 # FVM command - can be overridden to provide full path on Windows CI
 FVM ?= fvm
@@ -349,12 +353,25 @@ stamp_build = stamp() { \
 		exit 0; \
 	fi; \
 	stamped=; set -- $(ARGS); \
+<<<<<<< before updating
 	while [ $$\# -gt 0 ]; do \
 		target=; \
 		case "$$1" in \
 			--target-dir|--target-dir=*) \
 				echo "Not stamped: --target-dir puts the build where the hook does not look."; \
 				exit 0 ;; \
+=======
+	for arg in "$$@"; do \
+		case "$$arg" in \
+			--target-dir|--target-dir=*) \
+				echo "Not stamped: --target-dir puts the build where the hook does not look."; \
+				exit 0 ;; \
+		esac; \
+	done; \
+	while [ $$\# -gt 0 ]; do \
+		target=; \
+		case "$$1" in \
+>>>>>>> after updating
 			--target|-t) target="$$2"; shift ;; \
 			--target=*) target="$${1\#--target=}" ;; \
 		esac; \
@@ -370,8 +387,13 @@ stamp_build = stamp() { \
 	done; \
 	if [ -z "$$stamped" ]; then for dir in $(1); do stamp "$$dir"; done; fi
 
+<<<<<<< before updating
 # The app the targets under "The example app" below work on: the example, or the
 # new app `create-consumer` makes.
+=======
+# The app whose caches `forget_hook_results` below clears, besides this
+# package's own: the example.
+>>>>>>> after updating
 EXAMPLE_DIR ?= example
 
 # Forget what was cached about this package's build hook, or the build just made
@@ -1144,7 +1166,11 @@ get:
 
 clean:
 	rm -rf .dart_tool build rust/target \
+<<<<<<< before updating
 		example/.dart_tool example/build example/coverage example/web/pkg
+=======
+		example/.dart_tool example/build example/web/pkg
+>>>>>>> after updating
 	@touch .skip_libsignal_hook
 	@$(FVM) dart pub get --no-example; ret=$$?; rm -f .skip_libsignal_hook; exit $$ret
 
