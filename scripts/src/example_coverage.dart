@@ -6,27 +6,17 @@
 // bridged function that reports no executed line fails here. A function can only
 // get through by being called, or by a line in [uncalledOnPurpose] saying why not.
 //
+// The rules are the template's. What they are applied with — which functions are
+// excused, and the floor for hand-written lines — is this project's, in
+// example_coverage_policy.dart, which the template writes once and never again.
+//
 // Only [verifyExampleCoverage]'s caller touches the disk; everything else takes
 // values, so the rules are testable without a coverage run.
 library;
 
-/// Bridged functions the tests do not call, and why that is right.
-///
-/// Keys are what follows `crateApi` in `lib/src/rust/frb_generated.dart`. A name
-/// that no longer exists there is reported rather than ignored, so this list
-/// cannot quietly outlive what it excuses.
-const uncalledOnPurpose = {
-  'InitInitLibsignal':
-      'lib/src/rust/api/init.dart is not exported by the package.',
-  'InitIsLibsignalInitialized':
-      'lib/src/rust/api/init.dart is not exported by the package.',
-};
+import 'example_coverage_policy.dart';
 
-/// The share of hand-written lines the tests have to execute. Not a target: the
-/// misses that are fine, a `catch` for a library that cannot load and the like,
-/// add up to well under this. It is there because a whole new class on top of
-/// already-covered bridged functions moves nothing the check above can see.
-const handWrittenFloor = 0.95;
+export 'example_coverage_policy.dart';
 
 /// The generated file holding every bridged function's Dart side.
 const generatedBindings = 'lib/src/rust/frb_generated.dart';
@@ -112,8 +102,10 @@ class ExampleCoverage {
     required this.uncalled,
     required this.unmeasured,
     required this.staleExcuses,
+    required this.excused,
     required this.handWrittenLines,
     required this.handWrittenHit,
+    required this.floor,
   });
 
   /// How many bridged functions the generated file has.
@@ -126,11 +118,19 @@ class ExampleCoverage {
   /// did not find, so could not measure.
   final List<String> unmeasured;
 
-  /// Names in [uncalledOnPurpose] the generated file no longer has.
+  /// Excused names, [uncalledOnPurpose] by default, the generated file no
+  /// longer has.
   final List<String> staleExcuses;
+
+  /// How many of the excuses name a function the generated file has.
+  final int excused;
 
   final int handWrittenLines;
   final int handWrittenHit;
+
+  /// The share of [handWrittenLines] the run had to execute,
+  /// [handWrittenFloor] by default.
+  final double floor;
 
   double get handWrittenShare =>
       handWrittenLines == 0 ? 0 : handWrittenHit / handWrittenLines;
@@ -146,26 +146,32 @@ class ExampleCoverage {
     for (final name in uncalled)
       'crateApi$name: no integration test calls it. Add one under '
           'example/integration_test/capabilities/, or a line in '
-          'uncalledOnPurpose saying why not.',
+          'uncalledOnPurpose ($_policyFile) saying why not.',
     for (final name in staleExcuses)
       'uncalledOnPurpose names $name, which $generatedBindings no longer has.',
     if (handWrittenLines == 0)
       'The report has no hand-written lines, so it did not measure the package.'
-    else if (handWrittenShare < handWrittenFloor)
+    else if (handWrittenShare < floor)
       'The tests execute ${_percent(handWrittenShare)} of the hand-written '
-          'lines, under the ${_percent(handWrittenFloor)} floor.',
+          'lines, under the ${_percent(floor)} floor ($_policyFile).',
   ];
 }
 
+/// Where this project's half of the check is, for the messages.
+const _policyFile = 'scripts/src/example_coverage_policy.dart';
+
 String _percent(double share) => '${(share * 100).toStringAsFixed(1)}%';
 
-/// Judges a coverage report against the generated bindings.
+/// Judges a coverage report against the generated bindings, excusing
+/// [excuses] and holding the hand-written lines to [floor].
 ///
 /// Files under `lib/src/rust/` are the generator's. `lib/src/platform/` holds one
 /// file per platform, so one report can never reach them all.
 ExampleCoverage verifyExampleCoverage({
   required String lcov,
   required String generated,
+  Map<String, String> excuses = uncalledOnPurpose,
+  double floor = handWrittenFloor,
 }) {
   final report = parseLcov(lcov);
   final functions = bridgedFunctions(generated);
@@ -178,7 +184,7 @@ ExampleCoverage verifyExampleCoverage({
     for (var line = first; line <= last && !called; line++) {
       called = (generatedHits[line] ?? 0) > 0;
     }
-    if (!called && !uncalledOnPurpose.containsKey(name)) uncalled.add(name);
+    if (!called && !excuses.containsKey(name)) uncalled.add(name);
   });
 
   var lines = 0;
@@ -193,6 +199,10 @@ ExampleCoverage verifyExampleCoverage({
     hit += hits.values.where((count) => count > 0).length;
   });
 
+  final stale = [
+    for (final name in excuses.keys)
+      if (!functions.containsKey(name)) name,
+  ];
   return ExampleCoverage(
     bridged: functions.length,
     uncalled: uncalled,
@@ -200,21 +210,19 @@ ExampleCoverage verifyExampleCoverage({
       for (final name in declaredBridgedFunctions(generated))
         if (!functions.containsKey(name)) name,
     ]..sort(),
-    staleExcuses: [
-      for (final name in uncalledOnPurpose.keys)
-        if (!functions.containsKey(name)) name,
-    ],
+    staleExcuses: stale,
+    excused: excuses.length - stale.length,
     handWrittenLines: lines,
     handWrittenHit: hit,
+    floor: floor,
   );
 }
 
 /// One line for the log saying what was measured.
 String coverageSummary(ExampleCoverage coverage) {
-  final called =
-      coverage.bridged - coverage.uncalled.length - uncalledOnPurpose.length;
+  final called = coverage.bridged - coverage.uncalled.length - coverage.excused;
   return '$called of ${coverage.bridged} bridged functions called '
-      '(${uncalledOnPurpose.length} excused), '
+      '(${coverage.excused} excused), '
       '${coverage.handWrittenHit} of ${coverage.handWrittenLines} hand-written '
       'lines executed (${_percent(coverage.handWrittenShare)}).';
 }

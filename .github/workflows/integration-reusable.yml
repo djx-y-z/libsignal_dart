@@ -42,8 +42,9 @@
 #
 # Every step that can hang has a `timeout-minutes` of its own, and each job's is
 # longer than its setup and those added up. A job that runs out of time is
-# cancelled, and its log can go with it (one did, on the branch that added this
-# file); a step that runs out fails, with its log, saying where it hung.
+# cancelled, and its log can go with it (one did, in a project generated from
+# this template, on the branch that added this file); a step that runs out fails,
+# with its log, saying where it hung.
 
 name: Integration Tests (Reusable)
 
@@ -216,7 +217,7 @@ jobs:
   # Web
   # ============================================
   # The only job that runs the Dart half of the web build against the wasm module,
-  # with every store callback crossing the JavaScript bridge. `make test-web` is
+  # with every call crossing the JavaScript bridge. `make test-web` is
   # the crate's own Rust tests.
   web:
     needs: flutter
@@ -294,7 +295,8 @@ jobs:
   # `flutter test` never finds its VM service in the simulator's log: it waits out
   # its 12-minute load timeout and fails with "Error waiting for a debug
   # connection", with no test run. Measured on macos-26: 4 runs in the 18 whose
-  # logs survive, on the branch that added this job (another hung until its job
+  # logs survive, in a project generated from this template, on the branch that
+  # added this job (another hung until its job
   # was cancelled, with no log), all on the image the passing runs had too, and
   # never locally. Waiting for the simulator's log to answer before the launch did
   # not prevent it: the log answered at once every time, the failing runs
@@ -392,7 +394,8 @@ jobs:
   # ⚠ THE RUNNER IMAGE MATTERS. GitHub served these jobs two ubuntu-26.04 images
   # that differ where an emulator feels it: 20261025.179 has a 145 GB disk with
   # /tmp on it, 20261018.50 a 72 GB one and /tmp in a 7.7 GB tmpfs. Of the 37
-  # Android jobs on the branch that added this, two landed on the older image and
+  # Android jobs on the branch that added this, in a project generated from this
+  # template, two landed on the older image and
   # both failed, each in a way that touches storage: the "No space left on
   # device" above, and an API 24 install that hung in both tries. On the newer
   # one API 24 passed 18 of 18, and no install hung. GitHub picks the image, so
@@ -716,9 +719,9 @@ jobs:
         with:
           packages: platform-tools
 
-      # The build hook downloads the release, and tries three times in a few
-      # seconds; a runner's DNS has failed for longer than that. Its message then
-      # starts "Failed to download", and only that builds again, a minute later.
+      # The build hook downloads the release, and tries six times over a minute;
+      # a runner's DNS has failed for longer than that. Its message then starts
+      # "Failed to download", and only that builds again, a minute later.
       - name: Build the release app, and check the library is in it
         timeout-minutes: 60
         run: |
