@@ -267,7 +267,10 @@ simulator's first boot can leave the app unconnected (4 runs in 18), and the API
 image with 16 KB pages failed 4 runs in 14, four different ways. A test that failed
 fails the job at once and is never run again, and so does an app that crashed, read
 from Android's crash log or from the report macOS writes for a simulator's app: a
-test that fails now and then turns the run red instead of passing on a retry. Only
+test that fails now and then turns the run red instead of passing on a retry.
+macOS can write that report after its run was judged, so the reports are read once
+more after the last run, back to the first one's start; one written after the step
+has ended is still missed. Only
 a run that never got that far runs again — the app never connected or never
 started the tests, the device or the connection went away — three times in all,
 the third on a rebooted simulator, or each on a new emulator; each leaves a
@@ -769,7 +772,10 @@ accepts two kinds of run:
 
 - **The run `integration.yml` starts after the native build.** It is found by its
   title, `Released binaries of libsignal_frb-<crate>`, because GitHub records
-  `main`'s head as the commit of a `workflow_run`, not the tag's.
+  `main`'s head as the commit of a `workflow_run`, not the tag's. Its `resolve`
+  job tests only when a tag of that name is at the commit the build ran on. The
+  build runs by hand on any ref and checks the crate version only for a tag, so a
+  branch named like one gets the title and no test job, which counts as no run.
 - **A run started by hand on the released binaries at `HEAD`**
   (`gh workflow run integration.yml -f library=release`). This is the way through
   for a crate built before the workflow existed.

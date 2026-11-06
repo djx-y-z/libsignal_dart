@@ -192,6 +192,14 @@ Future<IntegrationCheck> judgeIntegration({
   );
 }
 
+/// The commit a run started by hand can have tested for this release, as git
+/// names it: the one the release is cut from.
+///
+/// A resumed release has its own commit on top already, the version bump and
+/// the CHANGELOG, made here and never pushed. No run can have been dispatched
+/// on that one, so the commit to look for is the one under it.
+String releaseBaseRev({required bool resuming}) => resuming ? 'HEAD~1' : 'HEAD';
+
 /// Refuses, by throwing, a release whose binaries [tag] have no passing
 /// integration run for the commit [head]. Fails closed when GitHub cannot be
 /// read.

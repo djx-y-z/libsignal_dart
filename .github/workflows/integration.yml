@@ -104,11 +104,12 @@ concurrency:
 jobs:
   # Turns the event into the reusable workflow's inputs, in one place. The native
   # build runs on `workflow_dispatch` too, as a retry path on any ref, so only a
-  # successful run on a ref named `libsignal_frb-*` — a release tag, unless someone
-  # with write access names a branch so — means there is a release to test. It has
-  # the tag's name in `head_branch`, and `head_sha` is the commit that produced the
-  # binaries: this workflow's own checkout would otherwise be main, which may have
-  # moved on.
+  # successful run on a ref named `libsignal_frb-*` can mean there is a release to
+  # test. It has the ref's name in `head_branch`, and `head_sha` is the commit that
+  # produced the binaries: this workflow's own checkout would otherwise be main,
+  # which may have moved on. That name is a release only if a tag of that name is
+  # at that commit, which the step below asks GitHub: the build checks a tag
+  # against the crate version, and a branch named so it does not check at all.
   resolve:
     runs-on: ubuntu-26.04
     if: >-
@@ -154,14 +155,44 @@ jobs:
             esac
           }
 
+          # Whether a tag named $1 is at the commit $2. The commits API takes a
+          # signed tag to its commit, and answers 422 for a name with no tag.
+          # Anything else stops the run, as above.
+          tag_at() {
+            status=$(curl -sS --retry 3 -o "$RUNNER_TEMP/tag.json" -w '%{http_code}' \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/commits/refs/tags/$1" ||
+              true)
+            case "$status" in
+              200)
+                tagged=$(python3 -c 'import json, sys; print(json.load(open(sys.argv[1]))["sha"])' "$RUNNER_TEMP/tag.json") || {
+                  echo "::error::Could not read the commit of the tag $1."
+                  exit 1
+                }
+                [ "$tagged" = "$2" ]
+                ;;
+              404 | 422) return 1 ;;
+              *)
+                echo "::error::Could not tell whether $1 is a tag (HTTP $status)."
+                exit 1
+                ;;
+            esac
+          }
+
           run=true library=tree ref='' version='' flutter=''
           case "$EVENT" in
             workflow_run)
               library=release
               ref="$RELEASE_SHA"
+              if ! tag_at "$RELEASE_TAG" "$RELEASE_SHA"; then
+                # A build run by hand on a branch of that name: its title says
+                # a release, and with no test job make release counts it as none.
+                run=false
+                echo "::warning::Not testing $RELEASE_TAG: no tag of that name is at $RELEASE_SHA, the commit the build ran on."
+                echo "Not testing $RELEASE_TAG: no tag of that name is at $RELEASE_SHA, the commit the build ran on." >> "$GITHUB_STEP_SUMMARY"
               # A release cut from a line older than these tests (release/8.0.x)
               # has none to run, and the jobs would fail at their first step.
-              if has_tests "$RELEASE_SHA"; then
+              elif has_tests "$RELEASE_SHA"; then
                 echo "Testing $RELEASE_TAG at $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
               else
                 run=false

@@ -303,6 +303,26 @@ void main() {
     });
   });
 
+  group('releaseBaseRev', () {
+    test('a new release is cut from HEAD', () {
+      expect(releaseBaseRev(resuming: false), 'HEAD');
+    });
+
+    test('a resumed one from under its own commit, which was never pushed', () {
+      expect(releaseBaseRev(resuming: true), 'HEAD~1');
+    });
+
+    test('is what make release asks git for', () {
+      expect(
+        File('scripts/src/release.dart').readAsStringSync(),
+        contains(
+          "head: await git(['rev-parse', "
+          'releaseBaseRev(resuming: resuming)]),',
+        ),
+      );
+    });
+  });
+
   group('IntegrationRun.fromJson', () {
     test('a run still going has no conclusion', () {
       final run = IntegrationRun.fromJson(
@@ -453,6 +473,36 @@ void main() {
       // Not main's head, which GitHub records as the run's commit: the title
       // says whose binaries, and this is the tree they are tested with.
       expect(workflow, contains(r'ref="$RELEASE_SHA"'));
+    });
+
+    test('tests a release only where a tag of its name is', () {
+      // The build runs by hand on any ref, and checks the crate version only
+      // for a tag: a branch named libsignal_frb-* gets the title above, and
+      // must leave no test job behind, which the check counts as no run.
+      expect(
+        workflow,
+        contains(
+          'if ! tag_at "\$RELEASE_TAG" "\$RELEASE_SHA"; then\n'
+          '                # A build run by hand',
+        ),
+      );
+      expect(
+        workflow,
+        contains(
+          r'"$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/commits/refs/tags/$1"',
+        ),
+      );
+      // Only "no such tag" is no tag; anything else stops the run.
+      expect(workflow, contains('              404 | 422) return 1 ;;\n'));
+      final release = workflow.substring(
+        workflow.indexOf('            workflow_run)'),
+        workflow.indexOf('            schedule)'),
+      );
+      expect(
+        release.indexOf('tag_at "'),
+        lessThan(release.indexOf('has_tests "')),
+      );
+      expect(release, contains('run=false'));
     });
 
     test('calls its test jobs what the check counts', () {

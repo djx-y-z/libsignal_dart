@@ -21,7 +21,9 @@
 // - An app that crashed has failed, whatever else the run says: a native crash
 //   ends the app like a device that went away does, and only the platform's own
 //   crash record tells the two apart. Android keeps it in the device's crash
-//   log, macOS in a report on the host, for a simulator's app too.
+//   log, macOS in a report on the host, for a simulator's app too. That report
+//   can come after its run was judged, so the script looks once more after the
+//   last run ([runAttempts]).
 // - A test that failed is the verdict from the moment it is written down,
 //   however the run ends. CI stops a try that runs out of time without asking
 //   it, so the script records the failure while the run is still going.
@@ -207,25 +209,49 @@ Future<RunOutcome> settleRun(
 /// each run's verdict when it ends; [run] may record `failed` sooner, while it
 /// goes. [beforeRetry] runs ahead of each run but the first, and
 /// [onUnfinished] after each run that did not finish.
+///
+/// [crashedEarlier] is asked once at the end, when a run did not finish and a
+/// later one did not fail: whether the platform has recorded a crash of the
+/// app since the first run after all. Each run looks for one only for a while
+/// after it ends, and macOS writes a simulator app's report in its own time;
+/// one that comes later belongs to a run already judged, and the run after it
+/// may pass.
 Future<RunOutcome> runAttempts({
   required int attempts,
   required Future<RunOutcome> Function(int attempt) run,
   required void Function(Verdict verdict) record,
   Future<void> Function(int attempt)? beforeRetry,
   void Function(int attempt, RunOutcome outcome)? onUnfinished,
+  Future<bool> Function()? crashedEarlier,
 }) async {
   if (attempts < 1) throw ArgumentError.value(attempts, 'attempts');
   late RunOutcome outcome;
+  var ran = 0;
   for (var attempt = 1; attempt <= attempts; attempt++) {
     record(Verdict.unfinished);
     if (attempt > 1) await beforeRetry?.call(attempt);
     outcome = await run(attempt);
+    ran = attempt;
     record(outcome.verdict);
     if (outcome.verdict != Verdict.unfinished) break;
     onUnfinished?.call(attempt, outcome);
   }
+  // Every run before the last one did not finish.
+  if (ran > 1 &&
+      outcome.verdict != Verdict.failed &&
+      crashedEarlier != null &&
+      await crashedEarlier()) {
+    outcome = const RunOutcome(Verdict.failed, reason: crashedEarlierReason);
+    record(outcome.verdict);
+  }
   return outcome;
 }
+
+/// Why a run that seemed to pass, or not to finish, has failed after all: the
+/// app crashed in a run before it, and the record of that came late.
+const crashedEarlierReason =
+    'the app crashed in an earlier run, whose crash report came after that run '
+    'had been judged';
 
 /// Judges a `flutter drive` run by its exit code and what it printed,
 /// [output]. [crashed] is the platform's own record that the app crashed.
