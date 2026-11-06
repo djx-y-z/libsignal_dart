@@ -2,6 +2,10 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.106.2** — session-state check refactoring
+
 #### Changed
 
 - **The build hook waits longer for GitHub** — the native library and its
@@ -12,6 +16,11 @@
   (404) still fails at once, and so does a file the hook cannot write, which
   another try cannot fix. A page that is not a checksums file, such as a proxy's,
   is reported as that rather than as an incomplete release.
+- **The native update refactors checks in session processing** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2). Provisioning code landed in `rust/provisioning`, which is not in this package's dependency graph. Auth and profile work landed in `rust/net/chat` and its service bridges, and attestation work in `rust/attest`; those crates are also outside the dependency graph. The Swift, Java and Node bindings and build tooling are outside this package's Dart surface.
+
+  In the bound crates, the range changes exactly `rust/core/Cargo.toml`, `rust/core/src/version.rs`, `rust/crypto/Cargo.toml`, `rust/crypto/src/aes_cbc.rs`, `rust/debug/Cargo.toml`, `rust/protocol/Cargo.toml`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs`, `rust/protocol/src/state/session.rs`, `rust/protocol/test-support/Cargo.toml` and `rust/protocol/tests/session.rs`. The manifests now inherit workspace edition and Rust-version settings (and the debug manifest sets its version explicitly); the core version constant changes to `0.106.2`. The AES-CBC length check uses `is_multiple_of`, the fingerprint encoder iterates five-byte chunks, and the incremental-MAC assertion uses `is_multiple_of` as well. In `state/session.rs`, the existing stale pending-pre-key and current-session-ID checks are rewritten as let-chain conditions with the same predicates; the session test also rewrites a nested condition. The fingerprint, CBC and MAC helpers are not named on the exposed surface, and the shown session edits do not change those checks' conditions. `make codegen` produced no change to `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
 #### Security
 
