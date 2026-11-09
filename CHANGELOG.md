@@ -130,14 +130,20 @@
   `.github/actions/setup-example/`, `publish.yml` and both `release.dart` equal the
   template's, and a change to them belongs there. The tests stay this project's:
   `example/integration_test/libsignal_test.dart`, `capabilities/`,
-  `support/party.dart` and `scripts/src/example_coverage_policy.dart`. The rest of
-  the range was here already, each part with its own entry above. It brings:
+  `support/party.dart`, `scripts/src/example_coverage_policy.dart` and
+  `test/scripts/example_coverage_bindings_test.dart`. The rest of the range was
+  here already, each part with its own entry above. It brings:
   - The entry point hands `LibSignal.init` to the harness through
     `declareCapabilities`, which also declares the watchdog's self-test first and,
     last, the test that hands the driver the count of what ran.
   - The functions the app's tests leave uncalled on purpose, and the floor for
     hand-written lines, moved unchanged from `scripts/src/example_coverage.dart` to
     `scripts/src/example_coverage_policy.dart`, which the check's failures now name.
+  - What holds the coverage check's parser to this project's bindings, more than
+    100 functions and two of them by name, moved to
+    `test/scripts/example_coverage_bindings_test.dart`. The template's test of the
+    real generated file asks only that the parser found some, since it cannot name
+    another project's functions.
   - `CLAUDE.md` says which of the example's files are ours and which the
     template's, and to run the watchdog's self-test again after a Flutter update;
     `CONTRIBUTING.md` says where a function the tests are not meant to call goes;
