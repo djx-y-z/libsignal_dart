@@ -222,9 +222,12 @@ The tests are `example/integration_test/`, one entry point (each test file is it
 own build, install and launch on a device) with the families under `capabilities/`.
 
 **The tests are ours; the harness is the template's.** `libsignal_test.dart`,
-`capabilities/`, `support/party.dart` and the coverage policy
-`scripts/src/example_coverage_policy.dart` are this project's, and no template
-update touches them. `support/harness.dart`, `test_driver/integration_test.dart`,
+`capabilities/`, `support/party.dart`, the coverage policy
+`scripts/src/example_coverage_policy.dart` and
+`test/scripts/example_coverage_bindings_test.dart` are this project's, and no
+template update touches them. The last holds the coverage check's parser to this
+project's bindings, which the template's test of it cannot name.
+`support/harness.dart`, `test_driver/integration_test.dart`,
 the scripts and the workflows came with `enable_integration_tests` and stay under
 the template's management: change them there, not here.
 
