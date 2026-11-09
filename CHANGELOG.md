@@ -103,7 +103,9 @@
   now those targets could only load the last release. Only a source checkout has that
   directory: `rust/target/` is not in the published package. A cross build from a bare
   `cargo` line, or from before this, now stops the app's build until it is rebuilt or
-  deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs.
+  deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs,
+  and nothing when the line also names `--target-dir`, wherever it stands: that build
+  is not where the hook looks.
 - **`example/ios` is integrated with CocoaPods** — `integration_test` is a plugin.
 - **`make clean` also clears the example's build output** — `example/.dart_tool`,
   `example/build`, `example/coverage` and `example/web/pkg`.
@@ -119,6 +121,27 @@
   for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,
   and a run in which no test job ran does not count, whatever else in it did.
   `--skip-integration-check` skips this check.
+- **copier template adopted: v4.19.0 → v4.20.0, with `enable_integration_tests`**
+  (`.copier-answers.yml` and the files named here) — the template now carries the
+  integration tests' machinery, and the recorded answer keeps it here on every update:
+  `example/integration_test/support/harness.dart`, `example/test_driver/`, the
+  example's scripts under `scripts/` with their tests under `test/scripts/`,
+  `integration.yml`, `integration-reusable.yml`, `rerun-unstarted.yml`,
+  `.github/actions/setup-example/`, `publish.yml` and both `release.dart` equal the
+  template's, and a change to them belongs there. The tests stay this project's:
+  `example/integration_test/libsignal_test.dart`, `capabilities/`,
+  `support/party.dart` and `scripts/src/example_coverage_policy.dart`. The rest of
+  the range was here already, each part with its own entry above. It brings:
+  - The entry point hands `LibSignal.init` to the harness through
+    `declareCapabilities`, which also declares the watchdog's self-test first and,
+    last, the test that hands the driver the count of what ran.
+  - The functions the app's tests leave uncalled on purpose, and the floor for
+    hand-written lines, moved unchanged from `scripts/src/example_coverage.dart` to
+    `scripts/src/example_coverage_policy.dart`, which the check's failures now name.
+  - `CLAUDE.md` says which of the example's files are ours and which the
+    template's, and to run the watchdog's self-test again after a Flutter update;
+    `CONTRIBUTING.md` says where a function the tests are not meant to call goes;
+    the README's list of commands has `make build-ios`.
 
 ## [9.0.0] - 2026-10-26
 

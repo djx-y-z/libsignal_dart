@@ -1,9 +1,16 @@
+// The in-app half of what `make test-example-ci` judges a run by: how a
+// capability is declared, the limit inside it, the watchdog's self-test, and the
+// count the driver checks. The template keeps this file in step with the host's
+// half, scripts/src/example_run.dart and test_driver/integration_test.dart, so
+// a project changes its tests, not this.
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:libsignal/libsignal.dart';
 
 int _declared = 0;
 int _ran = 0;
+
+/// What every [capability] runs first, given to [declareCapabilities].
+late Future<void> Function() _initialize;
 
 /// How long one capability may take, measured inside its body.
 const capabilityTimeout = Duration(minutes: 3);
@@ -23,6 +30,25 @@ Future<void> withinLimit(Duration limit, Future<void> Function() body) =>
       onTimeout: () => throw TestFailure('Took longer than $limit.'),
     );
 
+/// Declares the whole suite, from the entry point's `main`: the watchdog's
+/// self-test first when the build asks for it, so that the run stops at once,
+/// then [capabilities], which declares every [capability], then the check that
+/// each of them ran.
+///
+/// [initialize] is the package's own initialization. Each capability runs it
+/// first, inside its own limit, so that every one of them gets the library the
+/// way an app does.
+void declareCapabilities({
+  required Future<void> Function() initialize,
+  required void Function() capabilities,
+}) {
+  final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  _initialize = initialize;
+  if (hangOnPurpose) _capabilityThatHangs();
+  capabilities();
+  _capabilitiesAllRan(binding);
+}
+
 /// Declares one capability of the library, checked inside this running app.
 ///
 /// `testWidgets` rather than `test`, and that is not a style choice. Under
@@ -39,7 +65,7 @@ void capability(String description, Future<void> Function() body) {
     description,
     (tester) async {
       await withinLimit(capabilityTimeout, () async {
-        await LibSignal.init();
+        await _initialize();
         await body();
       });
       _ran++;
@@ -49,11 +75,14 @@ void capability(String description, Future<void> Function() body) {
   );
 }
 
-/// Whether this build carries [capabilityThatHangs]: only one asked for by
-/// `gh workflow run integration.yml -f hang=true`.
-const hangOnPurpose = bool.fromEnvironment('LIBSIGNAL_EXAMPLE_HANG');
+/// The define that builds [_capabilityThatHangs] into the app: only
+/// `gh workflow run integration.yml -f hang=true` passes it.
+const hangDefine = 'LIBSIGNAL_EXAMPLE_HANG';
 
-/// How long [capabilityThatHangs] blocks the app: past the 8 minutes the
+/// Whether this build carries [_capabilityThatHangs].
+const hangOnPurpose = bool.fromEnvironment(hangDefine);
+
+/// How long [_capabilityThatHangs] blocks the app: past the 8 minutes the
 /// watchdog of `make test-example-ci` waits (`stallLimit` in
 /// `scripts/src/example_run.dart`), so that it is the watchdog that ends it.
 const hangFor = Duration(minutes: 12);
@@ -61,7 +90,7 @@ const hangFor = Duration(minutes: 12);
 /// Declares a capability that blocks the app's isolate for [hangFor], as a call
 /// that never returns would: the self-test of the watchdog. The jobs it runs in
 /// fail, and should say that the app sent nothing for 8 minutes.
-void capabilityThatHangs() {
+void _capabilityThatHangs() {
   capability('blocks the app on purpose, for the watchdog to stop', () async {
     final clock = Stopwatch()..start();
     // Meanwhile nothing else runs on the isolate: no timer, no frame, and no
@@ -75,8 +104,8 @@ void capabilityThatHangs() {
 }
 
 /// Declares the check that every [capability] above it really ran, and hands
-/// the count to `test_driver/integration_test.dart`. Declare it last.
-void capabilitiesAllRan(IntegrationTestWidgetsFlutterBinding binding) {
+/// the count to `test_driver/integration_test.dart`. Declared last.
+void _capabilitiesAllRan(IntegrationTestWidgetsFlutterBinding binding) {
   final declared = _declared;
   testWidgets('every capability above ran', (tester) async {
     expect(_ran, declared);

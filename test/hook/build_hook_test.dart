@@ -5,6 +5,9 @@ import 'package:test/test.dart';
 
 import '../../hook/build.dart' as build_hook;
 
+/// On a line of its own, so that no other line's length depends on it.
+const _packageName = 'libsignal';
+
 void main() {
   group('downloadCacheSubdir', () {
     test('distinguishes iOS device from iOS simulator', () {
@@ -177,7 +180,7 @@ void main() {
       // A name here the release does not use is a directory no make target
       // ever writes, and the hook would quietly download instead.
       final workflow = File(
-        '.github/workflows/build-libsignal.yml',
+        '.github/workflows/build-$_packageName.yml',
       ).readAsStringSync();
       for (final (os, arch, sdk) in [
         (OS.android, Architecture.arm64, null),
@@ -443,17 +446,17 @@ void main() {
       Future<String> resolve() => build_hook.resolveExpectedChecksum(
         base,
         '8.0.0',
-        'libsignal_frb-8.0.0-macos-arm64.tar.gz',
+        'crate-8.0.0-macos-arm64.tar.gz',
         delays: noPauses,
       );
 
       test('is the one the file gives the archive', () async {
-        await serve([200], '$hash  libsignal_frb-8.0.0-macos-arm64.tar.gz\n');
+        await serve([200], '$hash  crate-8.0.0-macos-arm64.tar.gz\n');
         expect(await resolve(), equals(hash));
       });
 
       test('refuses an archive the file has no entry for', () async {
-        await serve([200], '$hash  libsignal_frb-8.0.0-linux-x64.tar.gz\n');
+        await serve([200], '$hash  crate-8.0.0-linux-x64.tar.gz\n');
         await expectLater(resolve(), failsWith('has no entry'));
       });
 

@@ -198,6 +198,8 @@ make build-web && make test-example-web CHROMEDRIVER=/path/to/chromedriver
 `capabilities/`, with `capability(...)` rather than `test(...)`.
 `make coverage-example ARGS="-d <device>"` measures every bridged function from the
 running app and fails on one nothing called, and CI runs it on every pull request.
+A function the tests are not meant to call goes in
+`scripts/src/example_coverage_policy.dart`, with the reason.
 
 ### Writing Tests
 

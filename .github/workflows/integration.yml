@@ -11,7 +11,8 @@
 #   binary" before stage 2, on every platform instead of one. `make release`
 #   refuses to tag until it has passed, and `publish.yml` runs the same again as a
 #   gate before its upload. A release cut from a line older than these tests
-#   (`release/8.0.x`) has none, and the run says so and stops.
+#   (a maintenance branch cut before them) has none, and the run says so and
+#   stops.
 # - Weekly: `pub`, the current version on pub.dev in a new app on the newest
 #   Flutter. No commit of ours moves anything this looks at. A Flutter release that
 #   breaks consumers of the published package shows up here, not in their issues.
@@ -190,8 +191,9 @@ jobs:
                 run=false
                 echo "::warning::Not testing $RELEASE_TAG: no tag of that name is at $RELEASE_SHA, the commit the build ran on."
                 echo "Not testing $RELEASE_TAG: no tag of that name is at $RELEASE_SHA, the commit the build ran on." >> "$GITHUB_STEP_SUMMARY"
-              # A release cut from a line older than these tests (release/8.0.x)
-              # has none to run, and the jobs would fail at their first step.
+              # A release cut from a line older than these tests, a maintenance
+              # branch cut before them, has none to run, and the jobs would fail
+              # at their first step.
               elif has_tests "$RELEASE_SHA"; then
                 echo "Testing $RELEASE_TAG at $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
               else
