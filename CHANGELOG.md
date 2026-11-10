@@ -2,6 +2,10 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.106.2** — internal/dependency update, no public-API impact
+
 #### Changed
 
 - **The build hook waits longer for GitHub** — the native library and its
@@ -12,6 +16,11 @@
   (404) still fails at once, and so does a file the hook cannot write, which
   another try cannot fix. A page that is not a checksums file, such as a proxy's,
   is reported as that rather than as an incomplete release.
+- **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2). Provisioning cryptography and its APIs landed in `rust/provisioning`, which is not in this package's dependency graph; associated Java, Node and Swift bindings are not exposed by this Dart wrapper. Auth and profile service work landed in `rust/net/chat`, and DCAP attestation changes landed in `rust/attest`; neither crate is in the dependency graph. The other network, key-transparency, username, backup and zkgroup work is in upstream crates absent from the graph, while repository build and CI edits are tooling rather than Dart APIs.
+
+  In the bound crates, the range changes `rust/core/src/version.rs`, `rust/crypto/src/aes_cbc.rs`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs` and `rust/protocol/src/state/session.rs`, along with crate manifests and a session test. The version constant changes to `0.106.2`. The AES-CBC length check, fingerprint encoding, and session usability and session-ID checks are rewrites that give the same results for every input. The `incremental_mac.rs` assertion is also equivalent; that file is explicitly out of reach in the scope map. `make codegen` produced no change to `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
 #### Security
 
@@ -43,6 +52,18 @@
 
 #### Added
 
+- **The update bot closes the update pull requests a newer one replaces** — each
+  run updates from the version pinned on `main`, so the pull request for the
+  newest version carries everything an older one did, and its CHANGELOG entry
+  covers the whole range. The older ones stayed open, conflicted, until someone
+  closed them by hand: #131 (v0.106.1) was still open three days after #142
+  (v0.106.2) had replaced it. `check-libsignal-updates.yml` now closes them on
+  the rule `check-template-updates.yml` applies to its own pull requests, with
+  the same four vetoes: a version that is not a plain, strictly older X.Y.Z, the
+  `agent-repaired` label, a `repair-build:` trailer, and a commit by anyone but
+  a bot. It closes only while the newest pull request is open and carries none
+  of `cargo-toml-failed`, `cargo-lock-failed` and `codegen-failed`, and a run by
+  hand only reports unless `dry_run` is turned off.
 - **A job that never got a runner runs again by itself** — GitHub cancels a job
   it could not give a runner after about a quarter of an hour, and macOS arm64
   ran short often enough to hold pull requests on the required
@@ -91,6 +112,21 @@
 
 #### Changed
 
+- **The update bot's CHANGELOG entry no longer calls a changed upstream body out
+  of reach** — the entry #142 wrote for libsignal v0.106.2 said the fingerprint
+  encoder and the AES-CBC length check upstream had rewritten are "not named on
+  the exposed surface", when `Fingerprint.displayString` runs through the one
+  and every message decryption through the other. Both rewrites keep every
+  result the same, which is what the entry should have said. The prompt asked
+  whether a patched body reaches an item named in the scope file, with nothing
+  in its material showing callers, and the scope file did not name `Fingerprint`
+  at all. The prompt now lets a changed body in a crate this package builds be
+  called unreachable only where the scope file names its file as out of reach
+  (`incremental_mac.rs`); otherwise the entry says whether it gives the same
+  result for every input, or what it now returns, accepts or refuses.
+  `.github/agent-prompts/changelog-scope.md` names the whole surface,
+  `Fingerprint` and the certificates included, and maps the upstream files each
+  part of it runs through.
 - **The `session_decrypt` fuzz target builds again** — since
   `mark_kyber_pre_key_used` began answering whether an agreement is new (9.0.0),
   the target still answered it with nothing, and the Fuzz workflow failed to
@@ -103,7 +139,9 @@
   now those targets could only load the last release. Only a source checkout has that
   directory: `rust/target/` is not in the published package. A cross build from a bare
   `cargo` line, or from before this, now stops the app's build until it is rebuilt or
-  deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs.
+  deleted. `make build ARGS="--target <triple>"` and `make build-android` stamp theirs,
+  and nothing when the line also names `--target-dir`, wherever it stands: that build
+  is not where the hook looks.
 - **`example/ios` is integrated with CocoaPods** — `integration_test` is a plugin.
 - **`make clean` also clears the example's build output** — `example/.dart_tool`,
   `example/build`, `example/coverage` and `example/web/pkg`.
@@ -119,6 +157,33 @@
   for a crate built before the workflow existed. A newer run decides over an older one, a run still going makes it wait,
   and a run in which no test job ran does not count, whatever else in it did.
   `--skip-integration-check` skips this check.
+- **copier template adopted: v4.19.0 → v4.20.0, with `enable_integration_tests`**
+  (`.copier-answers.yml` and the files named here) — the template now carries the
+  integration tests' machinery, and the recorded answer keeps it here on every update:
+  `example/integration_test/support/harness.dart`, `example/test_driver/`, the
+  example's scripts under `scripts/` with their tests under `test/scripts/`,
+  `integration.yml`, `integration-reusable.yml`, `rerun-unstarted.yml`,
+  `.github/actions/setup-example/`, `publish.yml` and both `release.dart` equal the
+  template's, and a change to them belongs there. The tests stay this project's:
+  `example/integration_test/libsignal_test.dart`, `capabilities/`,
+  `support/party.dart`, `scripts/src/example_coverage_policy.dart` and
+  `test/scripts/example_coverage_bindings_test.dart`. The rest of the range was
+  here already, each part with its own entry above. It brings:
+  - The entry point hands `LibSignal.init` to the harness through
+    `declareCapabilities`, which also declares the watchdog's self-test first and,
+    last, the test that hands the driver the count of what ran.
+  - The functions the app's tests leave uncalled on purpose, and the floor for
+    hand-written lines, moved unchanged from `scripts/src/example_coverage.dart` to
+    `scripts/src/example_coverage_policy.dart`, which the check's failures now name.
+  - What holds the coverage check's parser to this project's bindings, more than
+    100 functions and two of them by name, moved to
+    `test/scripts/example_coverage_bindings_test.dart`. The template's test of the
+    real generated file asks only that the parser found some, since it cannot name
+    another project's functions.
+  - `CLAUDE.md` says which of the example's files are ours and which the
+    template's, and to run the watchdog's self-test again after a Flutter update;
+    `CONTRIBUTING.md` says where a function the tests are not meant to call goes;
+    the README's list of commands has `make build-ios`.
 
 ## [9.0.0] - 2026-10-26
 

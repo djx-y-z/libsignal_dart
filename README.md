@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![Dart](https://img.shields.io/badge/dart-%3E%3D3.10.0-brightgreen.svg)](https://dart.dev)
 [![Flutter](https://img.shields.io/badge/flutter-%3E%3D3.38.0-blue.svg)](https://flutter.dev)
-[![libsignal](https://img.shields.io/badge/libsignal-v0.106.0-orange.svg)](https://github.com/signalapp/libsignal)
+[![libsignal](https://img.shields.io/badge/libsignal-v0.106.2-orange.svg)](https://github.com/signalapp/libsignal)
 
 Dart bindings for [libsignal](https://github.com/signalapp/libsignal), providing Signal Protocol implementation for end-to-end encryption, sealed sender, group messaging, and secure cryptographic operations.
 
@@ -602,6 +602,7 @@ make setup-android      # Install cargo-ndk for Android builds (optional)
 make codegen            # Regenerate Flutter Rust Bridge bindings
 make build              # Build Rust library locally (native)
 make build-android      # Build for Android (requires cargo-ndk + NDK)
+make build-ios          # Build for iOS: device and both simulators (requires Xcode)
 make build-web          # Build WASM for web (requires wasm-pack)
 
 # CI / Version Management

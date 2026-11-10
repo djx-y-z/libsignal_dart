@@ -3,10 +3,13 @@
 This file is pasted into the prompt that writes the CHANGELOG entry for an
 upstream dependency bump (`make update-changelog`, and the automatic update pull
 request). It is the list that entry is classified against: an upstream change
-that cannot be tied to something named here is invisible to this package's
-users, and saying otherwise turns somebody else's release notes into a list of
-features this package does not have. That is the single most common way this
-step goes wrong.
+that cannot be tied to something named here gets no bullet of its own, and
+giving it one turns somebody else's release notes into a list of features this
+package does not have. That is the single most common way this step goes wrong.
+The opposite mistake is the quieter one: a change inside a crate we bind,
+dismissed because its name is not here, when an item that is here runs through
+it. The map under the two bullets below is what lets the entry tie such a change
+to that item.
 
 **This file is yours, not the template's.** The template writes it once and never
 overwrites it (`_skip_if_exists`), so `copier update` will not touch your edits
@@ -27,9 +30,49 @@ Protocol primitives on top of them:
 - Crates bound: `libsignal-protocol` and `libsignal-core`, and two more from
   the same repository that they pull in: `signal-crypto`, through
   `libsignal-protocol`, and `libsignal-debug`, through `libsignal-core`
-- Exposed surface: identity / pre / signed-pre / Kyber keys, X3DH session
-  establishment, Double Ratchet encrypt/decrypt, sealed sender, group messaging
-  (SenderKey), and serialization of the above.
+- Exposed surface: identity, pre-, signed pre- and Kyber keys (`PrivateKey`,
+  `PublicKey`, `IdentityKeyPair`, `KyberKeyPair`, `PreKeyRecord`,
+  `SignedPreKeyRecord`, `KyberPreKeyRecord`, `PreKeyBundle`), with signing,
+  verification and key agreement; session establishment from a bundle
+  (`processPreKeyBundle`, X3DH with Kyber); Double Ratchet encrypt and decrypt
+  (`SessionCipher`) and the session record (`SessionRecord`, its
+  `hasUsableSenderChain` included); group messaging (SenderKey); sealed sender
+  v1 and v2, with sender and server certificates; safety numbers
+  (`Fingerprint`: `displayString`, `scannableEncoding`, `fingerprintCompare`);
+  the messages, parsed and serialized (`SignalMessage`, `PreKeySignalMessage`,
+  `SenderKeyMessage`, `SenderKeyDistributionMessage`, `PlaintextContent`,
+  `DecryptionErrorMessage`, `UnidentifiedSenderMessageContent`);
+  `ProtocolAddress`; and the `LibSignalErrorCode` every failed call carries,
+  mapped from libsignal's error variants.
+
+That list names what a caller calls. The calls run through far more of those
+crates than it names, so a changed body in any of these files can reach this
+package's users although no name above matches it. Whether one did is what its
+patch shows — the same result for every input, or a different one:
+
+- `libsignal-protocol`: `fingerprint.rs` is `Fingerprint`; the session code
+  (`session.rs`, `session_management.rs` and its directory, `tahini.rs`,
+  `state/session.rs`, `consts.rs`) is `SessionRecord` and every session
+  operation; `double_ratchet.rs`, `triple_ratchet.rs`, `ratchet.rs` and its
+  directory, `pqxdh.rs`, `handshake.rs` and `kem.rs` with its directory are
+  establishment, encrypt and decrypt; `sealed_sender.rs` is sealed sender;
+  `group_cipher.rs` and `sender_keys.rs` are group messaging; `crypto.rs`
+  (HMAC-SHA256, AES-CTR) is under the ratchet's chain keys, group messaging and
+  sealed sender; `protocol.rs` is the messages; `state/` holds the records;
+  `identity_key.rs` is `IdentityKeyPair`; `proto.rs` and `proto/` are the bytes
+  every parse and `serialize` reads and writes; `storage.rs` and its directory
+  are the store callbacks; `error.rs` holds the variants `LibSignalErrorCode`
+  maps.
+- `signal-crypto`: its AES-256-CBC (`aes_cbc.rs`) is what `triple_ratchet.rs`
+  and `group_cipher.rs` call to encrypt and decrypt the body of every Double
+  Ratchet and every SenderKey message.
+- `libsignal-core`: `curve.rs` and `curve/` are the keys, signatures and key
+  agreement; `address.rs` is `ProtocolAddress`.
+
+A file missing from this map is not thereby out of reach: the map was written
+against v0.106, and upstream adds and renames files. The one file known to be
+out of reach is `libsignal-protocol`'s `incremental_mac.rs`, which this package
+does not bind.
 
 One thing reaches this package's users without being named anywhere in that
 list, so it needs saying explicitly: the sparse post-quantum ratchet (`spqr`,

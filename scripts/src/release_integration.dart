@@ -10,10 +10,11 @@
 ///
 /// That run cannot be found by its commit. GitHub records the default branch's
 /// head as the commit of a run started by `workflow_run`, not the commit the
-/// build ran on: the build of `libsignal_frb-7.0.1` ran on `6ed2668`, cut from
-/// `release/8.0.x`, and the `test.yml` run it started carries `b9a98e1`, which
-/// was main's head at the time. So `integration.yml` names the run after the
-/// tag ([releasedRunTitle]), and it is found by that title.
+/// build ran on. Measured in a project generated from this template: the build
+/// of a patch release, cut from a maintenance branch, ran on that branch's
+/// commit, and the `test.yml` run it started carries the commit main's head was
+/// at the time. So `integration.yml` names the run after the tag
+/// ([releasedRunTitle]), and it is found by that title.
 ///
 /// A run started by hand on the released binaries counts too, when it ran on
 /// the commit being released. Its commit is recorded truly, because it ran on

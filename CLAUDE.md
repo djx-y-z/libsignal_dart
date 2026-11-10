@@ -221,6 +221,16 @@ for the web, and the library actually executing on that platform's architecture.
 The tests are `example/integration_test/`, one entry point (each test file is its
 own build, install and launch on a device) with the families under `capabilities/`.
 
+**The tests are ours; the harness is the template's.** `libsignal_test.dart`,
+`capabilities/`, `support/party.dart`, the coverage policy
+`scripts/src/example_coverage_policy.dart` and
+`test/scripts/example_coverage_bindings_test.dart` are this project's, and no
+template update touches them. The last holds the coverage check's parser to this
+project's bindings, which the template's test of it cannot name.
+`support/harness.dart`, `test_driver/integration_test.dart`,
+the scripts and the workflows came with `enable_integration_tests` and stay under
+the template's management: change them there, not here.
+
 **Which library it loads is the hook's choice, so build first:** `make build` for
 the host, `make build-android` / `make build-ios` for a device, `make build-web` for
 the browser. With none of those it downloads the release of the crate version in
@@ -230,7 +240,7 @@ the browser. With none of those it downloads the release of the crate version in
 That is what keeps "every capability of the library" true as the library grows: it
 is measured, from the coverage of the running app, over every `crateApi*` function
 in `lib/src/rust/frb_generated.dart`. The ones not called on purpose are listed
-with a reason in `scripts/src/example_coverage.dart`, and it also holds the
+with a reason in `scripts/src/example_coverage_policy.dart`, which also holds the
 hand-written lines to a floor, because a new class over already-covered bridged
 functions moves nothing else it can see.
 
@@ -238,7 +248,9 @@ functions moves nothing else it can see.
 `setUpAll`.** Under `flutter drive`, the only way to run this on the web, the host
 reads `testWidgets` outcomes only: a plain `test` can fail with the run green, and a
 `setUpAll` that throws leaves no tests and no failure, which reads as success.
-`capability` counts what it declares, and the suite's last test hands the count to
+`capability` runs `LibSignal.init` first, inside its own limit: the entry point
+hands it over through `declareCapabilities`, which also declares the watchdog's
+self-test first and, last, the test that hands the count of what ran to
 `test_driver/integration_test.dart`, whose absence fails the run.
 
 ⚠ **`pump` and `pumpAndSettle` can hang the app test forever.** A live test draws
@@ -309,7 +321,8 @@ annotation, which is the verdict. To see it work, `gh workflow run
 integration.yml --ref <branch> -f hang=true` adds a test that blocks the app: the
 Android and iOS jobs are to fail on it, saying the app sent nothing for 8 minutes
 (API 24 under `flutter drive`, the others under `flutter test`). The run is titled
-`Watchdog self-test: …`, which `make release` never counts.
+`Watchdog self-test: …`, which `make release` never counts. Run it again after a
+Flutter update.
 
 ⚠ **For Android, check the runner image before anything else.** GitHub served two
 ubuntu-26.04 images: `20261025.179` (145 GB disk, `/tmp` on it) and `20261018.50`
@@ -532,7 +545,7 @@ The libsignal version is specified in `rust/Cargo.toml`:
 
 ```toml
 [dependencies]
-libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.106.0" }
+libsignal-protocol = { git = "https://github.com/signalapp/libsignal", tag = "v0.106.2" }
 ```
 
 To check/update the version:

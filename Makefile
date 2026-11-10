@@ -67,7 +67,7 @@ help:
 	@echo "    make test-example-ci              - Either, as CI runs them: a failed test fails at once,"
 	@echo "                                        a run that never got that far runs again"
 	@echo "                                        Example: make test-example-ci ARGS=\"--attempts 3 -- -d <device>\""
-	@echo "    make build-example               - Build the app with the tests in it, without running it"
+	@echo "    make build-example                - Build the app with the tests in it, without running it"
 	@echo "                                        Example: make build-example ARGS=\"apk --debug\""
 	@echo "    make coverage-example             - Run them, then fail on a bridged function none of them calls"
 	@echo "                                        Example: make coverage-example ARGS=\"-d macos\""
@@ -349,12 +349,16 @@ stamp_build = stamp() { \
 		exit 0; \
 	fi; \
 	stamped=; set -- $(ARGS); \
-	while [ $$\# -gt 0 ]; do \
-		target=; \
-		case "$$1" in \
+	for arg in "$$@"; do \
+		case "$$arg" in \
 			--target-dir|--target-dir=*) \
 				echo "Not stamped: --target-dir puts the build where the hook does not look."; \
 				exit 0 ;; \
+		esac; \
+	done; \
+	while [ $$\# -gt 0 ]; do \
+		target=; \
+		case "$$1" in \
 			--target|-t) target="$$2"; shift ;; \
 			--target=*) target="$${1\#--target=}" ;; \
 		esac; \
