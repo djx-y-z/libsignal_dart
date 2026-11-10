@@ -43,6 +43,18 @@
 
 #### Added
 
+- **The update bot closes the update pull requests a newer one replaces** — each
+  run updates from the version pinned on `main`, so the pull request for the
+  newest version carries everything an older one did, and its CHANGELOG entry
+  covers the whole range. The older ones stayed open, conflicted, until someone
+  closed them by hand: #131 (v0.106.1) was still open three days after #142
+  (v0.106.2) had replaced it. `check-libsignal-updates.yml` now closes them on
+  the rule `check-template-updates.yml` applies to its own pull requests, with
+  the same four vetoes: a version that is not a plain, strictly older X.Y.Z, the
+  `agent-repaired` label, a `repair-build:` trailer, and a commit by anyone but
+  a bot. It closes only while the newest pull request is open and carries none
+  of `cargo-toml-failed`, `cargo-lock-failed` and `codegen-failed`, and a run by
+  hand only reports unless `dry_run` is turned off.
 - **A job that never got a runner runs again by itself** — GitHub cancels a job
   it could not give a runner after about a quarter of an hour, and macOS arm64
   ran short often enough to hold pull requests on the required
@@ -91,6 +103,21 @@
 
 #### Changed
 
+- **The update bot's CHANGELOG entry no longer calls a changed upstream body out
+  of reach** — the entry #142 wrote for libsignal v0.106.2 said the fingerprint
+  encoder and the AES-CBC length check upstream had rewritten are "not named on
+  the exposed surface", when `Fingerprint.displayString` runs through the one
+  and every message decryption through the other. Both rewrites keep every
+  result the same, which is what the entry should have said. The prompt asked
+  whether a patched body reaches an item named in the scope file, with nothing
+  in its material showing callers, and the scope file did not name `Fingerprint`
+  at all. The prompt now lets a changed body in a crate this package builds be
+  called unreachable only where the scope file names its file as out of reach
+  (`incremental_mac.rs`); otherwise the entry says whether it gives the same
+  result for every input, or what it now returns, accepts or refuses.
+  `.github/agent-prompts/changelog-scope.md` names the whole surface,
+  `Fingerprint` and the certificates included, and maps the upstream files each
+  part of it runs through.
 - **The `session_decrypt` fuzz target builds again** — since
   `mark_kyber_pre_key_used` began answering whether an agreement is new (9.0.0),
   the target still answered it with nothing, and the Fuzz workflow failed to
