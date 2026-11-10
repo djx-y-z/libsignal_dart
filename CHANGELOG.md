@@ -112,6 +112,17 @@
 
 #### Changed
 
+- **The integration tests on the newest Flutter run it on iOS and Android too** —
+  `make test-example-ci` runs under `fvm dart`, which puts the pinned Flutter
+  first on PATH, and the target it ran in the app took `flutter` from there. So
+  the app `make create-consumer FLUTTER_VERSION=…` makes, whose `.fvmrc` names
+  the newest Flutter, ran on the pinned one. The first weekly run (the package
+  from pub.dev, on Flutter 3.47.9) stopped at `pub get` on iOS and both Android
+  legs, in every try: "requires SDK version ^3.13.7", with Dart 3.10.3 running.
+  `publish.yml`'s `verify-published-on-stable` would have failed the same way
+  after the next upload. The Makefile now resolves the app's flutter with fvm in
+  the app's directory and hands it in, and the script prints which one runs. The
+  example has no `.fvmrc` of its own and runs as before.
 - **The update bot's CHANGELOG entry no longer calls a changed upstream body out
   of reach** — the entry #142 wrote for libsignal v0.106.2 said the fingerprint
   encoder and the AES-CBC length check upstream had rewritten are "not named on
