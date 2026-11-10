@@ -2,6 +2,10 @@
 
 ### For Users
 
+#### ✨ Highlights
+
+- **libsignal v0.106.2** — internal/dependency update, no public-API impact
+
 #### Changed
 
 - **The build hook waits longer for GitHub** — the native library and its
@@ -12,6 +16,11 @@
   (404) still fails at once, and so does a file the hook cannot write, which
   another try cannot fix. A page that is not a checksums file, such as a proxy's,
   is reported as that rather than as an incomplete release.
+- **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2). Provisioning cryptography and its APIs landed in `rust/provisioning`, which is not in this package's dependency graph; associated Java, Node and Swift bindings are not exposed by this Dart wrapper. Auth and profile service work landed in `rust/net/chat`, and DCAP attestation changes landed in `rust/attest`; neither crate is in the dependency graph. The other network, key-transparency, username, backup and zkgroup work is in upstream crates absent from the graph, while repository build and CI edits are tooling rather than Dart APIs.
+
+  In the bound crates, the range changes `rust/core/src/version.rs`, `rust/crypto/src/aes_cbc.rs`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs` and `rust/protocol/src/state/session.rs`, along with crate manifests and a session test. The version constant changes to `0.106.2`. The AES-CBC length check, fingerprint encoding, and session usability and session-ID checks are rewrites that give the same results for every input. The `incremental_mac.rs` assertion is also equivalent; that file is explicitly out of reach in the scope map. `make codegen` produced no change to `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
 #### Security
 
