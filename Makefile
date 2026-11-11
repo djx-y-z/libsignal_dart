@@ -378,6 +378,10 @@ stamp_build = stamp() { \
 # new app `create-consumer` makes.
 EXAMPLE_DIR ?= example
 
+# The flutter `test-example` and `drive-example` run in it: `$(FVM) flutter`,
+# unless `test-example-ci` hands in the app's own (see there).
+EXAMPLE_FLUTTER ?= flutter
+
 # Forget what was cached about this package's build hook, or the build just made
 # may never be used. When the hook last ran without a local build it downloaded
 # the released library and declared only rust/Cargo.toml — it cannot declare a
@@ -465,6 +469,10 @@ build-web:
 # And the lock file it was made from, which the hook compares with
 # rust/Cargo.lock: the dependencies move without the crate version.
 	@cp rust/Cargo.lock rust/target/wasm32/.cargo-lock
+# The web path of the hook declares these files only while they exist, as the
+# native path does its library, so a hook that last ran without them would not
+# run again for them (see forget_hook_results).
+	@$(forget_hook_results)
 	@echo ""
 	@echo "Build complete! WASM files at: rust/target/wasm32/ (crate $$(cat rust/target/wasm32/.crate-version))"
 
@@ -586,13 +594,13 @@ test-web:
 # `flutter test` forces debug mode. `drive-example` below is for the other modes.
 test-example:
 	@$(forget_hook_results)
-	cd $(EXAMPLE_DIR) && $(FVM) flutter test integration_test $(ARGS)
+	cd $(EXAMPLE_DIR) && $(FVM) "$(EXAMPLE_FLUTTER)" test integration_test $(ARGS)
 
 # The same tests under `flutter drive`, which is the one way to run them in
 # profile mode: AOT, what a consumer's release build is compiled to. It needs a
 # driver process and a device that has that mode, and an iOS simulator does not.
 #   make drive-example ARGS="--profile -d macos"
-example_drive = flutter drive --driver=test_driver/integration_test.dart \
+example_drive = "$(EXAMPLE_FLUTTER)" drive --driver=test_driver/integration_test.dart \
 	--target=integration_test/libsignal_test.dart
 
 drive-example:
@@ -608,8 +616,15 @@ drive-example:
 # scripts/test_example_ci.dart lists the options.
 #   make test-example-ci ARGS="--attempts 3 -- -d <device>"
 #   make test-example-ci ARGS="--drive -- --profile -d <device>"
+#
+# ⚠ The app's flutter is resolved here, by fvm in the app's directory, and handed
+# in. The script runs under `fvm dart`, which puts this project's pinned Flutter
+# first on PATH, and fvm cannot run again under it. So an app whose .fvmrc names
+# another Flutter, as `create-consumer FLUTTER_VERSION=…` writes for the newest
+# one, ran on the pinned one and stopped at its first `pub get`.
 test-example-ci:
-	@$(FVM) dart scripts/test_example_ci.dart --dir $(EXAMPLE_DIR) $(ARGS)
+	@flutter=$$(cd $(EXAMPLE_DIR) && $(if $(FVM),$(FVM) exec )sh -c 'command -v flutter') && \
+		$(FVM) dart scripts/test_example_ci.dart --dir $(EXAMPLE_DIR) --flutter "$$flutter" $(ARGS)
 
 # Build the app with the tests as its entry point, without running it. CI uses it
 # to build for an emulator before the emulator starts: the first Gradle build of an

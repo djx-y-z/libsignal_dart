@@ -47,6 +47,22 @@
   now come first, so an untrusted sender is `untrustedIdentity` and an X3DH
   message from before Kyber is `invalidMessage`, as they would be with the key
   in place. The fix is in the native library.
+- **A WebAssembly module an interrupted download cut short is downloaded
+  again** — for the web, the build hook kept the files it found in an
+  incomplete download cache and fetched only the ones that were missing. A
+  module that an interrupted extraction had left truncated was copied into the
+  app's `web/pkg/` and stamped with the package version, and never replaced. An
+  incomplete entry is now downloaded again whole, as the native libraries'
+  cache already was. Measured on an app: with the cached module cut to half and
+  the completeness marker gone, `web/pkg/` received 582,410 of its 1,164,820
+  bytes before, and all of them after.
+- **A web app's build no longer runs the build hook every time** — the hook
+  declared the files of a local WebAssembly build as its inputs whether they
+  existed or not, and a missing input counts as changed. In an app that gets the
+  package from pub.dev, which has no `rust/target/`, every web build ran
+  Flutter's `dart_build` step and the hook again. It now declares them only while
+  they exist, and `make build-web` drops the hook's cached results, as
+  `make build` does, so a local build made afterwards is still picked up.
 
 ### For Contributors
 
@@ -112,6 +128,17 @@
 
 #### Changed
 
+- **The integration tests on the newest Flutter run it on iOS and Android too** —
+  `make test-example-ci` runs under `fvm dart`, which puts the pinned Flutter
+  first on PATH, and the target it ran in the app took `flutter` from there. So
+  the app `make create-consumer FLUTTER_VERSION=…` makes, whose `.fvmrc` names
+  the newest Flutter, ran on the pinned one. The first weekly run (the package
+  from pub.dev, on Flutter 3.47.9) stopped at `pub get` on iOS and both Android
+  legs, in every try: "requires SDK version ^3.13.7", with Dart 3.10.3 running.
+  `publish.yml`'s `verify-published-on-stable` would have failed the same way
+  after the next upload. The Makefile now resolves the app's flutter with fvm in
+  the app's directory and hands it in, and the script prints which one runs. The
+  example has no `.fvmrc` of its own and runs as before.
 - **The update bot's CHANGELOG entry no longer calls a changed upstream body out
   of reach** — the entry #142 wrote for libsignal v0.106.2 said the fingerprint
   encoder and the AES-CBC length check upstream had rewritten are "not named on
