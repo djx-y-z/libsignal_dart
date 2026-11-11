@@ -16,14 +16,9 @@
   (404) still fails at once, and so does a file the hook cannot write, which
   another try cannot fix. A page that is not a checksums file, such as a proxy's,
   is reported as that rather than as an incomplete release.
-- **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2). Provisioning cryptography and its APIs landed in `rust/provisioning`, which is not in this package's dependency graph; associated Java, Node and Swift bindings are not exposed by this Dart wrapper. Auth and profile service work landed in `rust/net/chat`, and DCAP attestation changes landed in `rust/attest`; neither crate is in the dependency graph. The other network, key-transparency, username, backup and zkgroup work is in upstream crates absent from the graph, while repository build and CI edits are tooling rather than Dart APIs.
+- **The native update leaves the exposed protocol behavior unchanged** — libsignal moves from v0.106.0 to v0.107.0, through v0.106.2 ([v0.106.0…v0.106.2](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2), [v0.106.2…v0.107.0](https://github.com/signalapp/libsignal/compare/v0.106.2...v0.107.0)). Most of the range is in upstream crates this package does not build: provisioning cryptography (`rust/provisioning`), auth, profile, purchase-permit and other network work (`rust/net`, `rust/net/chat`), DCAP attestation and Nitro enclave support (`rust/attest`), backup-frame sanitizing and validators (`rust/message-backup`), and key-transparency, username and zkgroup work. The Java, Node and Swift bindings and packaging that changed are not called by this Dart wrapper, and build and CI edits are tooling.
 
-  In the bound crates, the range changes `rust/core/src/version.rs`, `rust/crypto/src/aes_cbc.rs`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs` and `rust/protocol/src/state/session.rs`, along with crate manifests and a session test. The version constant changes to `0.106.2`. The AES-CBC length check, fingerprint encoding, and session usability and session-ID checks are rewrites that give the same results for every input. The `incremental_mac.rs` assertion is also equivalent; that file is explicitly out of reach in the scope map. `make codegen` produced no change to `lib/src/rust/`.
-
-  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
-- **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.2...v0.107.0). Backup-frame sanitizing and validator errors land in `rust/message-backup`, Nitro enclave support in `rust/attest`, and purchase-permit and networking changes in `rust/net` and `rust/net/chat`; those crates are absent from this package's dependency graph. The Java exception changes and Swift packaging are in language bindings this Dart wrapper does not call, and build and CI edits are tooling.
-
-  In the bound crates, the range changes exactly `rust/core/src/version.rs` and `rust/protocol/tests/groups.rs`. The version constant changes to `0.107.0`; the group test adds a check that a syntactically valid tampered `SenderKeyMessage` returns `SignatureValidationFailed` and uses `assert_matches!` for the existing duplicate-message check. No production implementation files in the bound crates change. `make codegen` produced no change to `lib/src/rust/`. These changes do not affect this library's public API.
+  In the bound crates, the range changes `rust/core/src/version.rs`, `rust/crypto/src/aes_cbc.rs`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs` and `rust/protocol/src/state/session.rs`, along with crate manifests and two tests. The version constant changes to `0.107.0`. The AES-CBC length check, fingerprint encoding, and session usability and session-ID checks are rewrites that give the same results for every input. The `incremental_mac.rs` assertion is equivalent too, and that file is out of this package's reach. A new group test checks that a tampered `SenderKeyMessage` with a valid layout is refused with `SignatureValidationFailed`. The Dart bindings generated from the crate do not change.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
@@ -68,6 +63,14 @@
   Flutter's `dart_build` step and the hook again. It now declares them only while
   they exist, and `make build-web` drops the hook's cached results, as
   `make build` does, so a local build made afterwards is still picked up.
+- **Windows on Arm gets a build error instead of a library it cannot load** —
+  only x86_64 is released for Windows, and the build hook handed that library
+  to every Windows architecture. Flutter builds an arm64 app on Windows on Arm,
+  so the build passed and `LibSignal.init` could not load the library in the
+  running app. The hook now refuses a Windows architecture other than x86_64
+  ("Unsupported Windows architecture"), as it already refused an architecture
+  with no release on the other systems. Read from the code and Flutter's
+  target mapping; not run on a Windows on Arm machine.
 
 ### For Contributors
 

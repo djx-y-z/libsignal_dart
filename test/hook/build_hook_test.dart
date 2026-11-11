@@ -95,6 +95,36 @@ void main() {
         ),
         '1.5.0-android-arm64-v8a',
       );
+      expect(
+        build_hook.downloadCacheSubdir(
+          version: '1.5.0',
+          targetOS: OS.windows,
+          targetArchitecture: Architecture.x64,
+        ),
+        '1.5.0-windows-x86_64',
+      );
+    });
+
+    test('refuses a Windows architecture with no release', () {
+      // Only x86_64 is released for Windows. Handing that library to an arm64
+      // app on Windows on Arm made the build pass and the app fail to load it.
+      for (final architecture in [Architecture.arm64, Architecture.ia32]) {
+        expect(
+          () => build_hook.downloadCacheSubdir(
+            version: '1.5.0',
+            targetOS: OS.windows,
+            targetArchitecture: architecture,
+          ),
+          throwsA(
+            isA<build_hook.HookException>().having(
+              (e) => e.message,
+              'message',
+              contains('Unsupported Windows architecture'),
+            ),
+          ),
+          reason: '$architecture',
+        );
+      }
     });
   });
 
