@@ -42,7 +42,7 @@ help:
 	@echo "    make setup-frb-codegen            - Install pinned flutter_rust_bridge_codegen"
 	@echo "    make setup-protoc                 - Install protoc (Protocol Buffers compiler)"
 	@echo "    make setup-android                - Install Android build tools (cargo-ndk)"
-	@echo "    make setup-web                    - Install web build tools (wasm-pack)"
+	@echo "    make setup-web                    - Install web build tools (wasm-pack $(WASM_PACK_VERSION))"
 	@echo "    make setup-repo-protections       - Apply GitHub rulesets + both release environments (needs gh admin)"
 	@echo ""
 	@echo "  BUILD & CODEGEN"
@@ -285,13 +285,23 @@ setup-protoc:
 	fi
 	@echo "protoc setup complete!"
 
+# wasm-pack builds the WASM module a release ships and runs wasm-opt over it,
+# so it is pinned, and built from its own lock file, like cargo-ndk. This is
+# the one place the version is named: every CI job that builds for the web,
+# the release build included, installs it through this target. A wasm-pack of
+# another version is replaced, not kept. Dependabot does not read it; it
+# moves by hand. The wasm-bindgen-cli and binaryen that wasm-pack downloads
+# are not verified by it: the first follows the wasm-bindgen version in
+# rust/Cargo.lock, the second this version.
+WASM_PACK_VERSION := 0.15.0
+
 setup-web:
 	@echo "Installing web build tools..."
-	@if ! command -v wasm-pack >/dev/null 2>&1; then \
-		echo "Installing wasm-pack..."; \
-		cargo install wasm-pack; \
+	@if [ "$$(wasm-pack --version 2>/dev/null)" = "wasm-pack $(WASM_PACK_VERSION)" ]; then \
+		echo "wasm-pack $(WASM_PACK_VERSION) already installed"; \
 	else \
-		echo "wasm-pack already installed"; \
+		echo "Installing wasm-pack $(WASM_PACK_VERSION)..."; \
+		cargo install wasm-pack --locked --version $(WASM_PACK_VERSION); \
 	fi
 	rustup target add wasm32-unknown-unknown
 	@echo ""
@@ -932,8 +942,24 @@ fuzz:
 		cd rust && cargo +nightly fuzz list; \
 		exit 1; \
 	fi
+	cp rust/Cargo.lock rust/fuzz/Cargo.lock
 	cd rust && cargo +nightly fuzz run $(ARGS)
 
+<<<<<<< before updating
+=======
+# Generate the seed corpus (valid inputs) under rust/fuzz/corpus/<target>/.
+# Extend rust/fuzz/examples/gen_corpus.rs as you add fuzz targets.
+#
+# Both targets give the fuzz crate the crate's own lock file first: it is not
+# a member of the crate's workspace and keeps no lock of its own (rust/fuzz/
+# ignores it), so it would otherwise resolve every shared dependency to its
+# newest version and fuzz parsers other than the ones that ship. Cargo adds
+# the fuzz-only crates to the copy.
+fuzz-seed:
+	cp rust/Cargo.lock rust/fuzz/Cargo.lock
+	cd rust/fuzz && cargo run --release --example gen_corpus
+
+>>>>>>> after updating
 # =============================================================================
 # CI / Version Checks
 # =============================================================================

@@ -136,6 +136,24 @@
 
 #### Changed
 
+- **copier template adopted: v4.20.0 -> v4.21.0** — update automation and CI now
+  follow the newer template rules. The existing superseded-PR closing behavior in
+  `.github/workflows/check-libsignal-updates.yml` is tightened: pre-releases and
+  versions with a different prefix are left for a person, and the close step can
+  run on the idempotency gate's skip path. `.github/workflows/rerun-unstarted.yml`
+  now identifies replacement runs by title for cross-workflow runs, and by branch
+  and repository otherwise, so a run from a fork or another workflow cannot
+  incorrectly replace the run to retry. `.github/workflows/integration.yml` and
+  `integration-reusable.yml` validate the resolved Flutter version; the weekly
+  published-package run also skips a version that has no integration tests,
+  rather than trying to compile this ref's tests against it. The fuzz job and
+  `Makefile` add time limits and use the crate lockfile for shared fuzz
+  dependencies. GitHub-maintained actions are pinned to commits in the workflows
+  and `.github/actions/setup-fvm/action.yml`, with their versions beside the pins.
+  `.github/workflows/repair-build.yml` updates its comments to name both PR-closing
+  steps. The template's changelog-scope prompt and web-build changes are not part
+  of this adoption: their files do not appear in this project's diff.
+
 - **The integration tests on the newest Flutter run it on iOS and Android too** —
   `make test-example-ci` runs under `fvm dart`, which puts the pinned Flutter
   first on PATH, and the target it ran in the app took `flutter` from there. So

@@ -889,7 +889,7 @@ jobs:
           echo "$RUN_ID" > "$RUNNER_TEMP/rerun/run_id.txt"
 
       - name: Keep the marker
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: repair-rerun-${{ matrix.run_id }}
           path: ${{ runner.temp }}/rerun/run_id.txt
@@ -937,7 +937,7 @@ jobs:
       surface_disagreed: ${{ steps.surface.outputs.disagreed }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.detect.outputs.sha }}
           # Deliberately the default, read-only GITHUB_TOKEN. Checking out with
@@ -2063,7 +2063,7 @@ jobs:
 
       - name: Upload the patch
         if: steps.verdict.outputs.status == 'fixed'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: repair-patch
           path: |
@@ -2078,7 +2078,7 @@ jobs:
       # `repair-patch` and still gets exactly the two files it always got.
       - name: Upload the verdict
         if: steps.verdict.outputs.status == 'cannot-fix'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: repair-verdict
           path: ${{ runner.temp }}/verdict.json
@@ -2204,7 +2204,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -2222,12 +2222,12 @@ jobs:
       # If main really did move and the patch no longer applies, `git apply`
       # below fails loudly — the correct outcome, since the fix was reasoned
       # about against a tree that no longer exists.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           ref: main
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: repair-patch
           path: ${{ runner.temp }}/repair
@@ -2365,7 +2365,7 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -2378,12 +2378,12 @@ jobs:
       # `persist-credentials: false` although no agent runs here — nothing in
       # this job needs a credential in `.git/config`, because the commit is
       # made through the API rather than by pushing.
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.detect.outputs.sha }}
           persist-credentials: false
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: repair-patch
           path: ${{ runner.temp }}/repair
@@ -2811,12 +2811,12 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: repair-verdict
           path: ${{ runner.temp }}/verdict
@@ -2936,12 +2936,12 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: repair-verdict
           path: ${{ runner.temp }}/verdict
@@ -3067,7 +3067,7 @@ jobs:
           echo "::warning::The repair of ${SHA:0:12} stopped before any verdict (${RESULTS}). That is attempt ${COUNT} of ${UNFINISHED_CAP} for this commit."
 
       - name: Keep the count
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: repair-unfinished-${{ needs.detect.outputs.sha }}
           path: ${{ runner.temp }}/unfinished/attempt.txt
@@ -3080,7 +3080,7 @@ jobs:
       - name: Generate GitHub App Token
         id: app-token
         if: steps.count.outputs.exhausted == 'true'
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -3233,7 +3233,7 @@ jobs:
       - name: Generate GitHub App Token
         id: app-token
         if: steps.find.outputs.close != ''
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
