@@ -4,7 +4,7 @@
 
 #### ✨ Highlights
 
-- **libsignal v0.106.2** — internal/dependency update, no public-API impact
+- **libsignal v0.107.0** — internal/dependency update, no public-API impact
 
 #### Changed
 
@@ -19,6 +19,11 @@
 - **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.0...v0.106.2). Provisioning cryptography and its APIs landed in `rust/provisioning`, which is not in this package's dependency graph; associated Java, Node and Swift bindings are not exposed by this Dart wrapper. Auth and profile service work landed in `rust/net/chat`, and DCAP attestation changes landed in `rust/attest`; neither crate is in the dependency graph. The other network, key-transparency, username, backup and zkgroup work is in upstream crates absent from the graph, while repository build and CI edits are tooling rather than Dart APIs.
 
   In the bound crates, the range changes `rust/core/src/version.rs`, `rust/crypto/src/aes_cbc.rs`, `rust/protocol/src/fingerprint.rs`, `rust/protocol/src/incremental_mac.rs` and `rust/protocol/src/state/session.rs`, along with crate manifests and a session test. The version constant changes to `0.106.2`. The AES-CBC length check, fingerprint encoding, and session usability and session-ID checks are rewrites that give the same results for every input. The `incremental_mac.rs` assertion is also equivalent; that file is explicitly out of reach in the scope map. `make codegen` produced no change to `lib/src/rust/`.
+
+  No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
+- **The native update leaves the exposed protocol behavior unchanged** — [compare](https://github.com/signalapp/libsignal/compare/v0.106.2...v0.107.0). Backup-frame sanitizing and validator errors land in `rust/message-backup`, Nitro enclave support in `rust/attest`, and purchase-permit and networking changes in `rust/net` and `rust/net/chat`; those crates are absent from this package's dependency graph. The Java exception changes and Swift packaging are in language bindings this Dart wrapper does not call, and build and CI edits are tooling.
+
+  In the bound crates, the range changes exactly `rust/core/src/version.rs` and `rust/protocol/tests/groups.rs`. The version constant changes to `0.107.0`; the group test adds a check that a syntactically valid tampered `SenderKeyMessage` returns `SignatureValidationFailed` and uses `assert_matches!` for the existing duplicate-message check. No production implementation files in the bound crates change. `make codegen` produced no change to `lib/src/rust/`. These changes do not affect this library's public API.
 
   No third-party crate moves with it. None is added or removed. `spqr` stays at 1.6.0 (`06959b4`).
 
