@@ -136,6 +136,31 @@
 
 #### Changed
 
+- **copier template adopted: v4.20.0 → v4.21.0** — GitHub's own actions are
+  pinned by commit, their versions beside the pins, in the workflows and in
+  `.github/actions/setup-fvm/action.yml`. That is all this adoption changes in
+  `check-libsignal-updates.yml` and `repair-build.yml`: the release's closing of
+  superseded update pull requests, the `repair-build.yml` comments that name
+  both closing steps and the CHANGELOG prompt's rule for changed upstream
+  bodies came ahead of it in #147, and its web-hook, `test-example-ci` and
+  Windows-architecture fixes in #150 and #152. wasm-pack is pinned too:
+  `WASM_PACK_VERSION` (0.15.0) in the `Makefile`, which `make setup-web`
+  installs with `--locked`, and the release's WASM build in
+  `build-libsignal.yml` now installs it that way rather than with an unpinned
+  `cargo install`: wasm-pack runs `wasm-opt` over the module it ships.
+  `rerun-unstarted.yml` takes a run as replaced only
+  by a newer one of the same branch from the same repository, or, for a run
+  another workflow started, by a newer one with the same title, so a later
+  native build no longer leaves the run a release waits for unrepaired.
+  `integration.yml` no longer tests a pub.dev version whose tag has no
+  integration tests with this ref's, which would fail to compile against it,
+  and `integration-reusable.yml` refuses a Flutter version that is not one
+  before it reaches a make recipe. The fuzz job's seed step gets the crate's
+  lock file and a 45-minute limit, and a seed generator that fails leaves a
+  warning instead of failing the job. `fuzz.yml`'s seed step and the
+  `Makefile`'s `fuzz-seed` conflicted, ours having drifted from the template:
+  both take the template's, and our older `fuzz-seed` is removed rather than
+  left as a second definition of the target.
 - **The integration tests on the newest Flutter run it on iOS and Android too** —
   `make test-example-ci` runs under `fvm dart`, which puts the pinned Flutter
   first on PATH, and the target it ran in the app took `flutter` from there. So
