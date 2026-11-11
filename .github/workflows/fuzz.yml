@@ -129,10 +129,6 @@ jobs:
             echo "seconds=600" >> "$GITHUB_OUTPUT"
           fi
 
-<<<<<<< before updating
-      - name: Generate seed corpus
-        run: make fuzz-seed
-=======
       # Seeds give libFuzzer structurally-correct starting inputs; tolerate a
       # deleted generator so projects can opt out by removing the file. A
       # generator that does not build fails the job: that is code nobody
@@ -150,7 +146,6 @@ jobs:
           else
             echo "No rust/fuzz/examples/gen_corpus.rs — running with an empty corpus"
           fi
->>>>>>> after updating
 
       - name: Run fuzz target
         env:

@@ -928,10 +928,6 @@ rust-deny:
 fuzz-list:
 	cd rust && cargo +nightly fuzz list
 
-# Generate the seed corpus (valid serializations) under rust/fuzz/corpus/.
-fuzz-seed:
-	cd rust/fuzz && cargo run --release --example gen_corpus
-
 # Run a fuzz target. Pass the target name (and libFuzzer flags) via ARGS.
 #   make fuzz ARGS="keys"
 #   make fuzz ARGS="records -- -max_total_time=120"
@@ -945,8 +941,6 @@ fuzz:
 	cp rust/Cargo.lock rust/fuzz/Cargo.lock
 	cd rust && cargo +nightly fuzz run $(ARGS)
 
-<<<<<<< before updating
-=======
 # Generate the seed corpus (valid inputs) under rust/fuzz/corpus/<target>/.
 # Extend rust/fuzz/examples/gen_corpus.rs as you add fuzz targets.
 #
@@ -959,7 +953,6 @@ fuzz-seed:
 	cp rust/Cargo.lock rust/fuzz/Cargo.lock
 	cd rust/fuzz && cargo run --release --example gen_corpus
 
->>>>>>> after updating
 # =============================================================================
 # CI / Version Checks
 # =============================================================================
