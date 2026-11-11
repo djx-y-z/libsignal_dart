@@ -837,6 +837,13 @@ String _getPlatformArchName(
     case OS.macOS:
       return 'macos-${_archName(targetArch)}';
     case OS.windows:
+      // Only x86_64 is released for Windows. Flutter builds an arm64 app on
+      // Windows on Arm, which cannot load that library: refuse the build here,
+      // as the other systems refuse an architecture they have no release for,
+      // rather than let the running app fail to load it.
+      if (targetArch != Architecture.x64) {
+        throw HookException('Unsupported Windows architecture: $targetArch');
+      }
       return 'windows-x86_64';
     case OS.android:
       return 'android-${_androidAbi(targetArch)}';
