@@ -438,7 +438,8 @@ $_start$_loaded{"testID":1,"error":"Failed to load \\"/repo/example/integration_
     });
 
     group('the Makefile', () {
-      final makefile = File('Makefile').readAsStringSync();
+      // As checked out: CRLF on the Windows runner, and these match across lines.
+      final makefile = _readLf('Makefile');
 
       String recipe(String target) => RegExp(
         '^${RegExp.escape(target)}:\\n((?:\\t.*\\n)+)',
