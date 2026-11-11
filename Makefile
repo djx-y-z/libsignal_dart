@@ -469,6 +469,10 @@ build-web:
 # And the lock file it was made from, which the hook compares with
 # rust/Cargo.lock: the dependencies move without the crate version.
 	@cp rust/Cargo.lock rust/target/wasm32/.cargo-lock
+# The web path of the hook declares these files only while they exist, as the
+# native path does its library, so a hook that last ran without them would not
+# run again for them (see forget_hook_results).
+	@$(forget_hook_results)
 	@echo ""
 	@echo "Build complete! WASM files at: rust/target/wasm32/ (crate $$(cat rust/target/wasm32/.crate-version))"
 

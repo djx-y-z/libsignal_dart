@@ -47,6 +47,22 @@
   now come first, so an untrusted sender is `untrustedIdentity` and an X3DH
   message from before Kyber is `invalidMessage`, as they would be with the key
   in place. The fix is in the native library.
+- **A WebAssembly module an interrupted download cut short is downloaded
+  again** — for the web, the build hook kept the files it found in an
+  incomplete download cache and fetched only the ones that were missing. A
+  module that an interrupted extraction had left truncated was copied into the
+  app's `web/pkg/` and stamped with the package version, and never replaced. An
+  incomplete entry is now downloaded again whole, as the native libraries'
+  cache already was. Measured on an app: with the cached module cut to half and
+  the completeness marker gone, `web/pkg/` received 582,410 of its 1,164,820
+  bytes before, and all of them after.
+- **A web app's build no longer runs the build hook every time** — the hook
+  declared the files of a local WebAssembly build as its inputs whether they
+  existed or not, and a missing input counts as changed. In an app that gets the
+  package from pub.dev, which has no `rust/target/`, every web build ran
+  Flutter's `dart_build` step and the hook again. It now declares them only while
+  they exist, and `make build-web` drops the hook's cached results, as
+  `make build` does, so a local build made afterwards is still picked up.
 
 ### For Contributors
 
