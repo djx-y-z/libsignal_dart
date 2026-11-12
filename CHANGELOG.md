@@ -4,36 +4,32 @@
 
 #### Changed
 
-- **copier template adopted: v4.21.0 -> v4.22.0** — integration CI, reliability
-  and update-entry generation now reflect the template changes that landed here.
-  `integration.yml` and `integration-reusable.yml` use the same change-path filter:
-  library/build-hook code, the example, scripts, `Makefile`, package and Flutter
-  version files, `.copier-answers.yml`, integration workflows and
-  `.github/actions/`. This avoids running integration tests for unrelated changes;
-  the rulesets documentation now warns that filtered workflows cannot be
-  required checks if they may not report. Weekly, manual and post-release runs
-  are unchanged. In `setup-example/action.yml`, the post-publish wait checks the
-  package version listing that `pub` resolves, rather than the individual version
-  endpoint, and retries the app-creation step for CDN propagation delays.
-
-  `integration-reusable.yml` installs the Android NDK and CMake before builds,
-  retrying interrupted SDK downloads; it reads the NDK version from Flutter's
-  Gradle plugin, falling back to Gradle's fetch if it cannot. The run script and
-  `Makefile` now end an integration run that never reaches its first test within
-  the configured launch/start limits, then let CI retry it. `forget_hook_results`
-  also clears `build/app/intermediates/flutter/`, so Gradle cannot reuse stale
-  outputs and skip registering the library on a retry. `test-reusable.yml` and
-  `setup-protoc/action.yml` bound apt retries and waits; the test jobs also have
-  time limits, preventing an unreachable Ubuntu mirror from holding CI for hours.
-
-  `update_template.dart` now gives the entry generator file patches against
-  `HEAD`, rather than only status and diff statistics. It includes copier's
-  conflict-marker context, bounds the material supplied, and instructs the model
-  to describe only changes shown in those patches—not changes merely mentioned
-  in the template changelog. `check-template-updates.yml` reports quality gates
-  as not run when `make` cannot read a conflicted `Makefile`, rather than
-  misleadingly reporting them as failed. The adoption prompt also follows the
-  existing `→` version notation and list spacing.
+- **copier template adopted: v4.21.0 → v4.22.0** — the integration tests run for
+  a pull request or a push to main only when it changes what they read:
+  `integration.yml` gives both triggers the same paths, which a test holds equal
+  (`hook/`, `lib/`, `rust/`, `example/`, `scripts/`, the `Makefile`,
+  `pubspec.*`, `.fvmrc`, `.copier-answers.yml`, `integration*.yml` and
+  `.github/actions/`). None of their contexts is a required check here, which
+  the filter depends on; `.github/rulesets/README.md` now says what requiring
+  them would take. The Android legs install the NDK and CMake the app's build
+  asks for (28.2.13676358 and 3.22.1, which Flutter has Gradle fetch for every
+  app) before it, up to three times, the tree's own NDK r26 in the same step: a
+  broken NDK download had failed 9.0.1's `verify-published` on API 24.
+  `make test-example-ci` ends a run with no test started 5 minutes after flutter
+  said the app was built, or 20 after it began without that line, as a run that
+  did not finish, where an iOS app that never connected held its try for
+  flutter's 12 minutes and an Android install for up to the step's 30.
+  `forget_hook_results` also removes `example/build/app/intermediates/flutter`:
+  a profile retry after a killed try was UP-TO-DATE in Gradle, its build hook
+  never ran, and `verify-example-library` failed #145's run with every
+  capability passed. `make update-template` writes its entry from each file's
+  patch, and `check-template-updates.yml` reports a gate that a conflicted
+  `Makefile` blocks as not run. Also from the template: a new app on a version
+  just uploaded waits until `pub` lists it (9.0.1's Windows `verify-published`
+  race), apt calls retry and are bounded, and the `test` job has 60 minutes. A
+  `pub` run of 9.0.1 keeps that tag's own Makefile and scripts, so the new
+  limits and the Gradle fix reach it from the next release on; the NDK step is
+  in the workflow and reaches it now.
 
 ## [9.0.1] - 2026-11-11
 
