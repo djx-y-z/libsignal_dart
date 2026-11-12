@@ -4,11 +4,16 @@ description: Install Protocol Buffers compiler (protoc) for the current platform
 runs:
   using: composite
   steps:
+    # A step of an action takes no `timeout-minutes`, so `timeout` bounds each apt
+    # call: when the runner could not resolve the Ubuntu mirrors, apt went on for
+    # 35 minutes before it failed. Each download also gets three tries and 30
+    # seconds to connect and to answer (the https mirrors take the http setting).
     - name: Install Protobuf (Linux)
       if: runner.os == 'Linux'
       run: |
-        sudo apt-get update
-        sudo apt-get install -y protobuf-compiler
+        apt=(sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30)
+        timeout 600 "${apt[@]}" update
+        timeout 600 "${apt[@]}" install -y protobuf-compiler
         protoc --version
       shell: bash
 

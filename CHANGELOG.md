@@ -1,3 +1,36 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.21.0 → v4.22.0** — the integration tests run for
+  a pull request or a push to main only when it changes what they read:
+  `integration.yml` gives both triggers the same paths, which a test holds equal
+  (`hook/`, `lib/`, `rust/`, `example/`, `scripts/`, the `Makefile`,
+  `pubspec.*`, `.fvmrc`, `.copier-answers.yml`, `integration*.yml` and
+  `.github/actions/`). None of their contexts is a required check here, which
+  the filter depends on; `.github/rulesets/README.md` now says what requiring
+  them would take. The Android legs install the NDK and CMake the app's build
+  asks for (28.2.13676358 and 3.22.1, which Flutter has Gradle fetch for every
+  app) before it, up to three times, the tree's own NDK r26 in the same step: a
+  broken NDK download had failed 9.0.1's `verify-published` on API 24.
+  `make test-example-ci` ends a run with no test started 5 minutes after flutter
+  said the app was built, or 20 after it began without that line, as a run that
+  did not finish, where an iOS app that never connected held its try for
+  flutter's 12 minutes and an Android install for up to the step's 30.
+  `forget_hook_results` also removes `example/build/app/intermediates/flutter`:
+  a profile retry after a killed try was UP-TO-DATE in Gradle, its build hook
+  never ran, and `verify-example-library` failed #145's run with every
+  capability passed. `make update-template` writes its entry from each file's
+  patch, and `check-template-updates.yml` reports a gate that a conflicted
+  `Makefile` blocks as not run. Also from the template: a new app on a version
+  just uploaded waits until `pub` lists it (9.0.1's Windows `verify-published`
+  race), apt calls retry and are bounded, and the `test` job has 60 minutes. A
+  `pub` run of 9.0.1 keeps that tag's own Makefile and scripts, so the new
+  limits and the Gradle fix reach it from the next release on; the NDK step is
+  in the workflow and reaches it now.
+
 ## [9.0.1] - 2026-11-11
 
 ### For Users
