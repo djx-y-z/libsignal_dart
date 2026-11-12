@@ -1,3 +1,40 @@
+## [Unreleased]
+
+### For Contributors
+
+#### Changed
+
+- **copier template adopted: v4.21.0 -> v4.22.0** — integration CI, reliability
+  and update-entry generation now reflect the template changes that landed here.
+  `integration.yml` and `integration-reusable.yml` use the same change-path filter:
+  library/build-hook code, the example, scripts, `Makefile`, package and Flutter
+  version files, `.copier-answers.yml`, integration workflows and
+  `.github/actions/`. This avoids running integration tests for unrelated changes;
+  the rulesets documentation now warns that filtered workflows cannot be
+  required checks if they may not report. Weekly, manual and post-release runs
+  are unchanged. In `setup-example/action.yml`, the post-publish wait checks the
+  package version listing that `pub` resolves, rather than the individual version
+  endpoint, and retries the app-creation step for CDN propagation delays.
+
+  `integration-reusable.yml` installs the Android NDK and CMake before builds,
+  retrying interrupted SDK downloads; it reads the NDK version from Flutter's
+  Gradle plugin, falling back to Gradle's fetch if it cannot. The run script and
+  `Makefile` now end an integration run that never reaches its first test within
+  the configured launch/start limits, then let CI retry it. `forget_hook_results`
+  also clears `build/app/intermediates/flutter/`, so Gradle cannot reuse stale
+  outputs and skip registering the library on a retry. `test-reusable.yml` and
+  `setup-protoc/action.yml` bound apt retries and waits; the test jobs also have
+  time limits, preventing an unreachable Ubuntu mirror from holding CI for hours.
+
+  `update_template.dart` now gives the entry generator file patches against
+  `HEAD`, rather than only status and diff statistics. It includes copier's
+  conflict-marker context, bounds the material supplied, and instructs the model
+  to describe only changes shown in those patches—not changes merely mentioned
+  in the template changelog. `check-template-updates.yml` reports quality gates
+  as not run when `make` cannot read a conflicted `Makefile`, rather than
+  misleadingly reporting them as failed. The adoption prompt also follows the
+  existing `→` version notation and list spacing.
+
 ## [9.0.1] - 2026-11-11
 
 ### For Users
