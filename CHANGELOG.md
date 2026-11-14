@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.108.0** — pre-key decryption behavior changes
+
+#### Changed
+
+- **BREAKING:** **Pre-key decryption now rejects messages targeting locally initiated sessions** — libsignal moves from v0.107.0 to v0.108.0 ([compare](https://github.com/signalapp/libsignal/compare/v0.107.0...v0.108.0)). Changes in `rust/net`, `rust/keytrans`, and `rust/attest` are in crates this package does not build; upstream Java, Swift, and Node bindings are not called by the Dart wrapper.
+
+  The bound crates change `rust/core/src/version.rs`, `rust/protocol/src/session_management.rs`, `rust/protocol/src/storage/inmem.rs`, `rust/protocol/src/storage/traits.rs`, and `rust/protocol/src/tahini.rs`, along with `rust/protocol/test-support/src/client_stores.rs` and the tests `rust/protocol/tests/identity_changes.rs` and `rust/protocol/tests/tahini.rs`. The core version constant becomes `0.108.0`. In session decryption, a PreKey message matching a locally initiated session is now rejected with `InvalidMessage`; archived-session receives now call `record_received_identity`, while active-session and new-session receives continue to save the identity. Existing-session PreKey receives also update the session state after a successful receive. The tests cover rejection before and after acknowledgement and tracking identity changes on archived receives. The binding regeneration changed `lib/src/rust/` and the FFI surface.
+
+  Third-party crates move with it: `hax-lib` 0.5.0, `hax-lib-macros` 0.5.0 and `hax-lib-macros-types` 0.5.0. None is added or removed. `spqr` moves from 1.6.0 (`06959b4`) to 1.7.0 (`3a69df8`).
+
 ### For Contributors
 
 #### Changed
