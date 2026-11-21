@@ -1,5 +1,21 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.108.5** — session and FFI surface changes
+
+#### Changed
+
+#### Changed
+
+- **The native update reaches session code and generated bindings** — libsignal moves from v0.107.0 to v0.108.5 ([compare](https://github.com/signalapp/libsignal/compare/v0.107.0...v0.108.5)). The `deletedTombstone` backup-field change is in `rust/message-backup`, and networking, key-transparency, SVR and zkgroup work is in crates outside this package's dependency graph. Upstream Java, Node and Swift bindings are not called by this Dart wrapper.
+
+  In the bound crates, the range changes `rust/core/src/version.rs` and these `libsignal-protocol` files: `rust/protocol/src/session_management.rs`, `rust/protocol/src/storage/inmem.rs`, `rust/protocol/src/storage/traits.rs`, `rust/protocol/src/tahini.rs`, `rust/protocol/test-support/src/client_stores.rs`, `rust/protocol/tests/identity_changes.rs` and `rust/protocol/tests/tahini.rs`. The version constant changes to `0.108.5`; the other files are named here without further behavioral claims. `session_management.rs` and `tahini.rs` map to `SessionRecord` and session operations. Binding regeneration also changed `lib/src/rust/`; the generated FFI surface moved.
+
+  Third-party crates move with it: `hax-lib` 0.5.0, `hax-lib-macros` 0.5.0 and `hax-lib-macros-types` 0.5.0. None is added or removed. `spqr` moves from 1.6.0 (`06959b4`) to 1.7.0 (`3a69df8`).
+
 ### For Contributors
 
 #### Changed
