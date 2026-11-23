@@ -112,7 +112,7 @@ build-target 0.4.0
   License: MIT
   Texts:   LICENSE [T110]
 
-bumpalo 3.20.3
+bumpalo 3.20.4
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T78]
 
@@ -124,7 +124,7 @@ byteorder 1.5.0
   License: Unlicense OR MIT
   Texts:   COPYING [T130], LICENSE-MIT [T121], UNLICENSE [T129]
 
-bytes 1.12.1
+bytes 1.12.2
   License: MIT
   Texts:   LICENSE [T63]
 
@@ -132,7 +132,7 @@ cbc 0.2.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T69]
 
-cc 1.11.1
+cc 1.11.3
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T32]
 
@@ -164,7 +164,7 @@ console_error_panic_hook 0.1.7
   License: Apache-2.0/MIT
   Texts:   LICENSE-APACHE [T18], LICENSE-MIT [T65]
 
-const-oid 0.10.2
+const-oid 0.10.3
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T84]
 
@@ -288,7 +288,7 @@ equivalent 1.0.3
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T52]
 
-errno 0.3.14
+errno 0.3.15
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T33]
 
@@ -304,7 +304,7 @@ find-msvc-tools 0.1.15
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T32]
 
-fixedbitset 0.5.7
+fixedbitset 0.5.9
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T41]
 
@@ -447,7 +447,7 @@ indexmap 2.14.2
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T51]
 
-inout 0.2.5
+inout 0.2.6
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T87]
 
@@ -455,15 +455,11 @@ itertools 0.13.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T37]
 
-itertools 0.14.0
-  License: MIT OR Apache-2.0
-  Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T37]
-
 itertools 0.15.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T37]
 
-itoa 1.0.18
+itoa 1.0.19
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
 
@@ -633,7 +629,7 @@ petgraph 0.8.3
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T37], assets/images/LICENSE.md [T102]
 
-pin-project-lite 0.2.17
+pin-project-lite 0.2.18
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T2], LICENSE-MIT [T116]
 
@@ -657,6 +653,10 @@ prettyplease 0.2.37
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
 
+prettyplease 0.3.0
+  License: MIT OR Apache-2.0
+  Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
+
 proc-macro-crate 3.5.0
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T22], LICENSE-MIT [T116]
@@ -673,19 +673,19 @@ proc-macro2 1.0.107
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
 
-prost-build 0.14.4
+prost-build 0.14.6
   License: Apache-2.0
   Texts:   LICENSE [T15]
 
-prost-derive 0.14.4
+prost-derive 0.14.6
   License: Apache-2.0
   Texts:   LICENSE [T15]
 
-prost-types 0.14.4
+prost-types 0.14.6
   License: Apache-2.0
   Texts:   LICENSE [T15]
 
-prost 0.14.4
+prost 0.14.6
   License: Apache-2.0
   Texts:   LICENSE [T15]
 
@@ -735,15 +735,15 @@ redox_syscall 0.5.18
   License: MIT
   Texts:   LICENSE [T60]
 
-regex-automata 0.4.18
+regex-automata 0.4.19
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T34]
 
-regex-syntax 0.8.11
+regex-syntax 0.8.12
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T34], src/unicode_tables/LICENSE-UNICODE [T132]
 
-regex 1.13.1
+regex 1.13.2
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T34]
 
@@ -815,7 +815,7 @@ slab 0.4.12
   License: MIT
   Texts:   LICENSE [T76]
 
-smallvec 1.16.5
+smallvec 1.16.6
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T66]
 
@@ -835,7 +835,7 @@ syn 2.0.119
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
 
-syn 3.0.9
+syn 3.0.10
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T10], LICENSE-MIT [T116]
 
@@ -883,7 +883,7 @@ universal-hash 0.6.1
   License: MIT OR Apache-2.0
   Texts:   LICENSE-APACHE [T17], LICENSE-MIT [T80]
 
-uuid 1.29.0
+uuid 1.29.3
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T15], LICENSE-MIT [T35]
 
@@ -947,7 +947,7 @@ zerocopy 0.8.63
   License: BSD-2-Clause OR Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T5], LICENSE-BSD [T98], LICENSE-MIT [T99]
 
-zeroize 1.9.1
+zeroize 1.9.2
   License: Apache-2.0 OR MIT
   Texts:   LICENSE-APACHE [T6], LICENSE-MIT [T74]
 
@@ -1004,7 +1004,7 @@ DEALINGS IN THE SOFTWARE.
 
 Crates:
   miniz_oxide@0.9.1
-  pin-project-lite@0.2.17
+  pin-project-lite@0.2.18
   portable-atomic@1.15.0
 
 Apache License
@@ -1823,7 +1823,7 @@ Crates:
   cmov@0.5.4
   ctutils@0.4.8
   derive-where@1.7.0
-  zeroize@1.9.1
+  zeroize@1.9.2
   zeroize_derive@1.5.0
 
 Apache License
@@ -2679,18 +2679,19 @@ Apache License
    limitations under the License.
 
 ------------------------------------------------------------------------------
-[T10] referenced by 22 crate(s)
+[T10] referenced by 23 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
   anyhow@1.0.104
   async-trait@0.1.92
-  itoa@1.0.18
+  itoa@1.0.19
   libc@0.2.191
   num_enum@0.7.6
   num_enum_derive@0.7.6
   pastey@0.2.3
   prettyplease@0.2.37
+  prettyplease@0.3.0
   proc-macro2@1.0.107
   quote@1.0.47
   rustc-hash@2.1.3
@@ -2701,7 +2702,7 @@ Crates:
   serde_derive@1.0.229
   serde_json@1.0.154
   syn@2.0.119
-  syn@3.0.9
+  syn@3.0.10
   thiserror-impl@2.0.21
   thiserror@2.0.21
   unicode-ident@1.0.27
@@ -3729,7 +3730,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 ------------------------------------------------------------------------------
-[T15] referenced by 74 crate(s)
+[T15] referenced by 73 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
@@ -3739,8 +3740,8 @@ Crates:
   autocfg@1.5.1
   backtrace@0.3.77
   bitflags@2.13.2
-  bumpalo@3.20.3
-  cc@1.11.1
+  bumpalo@3.20.4
+  cc@1.11.3
   cexpr@0.6.0
   cfg-if@1.0.5
   crossbeam-deque@0.8.8
@@ -3750,10 +3751,10 @@ Crates:
   displaydoc@0.2.7
   either@1.19.0
   equivalent@1.0.3
-  errno@0.3.14
+  errno@0.3.15
   fastrand@2.5.0
   find-msvc-tools@0.1.15
-  fixedbitset@0.5.7
+  fixedbitset@0.5.9
   gimli@0.34.0
   glob@0.3.4
   hashbrown@0.14.5
@@ -3763,7 +3764,6 @@ Crates:
   hermit-abi@0.5.3
   indexmap@2.14.2
   itertools@0.13.0
-  itertools@0.14.0
   itertools@0.15.0
   js-sys@0.3.106
   lazy_static@1.5.1
@@ -3781,23 +3781,23 @@ Crates:
   parking_lot_core@0.9.12
   petgraph@0.8.3
   pkg-config@0.3.34
-  prost-build@0.14.4
-  prost-derive@0.14.4
-  prost-types@0.14.4
-  prost@0.14.4
+  prost-build@0.14.6
+  prost-derive@0.14.6
+  prost-types@0.14.6
+  prost@0.14.6
   rayon-core@1.13.0
   rayon@1.12.0
-  regex-automata@0.4.18
-  regex-syntax@0.8.11
-  regex@1.13.1
+  regex-automata@0.4.19
+  regex-syntax@0.8.12
+  regex@1.13.2
   rustc-demangle@0.1.28
   rustc_version@0.4.1
   rustix@1.1.6
   scopeguard@1.2.0
-  smallvec@1.16.5
+  smallvec@1.16.6
   tempfile@3.27.0
   threadpool@1.8.1
-  uuid@1.29.0
+  uuid@1.29.3
   version_check@0.9.5
   wasip2@1.0.4+wasi-0.2.12
   wasm-bindgen-futures@0.4.79
@@ -4233,7 +4233,7 @@ Crates:
   cbc@0.2.1
   chacha20@0.10.2
   cipher@0.5.2
-  const-oid@0.10.2
+  const-oid@0.10.3
   cpubits@0.1.1
   cpufeatures@0.3.1
   crypto-common@0.1.7
@@ -4245,7 +4245,7 @@ Crates:
   hkdf@0.13.0
   hmac@0.13.0
   hybrid-array@0.4.15
-  inout@0.2.5
+  inout@0.2.6
   md-5@0.10.6
   polyval@0.7.3
   sha1@0.11.0
@@ -6321,7 +6321,7 @@ SOFTWARE.
 
 Crates:
   backtrace@0.3.77
-  cc@1.11.1
+  cc@1.11.3
   cfg-if@1.0.5
   find-msvc-tools@0.1.15
   js-sys@0.3.106
@@ -6365,7 +6365,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  errno@0.3.14
+  errno@0.3.15
 
 Copyright (c) 2014 Chris Wong
 
@@ -6404,9 +6404,9 @@ Crates:
   num-bigint@0.4.8
   num-integer@0.1.47
   num-traits@0.2.19
-  regex-automata@0.4.18
-  regex-syntax@0.8.11
-  regex@1.13.1
+  regex-automata@0.4.19
+  regex-syntax@0.8.12
+  regex@1.13.2
   threadpool@1.8.1
 
 Copyright (c) 2014 The Rust Project Developers
@@ -6440,7 +6440,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  uuid@1.29.0
+  uuid@1.29.3
 
 Copyright (c) 2014 The Rust Project Developers
 Copyright (c) 2018 Ashley Mannix, Christopher Armstrong, Dylan DPC, Hunar Roop Kahlon
@@ -6498,13 +6498,12 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ------------------------------------------------------------------------------
-[T37] referenced by 5 crate(s)
+[T37] referenced by 4 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
   either@1.19.0
   itertools@0.13.0
-  itertools@0.14.0
   itertools@0.15.0
   petgraph@0.8.3
 
@@ -6639,7 +6638,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  fixedbitset@0.5.7
+  fixedbitset@0.5.9
 
 Copyright (c) 2015-2017
 
@@ -7378,7 +7377,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  bytes@1.12.1
+  bytes@1.12.2
 
 Copyright (c) 2018 Carl Lerche
 
@@ -7477,7 +7476,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  smallvec@1.16.5
+  smallvec@1.16.6
 
 Copyright (c) 2018 The Servo Project Developers
 
@@ -7749,7 +7748,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  zeroize@1.9.1
+  zeroize@1.9.2
 
 Copyright (c) 2018-2026 The RustCrypto Project Developers
 
@@ -7868,7 +7867,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ------------------------------------------------------------------------------
 
 Crates:
-  bumpalo@3.20.3
+  bumpalo@3.20.4
 
 Copyright (c) 2019 Nick Fitzgerald
 
@@ -8071,7 +8070,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  const-oid@0.10.2
+  const-oid@0.10.3
   cpufeatures@0.3.1
 
 Copyright (c) 2020-2026 The RustCrypto Project Developers
@@ -8171,7 +8170,7 @@ DEALINGS IN THE SOFTWARE.
 ------------------------------------------------------------------------------
 
 Crates:
-  inout@0.2.5
+  inout@0.2.6
 
 Copyright (c) 2022-2025 The RustCrypto Project Developers
 Copyright (c) 2022 Artyom Pavlov
@@ -9639,7 +9638,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ------------------------------------------------------------------------------
-[T116] referenced by 37 crate(s)
+[T116] referenced by 38 crate(s)
 ------------------------------------------------------------------------------
 
 Crates:
@@ -9650,7 +9649,7 @@ Crates:
   displaydoc@0.2.7
   fastrand@2.5.0
   hermit-abi@0.5.3
-  itoa@1.0.18
+  itoa@1.0.19
   lazy_static@1.5.1
   linux-raw-sys@0.12.1
   minimal-lexical@0.2.1
@@ -9658,9 +9657,10 @@ Crates:
   num_enum_derive@0.7.6
   once_cell@1.21.4
   pastey@0.2.3
-  pin-project-lite@0.2.17
+  pin-project-lite@0.2.18
   portable-atomic@1.15.0
   prettyplease@0.2.37
+  prettyplease@0.3.0
   proc-macro-crate@3.5.0
   proc-macro2@1.0.107
   quote@1.0.47
@@ -9673,7 +9673,7 @@ Crates:
   serde_derive@1.0.229
   serde_json@1.0.154
   syn@2.0.119
-  syn@3.0.9
+  syn@3.0.10
   thiserror-impl@2.0.21
   thiserror@2.0.21
   unicode-ident@1.0.27
@@ -10158,7 +10158,7 @@ authorization of the copyright holder.
 ------------------------------------------------------------------------------
 
 Crates:
-  regex-syntax@0.8.11
+  regex-syntax@0.8.12
 
 UNICODE, INC. LICENSE AGREEMENT - DATA FILES AND SOFTWARE
 
