@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### For Users
+
+#### ✨ Highlights
+
+- **libsignal v0.108.7** — session, storage, and FFI updates
+
+#### Changed
+
+- **The native update changes session-related Rust sources and generated bindings** — libsignal v0.107.0 to v0.108.7 ([compare](https://github.com/signalapp/libsignal/compare/v0.107.0...v0.108.7)). Changes in `rust/net`, `rust/keytrans`, `rust/message-backup`, `rust/zkgroup`, and `rust/attest` are in crates absent from this package's dependency graph. Java, Node, Swift, and upstream bridge changes are in bindings this Dart wrapper does not call; build and CI changes are upstream tooling this package does not build or call.
+
+  In the crates this package builds, the range changes `rust/core/src/version.rs`, `rust/protocol/src/session_management.rs`, `rust/protocol/src/storage/inmem.rs`, `rust/protocol/src/storage/traits.rs`, `rust/protocol/src/tahini.rs`, `rust/protocol/test-support/src/client_stores.rs`, `rust/protocol/tests/identity_changes.rs`, and `rust/protocol/tests/tahini.rs`. `rust/core/src/version.rs` changes `VERSION` from `0.107.0` to `0.108.7`. Binding regeneration also changed `lib/src/rust/`; the generated FFI surface moved.
+
+  Third-party crates move with it: `hax-lib` 0.5.0, `hax-lib-macros` 0.5.0 and `hax-lib-macros-types` 0.5.0. None is added or removed. `spqr` moves from 1.6.0 (`06959b4`) to 1.7.0 (`3a69df8`).
+
 ### For Contributors
 
 #### Changed
